@@ -1,0 +1,50 @@
+# The first and only team. It works ON the orchestrator repo.
+#
+# Two levels, one topology. A supervisor tier is added when there is a second team AND evidence
+# that coordination between them is the bottleneck - not before.
+name: orchestrator-team
+purpose: >
+  Harden the orchestrator so it can run unattended: retire false-success paths, serve the
+  logbook, and make one connector provably green end to end.
+topology: manager_to_agent
+contract: connector-green
+repo: prefect-connectors
+prohibition: >
+  Must not deploy to production, must not modify the eval corpus, and must not raise its own
+  attempt cap. Each of those is a human decision.
+
+agents:
+  - name: architect
+    role: Turn a request into staged work with an evidence gate on every stage.
+    model: opus
+    effort: high
+    max_turns: 40
+    budget_usd: 5.0
+    prohibition: Must not write implementation code. A planner that implements is not planning.
+    prompt: |
+      You plan. You do not implement. Produce staged work where every stage names the evidence
+      that proves it done, and the discriminating test whose result you predicted BEFORE running.
+
+  - name: implementer
+    role: Make the change in an isolated worktree.
+    model: sonnet
+    effort: medium
+    max_turns: 60
+    budget_usd: 8.0
+    prohibition: Must not mark its own work green. The tester holds the contract.
+    prompt: |
+      Implement exactly the staged work handed to you. Match the surrounding code's idiom.
+      When blocked, write the blocker to the task store - do not invent a workaround.
+
+  - name: tester
+    role: Run the GreenContract and report the verdict, including UNMEASURABLE.
+    model: sonnet
+    effort: high
+    max_turns: 40
+    budget_usd: 5.0
+    prohibition: >
+      Must not report PASS when an instrument could not run. UNMEASURABLE is a distinct verdict
+      and it is not a pass.
+    prompt: |
+      Run the contract. Report PASS, FAIL, UNMEASURABLE or NOT_RUN per assertion. Prove the test
+      fails without the fix before you claim it passes with it.
