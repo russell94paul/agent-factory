@@ -1,0 +1,54 @@
+# GreenContract target — windsorai @ GEP
+#
+# The first real contract instance. Chosen because windsorai landed its first row ever on
+# 2026-08-20 (20 rows, one session id, verified at the consumer layer) after ten attempts and
+# zero completions. A contract first exercised on a broken connector cannot tell "the connector
+# is broken" from "the contract is wrong", so it is calibrated here, against known-good.
+#
+# Every field carries its basis. A field marked ASSUMED has not been measured and is a question
+# for a human, not a default to build on.
+
+connector: windsorai
+client: GEP
+
+# MEASURED — orchestrator run 2026-08-20, flow run `responsible-pigeon`
+landing_table: QA_DG1_GEP_PREFECT_PR.WINDSORAI__PR.google_ads_CAMPAIGN
+session_column: ___ALDC___GLOBAL_SESSION_ID___
+run_date: "2026-07-22"
+
+# DERIVED — the estate's deployment naming is "<connector> - <client>", measured for
+# `amazon_ads - GEP`. Confirm against `prefect deployment ls` before a live run.
+deployment: "windsorai - GEP"
+
+# DERIVED from connector/connectors/windsorai.py naming convention. Not yet read from source.
+connection_class: WindsorAiConnection
+options_class: WindsorAiOptions
+
+# MEASURED — PR #50 merged as 4db9556 at 09:46:51Z; :development republished 09:50:18Z.
+expected_commit: "4db9556"
+merged_at: 1787305611          # 2026-08-20T09:46:51Z
+
+# ⚠ INCOMPLETE — the recorded digest is truncated to 19 characters in the evidence
+# (`sha256:d2d7193bc096ae149`). A4 matches byte-for-byte, so this must be re-measured from the
+# registry before it can be pinned. Left empty: A3 then proves import + commit + build-time and
+# does not pretend to prove the digest.
+expected_image_digest: ""
+
+# ASSUMED — no pinned test revision exists yet. 721 passed on 2026-08-20, but pinning a count
+# is wrong the moment a test is added.
+pinned_test_revision: ""
+
+expect_rows: true
+
+# DERIVED from the Google Ads campaign grain. Confirm against the table DDL.
+primary_key: [account_id, campaign_id, date]
+key_column: account_id
+date_column: date
+non_null_positive: [spend]
+
+# ⛔ NOT MEASURED — the Navira/GEP account ids. One ALDC Windsor key returns EVERY client's
+# accounts, so an unfiltered pull lands Fusion92 rows in a GEP table and nothing downstream can
+# tell. Until this list is filled, A12 reports UNMEASURABLE and the contract cannot go green.
+# That is the intended behaviour, not a gap to work around.
+tenant_column: account_id
+allowed_tenants: []

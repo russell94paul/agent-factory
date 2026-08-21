@@ -26,6 +26,22 @@ metrics.py    every activity metric paired with an outcome metric
 That test is the whole point: it proves the instrument can register a failure. A green suite from
 an instrument that cannot fail is the 965-run loop again.
 
+## Status
+
+**Phase A is in progress: the contract exists and is calibrated, the instruments are not wired.**
+
+```bash
+python -m factory.certify blueprints/windsorai_gep.yaml --calibrate
+# connector-e2e/windsorai@GEP: UNMEASURABLE (PASS=11, UNMEASURABLE=1)
+```
+
+Eleven assertions pass against the recorded 2026-08-20 windsorai run; A12 blocks because no tenant
+scope has been declared. Evidence and open questions:
+[`docs/evidence/phase-a-windsorai.md`](docs/evidence/phase-a-windsorai.md).
+
+Team scope for team one is **source -> container -> Prefect -> warehouse**. Power BI is out until
+a team has proved it can land rows.
+
 ## Quickstart
 
 ```bash
