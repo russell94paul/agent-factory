@@ -1,0 +1,29 @@
+connectors  C:\Users\PaulRussell\repos\agent-factory\.worktrees\prefect-connectors
+
+  ok  cap
+       removed: both cap checks — the entry points and the choke point
+       intact -> PASS   mutated -> FAIL
+  ok  bounded
+       removed: the ceiling at the choke point, so a watchdog can dispatch forever
+       intact -> PASS   mutated -> FAIL
+  ok  concurrency
+       removed: the dispatch ceiling branch
+       intact -> PASS   mutated -> FAIL
+  ok  reaper
+       removed: reap_expired_leases, which now reaps nothing
+       intact -> PASS   mutated -> FAIL
+  ok  from-history
+       removed: the refusal to treat a missing log as an empty one
+       intact -> PASS   mutated -> FAIL
+  ok  reaper
+       removed: the terminal kill — the reaper now recovers instead, so the orphan runs again
+       intact -> PASS   mutated -> FAIL
+
+  LOAD-BEARING   cap            both cap checks — the entry points and the choke point
+  LOAD-BEARING   bounded        the ceiling at the choke point, so a watchdog can dispatch forever
+  LOAD-BEARING   concurrency    the dispatch ceiling branch
+  LOAD-BEARING   reaper         reap_expired_leases, which now reaps nothing
+  LOAD-BEARING   from-history   the refusal to treat a missing log as an empty one
+  LOAD-BEARING   reaper         the terminal kill — the reaper now recovers instead, so the orphan runs again
+
+All 6 mutations flipped their gate off PASS: every control-plane gate is measuring the control it names.
