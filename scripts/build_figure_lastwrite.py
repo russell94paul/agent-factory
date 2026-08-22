@@ -57,7 +57,9 @@ def build() -> str:
     final = seq[-1]
 
     # ---- geometry, all derived -------------------------------------------------
-    X0, BAND_W, Y, H = 34.0, 486.0, 92.0, 46.0
+    # Y drives every vertical below it. The key line needs its own band of space above
+    # the marks: at Y=92 it landed on the '115 recorded attempts' baseline at y=79.
+    X0, BAND_W, Y, H = 34.0, 486.0, 114.0, 46.0
     pitch = BAND_W / n
     w = max(2.0, pitch - 1.6)
     CELL_X, CELL_W = 604.0, 262.0
@@ -78,7 +80,7 @@ def build() -> str:
     # -- left label
     a(f'    <text class="lbl" x="{X0}" y="52">THE APPEND-ONLY LOG</text>')
     a(f'    <text class="num" x="{X0}" y="79">{n + open_}</text>')
-    a(f'    <text class="lbl2" x="{X0 + 44}" y="79">recorded attempts at '
+    a(f'    <text class="lbl2" x="{X0 + 68}" y="79">recorded attempts at '
       f'<tspan class="mono2">{STAGE}</tspan></text>')
 
     # -- the ticks: one rect per recorded attempt, in recorded order
@@ -100,7 +102,7 @@ def build() -> str:
     # A key ON the figure. The first version explained what a mark meant only in the caption,
     # and a reader could not identify the marks at all — a figure that needs its caption to be
     # legible has failed.
-    a(f'    <text class="key" x="{X0}" y="{Y - 12}">each bar is one recorded attempt '
+    a(f'    <text class="key" x="{X0}" y="{Y - 17}">each bar is one recorded attempt '
       f'&#183; left to right in the order they happened</text>')
     a(f'    <rect class="sw f" x="{X0}" y="{Y + H + 12}" width="9" height="9"></rect>')
     a(f'    <text class="cnt f" x="{X0 + 15}" y="{Y + H + 21}">{fails} failed</text>')
@@ -122,12 +124,12 @@ def build() -> str:
 
     # -- the cell that survives
     a('    <g class="cell">')
-    a(f'      <rect x="{CELL_X}" y="{Y - 8}" width="{CELL_W}" height="{H + 16}" rx="2"></rect>')
+    a(f'      <rect x="{CELL_X}" y="{Y - 8}" width="{CELL_W}" height="{H + 34}" rx="2"></rect>')
     a(f'      <text class="ck" x="{CELL_X + 16}" y="{Y + 12}">'
       f'pipeline[&quot;stages&quot;][{STAGE}]</text>')
     a(f'      <text class="cv" x="{CELL_X + 16}" y="{Y + 36}">status = &quot;{final}&quot;</text>')
-    a(f'      <text class="cn" x="{CELL_X + CELL_W - 16}" y="{Y + 36}" text-anchor="end">'
-      f'last attempt only</text>')
+    a(f'      <text class="cn" x="{CELL_X + 16}" y="{Y + 58}">'
+      f'&#8593; only the last attempt is kept here</text>')
     a('    </g>')
     a(f'    <text class="lbl" x="{CELL_X}" y="52">WHAT THE VERDICT READS</text>')
 
