@@ -1030,12 +1030,12 @@ hr.rule{border:0; border-top:1px solid var(--rule); margin:44px 0}
   </div>
   <div class="tracker rv">
     <div class="tracker-head">
-      <h3 class="disp">3 of 15 gates pass</h3>
+      <h3 class="disp">3 of 23 gates pass</h3>
       <span class="basis m">measured on build</span>
     </div>
     <div style="padding:0 18px 18px">
-      <div style="height:6px;background:var(--rule);position:relative;margin:14px 0 10px" role="img" aria-label="3 of 15 gates pass"><span style="position:absolute;inset:0 auto 0 0;width:20%;background:var(--pass)"></span></div>
-      <p style="font-size:14px;color:var(--ink-2)">Unattended means the loop runs, its gates can refuse, and its output can be certified. Today 3 of those 15 conditions holds. The gap is the work.</p>
+      <div style="height:6px;background:var(--rule);position:relative;margin:14px 0 10px" role="img" aria-label="3 of 23 gates pass"><span style="position:absolute;inset:0 auto 0 0;width:13%;background:var(--pass)"></span></div>
+      <p style="font-size:14px;color:var(--ink-2)">Unattended means the loop runs, its gates can refuse, and its output can be certified. Today 3 of those 23 conditions holds. The gap is the work.</p>
     </div>
   </div>
   <div class="tracker rv">
@@ -1089,13 +1089,95 @@ hr.rule{border:0; border-top:1px solid var(--rule); margin:44px 0}
   </div>
   <div class="tracker rv">
     <div class="tracker-head">
-      <h3 class="disp">Can it tell success from failure?</h3>
-      <span class="basis a">0 of 7</span>
+      <h3 class="disp">Is it bounded? (build order 1-2)</h3>
+      <span class="basis a">0 of 4</span>
     </div>
     <div style="overflow-x:auto">
       <table class="derived">
         <thead><tr><th style="width:96px">Verdict</th><th>Gate</th><th class="n">Measured from</th></tr></thead>
         <tbody>
+          <tr>
+            <td><span class="chip fail">fail</span></td>
+            <td class="what"><b>Is the retry cap enforced on the path that restarts?</b><br>
+              <span style="color:var(--ink-2)">a cap exists on a path that did not run</span>
+              <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
+                <li>a cap IS defined: pipeline_agent.py:46 MAX_RECOVERIES_PER_STAGE = 2</li>
+                <li>and enforced there: pipeline_agent.py:422</li>
+                <li>but restart_from_stage/retry_stage in pipelines.py compare no count to a ceiling</li>
+                <li>1,004 restart_from_stage events recorded; worst 352 in one run</li>
+              </ul>
+              <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>A cap on a path nothing uses is not a cap.</i></div>
+            </td>
+            <td class="n"><span class="mono">orchestrator/pipelines.py + engine/pipeline_agent.py</span></td>
+          </tr>
+          <tr>
+            <td><span class="chip fail">fail</span></td>
+            <td class="what"><b>Is spend checked before dispatch?</b><br>
+              <span style="color:var(--ink-2)">no spend ceiling enforced before dispatch</span>
+              <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
+                <li>0 pre-dispatch comparison(s) of accrued cost against a budget</li>
+                <li>budget_usd is declared per stage but nothing was found comparing accrued spend to it before dispatch</li>
+                <li>cost is recorded only on stage_completed, so the accrued figure a ceiling would read is itself blind to every failure</li>
+              </ul>
+              <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>A ceiling read from a figure blind to failures is not a ceiling.</i></div>
+            </td>
+            <td class="n"><span class="mono">orchestrator/</span></td>
+          </tr>
+          <tr>
+            <td><span class="chip fail">fail</span></td>
+            <td class="what"><b>Is concurrent dispatch bounded outside the agent?</b><br>
+              <span style="color:var(--ink-2)">concurrency is bounded per wave, not per stage dispatch</span>
+              <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
+                <li>10 max_parallel reference(s) in the wave scheduler</li>
+                <li>wave_scheduler bounds how many PIPELINES start together</li>
+                <li>pipelines.py has no max_parallel — nothing bounds concurrent STAGE dispatch, which is the level at which ten containers took the region quota</li>
+              </ul>
+              <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>Ten containers took a region quota; waves bound pipelines, not stages.</i></div>
+            </td>
+            <td class="n"><span class="mono">orchestrator/engine/wave_scheduler.py</span></td>
+          </tr>
+          <tr>
+            <td><span class="chip fail">fail</span></td>
+            <td class="what"><b>Is dispatched work either finished or killed?</b><br>
+              <span style="color:var(--ink-2)">no lease, timeout or reaper for dispatched work</span>
+              <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
+                <li>14 heartbeat reference(s) in work_guard.py</li>
+                <li>work_guard's lease covers REPO LOCKS between agents, not dispatched cloud work</li>
+                <li>4 of 14 runs sit at stage_started with no terminal event — nothing timed them out</li>
+                <li>documented: a container outlived its stage and ten of them took a 10-core quota</li>
+              </ul>
+              <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>Four runs sit at stage_started forever; containers outlive their stage.</i></div>
+            </td>
+            <td class="n"><span class="mono">orchestrator/engine/</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="tracker rv">
+    <div class="tracker-head">
+      <h3 class="disp">Can it tell success from failure?</h3>
+      <span class="basis a">0 of 8</span>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="derived">
+        <thead><tr><th style="width:96px">Verdict</th><th>Gate</th><th class="n">Measured from</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="chip fail">fail</span></td>
+            <td class="what"><b>Is the terminal verdict computed from history?</b><br>
+              <span style="color:var(--ink-2)">the verdict reads current state, not history</span>
+              <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
+                <li>any_failed iterates over: pipeline["stages"]</li>
+                <li>that is pipeline["stages"][i]["status"] — last-write-wins</li>
+                <li>a stage that failed 100 times and succeeded on 101 reads 'completed', so it contributes nothing to any_failed</li>
+                <li>the failures exist only in the append-only log, which this does not consult</li>
+                <li>3 runs recorded succeeded over 115, 21 and 15 failures</li>
+              </ul>
+              <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>Current state cannot answer a question about what it cost to get there.</i></div>
+            </td>
+            <td class="n"><span class="mono">orchestrator/pipelines.py:1669</span></td>
+          </tr>
           <tr>
             <td><span class="chip fail">fail</span></td>
             <td class="what"><b>Has any gate ever refused a run?</b><br>
@@ -1196,12 +1278,53 @@ hr.rule{border:0; border-top:1px solid var(--rule); margin:44px 0}
   <div class="tracker rv">
     <div class="tracker-head">
       <h3 class="disp">Can its output be certified?</h3>
-      <span class="basis a">3 of 5</span>
+      <span class="basis a">3 of 8</span>
     </div>
     <div style="overflow-x:auto">
       <table class="derived">
         <thead><tr><th style="width:96px">Verdict</th><th>Gate</th><th class="n">Measured from</th></tr></thead>
         <tbody>
+          <tr>
+            <td><span class="chip fail">fail</span></td>
+            <td class="what"><b>Does the eval corpus have enough breadth to calibrate?</b><br>
+              <span style="color:var(--ink-2)">1 case(s), 0 strata — below any calibration threshold</span>
+              <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
+                <li>1 corpus case(s), 0 declared stratum/strata</li>
+                <li>R1 graded one-run calibration FOLKLORE: a blind spot affecting 10% of a stratum needs 29 cases for a 95% chance of being seen once</li>
+                <li>target is two distributions — a regression corpus of every distinct historical failure, and a challenge corpus across 15 mechanisms — neither prevalence-weighted</li>
+              </ul>
+              <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>One real success is a fixture. Calibration needs strata and counts.</i></div>
+            </td>
+            <td class="n"><span class="mono">evals/corpus/</span></td>
+          </tr>
+          <tr>
+            <td><span class="chip fail">fail</span></td>
+            <td class="what"><b>Does the version hash cover what makes an agent an agent?</b><br>
+              <span style="color:var(--ink-2)">15 dimensions absent from the version</span>
+              <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
+                <li>0 of 15 dimensions in the hashed config</li>
+                <li>missing: prompt, model, effort, tools, max_turns, budget_usd, tool_implementation, sandbox_image, model_routing, context_policy, external_knowledge, permissions, contract_version, harness_version, side_effect_replay</li>
+                <li>contract_version is the one that bites now — a certification granted under contract V4 silently transfers to V5</li>
+              </ul>
+              <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>Anything unhashed is something a certification silently transfers across.</i></div>
+            </td>
+            <td class="n"><span class="mono">factory/blueprint.py</span></td>
+          </tr>
+          <tr>
+            <td><span class="chip notrun">not run</span></td>
+            <td class="what"><b>Is the evaluator a principal the agent cannot impersonate?</b><br>
+              <span style="color:var(--ink-2)">the evaluator is not yet a separate principal</span>
+              <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
+                <li>$AGENT_FACTORY_EVALUATOR: (unset)</li>
+                <li>client implementation: none</li>
+                <li>the verifier runs in-process today, with the same identity as whatever invokes it</li>
+                <li>R3's ranking: external evaluator service with its own identity is rank 1; a separate local process is rank 5 and 'mostly theatre'</li>
+                <li>'Moving only the files to another directory changes nothing; moving ownership/credentials out of the agent's capability set does'</li>
+              </ul>
+              <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>Tamper-evidence is not a trust boundary; a separate directory is not either.</i></div>
+            </td>
+            <td class="n"><span class="mono">$AGENT_FACTORY_EVALUATOR + factory/</span></td>
+          </tr>
           <tr>
             <td><span class="chip pass">pass</span></td>
             <td class="what"><b>Is the certification suite green and honest?</b><br>

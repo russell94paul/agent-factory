@@ -491,7 +491,225 @@ def g_status_matches_reality():
                      ev, src)
     return _pass("recorded status agrees with the event log", ev, src)
 
+
+# --------------------------------------------------------------------------- build-order gates
+# One gate per prerequisite in docs/research/SYNTHESIS.md section 5. Four research passes agreed
+# these must be true BEFORE any configuration search, because an optimiser scoring an unbounded,
+# unreapable, unattributable loop learns the control plane's mistakes rather than correctness.
+
+
+def _src(rel: str) -> str:
+    f = CONNECTORS / rel
+    if not f.is_file():
+        raise Unmeasurable(f"no {rel} at {CONNECTORS} — cannot inspect the control plane")
+    return f.read_text(encoding="utf-8", errors="replace")
+
+
+def _grep(rel: str, pattern: str):
+    """(line_number, text) for each match. Reading source is the only instrument available
+    without credentials; a gate that needs a live system says UNMEASURABLE instead."""
+    out = []
+    for i, line in enumerate(_src(rel).splitlines(), 1):
+        if re.search(pattern, line):
+            out.append((i, line.strip()))
+    return out
+
+
+def g_attempt_cap_on_the_live_path():
+    """Is the retry cap enforced on the path that actually restarts stages?
+
+    Not "does a cap exist" — one does. It is on a different path from the one that ran.
+    """
+    src = "orchestrator/pipelines.py + engine/pipeline_agent.py"
+    cap_def = _grep("orchestrator/engine/pipeline_agent.py", r"MAX_RECOVERIES_PER_STAGE\s*=")
+    cap_use = _grep("orchestrator/engine/pipeline_agent.py", r"attempts\s*>=\s*MAX_RECOVERIES")
+    body = _src("orchestrator/pipelines.py")
+    # the restart/retry entry points, and whether either compares a count to a ceiling
+    guarded = re.search(r"def (restart_from_stage|retry_stage).{0,3000}?"
+                        r"(MAX_\w*ATTEMPT|max_attempts|>=\s*\w*CAP|_retry_count\s*[<>]=?)",
+                        body, re.S)
+    cleared = _grep("orchestrator/server.py", r"pop\(\s*.._retry_count")
+    ev = []
+    if cap_def:
+        ev.append(f"a cap IS defined: pipeline_agent.py:{cap_def[0][0]} {cap_def[0][1]}")
+    if cap_use:
+        ev.append(f"and enforced there: pipeline_agent.py:{cap_use[0][0]}")
+    ev.append("but restart_from_stage/retry_stage in pipelines.py compare no count to a ceiling"
+              if not guarded else "restart path compares a count to a ceiling")
+    if cleared:
+        ev.append(f"and server.py:{cleared[0][0]} POPS _retry_count, resetting the counter")
+    ev.append("1,004 restart_from_stage events recorded; worst 352 in one run")
+    if guarded and not cleared:
+        return _pass("the restarting path is capped", ev, src)
+    return _fail("a cap exists on a path that did not run", ev, src)
+
+
+def g_spend_ceiling_survives_restart():
+    src = "orchestrator/"
+    body = _src("orchestrator/pipelines.py")
+    checks = re.findall(r"cost_usd.{0,80}(?:>=|>)\s*.{0,40}budget", body)
+    ev = [f"{len(checks)} pre-dispatch comparison(s) of accrued cost against a budget"]
+    if not checks:
+        ev.append("budget_usd is declared per stage but nothing was found comparing accrued "
+                  "spend to it before dispatch")
+        ev.append("cost is recorded only on stage_completed, so the accrued figure a ceiling "
+                  "would read is itself blind to every failure")
+        return _fail("no spend ceiling enforced before dispatch", ev, src)
+    return _pass("spend is checked before dispatch", ev, src)
+
+
+def g_concurrency_is_reserved_outside_the_agent():
+    src = "orchestrator/engine/wave_scheduler.py"
+    par = _grep(src, r"max_parallel")
+    stage_level = re.search(r"max_parallel", _src("orchestrator/pipelines.py"))
+    ev = [f"{len(par)} max_parallel reference(s) in the wave scheduler"]
+    if not par:
+        raise Unmeasurable("no concurrency mechanism found to assess")
+    ev.append("wave_scheduler bounds how many PIPELINES start together")
+    ev.append("pipelines.py has no max_parallel — nothing bounds concurrent STAGE dispatch, "
+              "which is the level at which ten containers took the region quota"
+              if not stage_level else "stage dispatch is also bounded")
+    if stage_level:
+        return _pass("concurrency bounded at stage level", ev, src)
+    return _fail("concurrency is bounded per wave, not per stage dispatch", ev, src)
+
+
+def g_orphans_are_reaped():
+    src = "orchestrator/engine/"
+    hb = _grep("orchestrator/engine/work_guard.py", r"heartbeat|lastHeartbeatAt")
+    ev = [f"{len(hb)} heartbeat reference(s) in work_guard.py"]
+    ev.append("work_guard's lease covers REPO LOCKS between agents, not dispatched cloud work")
+    ev.append("4 of 14 runs sit at stage_started with no terminal event — nothing timed them out")
+    ev.append("documented: a container outlived its stage and ten of them took a 10-core quota")
+    return _fail("no lease, timeout or reaper for dispatched work", ev, src)
+
+
+def g_verdict_is_computed_from_history():
+    """Does the terminal verdict read the append-only log, or a last-write-wins field?"""
+    src = "orchestrator/pipelines.py:1669"
+    body = _src("orchestrator/pipelines.py")
+    # Capture through to the comprehension's iterable: the first ")" closes .get(...), not any(),
+    # so a non-greedy match to the first paren never reaches the thing being iterated. The earlier
+    # version of this probe returned the right verdict with NO evidence for exactly that reason.
+    m = re.search(r"any_failed\s*=\s*any\(.{0,400}?for \w+ in ([^\s:)]+)", body, re.S)
+    iterable = m.group(1) if m else ""
+    reads_stages = "stages" in iterable
+    reads_audit = "audit" in iterable or "event" in iterable
+    ev = [f"any_failed iterates over: {iterable or '(not found)'}"]
+    if reads_stages:
+        ev.append('that is pipeline["stages"][i]["status"] — last-write-wins')
+        ev.append("a stage that failed 100 times and succeeded on 101 reads 'completed', so it "
+                  "contributes nothing to any_failed")
+        ev.append("the failures exist only in the append-only log, which this does not consult")
+        ev.append("3 runs recorded succeeded over 115, 21 and 15 failures")
+    if reads_audit and not reads_stages:
+        return _pass("the verdict is derived from the event log", ev, src)
+    if not m:
+        raise Unmeasurable("could not locate the terminal-verdict computation")
+    return _fail("the verdict reads current state, not history", ev, src)
+
+
+def g_corpus_has_breadth():
+    """One real success is a fixture, not a calibration."""
+    from . import corpus as _c
+    src = "evals/corpus/"
+    try:
+        pinned = _c.available()
+    except _c.CorpusError as exc:
+        return _fail("the corpus does not verify", [str(exc)[:160]], src)
+    strata = set()
+    for cid in pinned:
+        doc = _c.load(cid)
+        strata.update(doc.get("strata") or [])
+    ev = [f"{len(pinned)} corpus case(s), {len(strata)} declared stratum/strata",
+          "R1 graded one-run calibration FOLKLORE: a blind spot affecting 10% of a stratum "
+          "needs 29 cases for a 95% chance of being seen once",
+          "target is two distributions — a regression corpus of every distinct historical "
+          "failure, and a challenge corpus across 15 mechanisms — neither prevalence-weighted"]
+    if len(pinned) >= 29 and len(strata) >= 15:
+        return _pass(f"{len(pinned)} cases across {len(strata)} strata", ev, src)
+    return _fail(f"{len(pinned)} case(s), {len(strata)} strata — below any calibration threshold",
+                 ev, src)
+
+
+# The dimensions R2 named as missing from a config hash. An agent is not a name; it is everything
+# here, and anything absent is something a certification silently transfers across.
+VERSION_DIMENSIONS = [
+    "prompt", "model", "effort", "tools", "max_turns", "budget_usd",          # we have these
+    "tool_implementation", "sandbox_image", "model_routing", "context_policy",
+    "external_knowledge", "permissions", "contract_version", "harness_version",
+    "side_effect_replay",
+]
+
+
+def g_version_hash_is_complete():
+    src = "factory/blueprint.py"
+    body = (FACTORY / "blueprint.py").read_text(encoding="utf-8")         if (FACTORY / "blueprint.py").is_file() else         (FACTORY / "factory" / "blueprint.py").read_text(encoding="utf-8")
+    have = [d for d in VERSION_DIMENSIONS if re.search(rf"{d}", body)]
+    missing = [d for d in VERSION_DIMENSIONS if d not in have]
+    ev = [f"{len(have)} of {len(VERSION_DIMENSIONS)} dimensions in the hashed config",
+          "missing: " + ", ".join(missing)]
+    if "contract_version" in missing:
+        ev.append("contract_version is the one that bites now — a certification granted under "
+                  "contract V4 silently transfers to V5")
+    if not missing:
+        return _pass("the hash covers every declared dimension", ev, src)
+    return _fail(f"{len(missing)} dimensions absent from the version", ev, src)
+
+
+def g_evaluator_is_a_service():
+    """R3 ranked the isolation options; a separate local process is 'mostly theatre'.
+
+    ⚠ The first version of this probe grepped factory/*.py for EVALUATOR_URL and friends — and
+    MATCHED ITS OWN SOURCE, because those strings appear in the very regex doing the searching.
+    It returned PASS: "an evaluator service is configured", when none exists. A self-matching
+    probe producing a false green is the failure this project exists to stop, reproduced inside
+    the instrument. It now asks a question source text cannot answer by accident: is an endpoint
+    actually configured, and is there a module that is not this one implementing it.
+    """
+    src = "$AGENT_FACTORY_EVALUATOR + factory/"
+    endpoint = os.environ.get("AGENT_FACTORY_EVALUATOR", "").strip()
+    impl = [f.name for f in (FACTORY / "factory").glob("*.py")
+            if f.name not in ("readiness.py", "__init__.py")
+            and "class EvaluatorClient" in f.read_text(encoding="utf-8", errors="replace")]
+    ev = [f"$AGENT_FACTORY_EVALUATOR: {endpoint or '(unset)'}",
+          f"client implementation: {', '.join(impl) or 'none'}",
+          "the verifier runs in-process today, with the same identity as whatever invokes it",
+          "R3's ranking: external evaluator service with its own identity is rank 1; a separate "
+          "local process is rank 5 and 'mostly theatre'",
+          "'Moving only the files to another directory changes nothing; moving "
+          "ownership/credentials out of the agent's capability set does'"]
+    if endpoint and impl:
+        return _pass("an evaluator service is configured and reachable", ev, src)
+    return _notrun("the evaluator is not yet a separate principal", ev, src)
+
+
+
 GATES: List[Gate] = [
+    Gate("cap", "Is the retry cap enforced on the path that restarts?",
+         "A cap on a path nothing uses is not a cap.",
+         g_attempt_cap_on_the_live_path, "bounded"),
+    Gate("ceiling", "Is spend checked before dispatch?",
+         "A ceiling read from a figure blind to failures is not a ceiling.",
+         g_spend_ceiling_survives_restart, "bounded"),
+    Gate("concurrency", "Is concurrent dispatch bounded outside the agent?",
+         "Ten containers took a region quota; waves bound pipelines, not stages.",
+         g_concurrency_is_reserved_outside_the_agent, "bounded"),
+    Gate("reaper", "Is dispatched work either finished or killed?",
+         "Four runs sit at stage_started forever; containers outlive their stage.",
+         g_orphans_are_reaped, "bounded"),
+    Gate("from-history", "Is the terminal verdict computed from history?",
+         "Current state cannot answer a question about what it cost to get there.",
+         g_verdict_is_computed_from_history, "judgement"),
+    Gate("breadth", "Does the eval corpus have enough breadth to calibrate?",
+         "One real success is a fixture. Calibration needs strata and counts.",
+         g_corpus_has_breadth, "certification"),
+    Gate("version", "Does the version hash cover what makes an agent an agent?",
+         "Anything unhashed is something a certification silently transfers across.",
+         g_version_hash_is_complete, "certification"),
+    Gate("isolated", "Is the evaluator a principal the agent cannot impersonate?",
+         "Tamper-evidence is not a trust boundary; a separate directory is not either.",
+         g_evaluator_is_a_service, "certification"),
     Gate("finishes", "Does a run finish without a human?",
          "Unattended means the pipeline reaches its terminal stage on its own.",
          g_finishes, "loop"),
@@ -544,6 +762,7 @@ GATES: List[Gate] = [
 
 PHASES = {
     "loop": "Can the loop run?",
+    "bounded": "Is it bounded? (build order 1-2)",
     "judgement": "Can it tell success from failure?",
     "certification": "Can its output be certified?",
 }
