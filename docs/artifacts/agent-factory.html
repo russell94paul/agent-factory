@@ -1030,12 +1030,12 @@ hr.rule{border:0; border-top:1px solid var(--rule); margin:44px 0}
   </div>
   <div class="tracker rv">
     <div class="tracker-head">
-      <h3 class="disp">1 of 13 gates pass</h3>
+      <h3 class="disp">1 of 15 gates pass</h3>
       <span class="basis m">measured on build</span>
     </div>
     <div style="padding:0 18px 18px">
-      <div style="height:6px;background:var(--rule);position:relative;margin:14px 0 10px" role="img" aria-label="1 of 13 gates pass"><span style="position:absolute;inset:0 auto 0 0;width:8%;background:var(--pass)"></span></div>
-      <p style="font-size:14px;color:var(--ink-2)">Unattended means the loop runs, its gates can refuse, and its output can be certified. Today 1 of those 13 conditions holds. The gap is the work.</p>
+      <div style="height:6px;background:var(--rule);position:relative;margin:14px 0 10px" role="img" aria-label="1 of 15 gates pass"><span style="position:absolute;inset:0 auto 0 0;width:7%;background:var(--pass)"></span></div>
+      <p style="font-size:14px;color:var(--ink-2)">Unattended means the loop runs, its gates can refuse, and its output can be certified. Today 1 of those 15 conditions holds. The gap is the work.</p>
     </div>
   </div>
   <div class="tracker rv">
@@ -1090,7 +1090,7 @@ hr.rule{border:0; border-top:1px solid var(--rule); margin:44px 0}
   <div class="tracker rv">
     <div class="tracker-head">
       <h3 class="disp">Can it tell success from failure?</h3>
-      <span class="basis a">0 of 5</span>
+      <span class="basis a">0 of 7</span>
     </div>
     <div style="overflow-x:auto">
       <table class="derived">
@@ -1124,6 +1124,32 @@ hr.rule{border:0; border-top:1px solid var(--rule); margin:44px 0}
               <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>A manual gate with check=None is a human clicking approve, not a control.</i></div>
             </td>
             <td class="n"><span class="mono">orchestrator/pipelines.py :: PIPELINE_DEFS</span></td>
+          </tr>
+          <tr>
+            <td><span class="chip fail">fail</span></td>
+            <td class="what"><b>Can a run be tied to the ticket it was doing?</b><br>
+              <span style="color:var(--ink-2)">2 runs cannot be tied to a Jira ticket</span>
+              <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
+                <li>13 of 14 runs carry a ticket key in their worktree name</li>
+                <li>tickets: GP-271, GP-272, GP-273, GP-274, GP-275, KA-15</li>
+                <li>not real Jira keys: GP-MIGRATE-EXCHANGERATESAPI</li>
+                <li>unattributable: cda9155f</li>
+              </ul>
+              <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>Unattributable work cannot be reported on, priced, or handed back.</i></div>
+            </td>
+            <td class="n"><span class="mono">.sessions/pipe_&lt;TICKET&gt;_&lt;runid&gt;</span></td>
+          </tr>
+          <tr>
+            <td><span class="chip fail">fail</span></td>
+            <td class="what"><b>Does a recorded status match its own event log?</b><br>
+              <span style="color:var(--ink-2)">1 pipeline(s) claim a state their log contradicts</span>
+              <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
+                <li>2 pipelines listed, 14 with an event log</li>
+                <li>pipe_29b8edf6 recorded 'running' but its log ends stage_failed at git-commit-and-pr</li>
+              </ul>
+              <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>A record that contradicts its log is the success-over-failures defect one level up.</i></div>
+            </td>
+            <td class="n"><span class="mono">orchestrator/data/pipelines.json vs audits</span></td>
           </tr>
           <tr>
             <td><span class="chip fail">fail</span></td>
@@ -1246,7 +1272,6 @@ hr.rule{border:0; border-top:1px solid var(--rule); margin:44px 0}
       <table class="derived"><tbody>
         <tr><td class="what"><b>Which Navira account ids are in scope?</b><br><span style="color:var(--ink-3)">Blocks A12, and therefore blocks certification. One ALDC Windsor key returns every client&rsquo;s accounts.</span></td></tr>
         <tr><td class="what"><b>Is the landing table one account or two?</b><br><span style="color:var(--ink-3)">20 rows across 18 campaigns on one date cannot be unique on <span class="mono">(account_id, campaign_id, date)</span>. If it is one account, the declared primary key is wrong.</span></td></tr>
-        <tr><td class="what"><b>Which Jira ticket does the factory work belong to?</b><br><span style="color:var(--ink-3)">Nothing in either repo records one, and a branch name is not evidence.</span></td></tr>
       </tbody></table>
     </div>
     <div class="ro-note">These three are not tick boxes and there is nothing to tick. Answer one and it stops appearing here, because the row above it starts measuring true.</div>

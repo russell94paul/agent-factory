@@ -358,6 +358,78 @@ def g_repo_is_durable():
                  ["one rm -rf from gone"], src)
 
 
+
+def g_work_is_attributable():
+    """Can a run be tied back to the ticket it was doing?
+
+    This started life in the artifact's "needs a person" list, on the assumption
+    that only Paul knew. He did not need to: the orchestrator names each run's
+    worktree pipe_<TICKET>_<runid>. A question filed as unanswerable that a probe
+    can settle is the same defect as a gate that cannot refuse.
+    """
+    import re as _re
+    d = CONNECTORS / ".sessions"
+    runs = _audits()
+    if not d.is_dir():
+        raise Unmeasurable(f"no .sessions directory at {d} — cannot attribute runs")
+    sess = {}
+    for name in os.listdir(d):
+        m = _re.match(r"pipe_([A-Za-z][A-Za-z0-9-]*-[A-Za-z0-9]+)_([0-9a-f]+)$", name)
+        if m:
+            sess[m.group(2)] = m.group(1)
+    mapped = {r["id"][5:]: sess.get(r["id"][5:]) for r in runs}
+    hit = {k: v for k, v in mapped.items() if v}
+    real = {k: v for k, v in hit.items() if _re.fullmatch(r"[A-Z]{2,}-\d+", v)}
+    src = ".sessions/pipe_<TICKET>_<runid>"
+    ev = [f"{len(hit)} of {len(runs)} runs carry a ticket key in their worktree name",
+          "tickets: " + ", ".join(sorted(set(real.values())))]
+    placeholder = sorted({v for v in hit.values() if v not in real.values()})
+    if placeholder:
+        ev.append("not real Jira keys: " + ", ".join(placeholder))
+    unmapped = sorted(k for k, v in mapped.items() if not v)
+    if unmapped:
+        ev.append("unattributable: " + ", ".join(unmapped))
+    if len(hit) == len(runs) and not placeholder:
+        return _pass("every run names its ticket", ev, src)
+    return _fail(f"{len(runs) - len(real)} runs cannot be tied to a Jira ticket", ev, src)
+
+
+def g_status_matches_reality():
+    """Does a pipeline's recorded status agree with its own event log?
+
+    Same shape as the completed-over-failures gate, one level up: there the run
+    lied about its stages, here the record lies about the run.
+    """
+    f = CONNECTORS / "orchestrator" / "data" / "pipelines.json"
+    if not f.is_file():
+        raise Unmeasurable(f"no pipelines.json at {f}")
+    try:
+        listed = json.load(open(f, encoding="utf-8")).get("pipelines", [])
+    except Exception as exc:
+        raise Unmeasurable(f"pipelines.json will not parse: {exc}")
+    if not listed:
+        raise Unmeasurable("pipelines.json records no pipelines — nothing to compare")
+    by_id = {r["id"]: r for r in _audits()}
+    TERMINAL = {"pipeline_completed", "stage_failed", "stage_skipped"}
+    drift = []
+    for pl in listed:
+        run = by_id.get(pl.get("id"))
+        if not run or not run["events"]:
+            continue
+        last = run["events"][-1]
+        claimed = (pl.get("status") or "").lower()
+        if claimed in ("running", "created") and last.get("event_type") in TERMINAL:
+            drift.append((pl["id"], claimed, last.get("event_type"),
+                          last.get("stage_name")))
+    src = "orchestrator/data/pipelines.json vs audits"
+    ev = [f"{len(listed)} pipelines listed, {len(by_id)} with an event log"]
+    for pid, claimed, ev_type, stage in drift:
+        ev.append(f"{pid} recorded '{claimed}' but its log ends {ev_type} at {stage}")
+    if drift:
+        return _fail(f"{len(drift)} pipeline(s) claim a state their log contradicts",
+                     ev, src)
+    return _pass("recorded status agrees with the event log", ev, src)
+
 GATES: List[Gate] = [
     Gate("finishes", "Does a run finish without a human?",
          "Unattended means the pipeline reaches its terminal stage on its own.",
@@ -374,6 +446,13 @@ GATES: List[Gate] = [
     Gate("checks", "Do the gates have programmatic checks?",
          "A manual gate with check=None is a human clicking approve, not a control.",
          g_gates_have_checks, "judgement"),
+    Gate("attributable", "Can a run be tied to the ticket it was doing?",
+         "Unattributable work cannot be reported on, priced, or handed back.",
+         g_work_is_attributable, "judgement"),
+    Gate("truthful", "Does a recorded status match its own event log?",
+         "A record that contradicts its log is the success-over-failures defect "
+         "one level up.",
+         g_status_matches_reality, "judgement"),
     Gate("honest", "Does a completed run mean the work was correct?",
          "This is the estate's signature failure: success reported over an unseen "
          "population.",

@@ -42,8 +42,6 @@ NEEDS_A_PERSON = [
      "20 rows across 18 campaigns on one date cannot be unique on "
      "<span class=\"mono\">(account_id, campaign_id, date)</span>. If it is one "
      "account, the declared primary key is wrong."),
-    ("Which Jira ticket does the factory work belong to?",
-     "Nothing in either repo records one, and a branch name is not evidence."),
 ]
 
 
