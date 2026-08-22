@@ -743,8 +743,8 @@ write.
 
 | harness | before | after |
 |---|---|---|
-| `mutate_readiness_probes.py` — do the GATES depend on the controls? | 8 of 8 | **10 of 10** |
-| `mutate_control_plane.py` — do the TESTS depend on the controls? | 8 of 8 | **12 of 12** |
+| `mutate_readiness_probes.py` — do the GATES depend on the controls? | 8 of 8 | **12 of 12** (the two extra are the review's own edits: the registration call, and `_report_run`'s body) |
+| `mutate_control_plane.py` — do the TESTS depend on the controls? | 8 of 8 | **15 of 15** (12 after session 2's first pass; the 409 status, the control name in the body and the sweep budget came from the review) |
 
 New mutations, all LOAD-BEARING: the termination call; the durable handle; the ownership
 check that fails closed; the refusal to believe a verdict outside the vocabulary.
@@ -753,8 +753,8 @@ check that fails closed; the refusal to believe a verdict outside the vocabulary
 
 | suite | result |
 |---|---|
-| `prefect-connectors` `tests/orchestrator` | **673 passed, 1 failed** — 674 collected. I wrote 694, corrected it to 674, and 674 was the COLLECTED total, not the pass count; an independent review re-derived it |
-| `agent-factory` `pytest` | **147 passed, 2 xfailed** |
+| `prefect-connectors` `tests/orchestrator` | **697 passed, 1 failed** at the end of session 2. Earlier in this file: 673 passed / 674 collected — I wrote 694, corrected it to 674, and 674 was the COLLECTED total. Wrong three times, corrected each time by someone re-deriving it |
+| `agent-factory` `pytest` | **175 passed, 2 xfailed** |
 
 The one failure is `test_logbook.py::TestResolution::test_recurrence_after_resolution_is_marked_regressed`,
 pre-existing and unrelated — it fails identically on the unmodified checkout at `3da40f6`.
