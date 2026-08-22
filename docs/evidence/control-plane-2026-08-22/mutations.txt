@@ -1,24 +1,24 @@
   ok  cap — the attempt ceiling
        removed: both cap checks — the entry points and the choke point
-       TestAttemptCapRefuses or TestAttemptCapOverride  ->  10 failed, 29 deselected in 17.89s
+       TestAttemptCapRefuses or TestAttemptCapOverride  ->  10 failed, 32 deselected in 23.35s
   ok  concurrency — the dispatch ceiling
        removed: the ceiling branch in _build_stage_requests
-       TestDispatchCeiling  ->  4 failed, 1 passed, 34 deselected in 20.03s
+       TestDispatchCeiling  ->  5 failed, 3 passed, 34 deselected in 20.63s
   ok  reaper — the lease
        removed: reap_expired_leases, which now returns nothing
-       TestReaperKills  ->  5 failed, 1 passed, 33 deselected in 15.13s
+       TestReaperKills  ->  5 failed, 1 passed, 36 deselected in 17.13s
   ok  from-history — the terminal verdict
        removed: the history replay — any_failed reads pipeline[stages] again, as it did before
-       TestVerdictIsComputedFromHistory  ->  1 failed, 5 passed, 33 deselected in 25.09s
+       TestVerdictIsComputedFromHistory  ->  1 failed, 5 passed, 36 deselected in 31.14s
   ok  from-history — the failure count behind `clean`
        removed: the retry count from `clean`, so succeeded-after-100-failures reads clean again
-       TestVerdictIsComputedFromHistory  ->  2 failed, 4 passed, 33 deselected in 29.43s
+       TestVerdictIsComputedFromHistory  ->  2 failed, 4 passed, 36 deselected in 35.60s
   ok  from-history — failing closed on an unreadable log
        removed: the refusal to treat a missing log as an empty one — audit.get_audit's own bug
-       TestVerdictIsComputedFromHistory  ->  1 failed, 5 passed, 33 deselected in 32.92s
+       TestVerdictIsComputedFromHistory  ->  1 failed, 5 passed, 36 deselected in 40.37s
   ok  truthful — reachability
        removed: reachability — _reachable asks only whether a pending stage EXISTS, as before
-       TestStatusCannotContradictItsLog  ->  3 failed, 2 passed, 34 deselected in 19.92s
+       TestStatusCannotContradictItsLog  ->  3 failed, 2 passed, 37 deselected in 27.87s
 
   LOAD-BEARING   cap — the attempt ceiling
   LOAD-BEARING   concurrency — the dispatch ceiling

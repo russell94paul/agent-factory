@@ -93,7 +93,7 @@ connectors   C:\Users\PaulRussell\repos\agent-factory\.worktrees\prefect-connect
             . known hole: the contract is parameterised by a blueprint the graded party writes. A target floor and the artefact hash narrow it; a pinned per-connector target closes it, and nobody has written one
             . R3's ranking: external evaluator service with its own identity is rank 1; a separate local process is rank 5 and 'mostly theatre'
             . 'Moving only the files to another directory changes nothing; moving ownership/credentials out of the agent's capability set does'
-    PASS    Is the certification suite green and honest?         88 passed
+    PASS    Is the certification suite green and honest?         147 passed, 2 xfailed
             . includes test_every_assertion_has_been_proved_able_to_fail
     NOTRUN  Is the output actually certified?                    12 assertions have no instrument wired
             . connector-e2e/windsorai@GEP: UNMEASURABLE (UNMEASURABLE=12)
