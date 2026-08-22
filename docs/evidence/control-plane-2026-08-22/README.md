@@ -124,7 +124,7 @@ Design decisions that are not obvious, each made for a measured reason:
 
 ## Negative controls — every control watched refusing
 
-`prefect-connectors/tests/orchestrator/test_control_plane.py`, **39 tests, all passing**.
+`prefect-connectors/tests/orchestrator/test_control_plane.py`, **44 tests, all passing**.
 Every control is exercised in both directions, because a guard that refuses everything
 passes a cap test while silently disabling the feature.
 
@@ -143,6 +143,9 @@ passes a cap test while silently disabling the feature.
 | a missing log gives `basis=UNMEASURABLE, status=failed` | a tolerated `continue_on_failure` still lets a run succeed |
 | a stage the log never saw finish cannot make a run succeed | a genuinely running pipeline is left alone by the reconciler |
 | a run nothing can advance is closed rather than left `running` | a terminal status is never revised |
+| the sweep never touches a stage a human must release | a stranded pipeline is swept up when slots free |
+| a full ceiling stays full | the sweep rechecks dependencies rather than trusting the mark |
+| reaping the last runnable stage closes the run | reaping one stage of a live run does not close it |
 
 ### Two defects the negative controls found, before any of this ran anywhere real
 
@@ -154,6 +157,36 @@ passes a cap test while silently disabling the feature.
    stages missing from the log *entirely*, so a stage the log saw start and never saw
    finish passed. The record's status field was doing the work again — the exact
    substitution `terminal_verdict()` exists to remove.
+
+### Two more found by tracing the change rather than by a test failing
+
+Neither of these had a failing test to point at them. Both were found by asking what the
+new code depended on and then checking, and both are recorded in `docs/findings.md`.
+
+3. **The dispatch ceiling could strand a whole pipeline (F14).** A deferred stage is left
+   `pending`, and the claim "`_find_ready_stages` will offer it again on the next sweep"
+   was not checked. `on_session_complete` re-offers only when a stage *in that same
+   pipeline* completes, and `recover_stale_pipelines` has exactly one caller —
+   `pipeline_agent._run_watchdog` — which returns early on `if not _enabled`, and the agent
+   is off by default. A run that got zero stages dispatched had nothing that would ever
+   come back for it, which is the documented six-people-six-connectors case. Fixed by
+   `dispatch_deferred_stages()` on the reaper's ungated thread, which offers **only** the
+   stages the ceiling itself marked — never the ones `reclaim_orphaned_stages` left pending
+   for a human, whose ACI backfill may still be landing rows.
+
+4. **⭐ The reaper recreated the defect this lane exists to remove (F17).** Reaping the last
+   runnable stage marked the *stage* `failed` and left the *run* at `running` over a log
+   ending `stage_failed` — `pipe_29b8edf6`'s exact shape. Nothing would have closed it:
+   `on_session_complete` fires only when a session reports, and a reaped stage has no
+   session left to report. The same is true of a stage the attempt cap closes at the choke
+   point. Measured by driving it:
+   ```
+   reaped: [{'pipeline_id': 'pipe_x', 'stage': 'only', ...}]
+   stage : failed
+   PIPELINE STATUS AFTER REAPING THE ONLY STAGE: running
+   ```
+   Fixed: `reap_expired_leases()` reconciles what it reaped, and server.py's periodic loop
+   reconciles unconditionally.
 
 ---
 
@@ -306,7 +339,8 @@ judgement lane, which shares `pipelines.py` with this one.
 
 | suite | result |
 |---|---|
-| `prefect-connectors` `tests/orchestrator` | **641 passed, 1 failed** |
+| `prefect-connectors` `tests/orchestrator` | **646 passed, 1 failed** |
+| `prefect-connectors` whole suite | **869 passed, 1 failed** |
 | `agent-factory` `pytest` | **all passed, 2 xfailed** (the two allowlisted probe defects) |
 
 The one connectors failure is `test_logbook.py::TestResolution::test_recurrence_after_resolution_is_marked_regressed`
