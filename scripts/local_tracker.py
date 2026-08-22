@@ -82,12 +82,15 @@ def launch_command(lane_id: str, make: bool = True):
 
     # Prefer wt when present so the tab is titled and lands in the worktree; the cmd fallback
     # relies on Popen's cwd. Neither may contain a ';' — see the note above.
+    ps1 = _launch_script(f"lane {lane.id}", f"{lane.title}  ·  {lane.model}", f,
+                         LANE_ACCENT.get(lane.id, "38;5;75"))
     w = _wt()
     if w:
         return ([w, "new-tab", "--title", f"lane {lane.id}", "--startingDirectory", str(cwd),
-                 "powershell", "-NoExit", "-ExecutionPolicy", "Bypass", "-Command", inner], f, cwd)
+                 "--colorScheme", WT_SCHEME,
+                 "powershell", "-NoExit", "-ExecutionPolicy", "Bypass", "-File", str(ps1)], f, cwd)
     return (["cmd", "/c", "start", f"lane {lane.id}", "powershell", "-NoExit",
-             "-ExecutionPolicy", "Bypass", "-Command", inner], f, cwd)
+             "-ExecutionPolicy", "Bypass", "-File", str(ps1)], f, cwd)
 
 
 def start_session_from_handoff(note: str, dry: bool = False):
@@ -109,12 +112,14 @@ def start_session_from_handoff(note: str, dry: bool = False):
     # No semicolons — see the note in launch_command. wt would split on them.
     inner = f"claude (Get-Content -Raw -LiteralPath '{f}')"
 
+    ps1 = _launch_script("handoff session", "session handoff", f, "38;5;110")
     wtexe = _wt()
     cmd = ([wtexe, "new-tab", "--title", "handoff session", "--startingDirectory", str(FACTORY),
-            "powershell", "-NoExit", "-ExecutionPolicy", "Bypass", "-Command", inner]
+            "--colorScheme", WT_SCHEME,
+            "powershell", "-NoExit", "-ExecutionPolicy", "Bypass", "-File", str(ps1)]
            if wtexe else
            ["cmd", "/c", "start", "handoff session", "powershell", "-NoExit",
-            "-ExecutionPolicy", "Bypass", "-Command", inner])   # Popen gets cwd=FACTORY
+            "-ExecutionPolicy", "Bypass", "-File", str(ps1)])   # Popen gets cwd=FACTORY
     if dry:
         return True, f"DRY RUN — handoff saved to {f.name}, would open {'a wt tab' if wtexe else 'a window'}"
     try:
@@ -122,6 +127,39 @@ def start_session_from_handoff(note: str, dry: bool = False):
     except Exception as exc:                                       # noqa: BLE001
         return False, f"handoff saved to {f.name} but no terminal opened ({type(exc).__name__}: {exc})"
     return True, f"new session opened, holding {f.name}"
+
+
+#: One frame for every session (system identity); the banner accent varies per lane (instance
+#: identity). Five differently-coloured windows would read as noise, not information.
+WT_SCHEME = "Agent Factory Blue"
+LANE_ACCENT = {"control-plane": "38;5;75", "certify": "38;5;79", "judgement": "38;5;140",
+               "artifact": "38;5;73", "grain": "38;5;180"}
+
+
+def _launch_script(name: str, subtitle: str, prompt_file, accent: str = "38;5;75"):
+    """Write a .ps1 that titles the window, prints a banner, then runs claude.
+
+    ⚠ A .ps1 rather than a -Command string ON PURPOSE. Semicolons are wt's subcommand separator,
+    so a multi-statement -Command payload is split by wt and the remainder is launched as a
+    program — that is F10, and it cost a real click to find. A file has no such problem.
+    """
+    d = FACTORY / ".data" / "launch"
+    d.mkdir(parents=True, exist_ok=True)
+    f = d / f"{name}.ps1"
+    esc = chr(27)
+    bar = "─" * 58
+    body = f"""$Host.UI.RawUI.WindowTitle = '{name}'
+$e = [char]27
+Write-Host ""
+Write-Host "$e[{accent}m{bar}$e[0m"
+Write-Host "$e[{accent}m  AGENT FACTORY $e[0m$e[38;5;250m{subtitle}$e[0m"
+Write-Host "$e[38;5;244m  {name}$e[0m"
+Write-Host "$e[{accent}m{bar}$e[0m"
+Write-Host ""
+claude (Get-Content -Raw -LiteralPath '{prompt_file}')
+"""
+    f.write_text(body, encoding="utf-8")
+    return f
 
 
 def _wt() -> str:
