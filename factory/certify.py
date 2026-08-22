@@ -31,8 +31,12 @@ def main(argv: list[str] | None = None) -> int:
     args = ap.parse_args(argv)
 
     target = load_target(args.blueprint)
+    scored_against = None
     if args.calibrate:
-        from .calibration import known_good_world
+        from .calibration import known_good_world, provenance
+        # Read the stamp BEFORE scoring: if the corpus does not verify, this raises here rather
+        # than producing a verdict nobody can tie to a world.
+        scored_against = provenance()
         result = build_contract(target, CtxProbes()).run(known_good_world())
     else:
         result = build_contract(target, Probes()).run({})
@@ -41,6 +45,9 @@ def main(argv: list[str] | None = None) -> int:
         "contract": result.contract,
         "verdict": result.verdict.value,
         "promotable": result.verdict is Verdict.PASS,
+        # A verdict with no corpus is a live run; a verdict WITH one was replayed and must say so.
+        # Without this a calibration result and a production result are indistinguishable.
+        "scored_against": scored_against,
         "assertions": [{"name": r.name, "verdict": r.verdict.value, "detail": r.detail}
                        for r in result.results],
     }
@@ -50,6 +57,10 @@ def main(argv: list[str] | None = None) -> int:
         print(result.summary())
         for r in result.results:
             print(f"  {r}")
+        if scored_against:
+            print(f"\n  scored against corpus {scored_against['corpus']} "
+                  f"({scored_against['sha256'][:12]}…, recorded {scored_against['recorded']}) "
+                  f"— REPLAYED, not a live measurement")
         if result.verdict is Verdict.UNMEASURABLE:
             print("\nUNMEASURABLE is not a pass. Wire the probes, or say so on the ticket.")
     # 0 only for a real pass: UNMEASURABLE and FAIL must both stop a promotion.

@@ -1,0 +1,213 @@
+{
+  "client": "GEP",
+  "connector": "windsorai",
+  "id": "windsorai-2026-08-20",
+  "provenance": {
+    "basis": "MEASURED \u2014 replayed from the run's own evidence, not re-queried",
+    "caveat": "20 rows across 18 campaigns on one date cannot be unique on (account_id, campaign_id, date) under a single account. This world encodes two accounts sharing two campaign ids \u2014 the only arrangement consistent with the measured counts. If the real table holds one account the declared primary key is wrong and A9 will say so.",
+    "recorded": "2026-08-20",
+    "run": "responsible-pigeon",
+    "table": "QA_DG1_GEP_PREFECT_PR.WINDSORAI__PR.google_ads_CAMPAIGN"
+  },
+  "run_date": "2026-07-22",
+  "session": "452d3402-0000-4000-8000-000000000000",
+  "tenants": [
+    "1234567890",
+    "9876543210"
+  ],
+  "world": {
+    "config": {
+      "accounts": [
+        "1234567890",
+        "9876543210"
+      ],
+      "constructed": [
+        "WindsorAiConnection",
+        "WindsorAiOptions"
+      ]
+    },
+    "credential": {
+      "payload_keys": [
+        "data"
+      ],
+      "status": 200
+    },
+    "deployment": {
+      "id": "dep-windsorai-gep",
+      "image_digest": "sha256:d2d7193bc096ae149"
+    },
+    "forbidden": {
+      "gates_bypassed": [],
+      "out_of_scope_writes": [],
+      "secret_hits": 0,
+      "tests_modified": []
+    },
+    "image": {
+      "built_at": 1787305818,
+      "commit": "4db9556",
+      "digest": "sha256:d2d7193bc096ae149",
+      "imports": true
+    },
+    "landed": {
+      "rows": [
+        {
+          "___ALDC___GLOBAL_SESSION_ID___": "452d3402-0000-4000-8000-000000000000",
+          "account_id": "1234567890",
+          "campaign_id": "c000",
+          "date": "2026-07-22",
+          "spend": 10.0
+        },
+        {
+          "___ALDC___GLOBAL_SESSION_ID___": "452d3402-0000-4000-8000-000000000000",
+          "account_id": "1234567890",
+          "campaign_id": "c001",
+          "date": "2026-07-22",
+          "spend": 11.0
+        },
+        {
+          "___ALDC___GLOBAL_SESSION_ID___": "452d3402-0000-4000-8000-000000000000",
+          "account_id": "1234567890",
+          "campaign_id": "c002",
+          "date": "2026-07-22",
+          "spend": 12.0
+        },
+        {
+          "___ALDC___GLOBAL_SESSION_ID___": "452d3402-0000-4000-8000-000000000000",
+          "account_id": "1234567890",
+          "campaign_id": "c003",
+          "date": "2026-07-22",
+          "spend": 13.0
+        },
+        {
+          "___ALDC___GLOBAL_SESSION_ID___": "452d3402-0000-4000-8000-000000000000",
+          "account_id": "1234567890",
+          "campaign_id": "c004",
+          "date": "2026-07-22",
+          "spend": 14.0
+        },
+        {
+          "___ALDC___GLOBAL_SESSION_ID___": "452d3402-0000-4000-8000-000000000000",
+          "account_id": "1234567890",
+          "campaign_id": "c005",
+          "date": "2026-07-22",
+          "spend": 15.0
+        },
+        {
+          "___ALDC___GLOBAL_SESSION_ID___": "452d3402-0000-4000-8000-000000000000",
+          "account_id": "1234567890",
+          "campaign_id": "c006",
+          "date": "2026-07-22",
+          "spend": 16.0
+        },
+        {
+          "___ALDC___GLOBAL_SESSION_ID___": "452d3402-0000-4000-8000-000000000000",
+          "account_id": "1234567890",
+          "campaign_id": "c007",
+          "date": "2026-07-22",
+          "spend": 17.0
+        },
+        {
+          "___ALDC___GLOBAL_SESSION_ID___": "452d3402-0000-4000-8000-000000000000",
+          "account_id": "1234567890",
+          "campaign_id": "c008",
+          "date": "2026-07-22",
+          "spend": 18.0
+        },
+        {
+          "___ALDC___GLOBAL_SESSION_ID___": "452d3402-0000-4000-8000-000000000000",
+          "account_id": "1234567890",
+          "campaign_id": "c009",
+          "date": "2026-07-22",
+          "spend": 19.0
+        },
+        {
+          "___ALDC___GLOBAL_SESSION_ID___": "452d3402-0000-4000-8000-000000000000",
+          "account_id": "1234567890",
+          "campaign_id": "c010",
+          "date": "2026-07-22",
+          "spend": 20.0
+        },
+        {
+          "___ALDC___GLOBAL_SESSION_ID___": "452d3402-0000-4000-8000-000000000000",
+          "account_id": "1234567890",
+          "campaign_id": "c011",
+          "date": "2026-07-22",
+          "spend": 21.0
+        },
+        {
+          "___ALDC___GLOBAL_SESSION_ID___": "452d3402-0000-4000-8000-000000000000",
+          "account_id": "1234567890",
+          "campaign_id": "c012",
+          "date": "2026-07-22",
+          "spend": 22.0
+        },
+        {
+          "___ALDC___GLOBAL_SESSION_ID___": "452d3402-0000-4000-8000-000000000000",
+          "account_id": "1234567890",
+          "campaign_id": "c013",
+          "date": "2026-07-22",
+          "spend": 23.0
+        },
+        {
+          "___ALDC___GLOBAL_SESSION_ID___": "452d3402-0000-4000-8000-000000000000",
+          "account_id": "1234567890",
+          "campaign_id": "c014",
+          "date": "2026-07-22",
+          "spend": 24.0
+        },
+        {
+          "___ALDC___GLOBAL_SESSION_ID___": "452d3402-0000-4000-8000-000000000000",
+          "account_id": "1234567890",
+          "campaign_id": "c015",
+          "date": "2026-07-22",
+          "spend": 25.0
+        },
+        {
+          "___ALDC___GLOBAL_SESSION_ID___": "452d3402-0000-4000-8000-000000000000",
+          "account_id": "1234567890",
+          "campaign_id": "c016",
+          "date": "2026-07-22",
+          "spend": 26.0
+        },
+        {
+          "___ALDC___GLOBAL_SESSION_ID___": "452d3402-0000-4000-8000-000000000000",
+          "account_id": "1234567890",
+          "campaign_id": "c017",
+          "date": "2026-07-22",
+          "spend": 27.0
+        },
+        {
+          "___ALDC___GLOBAL_SESSION_ID___": "452d3402-0000-4000-8000-000000000000",
+          "account_id": "9876543210",
+          "campaign_id": "c000",
+          "date": "2026-07-22",
+          "spend": 5.0
+        },
+        {
+          "___ALDC___GLOBAL_SESSION_ID___": "452d3402-0000-4000-8000-000000000000",
+          "account_id": "9876543210",
+          "campaign_id": "c001",
+          "date": "2026-07-22",
+          "spend": 6.0
+        }
+      ]
+    },
+    "run": {
+      "emitted_rows": 20,
+      "id": "responsible-pigeon",
+      "session_id": "452d3402-0000-4000-8000-000000000000",
+      "state": "COMPLETED"
+    },
+    "source": {
+      "per_key_counts": {
+        "1234567890": 18,
+        "9876543210": 2
+      }
+    },
+    "suite": {
+      "failed": 0,
+      "passed": 721,
+      "revision": ""
+    }
+  }
+}

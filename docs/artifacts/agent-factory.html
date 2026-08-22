@@ -1205,7 +1205,7 @@ hr.rule{border:0; border-top:1px solid var(--rule); margin:44px 0}
           <tr>
             <td><span class="chip pass">pass</span></td>
             <td class="what"><b>Is the certification suite green and honest?</b><br>
-              <span style="color:var(--ink-2)">47 passed</span>
+              <span style="color:var(--ink-2)">55 passed</span>
               <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
                 <li>includes test_every_assertion_has_been_proved_able_to_fail</li>
               </ul>
@@ -1238,15 +1238,18 @@ hr.rule{border:0; border-top:1px solid var(--rule); margin:44px 0}
           </tr>
           <tr>
             <td><span class="chip fail">fail</span></td>
-            <td class="what"><b>Is the eval corpus outside the agent-writable tree?</b><br>
-              <span style="color:var(--ink-2)">the eval corpus lives in the tree the agents can write to</span>
+            <td class="what"><b>Is the grader tamper-evident and separable?</b><br>
+              <span style="color:var(--ink-2)">tamper-evident, but separation is not enforced</span>
               <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
-                <li>factory/calibration.py holds the known-good world every assertion is scored against</li>
-                <li>an agent that can edit its own grader is not graded</li>
+                <li>1 corpus file(s) pinned: windsorai-2026-08-20</li>
+                <li>every pinned corpus matches its manifest hash</li>
+                <li>corpus is data only — no executable files under evals/</li>
+                <li>certify records corpus id + sha on every replayed verdict</li>
+                <li>NOT ENFORCED: the corpus still lives in a repo this agent can write to. Tampering is evident, not prevented. $AGENT_FACTORY_EVALS makes the move a config change.</li>
               </ul>
-              <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>An agent that can edit its own grader is not graded.</i></div>
+              <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>An agent that can edit its own grader is not graded — and a silent edit is worse than a loud one.</i></div>
             </td>
-            <td class="n"><span class="mono">factory/calibration.py</span></td>
+            <td class="n"><span class="mono">evals/MANIFEST.sha256 + factory/corpus.py</span></td>
           </tr>
           <tr>
             <td><span class="chip pass">pass</span></td>

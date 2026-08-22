@@ -334,14 +334,61 @@ def g_tenancy_declared():
         "writes the Navira account ids down.")
 
 
-def g_corpus_outside_agent_tree():
-    p = FACTORY / "factory" / "calibration.py"
-    src = "factory/calibration.py"
-    if not p.is_file():
-        return _pass("no corpus inside the repo", [], src)
-    return _fail("the eval corpus lives in the tree the agents can write to",
-                 [f"{src} holds the known-good world every assertion is scored against",
-                  "an agent that can edit its own grader is not graded"], src)
+def g_corpus_is_tamper_evident():
+    """Is the grader separable from the thing it grades, and is a change to it detectable?
+
+    The first version of this gate checked whether factory/calibration.py existed, which measured
+    file layout rather than the property that matters. Moving a file changes nothing if the file
+    is still executable code that can construct any world it likes. What matters is:
+
+      EVIDENT     a changed corpus raises instead of scoring differently
+      ATTRIBUTED  a verdict names the corpus and hash it was scored against
+      SEPARABLE   the corpus imports nothing from factory/, so it can be lifted out
+
+    Separation is not yet ENFORCED — that needs the corpus in a repo the scored agent has no
+    write credential for. This gate says so rather than passing on the strength of the other
+    three.
+    """
+    import hashlib as _h
+    from . import corpus as _c
+    src = "evals/MANIFEST.sha256 + factory/corpus.py"
+    try:
+        pinned = _c.available()
+    except _c.CorpusError as exc:
+        return _fail("the corpus does not verify", [str(exc)[:200]], src)
+    if not pinned:
+        raise Unmeasurable("the manifest lists no corpus — nothing to verify")
+
+    ev = [f"{len(pinned)} corpus file(s) pinned: " + ", ".join(sorted(pinned))]
+    bad = []
+    for cid in pinned:
+        try:
+            _c.load(cid)
+        except _c.CorpusError as exc:
+            bad.append(f"{cid}: {str(exc).splitlines()[0]}")
+    if bad:
+        return _fail("a pinned corpus does not match its hash", ev + bad, src)
+    ev.append("every pinned corpus matches its manifest hash")
+
+    # Is it data, or is it code? Code can construct a different world each import.
+    code_corpus = [p for p in (FACTORY / "evals").rglob("*.py")]
+    if code_corpus:
+        ev.append("executable files under evals/: "
+                  + ", ".join(p.name for p in code_corpus))
+        return _fail("the corpus contains code, so its content is not fixed by its hash",
+                     ev, src)
+    ev.append("corpus is data only — no executable files under evals/")
+
+    # Does a verdict carry it?
+    if "scored_against" not in (FACTORY / "factory" / "certify.py").read_text(encoding="utf-8"):
+        ev.append("certify emits no corpus provenance")
+        return _fail("a verdict cannot be tied to the world that produced it", ev, src)
+    ev.append("certify records corpus id + sha on every replayed verdict")
+
+    ev.append("NOT ENFORCED: the corpus still lives in a repo this agent can write to. "
+              "Tampering is evident, not prevented. $AGENT_FACTORY_EVALS makes the move a "
+              "config change.")
+    return _fail("tamper-evident, but separation is not enforced", ev, src)
 
 
 def g_repo_is_durable():
@@ -472,9 +519,10 @@ GATES: List[Gate] = [
     Gate("tenancy", "Is blast radius certifiable?",
          "Certifying a pull whose scope is unknown certifies nothing.",
          g_tenancy_declared, "certification"),
-    Gate("corpus", "Is the eval corpus outside the agent-writable tree?",
-         "An agent that can edit its own grader is not graded.",
-         g_corpus_outside_agent_tree, "certification"),
+    Gate("corpus", "Is the grader tamper-evident and separable?",
+         "An agent that can edit its own grader is not graded — and a silent edit is "
+         "worse than a loud one.",
+         g_corpus_is_tamper_evident, "certification"),
     Gate("durable", "Does the factory survive this machine?",
          "Unpushed work is one accident from gone.",
          g_repo_is_durable, "certification"),
