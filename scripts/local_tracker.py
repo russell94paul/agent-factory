@@ -75,11 +75,53 @@ def launch_command(lane_id: str, make: bool = True):
     # checkout on disk. A dry run with side effects is just a run you did not admit to.
     cwd, note = (wt.ensure(lane.id) if make
                  else (wt.path_for(lane.id), 'would create the worktree'))
-    inner = (f"Set-Location -LiteralPath '{cwd}'; "
-             f"Write-Host '{note} - {lane.id}' -ForegroundColor Cyan; "
-             f"claude --model {lane.model} (Get-Content -Raw -LiteralPath '{f}')")
+    # ⚠ NO SEMICOLONS. wt uses ';' as its own subcommand separator, so a ';' here splits the wt
+    # invocation and it tries to launch the remainder as a program — "the system cannot find the
+    # file specified", found on the first real click. --startingDirectory sets the cwd instead.
+    inner = f"claude --model {lane.model} (Get-Content -Raw -LiteralPath '{f}')"
+
+    # Prefer wt when present so the tab is titled and lands in the worktree; the cmd fallback
+    # relies on Popen's cwd. Neither may contain a ';' — see the note above.
+    w = _wt()
+    if w:
+        return ([w, "new-tab", "--title", f"lane {lane.id}", "--startingDirectory", str(cwd),
+                 "powershell", "-NoExit", "-ExecutionPolicy", "Bypass", "-Command", inner], f, cwd)
     return (["cmd", "/c", "start", f"lane {lane.id}", "powershell", "-NoExit",
              "-ExecutionPolicy", "Bypass", "-Command", inner], f, cwd)
+
+
+def start_session_from_handoff(note: str, dry: bool = False):
+    """Write the current handoff to a file and open a session already holding it.
+
+    The Handoff tab could generate a handoff and not act on it — you could copy it, and that was
+    the whole loop. Copying is the step where a handoff gets skipped at 2am, so this removes it.
+
+    The handoff is written to disk BEFORE the terminal opens, so a failed spawn still leaves the
+    text recoverable rather than losing it with the click.
+    """
+    import subprocess as _sp
+    d = FACTORY / ".data" / "handoffs"
+    d.mkdir(parents=True, exist_ok=True)
+    stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    f = d / f"session-{stamp}.md"
+    f.write_text(ho.session_handoff(note), encoding="utf-8")
+
+    # No semicolons — see the note in launch_command. wt would split on them.
+    inner = f"claude (Get-Content -Raw -LiteralPath '{f}')"
+
+    wtexe = _wt()
+    cmd = ([wtexe, "new-tab", "--title", "handoff session", "--startingDirectory", str(FACTORY),
+            "powershell", "-NoExit", "-ExecutionPolicy", "Bypass", "-Command", inner]
+           if wtexe else
+           ["cmd", "/c", "start", "handoff session", "powershell", "-NoExit",
+            "-ExecutionPolicy", "Bypass", "-Command", inner])   # Popen gets cwd=FACTORY
+    if dry:
+        return True, f"DRY RUN — handoff saved to {f.name}, would open {'a wt tab' if wtexe else 'a window'}"
+    try:
+        _sp.Popen(cmd, cwd=str(FACTORY), close_fds=True)
+    except Exception as exc:                                       # noqa: BLE001
+        return False, f"handoff saved to {f.name} but no terminal opened ({type(exc).__name__}: {exc})"
+    return True, f"new session opened, holding {f.name}"
 
 
 def _wt() -> str:
@@ -791,6 +833,13 @@ def render(when: datetime.datetime, tab: str = "gates") -> str:
           'color:var(--ink);font-family:ui-monospace,monospace">add this note to the handoff below</button>')
         w('</form>')
         text = ho.session_handoff(_HANDOFF_NOTE)
+        w('<form method="POST" action="/new-session" style="display:inline">')
+        w(f'<input type="hidden" name="note" value="{e(_HANDOFF_NOTE)}">')
+        w('<button type="submit" style="font-size:12.5px;padding:6px 14px;margin:14px 6px 8px 0;'
+          'cursor:pointer;border:1px solid var(--pass);border-radius:3px;background:var(--pass);'
+          'color:var(--paper);font-family:ui-monospace,monospace">'
+          '&#9654; open a new session with this handoff</button>')
+        w('</form>')
         w('<button type="button" data-copy="handoff-text" style="font-size:12.5px;'
           'padding:6px 14px;margin:14px 0 8px;cursor:pointer;border:1px solid var(--rule);'
           'border-radius:3px;background:var(--raise);color:var(--ink);'
@@ -844,7 +893,7 @@ document.querySelectorAll('[data-copy]').forEach(function (b) {
 
 class Handler(http.server.BaseHTTPRequestHandler):
     def do_POST(self):
-        global _ANSWER_MSG, _CLAIM_MSG
+        global _ANSWER_MSG, _CLAIM_MSG, _HANDOFF_NOTE
         import urllib.parse
         if self.path.rstrip("/") == "/finish":
             raw = self.rfile.read(int(self.headers.get("Content-Length") or 0)).decode("utf-8", "replace")
@@ -863,8 +912,16 @@ class Handler(http.server.BaseHTTPRequestHandler):
             print(f"  finish: {_CLAIM_MSG[1]}")
             self.send_response(303); self.send_header("Location", "/lanes"); self.end_headers()
             return
+        if self.path.rstrip("/") == "/new-session":
+            raw = self.rfile.read(int(self.headers.get("Content-Length") or 0)).decode("utf-8", "replace")
+            q = urllib.parse.parse_qs(raw, keep_blank_values=True)
+            _HANDOFF_NOTE = (q.get("note") or [""])[0]
+            _CLAIM_MSG = start_session_from_handoff(_HANDOFF_NOTE,
+                                                    dry="dry" in (q.get("mode") or []))
+            print(f"  new-session: {_CLAIM_MSG[1]}")
+            self.send_response(303); self.send_header("Location", "/handoff"); self.end_headers()
+            return
         if self.path.rstrip("/") == "/handoff":
-            global _HANDOFF_NOTE
             raw = self.rfile.read(int(self.headers.get("Content-Length") or 0)).decode("utf-8", "replace")
             _HANDOFF_NOTE = (urllib.parse.parse_qs(raw, keep_blank_values=True).get("note") or [""])[0]
             self.send_response(303); self.send_header("Location", "/handoff"); self.end_headers()

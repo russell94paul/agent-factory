@@ -138,3 +138,27 @@ you have.
   it is 1. Do not kill `head -1`.
 - **AFFECTS** — every lane. Any local service verified by restart-then-fetch, and specifically
   anyone trusting a tracker page to reflect the code they just edited.
+
+### F9 — ast.parse does not catch every SyntaxError; compile() does
+
+- **BELIEVED** — `ast.parse(src)` passing means a patched module is syntactically valid.
+- **ACTUALLY** — it builds the tree only. Symbol-table errors are invisible to it: `global X`
+  appearing after X is used elsewhere in the same function parses cleanly and fails at compile.
+  A patch script printed "wired and parses" and the server then refused to start.
+- **MEASURED BY** — on the same source, `ast.parse(t)` succeeded and `compile(t, "f.py", "exec")`
+  raised `SyntaxError: name '_HANDOFF_NOTE' is used prior to global declaration`.
+- **AFFECTS** — every lane, and any patch-then-verify loop. Use `compile(src, name, "exec")`:
+  same cost, catches strictly more.
+
+### F10 — Windows Terminal eats semicolons in the command you hand it
+
+- **BELIEVED** — `wt new-tab ... powershell -Command "Set-Location X; claude Y"` runs both halves.
+- **ACTUALLY** — `;` is **wt's own subcommand separator**. It splits the invocation there and
+  tries to launch the remainder as a program. The observable result is a tab that opens in the
+  right directory and does nothing else, plus
+  `error 2147942402 (0x80070002) ... The system cannot find the file specified`.
+- **MEASURED BY** — Paul's first real click. Every prior test was a dry run that inspected the
+  command without executing it, so nothing had exercised wt's parsing.
+- **AFFECTS** — any lane launching a terminal. Put **no semicolons** in the `-Command` payload;
+  use `--startingDirectory` for the cwd. And note the lesson under it: a dry run proves the
+  command you built, never the thing that will parse it.
