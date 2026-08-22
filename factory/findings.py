@@ -22,8 +22,26 @@ from dataclasses import dataclass, field
 from typing import Dict, List
 
 LEDGER = pathlib.Path(__file__).resolve().parent.parent / "docs" / "findings.md"
+#: One file per finding. A single shared ledger cannot survive parallel lanes: on 2026-08-22
+#: three isolated worktrees each read F10 as the last id and appended their own F11 and F12,
+#: correctly and incompatibly, because none could observe the others. Separate paths remove the
+#: shared write — git never has to reconcile two writers in one place.
+FRAGMENTS = LEDGER.parent / "findings.d"
 
 REQUIRED = ("BELIEVED", "ACTUALLY", "MEASURED BY", "AFFECTS")
+#: Optional on every entry, but see `Finding.missing`: a finding that declares itself a design
+#: consequence must say what changes, or it is an observation wearing a decision's clothes.
+OPTIONAL = ("KIND", "CHANGES", "STATUS")
+#: CORRECTION   a premise was wrong; fix it and move on
+#: INSTRUMENT   a tool lied, or could not see — changes what a measurement is worth
+#: DESIGN       the system should be built differently
+#: AGENT-DESIGN the agents/lanes/harness should work differently
+#: PROCESS      the way we work should change
+KINDS = ("CORRECTION", "INSTRUMENT", "DESIGN", "AGENT-DESIGN", "PROCESS")
+#: A DESIGN finding with no status is an insight nobody ever decided about. Silence has to mean
+#: decided, the same way NOTHING TO REPORT has to mean checked.
+STATUSES = ("OPEN", "ADOPTED", "REJECTED", "SUPERSEDED")
+DESIGN_KINDS = ("DESIGN", "AGENT-DESIGN")
 _HEADING = re.compile(r"^###\s+(F\d+)\s*[—-]\s*(.+?)\s*$", re.M)
 _NOTHING = re.compile(r"NOTHING TO REPORT", re.I)
 
@@ -36,8 +54,26 @@ class Finding:
     fields: Dict[str, str] = field(default_factory=dict)
 
     @property
+    def kind(self) -> str:
+        return self.fields.get("KIND", "").strip().upper()
+
+    @property
+    def status(self) -> str:
+        return self.fields.get("STATUS", "").strip().upper()
+
+    @property
     def missing(self) -> List[str]:
-        return [f for f in REQUIRED if f not in self.fields]
+        out = [f for f in REQUIRED if f not in self.fields]
+        # Conditional, not absolute. Most findings are corrections and need no design field at
+        # all; one that claims a design consequence and then does not name it is the failure this
+        # is for — the insight gets filed, admired, and never built.
+        if self.kind in DESIGN_KINDS and "CHANGES" not in self.fields:
+            out.append("CHANGES")
+        if self.kind and self.kind not in KINDS:
+            out.append(f"KIND={self.kind} not one of {list(KINDS)}")
+        if self.status and self.status not in STATUSES:
+            out.append(f"STATUS={self.status} not one of {list(STATUSES)}")
+        return out
 
     @property
     def affects(self) -> str:
@@ -50,7 +86,7 @@ def _split(text: str) -> List[Finding]:
     for i, m in enumerate(marks):
         body = text[m.end():marks[i + 1].start() if i + 1 < len(marks) else len(text)]
         fields: Dict[str, str] = {}
-        for name in REQUIRED:
+        for name in REQUIRED + OPTIONAL:
             # The ledger writes fields as **NAME** — value, inside a bullet.
             fm = re.search(rf"\*\*{re.escape(name)}\*\*\s*[—-]?\s*(.+?)(?=\n\s*-\s+\*\*|\Z)",
                            body, re.S)
@@ -60,11 +96,52 @@ def _split(text: str) -> List[Finding]:
     return out
 
 
+def _sources(path: pathlib.Path | None) -> List[pathlib.Path]:
+    """An explicit path is read alone — a caller naming a file means that file, and the tests rely
+    on it. The default unions the ledger with every fragment, so entries written the old way still
+    count and nothing already committed on a lane branch breaks."""
+    if path is not None:
+        return [path] if path.is_file() else []
+    out = [LEDGER] if LEDGER.is_file() else []
+    if FRAGMENTS.is_dir():
+        out += sorted(q for q in FRAGMENTS.glob("*.md") if q.name != "README.md")
+    return out
+
+
+def _key(f: "Finding"):
+    m = re.match(r"F(\d+)", f.id)
+    return (int(m.group(1)) if m else 10 ** 6, f.id)
+
+
 def load(path: pathlib.Path | None = None) -> List[Finding]:
-    p = path or LEDGER
-    if not p.is_file():
-        return []
-    return _split(p.read_text(encoding="utf-8"))
+    seen, out = set(), []
+    for p in _sources(path):
+        for f in _split(p.read_text(encoding="utf-8")):
+            # Same id in both places is a half-finished migration, not two findings. Keep the
+            # first rather than reporting a duplicate as malformed.
+            if f.id in seen:
+                continue
+            seen.add(f.id)
+            out.append(f)
+    return sorted(out, key=_key)
+
+
+def by_kind(path: pathlib.Path | None = None) -> Dict[str, List[Finding]]:
+    """kind -> findings. Unclassified entries land under '' and are not an error: the four
+    mandatory fields are the discipline, KIND is the refinement."""
+    out: Dict[str, List[Finding]] = {}
+    for f in load(path):
+        out.setdefault(f.kind, []).append(f)
+    return out
+
+
+def design_debt(path: pathlib.Path | None = None) -> List[Finding]:
+    """Findings that say the system or the agents should be built differently, and that nobody
+    has decided about yet. This is the list that should shrink, and the reason KIND exists: a
+    correction is spent once it is read, a design consequence is not spent until it is built or
+    deliberately refused."""
+    return [f for f in load(path)
+            if f.kind in DESIGN_KINDS and f.status in ("", "OPEN")]
 
 
 def malformed(path: pathlib.Path | None = None) -> Dict[str, List[str]]:
@@ -75,8 +152,8 @@ def malformed(path: pathlib.Path | None = None) -> Dict[str, List[str]]:
 def nothing_to_report(path: pathlib.Path | None = None) -> int:
     """How many lanes closed having checked and found nothing. Counted because it is the
     difference between silence-as-measurement and silence-as-nobody-looked."""
-    p = path or LEDGER
-    return len(_NOTHING.findall(p.read_text(encoding="utf-8"))) if p.is_file() else 0
+    return sum(len(_NOTHING.findall(p.read_text(encoding="utf-8")))
+               for p in _sources(path))
 
 
 def by_lane(path: pathlib.Path | None = None) -> Dict[str, List[Finding]]:

@@ -49,3 +49,34 @@ def test_attachment_is_by_declared_id_not_by_keyword():
                      or any(g in text for g in lane.gates)
                      or "every lane" in text or "all lanes" in text)
             assert named, f"{f.id} attached to {lane.id} without naming it: {f.affects[:80]!r}"
+
+
+def test_a_design_finding_must_name_the_change_it_implies():
+    """KIND=DESIGN with no CHANGES is an observation wearing a decision's clothes.
+
+    A correction is spent once it has been read. A design consequence is not spent until it is
+    built or deliberately refused, and the ledger could not tell those apart — so they were filed,
+    admired, and never acted on. This is the rule that makes design_debt() a real list.
+    """
+    from factory.findings import _split
+    bad = _split("### F999 — a design claim with no change\n\n"
+                 "- **KIND** — DESIGN\n- **BELIEVED** — x\n- **ACTUALLY** — y\n"
+                 "- **MEASURED BY** — z\n- **AFFECTS** — every lane\n")[0]
+    assert "CHANGES" in bad.missing, (
+        "a DESIGN finding without CHANGES must be rejected, or the field is decoration")
+
+    good = _split("### F999 — a design claim that names its change\n\n"
+                  "- **KIND** — DESIGN\n- **BELIEVED** — x\n- **ACTUALLY** — y\n"
+                  "- **MEASURED BY** — z\n- **CHANGES** — build the thing\n"
+                  "- **AFFECTS** — every lane\n")[0]
+    assert not good.missing, f"a complete DESIGN finding must pass, got {good.missing}"
+
+
+def test_an_unknown_kind_or_status_is_rejected():
+    """A controlled vocabulary nobody enforces is a free-text field with extra steps."""
+    from factory.findings import _split
+    f = _split("### F998 — typo'd kind\n\n- **KIND** — DESIGNN\n- **STATUS** — MAYBE\n"
+               "- **BELIEVED** — x\n- **ACTUALLY** — y\n- **MEASURED BY** — z\n"
+               "- **AFFECTS** — every lane\n")[0]
+    assert any("KIND=DESIGNN" in m for m in f.missing), f.missing
+    assert any("STATUS=MAYBE" in m for m in f.missing), f.missing
