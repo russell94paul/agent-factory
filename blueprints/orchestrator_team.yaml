@@ -1,3 +1,37 @@
+# ⛔ SUPERSEDED BY EVIDENCE 2026-08-21 — DO NOT BUILD THIS TEAM.
+#
+# R2 (docs/research/answers/R2-answer-topology.md) was asked whether this three-agent design is
+# defensible. It is not, and the answer was unusually direct: "Start with one end-to-end
+# implementation agent, not the three-agent architect -> implementer -> tester team."
+#
+# The recommended first topology has NO LLM manager, NO LLM architect, NO LLM tester and NO
+# agent-to-agent channel:
+#
+#     control plane -> ONE worker agent (inspect, plan, implement, self-test, repair)
+#                   -> non-LLM VERIFIER in a clean environment, immutable contract
+#                   -> control plane -> privileged operation? -> HUMAN
+#
+# The worker plans and tests inside one continuous context but CANNOT author the authoritative
+# PASS bit. "Prefect is the manager in the only sense that presently matters: it owns state."
+#
+# Why: a 180-configuration study across 5 architectures, 3 model families and 4 agentic
+# benchmarks found multi-agent averaging -3.5% against single-agent baselines, with sequential
+# tasks degrading 39-70%. Connector migration is sequential shared-state work — the class that
+# did worst. Anthropic's 90.2% multi-agent result is breadth-first research at ~15x the tokens,
+# and their own guidance says coding is less parallelisable. And our own measured failures were
+# ALL seam failures, so adding two mandatory LLM-to-LLM handoffs treats the wrong variable.
+#
+# THIS FILE IS KEPT, NOT DELETED. It is a hypothesis that was tested and rejected, and the
+# rejection is worth more than the file's absence would be. R2 also gives the threshold that
+# would unlock it — a same-budget A/B on the same connector tasks and the same authoritative
+# verifier showing >=10pp absolute terminal-success gain, or >=20% lower cost at
+# indistinguishable success, with no increase in side effects and every mandatory handoff
+# >=99% accepted-and-correctly-consumed. Those are governance thresholds, not published
+# constants.
+#
+# Do not instantiate these three agents. Build the single-worker topology first.
+# ---------------------------------------------------------------------------------------------
+
 # The first and only team. It works ON the orchestrator repo.
 #
 # Two levels, one topology. A supervisor tier is added when there is a second team AND evidence
