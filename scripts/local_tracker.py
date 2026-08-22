@@ -20,6 +20,7 @@ import datetime
 import html
 import http.server
 import pathlib
+import re
 import socketserver
 import sys
 import webbrowser
@@ -55,6 +56,38 @@ def _answer_path(prompt: pathlib.Path) -> pathlib.Path:
     parts = prompt.stem.split("-", 1)
     tail = parts[1] if len(parts) > 1 else "answer"
     return prompt.parent / "answers" / f"{parts[0]}-answer-{tail}.md"
+
+
+#: Uploads are capped. An answer larger than this is not an answer, it is an accident.
+MAX_UPLOAD = 2 * 1024 * 1024
+
+
+def _parse_multipart(raw: bytes, content_type: str) -> dict:
+    """Return {field_name: text} for a multipart/form-data body.
+
+    Hand-rolled because Python 3.13 removed `cgi`. Deliberately minimal: this serves one form on
+    loopback, so it handles the parts that form sends and refuses to guess at anything else.
+    Filenames are read but NOT used to build a path — the destination is derived from the prompt
+    stem, so an upload cannot choose where it lands.
+    """
+    marker = "boundary="
+    if marker not in content_type:
+        return {}
+    boundary = content_type.split(marker, 1)[1].strip().strip('"')
+    sep = b"--" + boundary.encode()
+    out = {}
+    for chunk in raw.split(sep):
+        if not chunk.strip(b"-\r\n"):
+            continue
+        head, _, payload = chunk.partition(b"\r\n\r\n")
+        if not _:
+            continue
+        headers = head.decode("utf-8", "replace")
+        m = re.search(r'name="([^"]+)"', headers)
+        if not m:
+            continue
+        out[m.group(1)] = payload.rstrip(b"\r\n").decode("utf-8", "replace")
+    return out
 
 
 def save_answer(stem: str, body: str):
@@ -435,13 +468,21 @@ def render(when: datetime.datetime) -> str:
               f'background:var(--paper);color:var(--ink2);max-height:260px;overflow:auto">'
               f'{e(body)}</pre>')
             dest = _answer_path(f).name
-            w(f'<form method="POST" action="/answer" style="margin-top:12px">')
+            w('<form method="POST" action="/answer" enctype="multipart/form-data" '
+              'style="margin-top:12px">')
             w(f'<input type="hidden" name="stem" value="{e(f.stem)}">')
             w(f'<div style="font-size:12.5px;color:var(--ink3);margin-bottom:6px">'
-              f'Paste the answer here &rarr; saved as '
-              f'<code>docs/research/answers/{e(dest)}</code>, which is where the gate looks.</div>')
-            w('<textarea name="body" rows="6" placeholder="paste the Deep Research answer, then '
-              'save" style="width:100%;box-sizing:border-box;font-family:ui-monospace,monospace;'
+              f'Saved as <code>docs/research/answers/{e(dest)}</code> &mdash; the path the gate '
+              f'reads. There is no &ldquo;notify Claude&rdquo; button because this page has no '
+              f'channel to a session; <b>the saved file is the signal</b>, and a session watching '
+              f'that directory picks it up.</div>')
+            w('<div style="margin-bottom:8px"><input type="file" name="file" '
+              'accept=".md,.txt,.markdown,text/plain,text/markdown" '
+              'style="font-size:12px;color:var(--ink2)">'
+              '<span style="font-size:12px;color:var(--ink3)"> &nbsp;upload a file, '
+              '<b>or</b> paste below &mdash; the file wins if you do both</span></div>')
+            w('<textarea name="body" rows="6" placeholder="…or paste the answer here, then save" '
+              'style="width:100%;box-sizing:border-box;font-family:ui-monospace,monospace;'
               'font-size:11.5px;line-height:1.5;padding:10px;border:1px solid var(--rule);'
               'border-radius:3px;background:var(--paper);color:var(--ink)"></textarea>')
             w('<button type="submit" style="font-size:12px;padding:6px 12px;margin-top:8px;'
@@ -501,9 +542,23 @@ class Handler(http.server.BaseHTTPRequestHandler):
             n = int(self.headers.get("Content-Length") or 0)
         except ValueError:
             n = 0
-        raw = self.rfile.read(n).decode("utf-8", "replace") if n else ""
-        form = urllib.parse.parse_qs(raw, keep_blank_values=True)
-        _ANSWER_MSG = save_answer((form.get("stem") or [""])[0], (form.get("body") or [""])[0])
+        ctype = self.headers.get("Content-Type", "")
+        if n > MAX_UPLOAD:
+            _ANSWER_MSG = (False, f"body is {n:,} bytes, over the {MAX_UPLOAD:,} cap")
+            self.send_response(303)
+            self.send_header("Location", "/")
+            self.end_headers()
+            return
+        blob = self.rfile.read(n) if n else b""
+        if ctype.startswith("multipart/form-data"):
+            form = _parse_multipart(blob, ctype)
+            stem, pasted, uploaded = form.get("stem", ""), form.get("body", ""), form.get("file", "")
+        else:
+            q = urllib.parse.parse_qs(blob.decode("utf-8", "replace"), keep_blank_values=True)
+            stem, pasted, uploaded = ((q.get("stem") or [""])[0], (q.get("body") or [""])[0], "")
+        # The file wins when both are supplied: picking a file is the more deliberate act, and
+        # silently preferring a half-filled textarea over it would be the wrong surprise.
+        _ANSWER_MSG = save_answer(stem, uploaded or pasted)
         print(f"  answer: {_ANSWER_MSG[1]}")
         self.send_response(303)
         self.send_header("Location", "/")
