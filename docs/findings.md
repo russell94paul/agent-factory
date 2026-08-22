@@ -165,7 +165,7 @@ you have.
 
 ## 2026-08-22 · session: artifact lane — gate `chain`, impeccable's detector
 
-### F11 — `node scripts/detect.mjs` silently under-counts to 1 finding without four npm packages
+### F50 — `node scripts/detect.mjs` silently under-counts to 1 finding without four npm packages
 
 - **BELIEVED** — running impeccable's bundled detector directly
   (`node ~/.claude/skills/impeccable/scripts/detect.mjs <file> --json`) runs the real 59-rule pass.
@@ -185,7 +185,7 @@ you have.
   detector rules" actually refers to). The two happened to match byte-for-byte on this file; don't
   assume they stay in sync.
 
-### F12 — a bulk `low-contrast` finding count is not evidence until checked in a real browser — proven both ways, including on my own draft
+### F51 — a bulk `low-contrast` finding count is not evidence until checked in a real browser — proven both ways, including on my own draft
 
 - **BELIEVED** (my own first draft of `docs/evidence/impeccable-detector-pass-2026-08-22.md`) —
   cross-referencing 56 of 258 `low-contrast` findings against the page's CSS token definitions and
@@ -214,7 +214,7 @@ you have.
   defend a claim — open the real artifact in a real browser and measure the disputed property
   directly.
 
-### F13 — `scripts/render_pass.py`'s all-PASS does not mean the page's text contrast is fine
+### F52 — `scripts/render_pass.py`'s all-PASS does not mean the page's text contrast is fine
 
 - **BELIEVED** — a lane reading `render-pass-2026-08-22.md` or a fresh `python
   scripts/render_pass.py` all-PASS could reasonably conclude the artifact's contrast is clean —
@@ -227,10 +227,30 @@ you have.
   (`--ink-3` captions/labels at ~4.06–4.44:1 against light surfaces, the `--unmeas` amber verdict
   token at ~3.15–3.2:1 as bold 11.5px text) — all against a 4.5:1 requirement neither prior
   instrument checked.
-- **MEASURED BY** — `docs/evidence/impeccable-detector-pass-2026-08-22.md`, same section as F12;
+- **MEASURED BY** — `docs/evidence/impeccable-detector-pass-2026-08-22.md`, same section as F51;
   `grep -n "body-fg\|getComputedStyle" scripts/render_pass.py` shows the one uncollected read.
 - **AFFECTS** — every lane treating render-pass PASS as a general design-quality signal. It checks
   what it checks (marks/legend/gaps/reveal/overlap/scroll/named-token-values/reduced-motion) and
   nothing else; contrast is not one of the things it checks. Not fixed this pass — recorded as an
   open, real, minor defect. The one-off contrast-sweep script used to find it is not currently
   committed; worth promoting into `scripts/` if a standing contrast gate is wanted.
+
+### F53 — the fix for F50 is itself unreproducible, one level up: `node_modules` is untracked and machine-local
+
+- **BELIEVED** (implicit in how F50 was fixed) — running `npm install htmlparser2 css-select
+  css-tree domutils --no-save` in `~/.claude/skills/impeccable` once settles the question; the
+  313-finding detector pass and the follow-up real-browser contrast sweep are both reproducible
+  from here.
+- **ACTUALLY** — `cd ~/.claude/skills/impeccable && git status --short node_modules` returns `??
+  node_modules/` — untracked, not gitignored either, in the same personal skills checkout (its own
+  git repo, outside `agent-factory`) that F50's SKILL.md precedence fix already lives in. This is
+  the exact same class of gap this lane already spent effort closing for the `chain` gate's
+  evidence (see `docs/evidence/impeccable-detector-pass-2026-08-22.md`'s reproducibility note) —
+  one level up. Reinstalling the skill, or running any of this on a different machine, silently
+  reverts the detector to the F50 degraded mode with no record of why the counts changed.
+- **MEASURED BY** — `git status --short node_modules` inside `~/.claude/skills/impeccable`.
+- **AFFECTS** — every lane relying on `docs/evidence/impeccable-detector-pass-2026-08-22.md`'s
+  313-finding count or its real-browser contrast sweep being reproducible as stated. Not fixed
+  this pass (no package.json exists in that skill directory to pin the versions installed, and
+  creating one is a change to a shared personal tool outside this repo's scope, not something to
+  do unprompted). Flagged so the next lane doesn't assume `npm install` once was enough.
