@@ -513,3 +513,269 @@ this lane — it is the logbook's regression detection, not the control plane.
 
 8. **`static/index.html:1746` carries a stale comment** — it says `restart_from_stage`
    preserves `_retry_count`, which is no longer the field the cap is measured against.
+
+---
+
+# Session 2 — 2026-08-22 — the half of each gate that was still decoration
+
+**Measured: 15 of 30 gates before, 15 of 30 after. The number did not move, and that is
+the finding.** All six lane gates were already PASS at the start of this session. Three of
+them were passing over the defect they are named for.
+
+| gate | what it said before | what it was still blind to |
+|---|---|---|
+| `reaper` | "dispatched work is leased and reaped, watched" | the **container**. Reaping closed the record and told a human to go and check whether the cloud work was still running. Ten containers taking a 10-core quota is the incident the gate exists for, and the record was never the thing holding the quota |
+| `cap` | "the restarting path is capped, and was watched refusing" | the operator. The override existed only in `server.py`, and the dashboard rendered the refusal as a **green success toast** |
+| — | `mutate_control_plane.py` reported 8 of 8 load-bearing | it mutated the real tree, and its verdict depended on a `-q` inherited from a different repository two directories up |
+
+---
+
+## 1. `reaper` — "either finished or killed" killed only the record
+
+`reap_expired_leases` marked the stage `failed`, freed the dispatch slot, reconciled the
+run — and its own error string handed the dangerous half to a person:
+
+> *"If this stage launches cloud work, check whether it is still running before releasing
+> it again."*
+
+A control that asks someone else to do the dangerous part is not the control it is named
+after, and the dangerous part is the documented one. `trigger-run` starts a Prefect flow
+run whose ACI container **survives the orchestrator** — 2026-08-13, ten of them took the
+whole 10-core canadacentral quota; 2026-08-15, an abandoned `seller_cloud` container was
+still merging rows twenty minutes after its stage stopped waiting for it.
+
+Two things had to exist before the reaper could kill anything.
+
+**A durable handle.** The flow run id lived in a local variable on a thread-pool thread.
+In the exact case that produces orphans — the orchestrator dies — the only handle on a
+container burning a shared core died with it. `record_external_handle` writes it to the
+persisted stage record and the append-only log **the moment Prefect answers**, at all
+three `create_flow_run` sites, wired through `ScriptContext.report_external_handle` which
+`server.py` binds per stage.
+
+**A terminator that fails closed.** `orchestrator/engine/cloud_reaper.py`, registered by
+`server.py` rather than imported by `pipelines.py`, so the engine still imports no cloud
+SDK and a unit test drives the whole control plane with a fake.
+
+Design decisions that are not obvious:
+
+- **Cancel first, then delete.** `PrefectService.cancel_flow_run` sets CANCELLING, not
+  CANCELLED, deliberately — the container belongs to the worker and only the worker can
+  tear it down cleanly. But the reaper fires precisely when the worker may be gone and
+  nobody will ever act on CANCELLING, so the container is checked and deleted anyway.
+- **Ownership fails closed, and the rule is the repo's own.** Container groups are
+  `<slugified-flow>-<run-uuid>` with no operator suffix, so two people running the same
+  connector produce indistinguishable names. `owned_by_this_instance` reads
+  ORCHESTRATOR_USER_SUFFIX off the container and returns False whenever it cannot tell.
+  Unproven ownership is NOT_ATTEMPTED. On 2026-08-14 ten orphaned containers were cleared
+  by hand and it was safe only because one person happened to be running that connector —
+  an unattended reaper does not get to be lucky. A leaked container is recoverable; a
+  colleague's live backfill deleted mid-merge is not.
+- **Matching is on the run id, never a name fragment.** That is what makes a delete safe
+  in a resource group six people share, and matching by name is why every cleanup call was
+  a silent no-op until 2026-08-15.
+- **The verdict is one of the contract's four, never a boolean.** KILLED / NOT_FOUND /
+  NOT_ATTEMPTED / FAILED, plus NOT_RECORDED for a stage carrying no handle.
+  ⚠ **NOT_RECORDED does not mean "it launched nothing."** It means we cannot tell, and
+  every stage dispatched before this commit is in that state. Collapsing those is the
+  false-`succeeded` defect one layer out.
+- **A terminator that answers outside the vocabulary is not believed.** It becomes FAILED.
+- **A terminator that raises still lets the record close.** A record left `dispatched`
+  because Azure was unreachable is strictly worse than one closed with FAILED beside it.
+
+### Watched refusing — 23 negative controls
+
+`tests/orchestrator/test_cloud_reaper.py`, all passing.
+
+| refuses | permits |
+|---|---|
+| a container whose ownership cannot be proven is **not deleted** | a container that is provably ours is cancelled and deleted |
+| `ORCHESTRATOR_REAP_TERMINATES=off` touches nothing, and says the quota may still be held | a Prefect outage does not stop the container being freed |
+| an empty run id never authorises a delete | the flow run is cancelled **before** the container is deleted |
+| an unreadable container list is FAILED, not NOT_FOUND | no container for the run is NOT_FOUND, not KILLED |
+| a failed delete says the container is still running | a live lease is never terminated |
+| a verdict outside the four-word vocabulary is not believed | a handle survives the process that recorded it |
+| a stage with no handle is NOT_RECORDED, and the operator is told it is an **unknown** | the same run recorded twice is recorded once |
+
+### ⚠ The limit, stated rather than implied
+
+**There is no Azure subscription in this suite and there is not going to be one.** The
+decision logic is proven; the three `az`/Prefect seams behind it are not, and cannot be
+from a laptop. The seams exist so that the untested surface is three functions rather than
+a file. Nothing here has been watched deleting a real container.
+
+### The gate could not see any of it
+
+`g_orphans_are_reaped` passed with the entire termination path deleted. The F18 shape, one
+gate over. It now requires the reap to **reach** the terminator carrying the stage's own
+handle — where the handle is placed by `record_external_handle`, the same function
+`server.py` binds into every script stage, rather than written into the dict by the probe
+— requires a handle-less stage to report NOT_RECORDED, and checks the wiring at the source
+(every launch site reports; the server binds the recorder; the server registers the
+terminators).
+
+---
+
+## 2. `cap` — the refusal was invisible at the surface a human watches
+
+The handover said the override was "unreachable from the dashboard: one input and one
+field in the POST body." Tracing it found something worse.
+
+`api()` has no `res.ok` check anywhere. It returns the parsed body whatever the status. So
+`check_attempt_cap`'s 400 arrived as `{error: "..."}`, `retryStage` read
+`result.dispatched || 0`, and the operator was shown
+
+```
+Retrying "trigger-run" with context — 0 dispatched          [success, green]
+```
+
+over a request the engine had refused. The `catch` block beneath it is dead code. The
+routes past were curl or Delete Pipeline — and Delete Pipeline is the 2026-08-14
+workaround that destroyed the evidence along with the loop. **The design's own argument
+for why an attempt cap is safe rested on a path nobody could take and a refusal nobody
+could see.**
+
+Fixed with `apiStrict()` (deliberately a *second* function — there are forty-odd `api()`
+call sites and most are page loads that must degrade quietly; making them all throw would
+trade a silent action failure for a blank dashboard), `isAttemptCapRefusal()`, and
+`retryWithCapOverride()`, which states that an override buys exactly one attempt and is
+recorded, and sends nothing at all for a blank or whitespace reason — which is also what
+`check_attempt_cap` refuses, so the two agree.
+
+### Watched, in a real browser, against the engine's real message
+
+`scripts/dashboard_cap_override_probe.py` drives the real `index.html` in Chromium. The
+refusal text is produced by **driving `check_attempt_cap` in-process**, not typed into the
+probe — finding F19 is a regex guard that had never been shown to match the line it was
+written for, and a pattern tested against an invented message proves nothing.
+
+```
+ok  the refusal was recognised as a cap refusal, not a generic error
+ok  the first request carried no override
+ok  the second request carried the override to the wire
+ok  the refusal was shown to the operator as an ERROR, not a success
+ok  no success toast was raised before the override succeeded
+ok  cancelling sends NOTHING
+ok  cancelling says nothing was retried
+ok  a whitespace-only reason is not an override
+```
+
+Run against the pre-change file it fails four of them and prints the defect verbatim.
+Both transcripts and a screenshot of the two rendered toasts are in `dashboard/`.
+
+Three cheap regression guards live in `tests/orchestrator/test_pipeline_routes.py` — the
+file whose own docstring is about a feature that existed behind an unreachable route. One
+builds the engine's refusal and asserts the dashboard's pattern matches it.
+
+---
+
+## 3. The mutation harness was the least safe thing in the repository
+
+`tests/orchestrator/mutate_control_plane.py` is the instrument that proves the controls
+are load-bearing. It had two defects.
+
+**It mutated the real tree.** The dirty-file guard protected the harness's own restore,
+not a concurrent *reader*: someone running the suite mid-mutation saw three spurious
+failures in a file they had not touched. And a `finally` does not run when the process is
+killed — a tool timeout left the working tree with a control removed. It now copies the
+worktree (~8 MB) to a temp directory. Proven: `pipelines.py`'s sha256 is identical before
+and after a full run, and `git status -- orchestrator/` is empty.
+
+**⛔ Its verdict depended on where the checkout sits.** The summary parser anchored on
+`^\d+ (passed|failed)`, which matches pytest's count line only when `-q` is in effect.
+This lane's connectors worktree lives *inside* `agent-factory`, whose `pyproject.toml`
+carries `addopts = "-q"`, and **pytest walks upwards for its rootdir config** — so the
+suite was inheriting `-q` from an unrelated repository two directories up. The same files
+anywhere else print `====== 10 failed, 36 deselected ======`, the anchor matches nothing,
+and the harness announces *"12 control(s) that nothing tests"* about a suite that had just
+failed exactly as designed.
+
+Measured: identical command, identical files, run in the lane worktree and in a copy
+outside `agent-factory`. Only the padding differs. **This is F19's shape one file over — a
+pattern that had only ever been shown to match the reassuring case.** It was found because
+the fix for the first defect changed the answer.
+
+---
+
+## 4. A defect this session introduced, and found by tracing rather than by a test
+
+`reap_expired_leases` walks `_pipelines.values()` directly. Microseconds before this lane;
+terminating cloud work shells out to `az` with 30- and 120-second timeouts, so the moment
+termination moved inside that loop the window became **minutes** — and an HTTP handler
+creating a pipeline during it raises `RuntimeError: dictionary changed size during
+iteration`, killing the reaper thread that nothing restarts.
+
+Walks a snapshot instead. A lock is the wrong answer: this module has no in-process lock
+of its own (F21) and holding one across network I/O on the reaper thread would stall every
+dispatcher behind an Azure timeout. Negative control: a terminator that creates a pipeline
+mid-call, which is exactly what a slow `az` gives an HTTP handler time to do.
+
+---
+
+## 5. `truthful` — the real record is corrected at last
+
+Approved by Paul after the dry run, which the previous session could not do because the
+main checkout's data directory is outside the worktree.
+
+```
+pipe_29b8edf6   running -> failed
+    basis            MEASURED
+    clean            False
+    failures in log  1
+    closed because nothing further can ever run: True
+```
+
+Dry run and apply agreed exactly, and the apply re-reads each correction against the one
+the dry run predicted. **No-regression, checked rather than assumed:** `pipe_fc674dfd` is
+untouched at `created` with no verdict — six pending stages, no failed dependency, so
+genuinely un-started. A reconciler that closed it too would make the record agree with the
+log by lying in the other direction. Rollback captured in `rollback-main/` before the
+write.
+
+---
+
+## Mutation harnesses after this session
+
+| harness | before | after |
+|---|---|---|
+| `mutate_readiness_probes.py` — do the GATES depend on the controls? | 8 of 8 | **10 of 10** |
+| `mutate_control_plane.py` — do the TESTS depend on the controls? | 8 of 8 | **12 of 12** |
+
+New mutations, all LOAD-BEARING: the termination call; the durable handle; the ownership
+check that fails closed; the refusal to believe a verdict outside the vocabulary.
+
+## Suites
+
+| suite | result |
+|---|---|
+| `prefect-connectors` `tests/orchestrator` | **674 passed, 1 failed** |
+| `agent-factory` `pytest` | **147 passed, 2 xfailed** |
+
+The one failure is `test_logbook.py::TestResolution::test_recurrence_after_resolution_is_marked_regressed`,
+pre-existing and unrelated — it fails identically on the unmodified checkout at `3da40f6`.
+
+---
+
+## Handover — still NOT done
+
+1. **Nothing has run.** Unchanged from the last session and still the largest gap. Every
+   control here is proven against a driven engine, a test suite and a browser. None has
+   been watched refusing during a *live* migration, because the orchestrator has not run
+   since 2026-05-28.
+2. **No container has ever been deleted by this code.** The three `az`/Prefect seams in
+   `cloud_reaper.py` are the untested surface, by construction. The first supervised run
+   with an expired lease is what would exercise them, and the safest way to try it is with
+   `ORCHESTRATOR_USER_SUFFIX` set — without it `owned_by_this_instance` returns False and
+   every termination is NOT_ATTEMPTED, which is safe but proves nothing.
+3. **Every stage dispatched before this session carries no handle**, so a reap of any of
+   them reports NOT_RECORDED. That is honest, and it is not coverage.
+4. **`MAX_ATTEMPTS_PER_STAGE = 5`, `MAX_PARALLEL_STAGE_DISPATCH = 4` and
+   `LEASE_GRACE_MIN = 15` remain ASSUMED, not derived.** No live throughput has
+   calibrated them.
+5. **`ceiling` and `cost` still FAIL** — no spend check before dispatch. Same file, but
+   the judgement lane's list.
+6. **`_reachable` computes the greatest fixed point**, so two mutually-dependent `pending`
+   stages keep each other alive. Latent — pipeline templates are static and acyclic.
+   Carried forward unfixed from the last session, deliberately.
+7. **`jira_notifier` still does not read the `reopenable` flag** (F22), so an early close
+   can post a wrong, client-visible completion and latch it.
