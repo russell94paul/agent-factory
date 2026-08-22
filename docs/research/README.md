@@ -10,10 +10,17 @@ checked.
 | R1 | `R1-eval-harness.md` | Grade the eval harness we built; what did we get wrong? | first |
 | R2 | `R2-topology.md` | One agent or a team — and is our 3-role sketch defensible? | after R1 |
 | R3 | `R3-optimizer-sandbox.md` | The optimizer, its bounds, the sandbox — or don't build it yet | last |
+| R4 | `R4-agnostic-optimizer.md` | Can it work on *any* repo? Fitness discovery, transfer, prior art | parallel with R3 |
 
-**Order matters.** R1's answer changes what a team must be able to prove, which changes R2. R2's
-topology changes what the optimizer searches over, which changes R3. Running them out of order
-produces three answers that do not compose.
+**Order matters for R1 -> R2 -> R3.** R1's answer changes what a team must be able to prove, which
+changes R2. R2's topology changes what the optimizer searches over, which changes R3. Running those
+three out of order produces answers that do not compose.
+
+**R4 runs in parallel with R3.** Different literature — R3 asks how to search and how to bound it,
+R4 asks whether the thing being searched can be made repo-agnostic at all. Neither depends on the
+other. R4 also covers the prior art the first three miss: DSPy/MIPROv2, GEPA, TextGrad, Trace,
+OpenEvolve, AlphaEvolve — the closest existing work to an agent-config optimizer, which R3 asks
+about only obliquely via `autoresearch`.
 
 **Each file is standalone.** Copy everything inside the fenced block — it carries its own context,
 its own measured figures, and its own constraints. Nothing outside the fence needs to go with it.
@@ -24,6 +31,7 @@ its own measured figures, and its own constraints. Nothing outside the fence nee
 docs/research/answers/R1-answer.md
 docs/research/answers/R2-answer.md
 docs/research/answers/R3-answer.md
+docs/research/answers/R4-answer.md
 ```
 
 Then tell Claude which have landed. Do not paraphrase them into a summary first — the raw answer
