@@ -37,12 +37,13 @@ from factory import synthesis as synth  # noqa: E402
 from factory import claims as claimlib  # noqa: E402
 from factory import operator as opans  # noqa: E402
 from factory import worktrees as wt  # noqa: E402
+from factory import handoff as ho  # noqa: E402
 
 OUT = FACTORY / "tracker.html"
 
 #: (key, href, label). The key is what render() switches on.
 TABS = [("gates", "/", "Gates"), ("lanes", "/lanes", "Lanes"),
-        ("research", "/research", "Research")]
+        ("research", "/research", "Research"), ("handoff", "/handoff", "Handoff")]
 
 #: Modules whose source can change while the server is running, newest-dependency-last: board and
 #: lanes both import from readiness, so readiness must be reloaded before them or they keep
@@ -54,6 +55,7 @@ _RELOAD_MSG = None
 _SYNC_MSG = None
 _ANSWER_MSG = None
 _CLAIM_MSG = None
+_HANDOFF_NOTE = ""
 
 
 def launch_command(lane_id: str, make: bool = True):
@@ -238,6 +240,7 @@ def hot_reload():
         g["claimlib"] = _il.reload(_il.import_module("factory.claims"))
         g["opans"] = _il.reload(_il.import_module("factory.operator"))
         g["wt"] = _il.reload(_il.import_module("factory.worktrees"))
+        g["ho"] = _il.reload(_il.import_module("factory.handoff"))
         _RELOADED_AT = datetime.datetime.now()
         return True, f"reloaded {len(_HOT)} modules, {len(r.GATES)} gates"
     except Exception as exc:                                          # noqa: BLE001
@@ -726,6 +729,37 @@ def render(when: datetime.datetime, tab: str = "gates") -> str:
                   f'{a.stat().st_size:,} bytes</p>')
                 w('</div>')
 
+    if tab == "handoff":
+        w('<div class="head" style="margin-top:34px">')
+        w('<h1>Hand this session on</h1>')
+        w('<div class="sub">Generated from measured state &mdash; gate verdicts, velocity, '
+          'claims, worktrees, ledger and decision record. The only part you write is the bit '
+          'no instrument can see.</div>')
+        w('</div>')
+        w('<form method="POST" action="/handoff" style="margin-top:16px">')
+        w('<div style="font-size:13px;color:var(--ink2);margin-bottom:6px">'
+          'What were you part-way through, and what would you warn the next session about?</div>')
+        w('<textarea name="note" rows="4" placeholder="the part the repo cannot tell them" '
+          'style="width:100%;box-sizing:border-box;font-family:ui-monospace,monospace;'
+          'font-size:12px;padding:9px;border:1px solid var(--rule);border-radius:3px;'
+          'background:var(--paper);color:var(--ink)"></textarea>')
+        w('<button type="submit" style="font-size:12.5px;padding:6px 14px;margin-top:8px;'
+          'cursor:pointer;border:1px solid var(--rule);border-radius:3px;background:var(--raise);'
+          'color:var(--ink);font-family:ui-monospace,monospace">regenerate with this note</button>')
+        w('</form>')
+        text = ho.session_handoff(_HANDOFF_NOTE)
+        w('<button type="button" data-copy="handoff-text" style="font-size:12.5px;'
+          'padding:6px 14px;margin:14px 0 8px;cursor:pointer;border:1px solid var(--rule);'
+          'border-radius:3px;background:var(--raise);color:var(--ink);'
+          'font-family:ui-monospace,monospace">copy handoff</button>')
+        w(f'<pre id="handoff-text" style="white-space:pre-wrap;word-break:break-word;'
+          f'font-family:ui-monospace,monospace;font-size:11.5px;line-height:1.55;margin:0;'
+          f'padding:12px;border:1px solid var(--rule);border-radius:3px;background:var(--paper);'
+          f'color:var(--ink2)">{e(text)}</pre>')
+        w('<p style="font-size:12px;color:var(--ink3);margin:10px 0 0">Paste this into a fresh '
+          'session. For a durable copy, a lane writes its own note to '
+          '<code>aldc-launchpad/boot-prompts/</code> when you finish it below.</p>')
+
     w('<footer>')
     w('<p><b>UNMEASURABLE is not a pass.</b> A gate with no instrument says so rather than '
       'waving through; that distinction is the point of the whole harness.</p>')
@@ -769,6 +803,12 @@ class Handler(http.server.BaseHTTPRequestHandler):
     def do_POST(self):
         global _ANSWER_MSG, _CLAIM_MSG
         import urllib.parse
+        if self.path.rstrip("/") == "/handoff":
+            global _HANDOFF_NOTE
+            raw = self.rfile.read(int(self.headers.get("Content-Length") or 0)).decode("utf-8", "replace")
+            _HANDOFF_NOTE = (urllib.parse.parse_qs(raw, keep_blank_values=True).get("note") or [""])[0]
+            self.send_response(303); self.send_header("Location", "/handoff"); self.end_headers()
+            return
         if self.path.rstrip("/") == "/answer-blocker":
             raw = self.rfile.read(int(self.headers.get("Content-Length") or 0)).decode("utf-8", "replace")
             f = urllib.parse.parse_qs(raw, keep_blank_values=True)
@@ -882,7 +922,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
             print(f"  hot reload: {_RELOAD_MSG[1]}")
             return
         route = {"/": "gates", "/index.html": "gates",
-                 "/lanes": "lanes", "/research": "research"}.get(self.path.rstrip("/") or "/")
+                 "/lanes": "lanes", "/research": "research",
+                 "/handoff": "handoff"}.get(self.path.rstrip("/") or "/")
         if route is None:
             self.send_error(404)
             return
