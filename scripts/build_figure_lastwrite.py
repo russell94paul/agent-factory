@@ -59,7 +59,7 @@ def build() -> str:
     # ---- geometry, all derived -------------------------------------------------
     X0, BAND_W, Y, H = 34.0, 486.0, 92.0, 46.0
     pitch = BAND_W / n
-    w = max(1.6, pitch - 1.15)
+    w = max(2.0, pitch - 1.6)
     CELL_X, CELL_W = 604.0, 262.0
 
     FILL = {"failed": "var(--fail)", "completed": "var(--pass)", "open": "var(--unmeas)"}
@@ -97,10 +97,19 @@ def build() -> str:
             continue
         cx = X0 + (sum(idxs) / len(idxs)) * pitch
         seen[s] = len(idxs)
-    a(f'    <text class="cnt f" x="{X0}" y="{Y + H + 22}">{fails} failed</text>')
-    a(f'    <text class="cnt p" x="{X0 + 92}" y="{Y + H + 22}">{done} completed</text>')
+    # A key ON the figure. The first version explained what a mark meant only in the caption,
+    # and a reader could not identify the marks at all — a figure that needs its caption to be
+    # legible has failed.
+    a(f'    <text class="key" x="{X0}" y="{Y - 12}">each bar is one recorded attempt '
+      f'&#183; left to right in the order they happened</text>')
+    a(f'    <rect class="sw f" x="{X0}" y="{Y + H + 12}" width="9" height="9"></rect>')
+    a(f'    <text class="cnt f" x="{X0 + 15}" y="{Y + H + 21}">{fails} failed</text>')
+    a(f'    <rect class="sw p" x="{X0 + 104}" y="{Y + H + 12}" width="9" height="9"></rect>')
+    a(f'    <text class="cnt p" x="{X0 + 119}" y="{Y + H + 21}">{done} completed</text>')
     if open_:
-        a(f'    <text class="cnt u" x="{X0 + 214}" y="{Y + H + 22}">{open_} never terminated</text>')
+        a(f'    <rect class="sw u" x="{X0 + 236}" y="{Y + H + 12}" width="9" height="9"></rect>')
+        a(f'    <text class="cnt u" x="{X0 + 251}" y="{Y + H + 21}">{open_} started, '
+          f'no outcome recorded</text>')
 
     # -- the collapse: every tick funnels to one point
     mid = Y + H / 2
