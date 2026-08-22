@@ -34,6 +34,7 @@ from factory.board import (  # noqa: E402
 from factory.lanes import LANES, SIZE, conflicts, recommend, waits_on  # noqa: E402
 from factory.findings import by_lane  # noqa: E402
 from factory import synthesis as synth  # noqa: E402
+from factory import claims as claimlib  # noqa: E402
 
 OUT = FACTORY / "tracker.html"
 
@@ -50,6 +51,50 @@ _RELOADED_AT = None
 _RELOAD_MSG = None
 _SYNC_MSG = None
 _ANSWER_MSG = None
+_CLAIM_MSG = None
+
+
+def launch_command(lane_id: str):
+    """(command_list, prompt_path) for starting `lane_id` in its own terminal. Never spawns."""
+    lane = next((l for l in LANES if l.id == lane_id), None)
+    if lane is None:
+        raise claimlib.ClaimError(f"no lane {lane_id!r}")
+    d = FACTORY / ".data" / "lane-prompts"
+    d.mkdir(parents=True, exist_ok=True)
+    f = d / f"{lane.id}.txt"
+    f.write_text(lane.full_prompt, encoding="utf-8")
+    # Get-Content -Raw hands the whole file to claude as ONE argument. Interpolating the prompt
+    # into the command line instead is how quoting silently truncates it.
+    inner = (f"Set-Location -LiteralPath '{FACTORY}'; "
+             f"claude --model {lane.model} (Get-Content -Raw -LiteralPath '{f}')")
+    return (["cmd", "/c", "start", f"lane {lane.id}", "powershell", "-NoExit",
+             "-ExecutionPolicy", "Bypass", "-Command", inner], f)
+
+
+def launch(lane_id: str, dry: bool = False):
+    """Claim, then spawn. Returns (ok, message). The claim runs FIRST so a conflicting lane is
+    refused before anything is started."""
+    import subprocess
+    try:
+        claimlib.claim(lane_id, who="launched from tracker")
+    except claimlib.ClaimError as exc:
+        return False, str(exc)
+    try:
+        cmd, f = launch_command(lane_id)
+    except claimlib.ClaimError as exc:
+        claimlib.release(lane_id)
+        return False, str(exc)
+    if dry:
+        claimlib.release(lane_id)
+        return True, "DRY RUN, nothing started — " + " ".join(cmd[:6]) + f" … prompt at {f.name}"
+    try:
+        subprocess.Popen(cmd, cwd=str(FACTORY), close_fds=True)
+    except Exception as exc:                                       # noqa: BLE001
+        # Roll the claim back: a lane marked running with no session is worse than an unclaimed
+        # one, because it blocks its conflicts for nothing.
+        claimlib.release(lane_id)
+        return False, f"could not start a terminal ({type(exc).__name__}: {exc}); claim released"
+    return True, f"started {lane_id} in a new terminal, claimed and blocking its conflicts"
 
 
 def _answer_path(prompt: pathlib.Path) -> pathlib.Path:
@@ -180,6 +225,7 @@ def hot_reload():
         import importlib as _il
         g["by_lane"] = getattr(_il.reload(_il.import_module("factory.findings")), "by_lane")
         g["synth"] = _il.reload(_il.import_module("factory.synthesis"))
+        g["claimlib"] = _il.reload(_il.import_module("factory.claims"))
         _RELOADED_AT = datetime.datetime.now()
         return True, f"reloaded {len(_HOT)} modules, {len(r.GATES)} gates"
     except Exception as exc:                                          # noqa: BLE001
@@ -274,6 +320,18 @@ def render(when: datetime.datetime, tab: str = "gates") -> str:
          '<title>Readiness</title>', f"<style>{CSS}</style></head><body><div class='wrap'>"]
     w = o.append
     w(f'<nav style="padding:22px 0 4px">{nav}</nav>')
+    if _SYNC_MSG:
+        okc = 'var(--pass)' if _SYNC_MSG[0] else 'var(--fail)'
+        w(f'<div class="sub" style="color:{okc};font-size:13px">{e(_SYNC_MSG[1])}</div>')
+    if _ANSWER_MSG:
+        okc = 'var(--pass)' if _ANSWER_MSG[0] else 'var(--fail)'
+        w(f'<div class="sub" style="color:{okc};font-size:13px">{e(_ANSWER_MSG[1])}</div>')
+    if _CLAIM_MSG:
+        okc = 'var(--pass)' if _CLAIM_MSG[0] else 'var(--fail)'
+        w(f'<div class="sub" style="color:{okc};font-size:13px">{e(_CLAIM_MSG[1])}</div>')
+    if _RELOAD_MSG:
+        okc = 'var(--pass)' if _RELOAD_MSG[0] else 'var(--fail)'
+        w(f'<div class="sub" style="color:{okc};font-size:13px">{e(_RELOAD_MSG[1])}</div>')
 
     if tab == "gates":
         w('<div class="head">')
@@ -299,15 +357,6 @@ def render(when: datetime.datetime, tab: str = "gates") -> str:
           'sync rewrites the local <code>docs/artifacts/agent-factory.html</code>. '
           'Publishing to claude.ai is a separate step &mdash; the published page only moves when '
           'someone republishes it.</div>')
-        if _SYNC_MSG:
-            okc = 'var(--pass)' if _SYNC_MSG[0] else 'var(--fail)'
-            w(f'<div class="sub" style="color:{okc};font-size:13px">{e(_SYNC_MSG[1])}</div>')
-        if _ANSWER_MSG:
-            okc = 'var(--pass)' if _ANSWER_MSG[0] else 'var(--fail)'
-            w(f'<div class="sub" style="color:{okc};font-size:13px">{e(_ANSWER_MSG[1])}</div>')
-        if _RELOAD_MSG:
-            okc = 'var(--pass)' if _RELOAD_MSG[0] else 'var(--fail)'
-            w(f'<div class="sub" style="color:{okc};font-size:13px">{e(_RELOAD_MSG[1])}</div>')
         w(f'<div class="score"><b>{n}</b><span>of {total} gates pass</span></div>')
         w(f'<div class="bar"><i style="width:{pct}%"></i></div>')
         w(f'<div class="sub">factory {e(FACTORY)}<br>connectors {e(CONNECTORS)}</div>')
@@ -390,6 +439,31 @@ def render(when: datetime.datetime, tab: str = "gates") -> str:
         w('<h1>Start a lane</h1>')
         w(f'<div class="sub">{len(LANES)} lanes &middot; <b>{len(ready_lanes)} can start now</b> '
           '&middot; copy a prompt into a fresh session</div>')
+        held = claimlib.active()
+        pset = claimlib.parallel_set(passing)
+        if held:
+            rows = "".join(
+                f'<li style="margin-bottom:3px"><code>{e(c.lane)}</code> &mdash; claimed '
+                f'{e(c.human_age())} by {e(c.who)}'
+                + ('  <b style="color:var(--unmeas)">STALE</b>' if c.stale else '')
+                + f' &middot; <a href="/release/{e(c.lane)}">release</a></li>'
+                for c in held.values())
+            w('<div class="par" style="margin-top:12px;border-color:var(--unmeas)">')
+            w(f'<h3 style="margin-top:0">{len(held)} lane(s) claimed</h3>')
+            w(f'<ul style="margin:6px 0 0 16px;padding:0;font-size:13px">{rows}</ul>')
+            w('<p style="font-size:12px;color:var(--ink3);margin:8px 0 0">A claim is a file, not a '
+              'lock &mdash; nothing here can tell a working session from a dead one, so a stale claim '
+              'still blocks and says it is stale. It blocks the <i>button</i>; it cannot stop someone '
+              'opening a terminal anyway.</p>')
+            w('</div>')
+        w('<div class="par" style="margin-top:12px">')
+        w(f'<h3 style="margin-top:0">{len(pset)} can run at the same time</h3>')
+        w(f'<p style="font-size:13.5px;color:var(--ink2);margin:0">'
+          f'<code>{e(" · ".join(pset))}</code></p>')
+        w('<p style="font-size:12px;color:var(--ink3);margin:8px 0 0">The largest set with no shared '
+          'files between them, taken greedily down the recommendation order. Five lanes have no '
+          'unmet dependency; only these can be worked <i>together</i>.</p>')
+        w('</div>')
         ranked = recommend(passing)
         if ranked:
             top, _, why = ranked[0]
@@ -452,10 +526,35 @@ def render(when: datetime.datetime, tab: str = "gates") -> str:
             if lane.needs_paul:
                 w(f'<p style="font-size:12.5px;color:var(--unmeas);margin:0 0 8px">'
                   f'<b>Needs Paul:</b> {e(lane.needs_paul)}</p>')
+            blocked = claimlib.blockers(lane.id, held)
+            mine = held.get(lane.id)
+            if mine:
+                w(f'<p style="font-size:12.5px;color:var(--unmeas);margin:0 0 8px">'
+                  f'<b>CLAIMED</b> {e(mine.human_age())} by {e(mine.who)}'
+                  + ('  &mdash; <b>STALE</b>' if mine.stale else '')
+                  + f' &middot; <a href="/release/{e(lane.id)}">release</a></p>')
+            elif blocked:
+                names = ", ".join(b.lane for b in blocked)
+                w(f'<p style="font-size:12.5px;color:var(--fail);margin:0 0 8px">'
+                  f'<b>BLOCKED</b> &mdash; {e(names)} is claimed and shares files with this lane. '
+                  f'Release it, or pick one from the parallel set above.</p>')
             w(f'<button type="button" data-copy="ln-{e(lane.id)}" style="font-size:12px;'
               f'padding:5px 10px;margin-bottom:8px;cursor:pointer;border:1px solid var(--rule);'
               f'border-radius:3px;background:var(--raise);color:var(--ink);'
               f'font-family:ui-monospace,monospace">copy prompt</button>')
+            if not mine:
+                dis = ' opacity:.45;pointer-events:none;' if blocked else ''
+                if not blocked:
+                    w(f'<a href="/start/{e(lane.id)}" style="display:inline-block;font-size:12px;'
+                      f'padding:5px 10px;margin:0 0 8px 6px;border:1px solid var(--pass);'
+                      f'border-radius:3px;background:var(--pass);color:var(--paper);'
+                      f'text-decoration:none;font-family:ui-monospace,monospace">'
+                      f'&#9654; start on {e(lane.model)}</a>')
+                w(f'<a href="/claim/{e(lane.id)}" style="display:inline-block;font-size:12px;'
+                  f'padding:5px 10px;margin:0 0 8px 6px;border:1px solid var(--rule);'
+                  f'border-radius:3px;background:var(--raise);color:var(--ink);'
+                  f'text-decoration:none;font-family:ui-monospace,monospace;{dis}">'
+                  f'{"blocked" if blocked else "claim this lane"}</a>')
             # pre-wrap: a <pre> of long lines would widen the page, which is a defect already fixed
             # once today on the artifact. Do not "tidy" this to nowrap.
             w(f'<pre id="ln-{e(lane.id)}" style="white-space:pre-wrap;word-break:break-word;'
@@ -659,6 +758,36 @@ class Handler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         global _RELOAD_MSG
         global _SYNC_MSG
+        global _CLAIM_MSG
+        import urllib.parse
+        lm = re.match(r"^/start/([a-z0-9-]+)$", urllib.parse.urlparse(self.path).path.rstrip("/"))
+        if lm:
+            dry = "dry=1" in (urllib.parse.urlparse(self.path).query or "")
+            _CLAIM_MSG = launch(lm.group(1), dry=dry)
+            print(f"  start: {_CLAIM_MSG[1]}")
+            self.send_response(303)
+            self.send_header("Location", "/lanes")
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            return
+        m = re.match(r"^/(claim|release)/([a-z0-9-]+)$", self.path.rstrip("/"))
+        if m:
+            verb, lane = m.group(1), m.group(2)
+            try:
+                if verb == "claim":
+                    c = claimlib.claim(lane, who="via tracker")
+                    _CLAIM_MSG = (True, f"claimed {c.lane} — copy its prompt and start a session")
+                else:
+                    ok = claimlib.release(lane)
+                    _CLAIM_MSG = (True, f"released {lane}" if ok else f"{lane} was not claimed")
+            except claimlib.ClaimError as exc:
+                _CLAIM_MSG = (False, str(exc))
+            print(f"  {verb}: {_CLAIM_MSG[1]}")
+            self.send_response(303)
+            self.send_header("Location", "/lanes")
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            return
         if self.path.rstrip("/") == "/sync":
             _SYNC_MSG = sync_artifact()
             self.send_response(303)

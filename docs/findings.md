@@ -123,3 +123,18 @@ constraint asserted in a research prompt is exactly that kind of object, and I a
 not checked — while telling the reader to check everything I asserted. Before writing a constraint
 into a prompt, measure it; a research pass optimises against the world you describe, not the one
 you have.
+
+### F8 — Two servers can hold port 8099, and you verify against the stale one
+
+- **BELIEVED** — killing the listener on 8099 and starting a new one means the page you then
+  fetch is the page you just built.
+- **ACTUALLY** — `local_tracker.py` sets `socketserver.TCPServer.allow_reuse_address = True`, so a
+  second process binds the same port happily. `netstat` showed **two** LISTENING entries and curl
+  was served by the older one. Every "restart and check" in this session could silently have
+  verified against pre-change code.
+- **MEASURED BY** — `netstat -ano -p TCP | grep :8099 | grep LISTENING` → two rows, two PIDs. The
+  tell was a freshly-started server whose log file stayed empty while the page still answered 200.
+- **AFTER** — kill **every** PID on the port, confirm the count is 0, then start one and confirm
+  it is 1. Do not kill `head -1`.
+- **AFFECTS** — every lane. Any local service verified by restart-then-fetch, and specifically
+  anyone trusting a tracker page to reflect the code they just edited.
