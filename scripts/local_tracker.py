@@ -2,6 +2,8 @@
 
     python scripts/local_tracker.py            # write tracker.html, print the file:// path
     python scripts/local_tracker.py --serve    # serve it; every browser refresh RE-MEASURES
+                                               # and the reload button re-reads the CODE;
+                                               # sync regenerates the artifact FILE
     python scripts/local_tracker.py --serve --port 8099
 
 The published artifact only changes when someone republishes it. This does not: in --serve mode
@@ -30,6 +32,82 @@ from factory.board import (  # noqa: E402
     BLOCKED, DONE, READY, board, critical_path)
 
 OUT = FACTORY / "tracker.html"
+
+#: Modules whose source can change while the server is running, newest-dependency-last: board and
+#: lanes both import from readiness, so readiness must be reloaded before them or they keep
+#: references to the old Gate objects.
+_HOT = ("factory.readiness", "factory.board", "factory.lanes", "factory.schedule")
+
+_RELOADED_AT = None
+_RELOAD_MSG = None
+_SYNC_MSG = None
+
+#: The generators that write into docs/artifacts/agent-factory.html, in the order they must run:
+#: the figure and the plan change the file, and the tracker section carries the headline that
+#: factory.schedule later reads out of git, so it goes last.
+_GENERATORS = (
+    ("figure", ["scripts/build_figure_lastwrite.py", "--insert"]),
+    ("plan", ["scripts/build_plan.py", "--insert"]),
+    ("tracker", ["scripts/build_tracker.py"]),
+)
+
+
+def sync_artifact():
+    """Regenerate every generated section of the artifact FILE. Returns (ok, message).
+
+    Deliberately reports the byte delta rather than "done": a generator that silently did
+    nothing and a generator that worked look identical otherwise, and this whole project is
+    about not letting those two be the same signal.
+    """
+    global _SYNC_MSG
+    import subprocess
+    art = FACTORY / "docs" / "artifacts" / "agent-factory.html"
+    before = art.stat().st_size if art.is_file() else 0
+    notes, ok = [], True
+    for label, args in _GENERATORS:
+        r = subprocess.run([sys.executable, *args], cwd=FACTORY, capture_output=True,
+                           text=True, encoding="utf-8", errors="replace")
+        if r.returncode != 0:
+            ok = False
+            notes.append(f"{label} FAILED: {(r.stderr or r.stdout).strip().splitlines()[-1][:120]}")
+        else:
+            notes.append(label)
+    after = art.stat().st_size if art.is_file() else 0
+    delta = after - before
+    tail = "no change" if delta == 0 else f"{delta:+,} bytes"
+    return ok, f"artifact file synced ({', '.join(notes)}) — {tail}"
+
+
+
+def hot_reload():
+    """Re-import the probe modules and rebind the names this script imported by value.
+
+    `from x import y` binds y once. importlib.reload() replaces the module object but does NOT
+    rebind names already imported into this namespace, so reloading without this rebinding step
+    is a no-op that looks like it worked — which is worse than not having the button.
+
+    Returns (ok, message). A syntax error mid-edit is reported on the page rather than crashing
+    the server, because the whole point is to keep editing without restarting.
+    """
+    global _RELOADED_AT
+    import importlib
+    try:
+        mods = {}
+        for name in _HOT:
+            m = importlib.import_module(name)
+            mods[name] = importlib.reload(m)
+        g = globals()
+        r, b = mods["factory.readiness"], mods["factory.board"]
+        for n in ("CONNECTORS", "FACTORY", "FAIL", "NOT_RUN", "PASS", "PHASES",
+                  "UNMEASURABLE", "measure"):
+            g[n] = getattr(r, n)
+        for n in ("BLOCKED", "DONE", "READY", "board", "critical_path"):
+            g[n] = getattr(b, n)
+        _RELOADED_AT = datetime.datetime.now()
+        return True, f"reloaded {len(_HOT)} modules, {len(r.GATES)} gates"
+    except Exception as exc:                                          # noqa: BLE001
+        return False, f"{type(exc).__name__}: {exc}"
+
 
 CHIP = {PASS: ("pass", "pass"), FAIL: ("fail", "fail"),
         UNMEASURABLE: ("unmeas", "unmeasurable"), NOT_RUN: ("notrun", "not run")}
@@ -115,6 +193,31 @@ def render(when: datetime.datetime) -> str:
     w('<h1>Can a team run a migration unattended?</h1>')
     w(f'<div class="sub">measured {e(when.strftime("%Y-%m-%d %H:%M:%S"))} local &middot; '
       f'refresh this page to re-measure</div>')
+    # Refresh re-measures; reload re-reads the CODE. They are different things and the page says
+    # so, because conflating them is exactly how this page sat on a 23-gate list for hours.
+    reloaded = (f' &middot; code reloaded {_RELOADED_AT.strftime("%H:%M:%S")}'
+                if _RELOADED_AT else ' &middot; code as at server start')
+    w(f'<div class="sub" style="margin-top:10px">'
+      f'<a href="/reload" style="display:inline-block;padding:6px 12px;border:1px solid '
+      f'var(--rule);border-radius:3px;background:var(--raise);color:var(--ink);'
+      f'text-decoration:none;font-size:13px">&#8635; reload code &amp; re-measure</a>'
+      f'<a href="/sync" style="display:inline-block;margin-left:8px;padding:6px 12px;'
+      f'border:1px solid var(--rule);border-radius:3px;background:var(--raise);'
+      f'color:var(--ink);text-decoration:none;font-size:13px">&#8681; sync artifact file</a>'
+      f'<span style="color:var(--ink3);font-size:12.5px">&nbsp; refresh re-measures'
+      f'{reloaded}</span></div>')
+    # The published page is a SEPARATE copy. Saying so on the page is the cheapest possible
+    # guard against reading a stale artifact as current state — which already happened.
+    w('<div class="sub" style="color:var(--ink3);font-size:12.5px;margin-top:4px">'
+      'sync rewrites the local <code>docs/artifacts/agent-factory.html</code>. '
+      'Publishing to claude.ai is a separate step &mdash; the published page only moves when '
+      'someone republishes it.</div>')
+    if _SYNC_MSG:
+        okc = 'var(--pass)' if _SYNC_MSG[0] else 'var(--fail)'
+        w(f'<div class="sub" style="color:{okc};font-size:13px">{e(_SYNC_MSG[1])}</div>')
+    if _RELOAD_MSG:
+        okc = 'var(--pass)' if _RELOAD_MSG[0] else 'var(--fail)'
+        w(f'<div class="sub" style="color:{okc};font-size:13px">{e(_RELOAD_MSG[1])}</div>')
     w(f'<div class="score"><b>{n}</b><span>of {total} gates pass</span></div>')
     w(f'<div class="bar"><i style="width:{pct}%"></i></div>')
     w(f'<div class="sub">factory {e(FACTORY)}<br>connectors {e(CONNECTORS)}</div>')
@@ -205,6 +308,24 @@ def render(when: datetime.datetime) -> str:
 
 class Handler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
+        global _RELOAD_MSG
+        global _SYNC_MSG
+        if self.path.rstrip("/") == "/sync":
+            _SYNC_MSG = sync_artifact()
+            self.send_response(303)
+            self.send_header("Location", "/")
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            print(f"  sync: {_SYNC_MSG[1]}")
+            return
+        if self.path.rstrip("/") == "/reload":
+            _RELOAD_MSG = hot_reload()
+            self.send_response(303)
+            self.send_header("Location", "/")
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            print(f"  hot reload: {_RELOAD_MSG[1]}")
+            return
         if self.path not in ("/", "/index.html"):
             self.send_error(404)
             return
