@@ -79,10 +79,11 @@ def launch_command(lane_id: str, make: bool = True):
     # Prefer wt when present so the tab is titled and lands in the worktree; the cmd fallback
     # relies on Popen's cwd. Neither may contain a ';' — see the note above.
     ps1 = _launch_script(f"lane {lane.id}", f"{lane.title}  ·  {lane.model}", f,
-                         LANE_ACCENT.get(lane.id, "38;5;75"), model=lane.model)
+                         LANE_ACCENT.get(lane.id, "38;5;75"), model=lane.model,
+                         session_name=f"{lane.id} · {lane.title}")
     w = _wt()
     if w:
-        return ([w, "new-tab", "--title", f"lane {lane.id}", "--startingDirectory", str(cwd),
+        return ([w, "new-tab", "--title", f"{lane.id} · {lane.title}", "--startingDirectory", str(cwd),
                  "--colorScheme", WT_SCHEME,
                  "powershell", "-NoExit", "-ExecutionPolicy", "Bypass", "-File", str(ps1)], f, cwd)
     return (["cmd", "/c", "start", f"lane {lane.id}", "powershell", "-NoExit",
@@ -131,7 +132,7 @@ LANE_ACCENT = {"control-plane": "38;5;75", "certify": "38;5;79", "judgement": "3
 
 
 def _launch_script(name: str, subtitle: str, prompt_file, accent: str = "38;5;75",
-                   model: str = ""):
+                   model: str = "", session_name: str = ""):
     """Write a .ps1 that titles the window, prints a banner, then runs claude.
 
     ⚠ A .ps1 rather than a -Command string ON PURPOSE. Semicolons are wt's subcommand separator,
@@ -149,6 +150,12 @@ def _launch_script(name: str, subtitle: str, prompt_file, accent: str = "38;5;75
     # running something dearer. A banner that names a model the process is not using is worse
     # than no banner: it is a label that reads as verified.
     model_flag = f" --model {model}" if model else ""
+    # Every lane session was called "boot pre-flight verification" — the name of whatever
+    # session started the tracker — so `claude` peer lists showed three identical rows and the
+    # only thing telling them apart was cwd. You cannot address a session you cannot name, and
+    # Paul could not tell which window he was looking at. Read at startup by the CLI
+    # (control chars stripped, capped at 200), so a lane can state what it is working on.
+    sess = (session_name or name).replace("'", "''")
     body = f"""$Host.UI.RawUI.WindowTitle = '{name}'
 # The tracker is itself started from a Claude Code session, so it inherits
 # CLAUDE_CODE_CHILD_SESSION and every terminal it spawns inherits it too — which turns transcript
@@ -157,6 +164,7 @@ def _launch_script(name: str, subtitle: str, prompt_file, accent: str = "38;5;75
 # script rather than depending on how the server happened to be launched.
 Remove-Item Env:CLAUDE_CODE_CHILD_SESSION -ErrorAction SilentlyContinue
 $env:CLAUDE_CODE_FORCE_SESSION_PERSISTENCE = '1'
+$env:CLAUDE_CODE_SESSION_NAME = '{sess}'
 $e = [char]27
 Write-Host ""
 Write-Host "$e[{accent}m{bar}$e[0m"
