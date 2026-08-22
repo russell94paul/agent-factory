@@ -134,6 +134,50 @@ OVERFLOW_JS = r"""
 }
 """
 
+#: Text the reader cannot read: hidden behind a box, or cut off by the viewBox.
+#:
+#: Added after lengthening a legend label pushed it under the verdict cell and it rendered as
+#: "…position unkn". The text-vs-text probe cannot see that — the thing on top is a <rect> — so
+#: it was caught by a human looking at a screenshot, which is exactly the dependency this whole
+#: harness exists to remove. Occlusion is judged by DOCUMENT ORDER: a filled rect that comes
+#: after a text paints over it. Labels drawn on top of their own bar come after the rect and are
+#: therefore not flagged, which keeps the false-positive rate at zero on this page.
+OCCLUSION_JS = r"""
+() => {
+  const out = [];
+  document.querySelectorAll('svg').forEach(svg => {
+    const kids = [...svg.querySelectorAll('text, rect')];
+    const svgBox = svg.getBoundingClientRect();
+    kids.forEach((t, ti) => {
+      if (t.tagName.toLowerCase() !== 'text') return;
+      const rt = t.getBoundingClientRect();
+      if (rt.width < 1 || rt.height < 1) return;
+      const label = (t.textContent || '').trim().slice(0, 48);
+      if (rt.right > svgBox.right + 1) {
+        out.push({ kind: 'clipped-by-viewbox', text: label,
+                   over: Math.round(rt.right - svgBox.right) });
+      }
+      for (let ri = ti + 1; ri < kids.length; ri++) {
+        const r = kids[ri];
+        if (r.tagName.toLowerCase() !== 'rect') continue;
+        const cs = getComputedStyle(r);
+        const fill = cs.fill;
+        if (!fill || fill === 'none' || fill === 'transparent') continue;
+        if (parseFloat(cs.fillOpacity) < 0.5 || parseFloat(cs.opacity) < 0.5) continue;
+        const rr = r.getBoundingClientRect();
+        const iw = Math.min(rt.right, rr.right) - Math.max(rt.left, rr.left);
+        const ih = Math.min(rt.bottom, rr.bottom) - Math.max(rt.top, rr.top);
+        if (iw <= 1 || ih <= 1) continue;
+        const pct = Math.round(100 * (iw * ih) / (rt.width * rt.height));
+        if (pct < 20) continue;
+        out.push({ kind: 'painted-over', text: label, pct, by: 'rect fill ' + fill });
+      }
+    });
+  });
+  return out.slice(0, 15);
+}
+"""
+
 TABLE_JS = r"""
 () => {
   const sec = document.querySelector('#tracker');
@@ -192,6 +236,7 @@ def run(target: str, shots: pathlib.Path | None) -> dict:
                     "geometry": geom,
                     "text_overlaps": pg.evaluate(OVERLAP_JS),
                     "overflow": pg.evaluate(OVERFLOW_JS),
+                    "occlusion": pg.evaluate(OCCLUSION_JS),
                     "marks": pg.evaluate(MARKS_JS),
                     "table": pg.evaluate(TABLE_JS),
                 }
@@ -262,6 +307,10 @@ def verdicts(r: dict) -> list:
                     "none" if not ov else
                     f"{len(ov)} pair(s), worst {ov[0]['pct']}%: "
                     f"{ov[0]['atext'][:30]!r} x {ov[0]['btext'][:30]!r}"))
+        occ = d["occlusion"]
+        out.append((("PASS" if not occ else "FAIL"), f"no text hidden or clipped @ {w}px",
+                    "none" if not occ else
+                    f"{len(occ)} — worst: {occ[0]['kind']} {occ[0]['text']!r}"))
         off = d["overflow"]["min_width_offenders"]
         out.append((("PASS" if not d["horizontal_scroll"] else "FAIL"),
                     f"body never scrolls sideways @ {w}px",

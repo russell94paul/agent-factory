@@ -61,7 +61,9 @@ def build() -> str:
     w('  <div class="col sec-h-wrap rv">')
     w('    <div class="sec-n">10 &mdash; the record</div>')
     w('    <h2 class="sec-h">Can a team run a migration unattended?</h2>')
-    w('    <p class="sec-sub">Thirteen gates, every one of them <b>measured from a file</b> '
+    # The count is derived. It said "Thirteen" while the generator emitted 30 — a hand-typed
+    # number inside the very section that exists so nothing is hand-maintained.
+    w(f'    <p class="sec-sub">{total} gates, every one of them <b>measured from a file</b> '
       'when this page was built &mdash; not ticked by hand. Each row names the path it '
       'was measured from, so a wrong row means a wrong repo, not a stale checkbox. '
       'Regenerate with <span class="mono">python scripts/build_tracker.py</span>.</p>')

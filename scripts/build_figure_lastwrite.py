@@ -60,7 +60,14 @@ def build() -> str:
     # Y drives every vertical below it. The key line needs its own band of space above
     # the marks: at Y=92 it landed on the '115 recorded attempts' baseline at y=79.
     X0, BAND_W, Y, H = 34.0, 486.0, 114.0, 46.0
-    pitch = BAND_W / n
+    # ⚠ The starts with no recorded outcome are drawn APART, after a gap, because their position
+    # in the sequence is NOT recoverable. Walking the log and pairing each start to a following
+    # terminal locates 24 unterminated starts, not 5 — terminals do not reliably follow their own
+    # start — which is the same inference attempts() already refuses to make. Reserving their
+    # slots here keeps the strip inside BAND_W and every bar the same width, so the residual
+    # block cannot read as a different kind of measurement.
+    GAP = 2.0 if open_ else 0.0
+    pitch = BAND_W / (n + open_ + GAP)
     w = max(2.0, pitch - 1.6)
     CELL_X, CELL_W = 604.0, 262.0
 
@@ -73,7 +80,10 @@ def build() -> str:
     a('<figure class="fig rv">')
     a('  <div class="fig-scroll">')
     a(f'  <svg viewBox="0 0 900 320" class="lww" role="img" aria-label="Of {n + open_} recorded attempts '
-      f'at the {STAGE} stage, {fails} failed, {done} completed and {open_} recorded no outcome. The pipeline\'s stored status '
+      f'at the {STAGE} stage, {fails} failed, {done} completed and {open_} recorded no outcome. '
+      f'The {fails + done} with an outcome are drawn in recorded order; the {open_} without one '
+      f'are drawn past a divider at the right, in no order, because their position in the '
+      f'sequence cannot be recovered from the log. The pipeline\'s stored status '
       f'for the stage keeps only the last attempt, which was {final}, so the terminal verdict '
       f'computed succeeded.">')
 
@@ -89,6 +99,19 @@ def build() -> str:
         x = X0 + i * pitch
         a(f'      <rect x="{x:.2f}" y="{Y}" width="{w:.2f}" height="{H}" fill="{FILL[s]}" '
           f'opacity="{OP[s]}" style="--i:{i}"></rect>')
+    # The residual, and the whole point of the figure: starts the log never gave an outcome.
+    # Drawn, because a legend colour with nothing to point at is a category the figure DECLARES
+    # and never SHOWS — and the category being dropped here is the unmeasured one, which is the
+    # exact distinction this page argues for. Separated and labelled, because placing them in
+    # the sequence would be a fabrication.
+    if open_:
+        gx = X0 + (n + GAP / 2) * pitch
+        a(f'      <path d="M{gx:.2f},{Y - 4} L{gx:.2f},{Y + H + 4}" stroke="var(--rule)" '
+          f'stroke-width="1" stroke-dasharray="2 3" fill="none"></path>')
+        for j in range(open_):
+            x = X0 + (n + GAP + j) * pitch
+            a(f'      <rect x="{x:.2f}" y="{Y}" width="{w:.2f}" height="{H}" '
+              f'fill="{FILL["open"]}" opacity="{OP["open"]}" style="--i:{n + j}"></rect>')
     a('    </g>')
 
     # -- counts under the band, positioned at each run's own centre of mass
@@ -102,8 +125,11 @@ def build() -> str:
     # A key ON the figure. The first version explained what a mark meant only in the caption,
     # and a reader could not identify the marks at all — a figure that needs its caption to be
     # legible has failed.
-    a(f'    <text class="key" x="{X0}" y="{Y - 17}">each bar is one recorded attempt '
-      f'&#183; left to right in the order they happened</text>')
+    order_note = ('each bar is one recorded attempt &#183; left to right in the order they '
+                  'happened' if not open_ else
+                  f'each bar is one recorded attempt &#183; the first {n} in the order they '
+                  f'happened, the {open_} past the divider in no order at all')
+    a(f'    <text class="key" x="{X0}" y="{Y - 17}">{order_note}</text>')
     a(f'    <rect class="sw f" x="{X0}" y="{Y + H + 12}" width="9" height="9"></rect>')
     a(f'    <text class="cnt f" x="{X0 + 15}" y="{Y + H + 21}">{fails} failed</text>')
     a(f'    <rect class="sw p" x="{X0 + 104}" y="{Y + H + 12}" width="9" height="9"></rect>')

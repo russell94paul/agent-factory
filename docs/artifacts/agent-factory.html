@@ -82,7 +82,7 @@ code,.mono{font-family:var(--f-mono); font-size:.86em}
 
 /* ============================================================ layout */
 .body-grid{display:grid; grid-template-columns:210px minmax(0,1fr); gap:56px; padding:52px 0 96px}
-@media(max-width:940px){ .body-grid{grid-template-columns:1fr; gap:0} .rail{display:none} }
+@media(max-width:940px){ /* minmax(0,1fr), never bare 1fr: a bare 1fr track is minmax(auto,1fr), so the grid item cannot shrink below the min-content of the min-width:760px figures inside it. The desktop rule above already guards this; dropping the guard here is what made the whole page scroll sideways at 700px while 1000px was fine. */ .body-grid{grid-template-columns:minmax(0,1fr); gap:0} .rail{display:none} }
 .rail{position:sticky; top:22px; align-self:start; font-family:var(--f-mono); font-size:12px}
 .rail ol{list-style:none; margin:0; padding:0}
 .rail li{margin:0 0 2px}
@@ -382,7 +382,7 @@ hr.rule{border:0; border-top:1px solid var(--rule); margin:44px 0}
         <line x1="367.4" y1="106" x2="826.6" y2="106" stroke="currentColor" stroke-width="1" opacity=".45"></line>
         <line x1="367.4" y1="102" x2="367.4" y2="110" stroke="currentColor" stroke-width="1" opacity=".45"></line>
         <line x1="826.6" y1="102" x2="826.6" y2="110" stroke="currentColor" stroke-width="1" opacity=".45"></line>
-        <text x="380" y="126" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" opacity=".72">25 of these 29 clear on two mechanical fixes &mdash; the fleet's problem is not mostly code</text>
+        <text x="380" y="120" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" opacity=".72">25 of these 29 clear on two mechanical fixes<tspan x="380" dy="14">the fleet's problem is not mostly code</tspan></text>
       </svg>
     </div>
     <figcaption><b>The broken majority is cheap.</b> 29 of 49 modules do not import, and 25 of those
@@ -730,123 +730,129 @@ hr.rule{border:0; border-top:1px solid var(--rule); margin:44px 0}
 <!-- FIGURE:last-write-wins -->
 <figure class="fig rv">
   <div class="fig-scroll">
-  <svg viewBox="0 0 900 320" class="lww" role="img" aria-label="Of 115 recorded attempts at the trigger-run stage, 100 failed, 10 completed and 5 recorded no outcome. The pipeline's stored status for the stage keeps only the last attempt, which was completed, so the terminal verdict computed succeeded.">
+  <svg viewBox="0 0 900 320" class="lww" role="img" aria-label="Of 115 recorded attempts at the trigger-run stage, 100 failed, 10 completed and 5 recorded no outcome. The 110 with an outcome are drawn in recorded order; the 5 without one are drawn past a divider at the right, in no order, because their position in the sequence cannot be recovered from the log. The pipeline's stored status for the stage keeps only the last attempt, which was completed, so the terminal verdict computed succeeded.">
     <text class="lbl" x="34.0" y="52">THE APPEND-ONLY LOG</text>
     <text class="num" x="34.0" y="79">115</text>
     <text class="lbl2" x="102.0" y="79">recorded attempts at <tspan class="mono2">trigger-run</tspan></text>
     <g class="ticks">
-      <rect x="34.00" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:0"></rect>
-      <rect x="38.42" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:1"></rect>
-      <rect x="42.84" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:2"></rect>
-      <rect x="47.25" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:3"></rect>
-      <rect x="51.67" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:4"></rect>
-      <rect x="56.09" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:5"></rect>
-      <rect x="60.51" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:6"></rect>
-      <rect x="64.93" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:7"></rect>
-      <rect x="69.35" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:8"></rect>
-      <rect x="73.76" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:9"></rect>
-      <rect x="78.18" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:10"></rect>
-      <rect x="82.60" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:11"></rect>
-      <rect x="87.02" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:12"></rect>
-      <rect x="91.44" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:13"></rect>
-      <rect x="95.85" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:14"></rect>
-      <rect x="100.27" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:15"></rect>
-      <rect x="104.69" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:16"></rect>
-      <rect x="109.11" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:17"></rect>
-      <rect x="113.53" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:18"></rect>
-      <rect x="117.95" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:19"></rect>
-      <rect x="122.36" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:20"></rect>
-      <rect x="126.78" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:21"></rect>
-      <rect x="131.20" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:22"></rect>
-      <rect x="135.62" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:23"></rect>
-      <rect x="140.04" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:24"></rect>
-      <rect x="144.45" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:25"></rect>
-      <rect x="148.87" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:26"></rect>
-      <rect x="153.29" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:27"></rect>
-      <rect x="157.71" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:28"></rect>
-      <rect x="162.13" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:29"></rect>
-      <rect x="166.55" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:30"></rect>
-      <rect x="170.96" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:31"></rect>
-      <rect x="175.38" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:32"></rect>
-      <rect x="179.80" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:33"></rect>
-      <rect x="184.22" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:34"></rect>
-      <rect x="188.64" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:35"></rect>
-      <rect x="193.05" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:36"></rect>
-      <rect x="197.47" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:37"></rect>
-      <rect x="201.89" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:38"></rect>
-      <rect x="206.31" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:39"></rect>
-      <rect x="210.73" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:40"></rect>
-      <rect x="215.15" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:41"></rect>
-      <rect x="219.56" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:42"></rect>
-      <rect x="223.98" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:43"></rect>
-      <rect x="228.40" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:44"></rect>
-      <rect x="232.82" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:45"></rect>
-      <rect x="237.24" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:46"></rect>
-      <rect x="241.65" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:47"></rect>
-      <rect x="246.07" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:48"></rect>
-      <rect x="250.49" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:49"></rect>
-      <rect x="254.91" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:50"></rect>
-      <rect x="259.33" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:51"></rect>
-      <rect x="263.75" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:52"></rect>
-      <rect x="268.16" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:53"></rect>
-      <rect x="272.58" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:54"></rect>
-      <rect x="277.00" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:55"></rect>
-      <rect x="281.42" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:56"></rect>
-      <rect x="285.84" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:57"></rect>
-      <rect x="290.25" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:58"></rect>
-      <rect x="294.67" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:59"></rect>
-      <rect x="299.09" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:60"></rect>
-      <rect x="303.51" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:61"></rect>
-      <rect x="307.93" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:62"></rect>
-      <rect x="312.35" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:63"></rect>
-      <rect x="316.76" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:64"></rect>
-      <rect x="321.18" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:65"></rect>
-      <rect x="325.60" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:66"></rect>
-      <rect x="330.02" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:67"></rect>
-      <rect x="334.44" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:68"></rect>
-      <rect x="338.85" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:69"></rect>
-      <rect x="343.27" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:70"></rect>
-      <rect x="347.69" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:71"></rect>
-      <rect x="352.11" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:72"></rect>
-      <rect x="356.53" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:73"></rect>
-      <rect x="360.95" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:74"></rect>
-      <rect x="365.36" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:75"></rect>
-      <rect x="369.78" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:76"></rect>
-      <rect x="374.20" y="114.0" width="2.82" height="46.0" fill="var(--pass)" opacity=".95" style="--i:77"></rect>
-      <rect x="378.62" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:78"></rect>
-      <rect x="383.04" y="114.0" width="2.82" height="46.0" fill="var(--pass)" opacity=".95" style="--i:79"></rect>
-      <rect x="387.45" y="114.0" width="2.82" height="46.0" fill="var(--pass)" opacity=".95" style="--i:80"></rect>
-      <rect x="391.87" y="114.0" width="2.82" height="46.0" fill="var(--pass)" opacity=".95" style="--i:81"></rect>
-      <rect x="396.29" y="114.0" width="2.82" height="46.0" fill="var(--pass)" opacity=".95" style="--i:82"></rect>
-      <rect x="400.71" y="114.0" width="2.82" height="46.0" fill="var(--pass)" opacity=".95" style="--i:83"></rect>
-      <rect x="405.13" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:84"></rect>
-      <rect x="409.55" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:85"></rect>
-      <rect x="413.96" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:86"></rect>
-      <rect x="418.38" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:87"></rect>
-      <rect x="422.80" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:88"></rect>
-      <rect x="427.22" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:89"></rect>
-      <rect x="431.64" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:90"></rect>
-      <rect x="436.05" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:91"></rect>
-      <rect x="440.47" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:92"></rect>
-      <rect x="444.89" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:93"></rect>
-      <rect x="449.31" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:94"></rect>
-      <rect x="453.73" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:95"></rect>
-      <rect x="458.15" y="114.0" width="2.82" height="46.0" fill="var(--pass)" opacity=".95" style="--i:96"></rect>
-      <rect x="462.56" y="114.0" width="2.82" height="46.0" fill="var(--pass)" opacity=".95" style="--i:97"></rect>
-      <rect x="466.98" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:98"></rect>
-      <rect x="471.40" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:99"></rect>
-      <rect x="475.82" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:100"></rect>
-      <rect x="480.24" y="114.0" width="2.82" height="46.0" fill="var(--pass)" opacity=".95" style="--i:101"></rect>
-      <rect x="484.65" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:102"></rect>
-      <rect x="489.07" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:103"></rect>
-      <rect x="493.49" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:104"></rect>
-      <rect x="497.91" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:105"></rect>
-      <rect x="502.33" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:106"></rect>
-      <rect x="506.75" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:107"></rect>
-      <rect x="511.16" y="114.0" width="2.82" height="46.0" fill="var(--fail)" opacity=".92" style="--i:108"></rect>
-      <rect x="515.58" y="114.0" width="2.82" height="46.0" fill="var(--pass)" opacity=".95" style="--i:109"></rect>
+      <rect x="34.00" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:0"></rect>
+      <rect x="38.15" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:1"></rect>
+      <rect x="42.31" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:2"></rect>
+      <rect x="46.46" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:3"></rect>
+      <rect x="50.62" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:4"></rect>
+      <rect x="54.77" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:5"></rect>
+      <rect x="58.92" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:6"></rect>
+      <rect x="63.08" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:7"></rect>
+      <rect x="67.23" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:8"></rect>
+      <rect x="71.38" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:9"></rect>
+      <rect x="75.54" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:10"></rect>
+      <rect x="79.69" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:11"></rect>
+      <rect x="83.85" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:12"></rect>
+      <rect x="88.00" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:13"></rect>
+      <rect x="92.15" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:14"></rect>
+      <rect x="96.31" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:15"></rect>
+      <rect x="100.46" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:16"></rect>
+      <rect x="104.62" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:17"></rect>
+      <rect x="108.77" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:18"></rect>
+      <rect x="112.92" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:19"></rect>
+      <rect x="117.08" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:20"></rect>
+      <rect x="121.23" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:21"></rect>
+      <rect x="125.38" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:22"></rect>
+      <rect x="129.54" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:23"></rect>
+      <rect x="133.69" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:24"></rect>
+      <rect x="137.85" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:25"></rect>
+      <rect x="142.00" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:26"></rect>
+      <rect x="146.15" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:27"></rect>
+      <rect x="150.31" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:28"></rect>
+      <rect x="154.46" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:29"></rect>
+      <rect x="158.62" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:30"></rect>
+      <rect x="162.77" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:31"></rect>
+      <rect x="166.92" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:32"></rect>
+      <rect x="171.08" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:33"></rect>
+      <rect x="175.23" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:34"></rect>
+      <rect x="179.38" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:35"></rect>
+      <rect x="183.54" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:36"></rect>
+      <rect x="187.69" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:37"></rect>
+      <rect x="191.85" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:38"></rect>
+      <rect x="196.00" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:39"></rect>
+      <rect x="200.15" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:40"></rect>
+      <rect x="204.31" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:41"></rect>
+      <rect x="208.46" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:42"></rect>
+      <rect x="212.62" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:43"></rect>
+      <rect x="216.77" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:44"></rect>
+      <rect x="220.92" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:45"></rect>
+      <rect x="225.08" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:46"></rect>
+      <rect x="229.23" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:47"></rect>
+      <rect x="233.38" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:48"></rect>
+      <rect x="237.54" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:49"></rect>
+      <rect x="241.69" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:50"></rect>
+      <rect x="245.85" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:51"></rect>
+      <rect x="250.00" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:52"></rect>
+      <rect x="254.15" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:53"></rect>
+      <rect x="258.31" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:54"></rect>
+      <rect x="262.46" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:55"></rect>
+      <rect x="266.62" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:56"></rect>
+      <rect x="270.77" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:57"></rect>
+      <rect x="274.92" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:58"></rect>
+      <rect x="279.08" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:59"></rect>
+      <rect x="283.23" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:60"></rect>
+      <rect x="287.38" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:61"></rect>
+      <rect x="291.54" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:62"></rect>
+      <rect x="295.69" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:63"></rect>
+      <rect x="299.85" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:64"></rect>
+      <rect x="304.00" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:65"></rect>
+      <rect x="308.15" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:66"></rect>
+      <rect x="312.31" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:67"></rect>
+      <rect x="316.46" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:68"></rect>
+      <rect x="320.62" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:69"></rect>
+      <rect x="324.77" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:70"></rect>
+      <rect x="328.92" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:71"></rect>
+      <rect x="333.08" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:72"></rect>
+      <rect x="337.23" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:73"></rect>
+      <rect x="341.38" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:74"></rect>
+      <rect x="345.54" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:75"></rect>
+      <rect x="349.69" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:76"></rect>
+      <rect x="353.85" y="114.0" width="2.55" height="46.0" fill="var(--pass)" opacity=".95" style="--i:77"></rect>
+      <rect x="358.00" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:78"></rect>
+      <rect x="362.15" y="114.0" width="2.55" height="46.0" fill="var(--pass)" opacity=".95" style="--i:79"></rect>
+      <rect x="366.31" y="114.0" width="2.55" height="46.0" fill="var(--pass)" opacity=".95" style="--i:80"></rect>
+      <rect x="370.46" y="114.0" width="2.55" height="46.0" fill="var(--pass)" opacity=".95" style="--i:81"></rect>
+      <rect x="374.62" y="114.0" width="2.55" height="46.0" fill="var(--pass)" opacity=".95" style="--i:82"></rect>
+      <rect x="378.77" y="114.0" width="2.55" height="46.0" fill="var(--pass)" opacity=".95" style="--i:83"></rect>
+      <rect x="382.92" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:84"></rect>
+      <rect x="387.08" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:85"></rect>
+      <rect x="391.23" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:86"></rect>
+      <rect x="395.38" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:87"></rect>
+      <rect x="399.54" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:88"></rect>
+      <rect x="403.69" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:89"></rect>
+      <rect x="407.85" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:90"></rect>
+      <rect x="412.00" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:91"></rect>
+      <rect x="416.15" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:92"></rect>
+      <rect x="420.31" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:93"></rect>
+      <rect x="424.46" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:94"></rect>
+      <rect x="428.62" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:95"></rect>
+      <rect x="432.77" y="114.0" width="2.55" height="46.0" fill="var(--pass)" opacity=".95" style="--i:96"></rect>
+      <rect x="436.92" y="114.0" width="2.55" height="46.0" fill="var(--pass)" opacity=".95" style="--i:97"></rect>
+      <rect x="441.08" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:98"></rect>
+      <rect x="445.23" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:99"></rect>
+      <rect x="449.38" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:100"></rect>
+      <rect x="453.54" y="114.0" width="2.55" height="46.0" fill="var(--pass)" opacity=".95" style="--i:101"></rect>
+      <rect x="457.69" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:102"></rect>
+      <rect x="461.85" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:103"></rect>
+      <rect x="466.00" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:104"></rect>
+      <rect x="470.15" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:105"></rect>
+      <rect x="474.31" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:106"></rect>
+      <rect x="478.46" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:107"></rect>
+      <rect x="482.62" y="114.0" width="2.55" height="46.0" fill="var(--fail)" opacity=".92" style="--i:108"></rect>
+      <rect x="486.77" y="114.0" width="2.55" height="46.0" fill="var(--pass)" opacity=".95" style="--i:109"></rect>
+      <path d="M495.08,110.0 L495.08,164.0" stroke="var(--rule)" stroke-width="1" stroke-dasharray="2 3" fill="none"></path>
+      <rect x="499.23" y="114.0" width="2.55" height="46.0" fill="var(--unmeas)" opacity=".55" style="--i:110"></rect>
+      <rect x="503.38" y="114.0" width="2.55" height="46.0" fill="var(--unmeas)" opacity=".55" style="--i:111"></rect>
+      <rect x="507.54" y="114.0" width="2.55" height="46.0" fill="var(--unmeas)" opacity=".55" style="--i:112"></rect>
+      <rect x="511.69" y="114.0" width="2.55" height="46.0" fill="var(--unmeas)" opacity=".55" style="--i:113"></rect>
+      <rect x="515.85" y="114.0" width="2.55" height="46.0" fill="var(--unmeas)" opacity=".55" style="--i:114"></rect>
     </g>
-    <text class="key" x="34.0" y="97.0">each bar is one recorded attempt &#183; left to right in the order they happened</text>
+    <text class="key" x="34.0" y="97.0">each bar is one recorded attempt &#183; the first 110 in the order they happened, the 5 past the divider in no order at all</text>
     <rect class="sw f" x="34.0" y="172.0" width="9" height="9"></rect>
     <text class="cnt f" x="49.0" y="181.0">100 failed</text>
     <rect class="sw p" x="138.0" y="172.0" width="9" height="9"></rect>
@@ -1176,7 +1182,7 @@ hr.rule{border:0; border-top:1px solid var(--rule); margin:44px 0}
         <g>
           <rect x="0" y="140" width="900" height="42" fill="none" stroke="var(--unmeas)" stroke-width="1.4"></rect>
           <text x="14" y="158" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--unmeas)">EXIT GATE FOR A&#8211;C</text>
-          <text x="14" y="174" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".82">a version-locked line passes a private eval &#183; the exact built image passes viability &#183; a second person approves the merge &#183; one connector green source&#8594;warehouse with no required assertion unmeasured</text>
+          <text x="14" y="170" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".82">a version-locked line passes a private eval &#183; the exact built image passes viability<tspan x="14" dy="14">a second person approves the merge &#183; one connector green source&#8594;warehouse with no required assertion unmeasured</tspan></text>
         </g>
       </svg>
     </div>
@@ -1211,7 +1217,7 @@ hr.rule{border:0; border-top:1px solid var(--rule); margin:44px 0}
   <div class="col sec-h-wrap rv">
     <div class="sec-n">10 &mdash; the record</div>
     <h2 class="sec-h">Can a team run a migration unattended?</h2>
-    <p class="sec-sub">Thirteen gates, every one of them <b>measured from a file</b> when this page was built &mdash; not ticked by hand. Each row names the path it was measured from, so a wrong row means a wrong repo, not a stale checkbox. Regenerate with <span class="mono">python scripts/build_tracker.py</span>.</p>
+    <p class="sec-sub">30 gates, every one of them <b>measured from a file</b> when this page was built &mdash; not ticked by hand. Each row names the path it was measured from, so a wrong row means a wrong repo, not a stale checkbox. Regenerate with <span class="mono">python scripts/build_tracker.py</span>.</p>
   </div>
   <div class="tracker rv">
     <div class="tracker-head">
@@ -1502,7 +1508,8 @@ hr.rule{border:0; border-top:1px solid var(--rule); margin:44px 0}
               <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
                 <li>$AGENT_FACTORY_EVALUATOR: http://127.0.0.1:8787</li>
                 <li>client implementation: evaluator.py</li>
-                <li>health check: NO ANSWER (EvaluatorUnreachable) — configured is not running</li>
+                <li>health check: answered as local-process, bundle 41caa5d8326b, corpus windsorai-2026-08-20, 4 verdict(s) recorded</li>
+                <li>the submission vocabulary it accepts: ['artifact_uri', 'artifact_sha256', 'run_id'] — no corpus, no manifest, no evaluator</li>
                 <li>deployment: LOOPBACK — R3 rank 5, 'mostly theatre'. Same uid can write the verdict store and restart the evaluator; the design is rank 1 and the remaining gap is a managed identity the agent sandbox does not hold, which is a deployment change, not a code change</li>
                 <li>the agent supplies {artifact_uri, artifact_sha256, run_id} and nothing else; the corpus, the manifest and the assertion set are resolved by the service</li>
                 <li>known hole: the contract is parameterised by a blueprint the graded party writes. A target floor and the artefact hash narrow it; a pinned per-connector target closes it, and nobody has written one</li>
@@ -1516,7 +1523,7 @@ hr.rule{border:0; border-top:1px solid var(--rule); margin:44px 0}
           <tr>
             <td><span class="chip pass">pass</span></td>
             <td class="what"><b>Is the certification suite green and honest?</b><br>
-              <span style="color:var(--ink-2)">72 passed</span>
+              <span style="color:var(--ink-2)">76 passed</span>
               <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
                 <li>includes test_every_assertion_has_been_proved_able_to_fail</li>
               </ul>
