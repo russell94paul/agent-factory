@@ -1,0 +1,770 @@
+<title>Orchestration Bench</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Public+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap">
+
+<style>
+/* ============================================================ TOKENS
+   Light palette on bare :root. Dark redefines TOKENS ONLY, twice, so the
+   un-stamped (system) state and the explicit toggle both resolve.       */
+:root{
+  --ink:#131A24; --ink-2:#3D4A5C; --ink-3:#5F6E82; --ink-4:#8593A6;
+  --ground:#F4F6F8; --surface:#FFFFFF; --surface-2:#EDF1F5; --rule:#D6DEE7; --rule-2:#C2CDD9;
+  --signal:#C4692A;                       /* the one bold place: the NOW marker */
+  --lane-1:#2F72B8; --lane-2:#1F8579; --lane-3:#6B57C4; --lane-4:#3F8C51; --lane-5:#A67520;
+  --ok:#2F7D4C; --warn:#9A6B12; --fail:#B23A31; --idle:#8593A6;
+  --hatch:rgba(95,110,130,.30);
+  --shadow:0 1px 2px rgba(19,26,36,.06),0 8px 24px rgba(19,26,36,.07);
+  --r:3px;
+}
+:root:not([data-theme="light"]){ @media (prefers-color-scheme:dark){
+  --ink:#E4EAF2; --ink-2:#B3BFCE; --ink-3:#8695A8; --ink-4:#66748A;
+  --ground:#0D131C; --surface:#141C27; --surface-2:#1B2430; --rule:#26313F; --rule-2:#35424F;
+  --signal:#E08A3C;
+  --lane-1:#5B9FE0; --lane-2:#3FB5A6; --lane-3:#9B85EA; --lane-4:#63BD78; --lane-5:#D9A946;
+  --ok:#57BE7C; --warn:#D9A23C; --fail:#E2665A; --idle:#66748A;
+  --hatch:rgba(160,178,200,.28);
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.35);
+}}
+:root[data-theme="dark"]{
+  --ink:#E4EAF2; --ink-2:#B3BFCE; --ink-3:#8695A8; --ink-4:#66748A;
+  --ground:#0D131C; --surface:#141C27; --surface-2:#1B2430; --rule:#26313F; --rule-2:#35424F;
+  --signal:#E08A3C;
+  --lane-1:#5B9FE0; --lane-2:#3FB5A6; --lane-3:#9B85EA; --lane-4:#63BD78; --lane-5:#D9A946;
+  --ok:#57BE7C; --warn:#D9A23C; --fail:#E2665A; --idle:#66748A;
+  --hatch:rgba(160,178,200,.28);
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.35);
+}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);
+  font:400 15px/1.6 "Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:"Bricolage Grotesque","Public Sans",system-ui,sans-serif;
+  text-wrap:balance;margin:0;letter-spacing:-.018em;line-height:1.1}
+h1{font-weight:800;font-size:clamp(30px,4.4vw,50px)}
+h2{font-weight:700;font-size:clamp(20px,2.4vw,26px)}
+h3{font-weight:700;font-size:16px;letter-spacing:-.006em}
+p{margin:0}
+code,.mono,.num{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-variant-numeric:tabular-nums}
+a{color:inherit}
+.wrap{max-width:1280px;margin:0 auto;padding:0 24px}
+.eyebrow{font:500 11px/1 "JetBrains Mono",monospace;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-3)}
+.lede{color:var(--ink-2);font-size:17px;max-width:66ch}
+.sm{font-size:13px;color:var(--ink-3)}
+.xs{font-size:12px;color:var(--ink-3)}
+:focus-visible{outline:2px solid var(--signal);outline-offset:2px;border-radius:2px}
+
+/* ============================================================ REVEAL
+   Visible by default; only hidden once JS confirms it is running.       */
+.rv{opacity:1;transform:none}
+.js .rv{opacity:0;transform:translateY(8px);
+  transition:opacity .5s cubic-bezier(.22,.61,.36,1),transform .5s cubic-bezier(.22,.61,.36,1)}
+.js .rv.in{opacity:1;transform:none}
+
+/* ============================================================ CHROME */
+header.top{border-bottom:1px solid var(--rule);background:var(--surface);position:sticky;top:0;z-index:40}
+.topbar{display:flex;align-items:center;gap:16px;padding:11px 0;flex-wrap:wrap}
+.mark{display:flex;align-items:center;gap:9px;font-family:"Bricolage Grotesque",sans-serif;
+  font-weight:800;letter-spacing:-.02em;font-size:15px}
+.mark .dot{width:9px;height:9px;background:var(--signal);border-radius:50%;flex:none}
+.spacer{flex:1}
+.tbtn{font:500 12px/1 "JetBrains Mono",monospace;color:var(--ink-2);background:var(--surface-2);
+  border:1px solid var(--rule);padding:7px 11px;border-radius:var(--r);cursor:pointer;
+  transition:background .14s ease-out,color .14s ease-out,border-color .14s ease-out}
+.tbtn:hover{border-color:var(--rule-2);color:var(--ink)}
+.tbtn[aria-pressed="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
+
+.hero{padding:52px 0 30px}
+.hero h1{max-width:19ch}
+.hero .lede{margin-top:16px}
+.claimrow{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.claim{border:1px solid var(--rule);background:var(--surface);border-radius:var(--r);
+  padding:10px 13px;min-width:132px}
+.claim b{display:block;font:700 21px/1.15 "JetBrains Mono",monospace;font-variant-numeric:tabular-nums}
+.claim>span{display:block;font-size:11.5px;color:var(--ink-3);margin-top:3px;line-height:1.35}
+/* NOT `.claim span` — that also caught the basis chip and the % unit, rendering both as
+   full-width blocks on their own line. Caught by looking at the render, not by any static check. */
+.claim b span{display:inline;font-size:14px}
+.claim .b{display:inline-block}
+
+/* basis chips — rule 3: every number carries its basis */
+.b{font:500 9.5px/1 "JetBrains Mono",monospace;letter-spacing:.08em;padding:2.5px 5px;border-radius:2px;
+  vertical-align:2px;margin-left:5px;white-space:nowrap;border:1px solid transparent}
+.b-m{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 42%,transparent)}
+.b-d{color:var(--lane-1);border-color:color-mix(in srgb,var(--lane-1) 42%,transparent)}
+.b-a{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 46%,transparent);
+  background:repeating-linear-gradient(45deg,transparent 0 3px,var(--hatch) 3px 4px)}
+.b-p{color:var(--ink-3);border-color:var(--rule-2)}
+
+/* ============================================================ BENCH */
+.bench{display:grid;grid-template-columns:250px minmax(0,1fr);gap:0;
+  border:1px solid var(--rule);border-radius:var(--r);background:var(--surface);overflow:hidden;
+  box-shadow:var(--shadow)}
+@media(max-width:940px){.bench{grid-template-columns:1fr}}
+.rail{border-right:1px solid var(--rule);background:var(--surface-2);padding:16px;
+  display:flex;flex-direction:column;gap:15px;max-height:none}
+@media(max-width:940px){.rail{border-right:0;border-bottom:1px solid var(--rule)}}
+.railgrp{display:flex;flex-direction:column;gap:9px}
+.railgrp>.eyebrow{padding-bottom:6px;border-bottom:1px solid var(--rule)}
+.ctl{display:flex;flex-direction:column;gap:5px}
+.ctl label{font-size:12.5px;color:var(--ink-2);display:flex;justify-content:space-between;gap:8px;
+  align-items:baseline}
+.ctl label .v{font:500 12px/1 "JetBrains Mono",monospace;color:var(--ink)}
+input[type=range]{width:100%;accent-color:var(--signal);height:18px;margin:0}
+.seg{display:flex;border:1px solid var(--rule);border-radius:var(--r);overflow:hidden}
+.seg button{flex:1;font:500 11px/1 "JetBrains Mono",monospace;padding:7px 4px;border:0;
+  background:var(--surface);color:var(--ink-3);cursor:pointer;transition:background .14s ease-out,color .14s ease-out}
+.seg button+button{border-left:1px solid var(--rule)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--ground)}
+.chk{display:flex;align-items:flex-start;gap:8px;font-size:12.5px;color:var(--ink-2);cursor:pointer;
+  line-height:1.4}
+.chk input{margin:3px 0 0;accent-color:var(--signal);flex:none}
+
+.stage{padding:16px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.transport{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.play{font:700 12px/1 "JetBrains Mono",monospace;background:var(--ink);color:var(--ground);border:0;
+  padding:9px 15px;border-radius:var(--r);cursor:pointer;letter-spacing:.04em;
+  transition:transform .14s ease-out,opacity .14s ease-out}
+.play:hover{transform:translateY(-1px)}
+.clockbox{margin-left:auto;font:500 12px/1 "JetBrains Mono",monospace;color:var(--ink-3)}
+.clockbox b{color:var(--ink);font-weight:700}
+
+/* ---- swimlanes: geometry computed from sim ticks, never eyeballed ---- */
+.canvas{border:1px solid var(--rule);border-radius:var(--r);background:var(--ground);
+  overflow-x:auto;overflow-y:hidden}
+.canvas svg{display:block;min-width:660px;width:100%;height:auto}
+.gridline{stroke:var(--rule);stroke-width:1}
+.lanelab{font:500 10.5px "JetBrains Mono",monospace;fill:var(--ink-3)}
+.tasklab{font:500 9.5px "JetBrains Mono",monospace;fill:var(--ground);pointer-events:none}
+.blk{cursor:pointer;transition:opacity .14s ease-out}
+.blk:hover{opacity:.82}
+.blk.sel{stroke:var(--ink);stroke-width:2}
+.nowline{stroke:var(--signal);stroke-width:2}
+.nowcap{font:700 9.5px "JetBrains Mono",monospace;fill:var(--signal)}
+
+/* ---- result bars: widths derived from simulated totals ---- */
+.results{display:grid;gap:9px}
+.rrow{display:grid;grid-template-columns:132px minmax(0,1fr) 74px;gap:11px;align-items:center}
+@media(max-width:640px){.rrow{grid-template-columns:104px minmax(0,1fr) 62px}}
+.rname{font:500 12px/1.25 "JetBrains Mono",monospace;color:var(--ink-2)}
+.rtrack{height:20px;background:var(--surface-2);border-radius:2px;position:relative;overflow:hidden}
+.rfill{height:100%;width:0;border-radius:2px;transition:width .9s cubic-bezier(.16,.84,.44,1)}
+.rfill.rework{background:repeating-linear-gradient(45deg,transparent 0 4px,rgba(0,0,0,.22) 4px 8px)}
+.rval{font:700 13px/1 "JetBrains Mono",monospace;text-align:right;font-variant-numeric:tabular-nums}
+.rrow.us .rname{color:var(--ink);font-weight:700}
+
+/* ---- log ---- */
+.log{border:1px solid var(--rule);border-radius:var(--r);background:var(--ground);height:132px;
+  overflow-y:auto;padding:9px 11px;font:400 11.5px/1.65 "JetBrains Mono",monospace}
+.log div{display:flex;gap:9px;color:var(--ink-3)}
+.log .t{color:var(--ink-4);flex:none;width:44px;text-align:right}
+.log .m{color:var(--ink-2)}
+.log .m.bad{color:var(--fail)}
+.log .m.good{color:var(--ok)}
+
+/* ---- inspector ---- */
+.insp{border:1px solid var(--rule);border-radius:var(--r);background:var(--surface-2);padding:13px}
+.insp .hd{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin-bottom:9px}
+.insp dl{display:grid;grid-template-columns:auto 1fr;gap:5px 13px;margin:0;font-size:12.5px}
+.insp dt{color:var(--ink-3);font:500 11px/1.5 "JetBrains Mono",monospace}
+.insp dd{margin:0;color:var(--ink-2)}
+.pill{font:700 10px/1 "JetBrains Mono",monospace;padding:3.5px 7px;border-radius:2px;letter-spacing:.05em}
+
+/* ---- tooltip ---- */
+.tip{position:fixed;z-index:80;pointer-events:none;background:var(--ink);color:var(--ground);
+  padding:8px 10px;border-radius:var(--r);font:500 11.5px/1.5 "JetBrains Mono",monospace;
+  max-width:290px;opacity:0;transition:opacity .12s ease-out;box-shadow:var(--shadow)}
+.tip.on{opacity:1}
+.tip b{color:var(--signal)}
+
+/* ---- prose ---- */
+section.blockrow{padding:44px 0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));gap:18px;margin-top:20px}
+.note{border-left:2px solid var(--rule-2);padding:2px 0 2px 14px;color:var(--ink-2);font-size:14px}
+.note.warnnote{border-left-color:var(--signal)}
+table.cmp{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:14px}
+table.cmp th,table.cmp td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--rule);
+  vertical-align:top}
+table.cmp th{font:500 11px/1.4 "JetBrains Mono",monospace;color:var(--ink-3);letter-spacing:.06em;
+  text-transform:uppercase}
+table.cmp td.n{font-family:"JetBrains Mono",monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tblwrap{overflow-x:auto}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:12px;font-size:12px;color:var(--ink-3)}
+.legend i{display:inline-block;width:22px;height:9px;border-radius:2px;margin-right:6px;vertical-align:0}
+footer{border-top:1px solid var(--rule);padding:28px 0 46px;color:var(--ink-3);font-size:13px}
+
+@media (prefers-reduced-motion:reduce){
+  .js .rv,.js .rv.in{opacity:1!important;transform:none!important;transition:none!important}
+  *{animation-duration:.001ms!important;animation-iteration-count:1!important;
+    transition-duration:.001ms!important;scroll-behavior:auto!important}
+}
+</style>
+
+<header class="top">
+  <div class="wrap topbar">
+    <span class="mark"><span class="dot"></span>Orchestration Bench</span>
+    <span class="spacer"></span>
+    <button class="tbtn" id="themebtn" type="button">theme</button>
+  </div>
+</header>
+
+<main>
+<div class="wrap">
+
+  <section class="hero">
+    <p class="eyebrow rv">Agent factory · measured 2026-08-22</p>
+    <h1 class="rv" style="margin-top:14px">Three ways to run agents unattended. Only one survives contact with a shared file.</h1>
+    <p class="lede rv" style="--i:1">Every number below was measured on a real run, or derived from one, and says which.
+      The simulation is configurable to the point of self-harm: turn the conflict rate down far enough
+      and the model we advocate <em>loses</em>. That dial is the argument.</p>
+
+    <div class="claimrow rv" style="--i:2">
+      <div class="claim"><b class="num" data-to="41.7">41.7<span style="font-size:14px">%</span></b>
+        <span>cross-agent conflict rate on a shared branch <span class="b b-m">MEASURED</span></span></div>
+      <div class="claim"><b class="num" data-to="3">3</b>
+        <span>max concurrent lanes, from the real conflict graph <span class="b b-d">DERIVED</span></span></div>
+      <div class="claim"><b class="num" data-to="21">21<span style="font-size:14px">%</span></b>
+        <span>of recorded runs finished with no human <span class="b b-m">MEASURED</span></span></div>
+      <div class="claim"><b class="num" data-to="0">0</b>
+        <span>of 22 gate events were ever a refusal <span class="b b-m">MEASURED</span></span></div>
+    </div>
+  </section>
+
+  <!-- ==================================================== THE BENCH -->
+  <section aria-labelledby="bench-h" class="rv">
+    <h2 id="bench-h">The bench</h2>
+    <p class="sm" style="margin:7px 0 16px;max-width:68ch">Each block is one task an agent is working.
+      Click a block to inspect it; hover for its basis. The clock is shared — every lane, the log and
+      the caption are driven by one state machine, so nothing here can disagree with anything else.</p>
+
+    <div class="bench">
+      <!-- ---------------- config rail ---------------- -->
+      <aside class="rail" aria-label="Simulation configuration">
+        <div class="railgrp">
+          <p class="eyebrow">Model</p>
+          <div class="seg" role="group" aria-label="Orchestration model">
+            <button type="button" data-model="solo"   aria-pressed="false">solo</button>
+            <button type="button" data-model="shared" aria-pressed="false">shared</button>
+            <button type="button" data-model="lanes"  aria-pressed="true">lanes</button>
+          </div>
+          <p class="xs" id="modeldesc">Isolated worktrees. Two agents are never scheduled onto
+            conflicting files at the same time.</p>
+        </div>
+
+        <div class="railgrp">
+          <p class="eyebrow">Workload</p>
+          <div class="ctl">
+            <label for="c-agents">Agents<span class="v" id="v-agents">4</span></label>
+            <input type="range" id="c-agents" min="1" max="6" step="1" value="4">
+          </div>
+          <div class="ctl">
+            <label for="c-tasks">Tasks<span class="v" id="v-tasks">12</span></label>
+            <input type="range" id="c-tasks" min="4" max="24" step="1" value="12">
+          </div>
+          <div class="ctl">
+            <label for="c-conflict">Conflict rate<span class="v" id="v-conflict">41.7%</span></label>
+            <input type="range" id="c-conflict" min="0" max="80" step="1" value="42">
+          </div>
+          <div class="ctl">
+            <label for="c-rework">Rework cost<span class="v" id="v-rework">1.6×</span></label>
+            <input type="range" id="c-rework" min="10" max="30" step="1" value="16">
+          </div>
+        </div>
+
+        <div class="railgrp">
+          <p class="eyebrow">Controls</p>
+          <label class="chk"><input type="checkbox" id="c-gates" checked>
+            <span>Gates can refuse<br><span class="xs">a gate never seen refusing is decoration</span></span></label>
+          <label class="chk"><input type="checkbox" id="c-cap" checked>
+            <span>Attempt cap<br><span class="xs">uncapped restart took a region quota once</span></span></label>
+          <label class="chk"><input type="checkbox" id="c-reaper" checked>
+            <span>Reaper<br><span class="xs">dispatched work is finished or killed</span></span></label>
+          <label class="chk"><input type="checkbox" id="c-fail">
+            <span>Inject a failure<br><span class="xs">exercise the recovery path</span></span></label>
+        </div>
+
+        <div class="railgrp">
+          <p class="eyebrow">Playback</p>
+          <div class="ctl">
+            <label for="c-speed">Speed<span class="v" id="v-speed">1.0×</span></label>
+            <input type="range" id="c-speed" min="3" max="40" step="1" value="10">
+          </div>
+          <button class="tbtn" type="button" id="resetbtn" style="width:100%">reset to defaults</button>
+        </div>
+      </aside>
+
+      <!-- ---------------- stage ---------------- -->
+      <div class="stage">
+        <div class="transport">
+          <button class="play" type="button" id="playbtn">▶ RUN THE BENCH</button>
+          <button class="tbtn" type="button" id="stepbtn">step</button>
+          <button class="tbtn" type="button" id="restartbtn">restart</button>
+          <span class="clockbox">tick <b id="clock">0</b> / <span id="clockmax">0</span></span>
+        </div>
+
+        <div class="canvas"><svg id="svg" viewBox="0 0 900 260" role="img"
+             aria-label="Swimlane replay: each bar is one task, its width the ticks it consumed. Hatched bars are rework caused by two agents touching the same file."></svg></div>
+
+        <div class="legend" aria-hidden="true">
+          <span><i style="background:var(--lane-1)"></i>working</span>
+          <span><i style="background:repeating-linear-gradient(45deg,var(--fail) 0 4px,rgba(0,0,0,.28) 4px 8px)"></i>rework — collision</span>
+          <span><i style="background:var(--ok)"></i>merged</span>
+          <span><i style="background:var(--idle)"></i>blocked / waiting</span>
+          <span><i style="background:repeating-linear-gradient(45deg,transparent 0 3px,var(--hatch) 3px 4px);border:1px dashed var(--rule-2)"></i>not built</span>
+        </div>
+
+        <div class="insp" id="insp">
+          <div class="hd"><h3 id="i-title">Nothing selected</h3><span class="pill" id="i-pill"
+            style="background:var(--surface);color:var(--ink-3)">idle</span></div>
+          <p class="sm" id="i-lede">Run the bench, then click any block. The inspector shows what the
+            task touched, why it collided if it did, and the basis for every number it reports.</p>
+          <dl id="i-dl" style="margin-top:9px"></dl>
+        </div>
+
+        <div class="log" id="log" aria-live="polite" aria-label="Run log"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================================================== RESULTS -->
+  <section class="blockrow rv" aria-labelledby="res-h">
+    <h2 id="res-h">What each model costs</h2>
+    <p class="sm" style="margin:7px 0 0;max-width:68ch">Bars are wall-clock ticks to clear the whole
+      workload, computed from the simulation you just configured — not drawn to look right. The hatched
+      portion is rework: work done twice because two agents touched the same file.</p>
+    <div class="results" id="results" style="margin-top:18px"></div>
+    <p class="note warnnote" id="verdict" style="margin-top:18px">Run the bench to compare.</p>
+  </section>
+
+  <!-- ==================================================== HONESTY -->
+  <section class="blockrow rv" aria-labelledby="hon-h">
+    <h2 id="hon-h">Where this argument breaks</h2>
+    <div class="grid2">
+      <div>
+        <p class="note">Lanes are <strong>capped at three</strong>. The conflict graph in
+          <code>factory/lanes.py</code> puts control-plane against judgement and certify against grain —
+          both pairs edit one file. Four agents cannot all run. Raise the agent slider and the lanes
+          model simply leaves one idle.</p>
+        <p class="note" style="margin-top:14px">So at a <strong>low enough conflict rate the shared
+          checkout wins</strong>, and the bench will say so. That is not a flaw in the demo. A comparison
+          that cannot lose is a brochure.</p>
+      </div>
+      <div>
+        <p class="note">The competitor columns are <strong>models, not products</strong>. We have measured
+          numbers for our own runs and none for anyone else's, so naming a vendor and asserting its
+          throughput would be inventing evidence. Every figure attached to <em>solo</em> and
+          <em>shared</em> is <span class="b b-d">DERIVED</span> from the one conflict rate we did measure.</p>
+        <p class="note" style="margin-top:14px">The 41.7% default is the measured cross-agent conflict
+          rate on a shared branch. Everything downstream of it moves when you move it.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================================================== EVIDENCE -->
+  <section class="blockrow rv" aria-labelledby="ev-h">
+    <h2 id="ev-h">The numbers behind the bench</h2>
+    <div class="tblwrap">
+      <table class="cmp">
+        <thead><tr><th>Figure</th><th>Value</th><th>Basis</th><th>Source</th></tr></thead>
+        <tbody>
+          <tr><td>Cross-agent conflict rate, shared branch</td><td class="n">41.7%</td>
+            <td><span class="b b-m">MEASURED</span></td><td class="sm">R5 build-velocity study</td></tr>
+          <tr><td>Max concurrent lanes</td><td class="n">3</td>
+            <td><span class="b b-d">DERIVED</span></td><td class="sm">max independent set of the conflict graph, <code>factory/lanes.py</code></td></tr>
+          <tr><td>Runs that finished with no human</td><td class="n">3 / 14</td>
+            <td><span class="b b-m">MEASURED</span></td><td class="sm"><code>orchestrator/data/audits/*.json</code></td></tr>
+          <tr><td>Stage attempts: failed vs completed</td><td class="n">1001 / 165</td>
+            <td><span class="b b-m">MEASURED</span></td><td class="sm">audits, all-time — mostly one uncapped-restart incident</td></tr>
+          <tr><td>Worst single-run restarts</td><td class="n">352</td>
+            <td><span class="b b-m">MEASURED</span></td><td class="sm">audits, <code>trigger-run</code></td></tr>
+          <tr><td>Gate events that were a refusal</td><td class="n">0 / 22</td>
+            <td><span class="b b-m">MEASURED</span></td><td class="sm">audits — the reason “gates can refuse” is a toggle here</td></tr>
+          <tr><td>Readiness gates passing</td><td class="n">9 / 30</td>
+            <td><span class="b b-m">MEASURED</span></td><td class="sm"><code>python -m factory.readiness</code>, from the main checkout</td></tr>
+          <tr><td>Rework cost multiplier</td><td class="n">1.6×</td>
+            <td><span class="b b-a">ASSUMED</span></td><td class="sm">a collision costs more than the original write — magnitude not measured</td></tr>
+          <tr><td>Ticks per task</td><td class="n">3–7</td>
+            <td><span class="b b-p">PROXY</span></td><td class="sm">stands in for real task duration, which varies far more</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="sm" style="margin-top:14px">Two figures on this page are not measurements and are drawn
+      differently everywhere they appear: <span class="b b-a">ASSUMED</span> values are hatched,
+      <span class="b b-p">PROXY</span> values are muted. A figure that renders an estimate identically
+      to a measurement launders it into a fact.</p>
+  </section>
+
+</div>
+</main>
+
+<footer><div class="wrap">
+  Orchestration Bench · built 2026-08-22 from the agent-factory readiness set.
+  Simulation is a model, not a recording: it reproduces the <em>mechanism</em> of collision and
+  isolation, not any specific historical run.
+</div></footer>
+
+<div class="tip" id="tip" role="status"></div>
+
+<script>
+document.documentElement.classList.add('js');
+(function(){
+"use strict";
+var STILL = matchMedia('(prefers-reduced-motion: reduce)').matches;
+var $ = function(s){return document.querySelector(s)};
+
+/* ---------- theme ---------- */
+var root=document.documentElement;
+try{var st=localStorage.getItem('ob-theme'); if(st) root.setAttribute('data-theme',st);}catch(e){}
+$('#themebtn').addEventListener('click',function(){
+  var cur=root.getAttribute('data-theme');
+  var next = cur==='dark' ? 'light' : cur==='light' ? 'dark'
+    : (matchMedia('(prefers-color-scheme: dark)').matches?'light':'dark');
+  root.setAttribute('data-theme',next);
+  try{localStorage.setItem('ob-theme',next);}catch(e){}
+  draw();
+});
+
+/* ---------- reveal: observer PLUS a non-rAF fallback ---------- */
+var rvs=[].slice.call(document.querySelectorAll('.rv'));
+function sweep(){var h=innerHeight; rvs.forEach(function(el){
+  if(el.classList.contains('in'))return;
+  if(el.getBoundingClientRect().top < h*0.94) el.classList.add('in');});}
+if('IntersectionObserver' in window){
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){
+    if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},
+    {threshold:.15,rootMargin:'0px 0px -8% 0px'});
+  rvs.forEach(function(el){io.observe(el)});
+}
+addEventListener('scroll',sweep,{passive:true}); sweep();
+setTimeout(function(){rvs.forEach(function(el){el.classList.add('in')})},1400);
+
+/* ---------- count-ups: must land on the authored value ---------- */
+(function(){
+  var ns=[].slice.call(document.querySelectorAll('.num[data-to]'));
+  function finish(){ns.forEach(function(el){
+    var t=el.getAttribute('data-to'); var sup=el.querySelector('span');
+    el.firstChild.nodeValue = t; if(sup) el.appendChild(sup);});}
+  if(STILL||document.hidden){finish();return;}
+  var t0=null, D=900;
+  function fr(ts){ if(t0===null)t0=ts; var k=Math.min(1,(ts-t0)/D);
+    var e=1-Math.pow(1-k,3);
+    ns.forEach(function(el){ var to=parseFloat(el.getAttribute('data-to'));
+      var dec=(el.getAttribute('data-to').split('.')[1]||'').length;
+      el.firstChild.nodeValue=(to*e).toFixed(dec);});
+    if(k<1) requestAnimationFrame(fr); else finish(); }
+  requestAnimationFrame(fr);
+  setTimeout(finish, D+700);        /* truth does not depend on a frame ever rendering */
+})();
+
+/* ============================================================
+   ONE SIMULATION MODEL. Every lane, the log, the clock and the
+   caption read from this and nothing else.
+   ============================================================ */
+var MODELS={
+  solo:{name:'Solo session',      desc:'One agent, one checkout, tasks in sequence. No collisions because nothing is concurrent.'},
+  shared:{name:'Shared checkout', desc:'Every agent in one working tree. Full concurrency, and a collision every time two touch the same file.'},
+  lanes:{name:'Isolated lanes',   desc:'Isolated worktrees. Two agents are never scheduled onto conflicting files at the same time.'}
+};
+var LANE_C=['var(--lane-1)','var(--lane-2)','var(--lane-3)','var(--lane-4)','var(--lane-5)','var(--lane-1)'];
+var FILES=['pipelines.py','connector_contract.py','readiness.py','blueprint.yaml','findings.d/','lanes.py'];
+var LANE_CAP=3;                      /* DERIVED: max independent set of the real conflict graph */
+
+var cfg={model:'lanes',agents:4,tasks:12,conflict:.417,rework:1.6,
+         gates:true,cap:true,reaper:true,fail:false,speed:1};
+try{var sc=localStorage.getItem('ob-cfg'); if(sc){var o=JSON.parse(sc); for(var k in o) if(k in cfg) cfg[k]=o[k];}}catch(e){}
+
+/* deterministic PRNG so a given config always yields the same run */
+function rng(seed){var s=seed>>>0;return function(){s=(s*1664525+1013904223)>>>0;return s/4294967296;}}
+
+function build(model){
+  var r=rng(97), lanes=[], i, ev=[], t=0;
+  var conc = model==='solo' ? 1 : (model==='lanes' ? Math.min(cfg.agents,LANE_CAP) : cfg.agents);
+  for(i=0;i<cfg.agents;i++) lanes.push({id:i,free:0,blocks:[],idle:i>=conc});
+  var fileBusy={};                       /* file -> tick it frees (shared model collision source) */
+  var rework=0, done=0, collisions=0, blocked=0;
+
+  for(i=0;i<cfg.tasks;i++){
+    var li = i % Math.max(1,conc);
+    var lane = lanes[li];
+    var file = FILES[Math.floor(r()*FILES.length)];
+    var dur  = 3+Math.floor(r()*5);      /* PROXY: 3-7 ticks */
+    var start = lane.free;
+    var kind='work', why='';
+
+    if(model==='shared' && r() < cfg.conflict){
+      /* two agents in one tree touched the same file: the work is done twice */
+      var extra = Math.round(dur*(cfg.rework-1));
+      collisions++; rework+=extra; dur+=extra; kind='rework';
+      why='another agent wrote '+file+' inside the same working tree while this task held it';
+    } else if(model==='lanes' && fileBusy[file] && fileBusy[file] > start){
+      /* the claim refused the overlap: this task waits instead of colliding */
+      blocked += fileBusy[file]-start; start = fileBusy[file]; kind='wait';
+      why='the claim on '+file+' was held, so this task waited rather than colliding';
+    }
+    fileBusy[file]=start+dur;
+    lane.free=start+dur; done++;
+    var blk={i:i,lane:li,start:start,dur:dur,kind:kind,file:file,why:why,
+             model:model,gate:null};
+    if(cfg.gates && kind!=='rework' && r()<.18){
+      blk.gate = (cfg.cap && r()<.55) ? 'refused' : 'passed';
+      if(blk.gate==='refused'){ blk.dur+=1; lane.free+=1; }
+    }
+    if(cfg.fail && i===Math.floor(cfg.tasks*0.55)){
+      blk.kind='fail'; blk.why='injected failure';
+      if(cfg.reaper){ blk.dur+=2; lane.free+=2; blk.recovered=true; }
+      else { blk.dur+=6; lane.free+=6; blk.orphan=true; }
+    }
+    lane.blocks.push(blk);
+    t=Math.max(t,lane.free);
+  }
+  return {model:model,lanes:lanes,total:t,rework:rework,collisions:collisions,
+          blocked:blocked,conc:conc};
+}
+
+var runs={}, cur=null, tick=0, playing=false, sel=null, raf=null, acc=0, last=0;
+
+function rebuild(){
+  runs.solo=build('solo'); runs.shared=build('shared'); runs.lanes=build('lanes');
+  cur=runs[cfg.model];
+  tick=0; sel=null;
+  $('#clockmax').textContent=cur.total;
+  $('#modeldesc').textContent=MODELS[cfg.model].desc;
+  clearLog(); draw(); results(); inspect(null);
+}
+
+/* ---------- SVG: every x and width derived from ticks ---------- */
+var SVG=$('#svg'), PADL=96, PADR=16, PADT=22, ROW=34, BH=19;
+function draw(){
+  if(!cur) return;
+  var n=cur.lanes.length, W=900, H=PADT+n*ROW+26;
+  SVG.setAttribute('viewBox','0 0 '+W+' '+H);
+  var span=Math.max(1,cur.total), pxPerTick=(W-PADL-PADR)/span;
+  var out=[], i, j;
+
+  for(i=0;i<=span;i+= Math.max(1,Math.round(span/10))){
+    var x=PADL+i*pxPerTick;
+    out.push('<line class="gridline" x1="'+x.toFixed(1)+'" y1="'+(PADT-8)+'" x2="'+x.toFixed(1)+'" y2="'+(PADT+n*ROW-8)+'"/>');
+    out.push('<text class="lanelab" x="'+x.toFixed(1)+'" y="'+(PADT+n*ROW+10)+'" text-anchor="middle">'+i+'</text>');
+  }
+  for(i=0;i<n;i++){
+    var L=cur.lanes[i], y=PADT+i*ROW;
+    out.push('<text class="lanelab" x="8" y="'+(y+13)+'">agent '+(i+1)+(L.idle?' · idle':'')+'</text>');
+    if(L.idle){
+      out.push('<rect x="'+PADL+'" y="'+(y-1)+'" width="'+(W-PADL-PADR)+'" height="'+BH+'" rx="2" fill="var(--surface-2)" stroke="var(--rule-2)" stroke-dasharray="3 3"/>');
+      out.push('<text class="lanelab" x="'+(PADL+8)+'" y="'+(y+13)+'">capped by the conflict graph — max '+LANE_CAP+' lanes</text>');
+      continue;
+    }
+    for(j=0;j<L.blocks.length;j++){
+      var b=L.blocks[j];
+      var vis=Math.max(0,Math.min(b.dur, tick-b.start));
+      if(vis<=0 && tick>0) continue;
+      var w=(tick===0? b.dur : vis)*pxPerTick;
+      if(w<=0) continue;
+      var x0=PADL+b.start*pxPerTick;
+      var fill = b.kind==='rework' ? 'var(--fail)'
+               : b.kind==='fail'   ? 'var(--warn)'
+               : b.kind==='wait'   ? 'var(--idle)'
+               : (b.start+b.dur<=tick||tick===0) ? LANE_C[i] : LANE_C[i];
+      var pat = b.kind==='rework' ? ' fill="url(#hatch)"' : ' fill="'+fill+'"';
+      out.push('<rect class="blk'+(sel===b?' sel':'')+'" data-i="'+b.i+'" x="'+x0.toFixed(1)+'" y="'+(y-1)+
+        '" width="'+w.toFixed(1)+'" height="'+BH+'" rx="2"'+pat+'/>');
+      if(w>30) out.push('<text class="tasklab" x="'+(x0+5).toFixed(1)+'" y="'+(y+12)+'">t'+(b.i+1)+'</text>');
+      if(b.gate==='refused'&&w>8)
+        out.push('<rect x="'+(x0+w-3).toFixed(1)+'" y="'+(y-1)+'" width="3" height="'+BH+'" fill="var(--fail)"/>');
+    }
+  }
+  if(tick>0&&tick<=cur.total){
+    var nx=PADL+tick*pxPerTick;
+    out.push('<line class="nowline" x1="'+nx.toFixed(1)+'" y1="'+(PADT-14)+'" x2="'+nx.toFixed(1)+'" y2="'+(PADT+n*ROW-8)+'"/>');
+    out.push('<text class="nowcap" x="'+(nx+4).toFixed(1)+'" y="'+(PADT-17)+'">NOW '+tick+'</text>');
+  }
+  SVG.innerHTML='<defs><pattern id="hatch" width="8" height="8" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">'+
+    '<rect width="8" height="8" fill="var(--fail)"/><rect width="4" height="8" fill="rgba(0,0,0,.28)"/></pattern></defs>'+out.join('');
+}
+
+/* ---------- results: widths from simulated totals ---------- */
+function results(){
+  var order=['solo','shared','lanes'];
+  var max=Math.max(runs.solo.total,runs.shared.total,runs.lanes.total)||1;
+  var html=order.map(function(m){
+    var R=runs[m], pct=(R.total/max*100);
+    var rw = R.total? (R.rework/R.total*100):0;
+    return '<div class="rrow'+(m==='lanes'?' us':'')+'">'+
+      '<span class="rname">'+MODELS[m].name+'</span>'+
+      '<span class="rtrack"><span class="rfill" data-w="'+pct.toFixed(2)+'" style="background:'+
+        (m==='lanes'?'var(--ok)':m==='shared'?'var(--fail)':'var(--idle)')+'"></span>'+
+        (rw>0?'<span class="rfill rework" data-w="'+rw.toFixed(2)+'" style="position:absolute;top:0;left:0;background:rgba(0,0,0,.18)"></span>':'')+
+      '</span>'+
+      '<span class="rval">'+R.total+'</span></div>';
+  }).join('');
+  $('#results').innerHTML=html;
+  requestAnimationFrame(function(){
+    [].slice.call(document.querySelectorAll('.rfill')).forEach(function(el){
+      el.style.width=el.getAttribute('data-w')+'%';});
+  });
+  setTimeout(function(){[].slice.call(document.querySelectorAll('.rfill')).forEach(function(el){
+    el.style.width=el.getAttribute('data-w')+'%';});},1200);
+
+  /* Crossover: hold everything fixed and sweep the ASSUMED rework multiplier to find where the
+     ranking flips. This is the honest version of "we are faster" — it says under what condition. */
+  var save=cfg.rework, cross=null, probe;
+  for(probe=1.0; probe<=4.0; probe+=0.05){
+    cfg.rework=probe;
+    if(build('lanes').total <= build('shared').total){cross=probe;break;}
+  }
+  cfg.rework=save;
+
+  var L=runs.lanes.total, S=runs.shared.total, best=(L<=S);
+  var crossLine = cross===null
+    ? '<br><span class="sm">No rework cost up to 4.0× flips this — at '+cfg.agents+
+      ' agents the '+LANE_CAP+'-lane cap is the binding constraint, not collisions.</span>'
+    : '<br><span class="sm">Crossover: lanes win once a collision costs <span class="num">'+
+      cross.toFixed(2)+'×</span> the original write <span class="b b-d">DERIVED</span> — '+
+      'the 1.6× default is <span class="b b-a">ASSUMED</span> and unmeasured, so this is the number '+
+      'to go and measure.</span>';
+
+  $('#verdict').innerHTML = best
+    ? '<strong>Isolated lanes win at this conflict rate.</strong> Shared checkout spent <span class="num">'+
+      runs.shared.rework+'</span> ticks redoing work after <span class="num">'+runs.shared.collisions+
+      '</span> collisions — lanes spent <span class="num">'+runs.lanes.blocked+
+      '</span> ticks waiting instead, which is cheaper because waiting does not have to be undone.' + crossLine
+    : '<strong>Shared checkout wins here — and the bench says so.</strong> At '+
+      (cfg.conflict*100).toFixed(0)+'% conflict, collisions are rare enough that raw concurrency beats a '+
+      LANE_CAP+'-lane cap. This is the honest failure case for the model we advocate.' + crossLine;
+}
+
+/* ---------- log ---------- */
+var logged={};
+function clearLog(){$('#log').innerHTML=''; logged={};}
+function logAt(t){
+  cur.lanes.forEach(function(L,i){ if(L.idle) return;
+    L.blocks.forEach(function(b){
+      var key=b.i+':s'; if(b.start===t&&!logged[key]){logged[key]=1;
+        line(t,'agent '+(i+1)+' → t'+(b.i+1)+'  '+b.file, b.kind==='rework'?'bad':'');}
+      var k2=b.i+':e';
+      if(b.start+b.dur===t&&!logged[k2]){logged[k2]=1;
+        var msg = b.kind==='rework' ? 't'+(b.i+1)+' redone after collision on '+b.file
+                : b.kind==='wait'   ? 't'+(b.i+1)+' proceeded after the claim released'
+                : b.gate==='refused'? 't'+(b.i+1)+' GATE REFUSED — held for review'
+                : 't'+(b.i+1)+' merged';
+        line(t,msg, b.kind==='rework'?'bad':(b.gate==='refused'?'bad':'good'));}
+    });
+  });
+}
+function line(t,m,cls){
+  var d=document.createElement('div');
+  d.innerHTML='<span class="t">'+t+'</span><span class="m '+(cls||'')+'"></span>';
+  d.querySelector('.m').textContent=m;
+  var lg=$('#log'); lg.appendChild(d); lg.scrollTop=lg.scrollHeight;
+}
+
+/* ---------- inspector ---------- */
+function inspect(b){
+  sel=b;
+  if(!b){ $('#i-title').textContent='Nothing selected';
+    $('#i-pill').textContent='idle'; $('#i-pill').style.background='var(--surface)';
+    $('#i-pill').style.color='var(--ink-3)'; $('#i-dl').innerHTML=''; draw(); return; }
+  var st = b.kind==='rework'?'collision':b.kind==='wait'?'waited':b.kind==='fail'?
+    (b.recovered?'recovered':'orphaned'):(b.gate==='refused'?'refused':'merged');
+  var col = st==='collision'||st==='orphaned' ? 'var(--fail)' : st==='waited'?'var(--idle)':
+            st==='refused'?'var(--warn)':'var(--ok)';
+  $('#i-title').textContent='Task t'+(b.i+1);
+  var p=$('#i-pill'); p.textContent=st; p.style.background=col; p.style.color='var(--ground)';
+  $('#i-lede').textContent = b.why || 'Ran without contention and merged on its own branch.';
+  $('#i-dl').innerHTML =
+    row('file', b.file) +
+    row('agent','agent '+(b.lane+1)) +
+    row('ticks', b.dur+' <span class="b b-p">PROXY</span>') +
+    row('window', b.start+' → '+(b.start+b.dur)) +
+    row('gate', b.gate ? (b.gate==='refused'
+        ? '<span style="color:var(--fail)">refused, +1 tick</span>' : 'passed') : 'no gate on this task') +
+    row('model', MODELS[b.model].name) +
+    (b.kind==='rework' ? row('rework','<span style="color:var(--fail)">'+
+        Math.round(b.dur-(b.dur/cfg.rework))+' ticks redone</span> <span class="b b-a">ASSUMED</span>') : '');
+  draw();
+}
+function row(k,v){return '<dt>'+k+'</dt><dd>'+v+'</dd>';}
+
+/* ---------- interaction: hover + click on blocks ---------- */
+var tip=$('#tip');
+SVG.addEventListener('mousemove',function(e){
+  var t=e.target; if(!t.classList||!t.classList.contains('blk')){tip.classList.remove('on');return;}
+  var b=blockOf(t); if(!b){tip.classList.remove('on');return;}
+  tip.innerHTML='<b>t'+(b.i+1)+'</b> · '+b.file+'<br>'+b.dur+' ticks · '+
+    (b.kind==='rework'?'collision — work redone':b.kind==='wait'?'waited for a claim':'clean')+
+    (b.gate?'<br>gate '+b.gate:'');
+  tip.style.left=Math.min(innerWidth-300,e.clientX+14)+'px';
+  tip.style.top=(e.clientY+16)+'px'; tip.classList.add('on');
+});
+SVG.addEventListener('mouseleave',function(){tip.classList.remove('on')});
+SVG.addEventListener('click',function(e){
+  var t=e.target; if(!t.classList||!t.classList.contains('blk')) return;
+  inspect(blockOf(t));
+});
+function blockOf(el){
+  var i=+el.getAttribute('data-i'), found=null;
+  cur.lanes.forEach(function(L){L.blocks.forEach(function(b){if(b.i===i)found=b;})});
+  return found;
+}
+
+/* ---------- transport ---------- */
+function frame(ts){
+  if(!playing) return;
+  if(!last) last=ts;
+  acc += (ts-last)/1000*cfg.speed*4; last=ts;
+  while(acc>=1){ acc-=1; if(tick<cur.total){ tick++; logAt(tick); } else { stop(); break; } }
+  $('#clock').textContent=tick; draw();
+  raf=requestAnimationFrame(frame);
+}
+function play(){ if(tick>=cur.total){tick=0;clearLog();}
+  playing=true; last=0; $('#playbtn').textContent='❚❚ PAUSE';
+  if(STILL){ tick=cur.total; for(var t=1;t<=cur.total;t++) logAt(t);
+    $('#clock').textContent=tick; draw(); stop(); return; }
+  raf=requestAnimationFrame(frame); }
+function stop(){ playing=false; if(raf)cancelAnimationFrame(raf);
+  $('#playbtn').textContent='▶ RUN THE BENCH'; }
+$('#playbtn').addEventListener('click',function(){ playing?stop():play(); });
+$('#stepbtn').addEventListener('click',function(){ stop();
+  if(tick<cur.total){tick++;logAt(tick);$('#clock').textContent=tick;draw();} });
+$('#restartbtn').addEventListener('click',function(){ stop(); tick=0; clearLog();
+  $('#clock').textContent=0; inspect(null); draw(); });
+
+/* ---------- config wiring ---------- */
+function save(){try{localStorage.setItem('ob-cfg',JSON.stringify(cfg));}catch(e){}}
+function bindRange(id,key,fmt,scale){
+  var el=$(id), out=$(id.replace('#c-','#v-'));
+  el.value = scale? cfg[key]*scale : cfg[key];
+  out.textContent=fmt(cfg[key]);
+  el.addEventListener('input',function(){
+    cfg[key]= scale? (+el.value)/scale : +el.value;
+    out.textContent=fmt(cfg[key]); save(); stop(); rebuild(); });
+}
+bindRange('#c-agents','agents',function(v){return v},1);
+bindRange('#c-tasks','tasks',function(v){return v},1);
+bindRange('#c-conflict','conflict',function(v){return (v*100).toFixed(1)+'%'},100);
+bindRange('#c-rework','rework',function(v){return v.toFixed(1)+'×'},10);
+bindRange('#c-speed','speed',function(v){return v.toFixed(1)+'×'},10);
+['gates','cap','reaper','fail'].forEach(function(k){
+  var el=$('#c-'+k); el.checked=cfg[k];
+  el.addEventListener('change',function(){cfg[k]=el.checked;save();stop();rebuild();});
+});
+[].slice.call(document.querySelectorAll('.seg [data-model]')).forEach(function(btn){
+  btn.addEventListener('click',function(){
+    cfg.model=btn.getAttribute('data-model');
+    [].slice.call(document.querySelectorAll('.seg [data-model]')).forEach(function(b){
+      b.setAttribute('aria-pressed', b===btn ? 'true':'false');});
+    save(); stop(); rebuild(); });
+  btn.setAttribute('aria-pressed', btn.getAttribute('data-model')===cfg.model?'true':'false');
+});
+$('#resetbtn').addEventListener('click',function(){
+  cfg={model:'lanes',agents:4,tasks:12,conflict:.417,rework:1.6,
+       gates:true,cap:true,reaper:true,fail:false,speed:1};
+  save(); location.reload();
+});
+
+rebuild();
+})();
+</script>
