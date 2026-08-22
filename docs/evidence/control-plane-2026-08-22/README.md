@@ -5,6 +5,12 @@ Lane `control-plane`, gates `cap`, `reaper`, `concurrency`, `bounded`, `truthful
 
 **Measured: 7 of 30 gates → 14 of 30. All six lane gates FAIL → PASS.**
 
+⚠ **The lane earns 6 of that +7, not 7.** `chain` also flipped FAIL→PASS in the same
+window. `g_impeccable_precedence_settled` reads
+`~/.claude/skills/living-systems-ui/SKILL.md` — outside both repos, untouched by this
+diff, and the artifact lane's work. Caught by an independent review re-deriving the figure
+rather than accepting it; the original wording here attributed it to this lane.
+
 ---
 
 ## Where the measurement was taken from
@@ -124,7 +130,7 @@ Design decisions that are not obvious, each made for a measured reason:
 
 ## Negative controls — every control watched refusing
 
-`prefect-connectors/tests/orchestrator/test_control_plane.py`, **44 tests, all passing**.
+`prefect-connectors/tests/orchestrator/test_control_plane.py`, **46 tests, all passing**.
 Every control is exercised in both directions, because a guard that refuses everything
 passes a cap test while silently disabling the feature.
 
@@ -335,12 +341,117 @@ judgement lane, which shares `pipelines.py` with this one.
 
 ---
 
+## The independent read, and what it found
+
+An opus reviewer was given the lane's gates and five questions: has each control been
+*watched* refusing; which numbers were measured and which inferred; **is this
+goalpost-moving**; what changed that nothing tests; and correctness/blast radius. Every
+finding below was reproduced before it was fixed. Ten findings; the four that matter:
+
+### ⭐ Two gates could not see the defects they are named for
+
+**`from-history`.** Reverting `any_failed` to the original last-write-wins expression —
+one edit, nothing else — left the gate reading PASS and all 45 tests passing. The gate was
+satisfied by a system that still had the defect it exists to detect.
+
+The cause is subtle and worth keeping: the probe's pass condition was `failures_in_log ==
+FAILS and clean is False`, and both come from the replayed log **independently of
+`any_failed`**. The probe proved the failure *count* comes from the log; it never proved
+the *verdict* does. The ⭐ note further up this file got close — "narrower than the class
+name implies" — and then still credited a kill to it. Measured in isolation, the history
+replay's unique contribution was **zero tests and zero gates**.
+
+Both now use a discriminating case: a stage whose log ends `stage_failed` and whose status
+field says `completed`. The field says `succeeded`; the log says `failed`. In this engine
+every status write is mirrored by an audit event, which is exactly *why* nothing caught it
+— the two expressions agree on every state the engine can reach on its own, so the test
+has to construct the one state where they cannot.
+
+**`cap`.** Same shape. The probe handed itself a stage with `_attempts` already at the
+ceiling, which proves the comparison fires and proves nothing about whether anything moves
+the counter. Deleting the one line that writes `_attempts` left the gate reporting "watched
+refusing" over an engine whose cap could never fire. It now drives a real dispatch and
+asserts the counter moved.
+
+### ⛔ A guard that never matched anything, inherited and repeated
+
+`cap`'s protection against the dashboard resetting the counter was a regex requiring two
+arbitrary characters and then the literal `_retry_count`. It never matched the line it was
+written to catch: after `pop(` the source reads `"_retry_count`, so those two characters
+consume `"_` and the literal lands one character too late. **The `not cleared` half of the
+pass condition was vacuously true** — at `ea888b0`, and in this lane's rewrite, where a
+commit message described it as a guard the gate enforced. Verified by running both patterns
+against the real line from `server.py` at `3da40f6`. It now matches the quote explicitly
+and covers `_attempts` too, since `attempts()` reads that field and guarding only the old
+one would let a future `clear_context` zero the real counter with the gate still green.
+
+### ⛔ An instrument that was measuring its own writes
+
+`_history_window()` took every event in the audit files. The moment the reconciler wrote
+`status_reconciled` and `verdict_recorded`, evidence about a history that stopped in May
+began reading "2026-05-26 to **2026-08-22**" — as though the system had been busy through
+August. It now counts only events a *run* produces, and reads 2026-05-26 to 2026-05-28.
+
+### Four code defects, one severe and one client-visible
+
+| # | defect | why it matters |
+|---|---|---|
+| F2 | **the dispatch ceiling is not atomic** — `free` is read, then `status="dispatched"` is written an audit round-trip later, and this module has no in-process lock | two threads each granted the FULL ceiling: eight concurrent dispatches against four, on a shared 10-core quota. **The 2026-08-14 shape, reachable through the control added to prevent it.** The same window let two callers dispatch the same stage — for `trigger-run`, two ACI backfills against one schema. The race pre-existed the lane; the lane added a third dispatcher and it is the only ungated one |
+| F4 | `reconcile_status_with_history` skipped `budget_paused` | precisely the reaper's widest case, which a test celebrates finding. `truthful` was blind to it and `resume_pipeline` could not rescue it |
+| F5 | **three more paths stranded their run**, and my fix lived in server.py | `skip_if_cataloged` and `resume_pipeline` too — and putting coverage in a 300-second loop made the invariant false for five minutes at a time and *permanently* false for every caller that is not the server. `_close_if_terminal` now runs at each call site |
+| F7 | the early close posts a **"failed" completion to the client's Jira ticket and latches** | `jira_notifier` drops every completion after the first. Stage fails → ticket says "pipeline finished: failed" → operator fixes it and the run genuinely succeeds → the correction is silently swallowed |
+
+### Both harnesses had criteria looser than their claims
+
+- `mutate_control_plane.py` counted **any** non-zero pytest exit as LOAD-BEARING. Pytest
+  exits 5 on "no tests collected", so a typo'd `-k` selector would have read as success.
+  Now requires `rc == 1` and a summary naming failures.
+- `mutate_readiness_probes.py` used `after != "PASS"`, which accepts UNMEASURABLE and
+  ERROR — a mutation that merely broke the scratch tree's import would have reported
+  LOAD-BEARING. Now requires FAIL: a gate must **refuse**, not merely fail to measure.
+- The compound `from-history` mutation is split; its single kill belonged entirely to the
+  unwitnessed-stage half, not to the history replay it was credited to.
+
+**8 of 8 load-bearing in each harness**, up from 7 and 6, with the two previously
+uncovered controls among them.
+
+### What the review confirmed rather than overturned
+
+The two-constants claim is true against git history. Both harnesses do real removals, not
+perturbations. `1,004 / worst 352`, `3→4 of 14`, `4 of 14 at stage_started` and the
+pre-existing `test_logbook` failure all re-derive independently. Both defects found by
+tracing were real and are genuinely fixed.
+
+### Accepted and NOT fixed, with reasons
+
+- **`_reachable` computes the greatest fixed point**, so two mutually-dependent `pending`
+  stages keep each other alive and the run can never be closed. Real, and latent: pipeline
+  templates are static and acyclic. A least-fixed-point formulation has no such hole.
+  Recorded rather than rewritten, because changing the closure rule with no live run to
+  check it against trades a latent hole for an untested one.
+- **`configure()` reconciles before the audit trail may exist**, in which case the
+  `status_reconciled` events meant to preserve the record's history are silently dropped
+  while the mass-failure is persisted. Safe at every current call site, ordered correctly
+  in `server.py`, and nothing enforces it.
+- **The cap's override is unreachable from the dashboard** — `server.py` plumbs
+  `override_reason`, `static/index.html` never sends it. The design's own justification for
+  the cap being safe is currently reachable only by curl. In the handover.
+- **`restart_from_stage` checks the cap only for the target stage**, so a restart can be
+  accepted and then die at a downstream stage already at its lifetime cap. Arguably correct
+  behaviour; the response does not say so.
+- **`reclaim_orphaned_stages`' "a human decides" contract was already unenforced** —
+  `pending` + satisfied deps = ready, to every dispatch path, with or without this lane's
+  sweep. The durable fix is a positive `_needs_human_release` flag honoured by
+  `_find_ready_stages`, which also closes the pre-existing half. Out of this lane's scope.
+- **`static/index.html:1746` now carries a stale comment** about `restart_from_stage`
+  preserving `_retry_count`.
+
 ## Suites
 
 | suite | result |
 |---|---|
-| `prefect-connectors` `tests/orchestrator` | **646 passed, 1 failed** |
-| `prefect-connectors` whole suite | **869 passed, 1 failed** |
+| `prefect-connectors` `tests/orchestrator` | **648 passed, 1 failed** |
+| `prefect-connectors` whole suite | **871 passed, 1 failed** |
 | `agent-factory` `pytest` | **all passed, 2 xfailed** (the two allowlisted probe defects) |
 
 The one connectors failure is `test_logbook.py::TestResolution::test_recurrence_after_resolution_is_marked_regressed`

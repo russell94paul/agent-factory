@@ -290,3 +290,102 @@ you have.
   Every such path must reconcile afterwards. `reap_expired_leases()` now calls
   `reconcile_status_with_history()`, and server.py's periodic loop reconciles
   unconditionally so the cap-refusal path is covered too.
+
+### F18 — A probe that hands itself the state it wants to see has measured nothing
+
+- **BELIEVED** — a gate that drives the engine and watches a control refuse is strong
+  evidence. This lane replaced five greps with behavioural probes on exactly that argument
+  and reported all six gates green.
+- **ACTUALLY** — two of the five passed over systems with their defect intact, and an
+  independent review found both by removing one line each:
+  - `cap` built its own input (`_scratch_stage("stuck", _attempts=cap)`). Deleting the
+    single line that *writes* `_attempts` left the gate reporting "capped, and was watched
+    refusing" over an engine whose cap could never fire.
+  - `from-history` checked `failures_in_log` and `clean`, both computed from the log
+    **independently of `any_failed`**. Reverting `any_failed` to the original
+    last-write-wins expression — one edit — left the gate PASS and all 45 tests passing.
+  A probe that constructs the precondition proves the *comparison* fires. It does not
+  prove the system ever reaches that state, which is the thing the gate claims.
+- **MEASURED BY** — copy `orchestrator/` to a scratch tree, delete exactly one line, point
+  `$PREFECT_CONNECTORS` at the copy, re-run the gate. `scripts/mutate_readiness_probes.py`
+  now carries both mutations; each flips its gate PASS→FAIL only after the fix.
+- **AFFECTS** — every lane. A behavioural probe is better than a grep and is still not
+  self-validating. **Write the mutation before you believe the gate**, and make it remove
+  the property rather than perturb it. And when a probe checks several things, ask which
+  of them the mutation actually killed: this lane's compound mutation reported one kill
+  and credited it to the wrong half.
+
+### F19 — A regex guard in readiness.py has never matched the line it was written to catch
+
+- **BELIEVED** — `cap`'s pass condition includes `not cleared`, guarding against the
+  dashboard's "clear context" zeroing the attempt counter. This lane removed the offending
+  `pop` from `server.py` and described the gate as enforcing it.
+- **ACTUALLY** — the pattern is `pop\(\s*.._retry_count`. After `pop(` the source reads
+  `"_retry_count`, so `..` consumes `"_` and the literal then has to match `retry_count`
+  against `retry_count` one character too late. **It matches nothing.** The `not cleared`
+  half of the condition has been vacuously true since `ea888b0`, and the lane repeated the
+  claim without testing the pattern.
+- **MEASURED BY** — `re.search(r"pop\(\s*.._retry_count", '        s.pop("_retry_count",
+  None)')` → `False`, against the real line from `server.py` at `3da40f6`. The corrected
+  pattern matches the quote explicitly and returns `True`; reintroducing the `pop` in a
+  scratch copy now flips `cap` to FAIL.
+- **AFFECTS** — every lane, and the `judgement` lane most (`checks`, `general`, `cost` and
+  `ceiling` all rest on `_grep` or `re.findall` conditions). **A negative grep result is
+  not evidence unless the pattern has been shown to match a positive case.** An absent
+  match and a broken pattern are indistinguishable, and the broken one always reports the
+  reassuring answer.
+
+### F20 — An instrument that counts its own writes reports the wrong period
+
+- **BELIEVED** — the audit files date from 2026-05-26 to 05-28 (F4), so a gate citing that
+  window tells the reader how old its evidence is.
+- **ACTUALLY** — `_history_window()` took **every** event in the files. The moment this
+  lane's reconciler wrote `status_reconciled` and `verdict_recorded` events, the window
+  stretched to "2026-05-26 to 2026-08-22" and evidence about a history that stopped in May
+  began reading as though the system had been busy through August. The fix that made the
+  gates carry the age of their evidence is the same fix that corrupted it.
+- **MEASURED BY** — `python -m factory.readiness | grep "history,"` before and after
+  restricting the window to events a *run* produces: `2026-05-26 to 2026-08-22` becomes
+  `2026-05-26 to 2026-05-28`.
+- **AFFECTS** — every lane, and anything that writes to the audit trail — which now
+  includes the control plane, the reconciler and `scripts/reconcile_pipeline_records.py`.
+  Any statistic over `audits/*.json` must exclude control-plane bookkeeping or it is
+  measuring the measurer.
+
+### F21 — `pipelines.py` has no in-process lock, and there are now three dispatchers
+
+- **BELIEVED** — the file lock in `_flush()` makes concurrent access to the pipeline store
+  safe enough.
+- **ACTUALLY** — the file lock protects the *file*. `test_instance_isolation` states the
+  rest in as many words: *"pipelines.py has no in-process lock of its own — the file lock
+  is it."* Every read-then-write in that module is racy. This lane's dispatch ceiling was
+  one: `free` was read at the top of `_build_stage_requests` and `status = "dispatched"`
+  not written until an audit round-trip later, so two threads each granted the **full**
+  ceiling — eight concurrent dispatches against four, on a shared 10-core quota. The same
+  window let two callers dispatch the same stage, which for `trigger-run` is two ACI
+  backfills against one landing schema.
+- **MEASURED BY** — two callers each computing ready indices before either writes: 4 + 4
+  granted against a ceiling of 4; and one stage reaching `_attempts: 2, status: dispatched`
+  from a single ready set. Closed by `_DISPATCH_LOCK` plus a `status != "pending"` re-check
+  under it.
+- **AFFECTS** — the `judgement` lane, which edits the same file. There are now **three**
+  dispatchers racing here — HTTP handlers, the agent watchdog, and this lane's reaper
+  thread — and the reaper is the only one no toggle gates. Any new counter, ceiling or
+  budget check added to `pipelines.py` must take `_DISPATCH_LOCK`, or it is advisory.
+
+### F22 — `jira_notifier` latches on the first completion event and drops every later one
+
+- **BELIEVED** — emitting `pipeline.completed` earlier (when the remaining stages became
+  unreachable, rather than when they all resolved) is a bookkeeping improvement.
+- **ACTUALLY** — `jira_notifier` returns immediately if `entry["completed"]` is set, and
+  persists that latch. So an early close posts *"pipeline finished: failed"* to the
+  client's ticket and permanently suppresses the real completion: the operator fixes the
+  credential, retries, the run genuinely succeeds, and the correction never arrives. The
+  ticket keeps a completion comment that is wrong, client-visible, and silent.
+- **MEASURED BY** — `orchestrator/engine/jira_notifier.py:353-364`, the
+  `if entry.get("completed"): return` guard and `_save_state()` beneath it, against
+  `pipelines._close_pipeline`, which now emits from two code paths rather than one.
+  Mitigated by a `reopenable` flag on the event; the notifier does not yet read it.
+- **AFFECTS** — the `judgement` lane and anyone changing **when** a run reaches a terminal
+  state. Changing the timing of a terminal event is not an internal change: at least one
+  downstream consumer treats the first one as final and writes to a client-facing surface.
