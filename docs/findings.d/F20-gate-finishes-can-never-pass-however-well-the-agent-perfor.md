@@ -3,6 +3,8 @@
 ### F20 — Gate `finishes` can never pass, however well the agent performs
 
 
+- **KIND** — DESIGN
+- **STATUS** — ADOPTED
 - **BELIEVED** — "3/14 runs finished" is a score that improves as the loop gets more reliable, so
   landing the reaper and re-running the loop will move it. [[F4]] says the numbers are stale;
   the natural inference is that fresh runs fix them. For this gate that inference is wrong.
@@ -17,6 +19,7 @@
 - **MEASURED BY** — read `factory/readiness.py:175`; the pass condition is equality, not a rate.
   Then note the four ids in the gate's own evidence lines. No run appended after today can
   satisfy it, because the shortfall is in runs that already ended.
+- **CHANGES** — window the gate: measure only runs started since `MEASURED_SINCE`, and raise Unmeasurable — never PASS — when the window is empty. **Built** in `factory/readiness.py` (`g_finishes`), with the four historical stranded runs counted in the evidence rather than hidden, and their audits left on disk because the `bounded` gate cites them. The reaper-backfill option was not needed: a stranded run from the uncontrolled era is not evidence about the controls.
 - **AFFECTS** — control-plane lane (`finishes`, and the `reaper` it is building), and anyone
   reading the 30-gate score as progress. The reaper is the fix, but only if it **backfills a
   terminal event for those four historical runs** rather than only bounding future dispatch —

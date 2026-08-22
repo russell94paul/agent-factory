@@ -3,7 +3,7 @@
 ### F72 — The board's own number depends on which directory you run it from
 
 - **KIND** — INSTRUMENT
-- **STATUS** — OPEN
+- **STATUS** — ADOPTED
 - **BELIEVED** — "`python -m factory.readiness` prints the readiness of the system. Quote the
   number; compare it before and after."
 - **ACTUALLY** — it prints the readiness of *whatever the paths resolve to from your cwd*, and
