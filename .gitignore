@@ -7,3 +7,7 @@ __pycache__/
 tracker.html
 .worktrees/
 .data/launch/
+
+# Skill installer artifact. Kept on disk on purpose: it carries 7 files the installed
+# copy at ~/.claude/skills/living-systems-ui does not have. Not deleted, not committed.
+living-systems-ui.zip
