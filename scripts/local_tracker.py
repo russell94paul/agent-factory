@@ -26,6 +26,8 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 
 from factory.readiness import (  # noqa: E402
     CONNECTORS, FACTORY, FAIL, NOT_RUN, PASS, PHASES, UNMEASURABLE, measure)
+from factory.board import (  # noqa: E402
+    BLOCKED, DECLARED, DONE, READY, TRACKS, board)
 
 OUT = FACTORY / "tracker.html"
 
@@ -74,6 +76,23 @@ footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--rule);
 code{font-family:ui-monospace,monospace;background:var(--raise);padding:1px 5px;
  border:1px solid var(--rule);font-size:12.5px}
 @media(max-width:620px){.g{grid-template-columns:1fr}}
+.t{padding:12px 16px;border-bottom:1px solid var(--rule);display:grid;
+ grid-template-columns:78px 26px 1fr;gap:12px;align-items:start}
+.t:last-child{border-bottom:0}
+.st{font-family:ui-monospace,monospace;font-size:10px;letter-spacing:.09em;text-transform:uppercase;
+ border:1px solid currentColor;padding:2px 5px;display:inline-block;white-space:nowrap}
+.st.done{color:var(--pass)}.st.ready{color:var(--accent)}
+.st.blocked{color:var(--ink3)}.st.declared{color:var(--unmeas)}
+.sz{font-family:ui-monospace,monospace;font-size:11px;color:var(--ink3);text-align:center;
+ border:1px solid var(--rule);padding:1px 0}
+.tt{font-weight:600}
+.tw{font-size:13px;color:var(--ink3);margin-top:3px;line-height:1.5}
+.dep{font-family:ui-monospace,monospace;font-size:11.5px;color:var(--ink3);margin-top:4px}
+.own{font-size:12px;color:var(--unmeas);margin-top:3px}
+.par{border:1px solid var(--accent);background:var(--raise);padding:15px 17px;margin:26px 0 0}
+.par h3{margin:0 0 8px;font-size:15px}
+.par ul{margin:0 0 0 17px;font-size:14px;color:var(--ink2)}
+.par li{margin:3px 0}
 """
 
 
@@ -124,12 +143,64 @@ def render(when: datetime.datetime) -> str:
             w('</div></div>')
         w('</section>')
 
+    # ------------------------------------------------------------------ the work
+    rows = board()
+    n_done = sum(1 for _, st, _ in rows if st == DONE)
+    ready = [t for t, st, _ in rows if st == READY]
+    CH = {DONE: ("done", "done"), READY: ("ready", "ready"),
+          BLOCKED: ("blocked", "blocked"), DECLARED: ("declared", "no probe")}
+
+    w('<div class="head" style="margin-top:44px">')
+    w('<h1>What is left</h1>')
+    w(f'<div class="sub">{n_done} of {len(rows)} done &middot; {len(ready)} can start right now '
+      f'&middot; status is derived from the gates above wherever a probe exists</div>')
+    w('</div>')
+
+    for key, (title, sub) in TRACKS.items():
+        group = [(t, st, u) for t, st, u in rows if t.track == key]
+        if not group:
+            continue
+        d = sum(1 for _, st, _ in group if st == DONE)
+        w('<section class="phase"><header>')
+        w(f'<h2>{e(title)}</h2><span class="count">{d} of {len(group)}</span>')
+        w('</header>')
+        w(f'<div class="g" style="grid-template-columns:1fr;padding-bottom:0">'
+          f'<div class="hl">{e(sub)}</div></div>')
+        for t, st, unmet in group:
+            cls, label = CH[st]
+            w('<div class="t">')
+            w(f'<div><span class="st {cls}">{label}</span></div>')
+            w(f'<div class="sz">{e(t.size)}</div>')
+            w('<div>')
+            w(f'<div class="tt">{e(t.title)}</div>')
+            if t.why:
+                w(f'<div class="tw">{e(t.why)}</div>')
+            if unmet:
+                w(f'<div class="dep">waits on: {e(", ".join(unmet))}</div>')
+            w(f'<div class="dep">done when: {e(t.done_when)}</div>')
+            if t.owner:
+                w(f'<div class="own">{e(t.owner)}</div>')
+            w('</div></div>')
+        w('</section>')
+
+    if ready:
+        w('<div class="par">')
+        w(f'<h3>{len(ready)} can run in parallel right now</h3>')
+        w('<p style="font-size:13.5px;color:var(--ink3);margin:0 0 8px">No unmet dependency '
+          'between any of these &mdash; computed from the dependency graph, not guessed.</p>')
+        w('<ul>' + "".join(f'<li><b>{e(t.track)}</b> &mdash; {e(t.title)}</li>'
+                           for t in ready) + '</ul>')
+        w('</div>')
+
     w('<footer>')
     w('<p><b>UNMEASURABLE is not a pass.</b> A gate with no instrument says so rather than '
       'waving through; that distinction is the point of the whole harness.</p>')
     w('<p>Every row is measured from a file at the moment shown above and names the path it came '
       'from. Nothing here is hand-maintained, so a wrong row means a wrong repo, not a stale '
       'page. Probes live in <code>factory/readiness.py</code>.</p>')
+    w('<p>A task is <b>done</b> only when its readiness gate passes &mdash; it ticks itself and '
+      'cannot be wrong about itself. Rows marked <b>no probe</b> are the ones nothing can settle '
+      'automatically, and they say who has to.</p>')
     w('<p>Regenerate: <code>python scripts/local_tracker.py</code> &middot; '
       'serve and re-measure on refresh: <code>python scripts/local_tracker.py --serve</code> '
       '&middot; check the published artifact still matches: '
