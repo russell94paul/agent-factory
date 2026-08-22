@@ -219,7 +219,7 @@ svg{max-width:100%; height:auto; display:block}
 .lww .win{fill:var(--pass); font-weight:600}
 .lww .foot{font-family:var(--f-body); font-size:13.5px; fill:var(--ink-3); font-style:italic}
 /* ticks are visible at rest; script opts into the reveal */
-.js .lww .ticks rect{transform:scaleY(.08); transform-origin:center;
+.js .lww .ticks rect{transform:scaleY(.06); transform-box:fill-box; transform-origin:center;
   transition:transform .34s cubic-bezier(.16,.84,.44,1);
   transition-delay:calc(var(--i,0) * 3.4ms)}
 .js .rv.in .lww .ticks rect{transform:scaleY(1)}
