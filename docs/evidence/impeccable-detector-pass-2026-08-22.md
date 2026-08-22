@@ -4,6 +4,58 @@
 `docs/evidence/render-pass-2026-08-22.md` (Playwright, same file, same day) — this is the other
 instrument the render-pass writeup flagged as never having been run.
 
+⚠ **Reproducibility note on the `chain` gate itself.** `factory/readiness.py:775-786`
+(`g_impeccable_precedence_settled`) reads `~/.claude/skills/living-systems-ui/SKILL.md` — a file
+that lives **outside this repository**, in a separate personal skills checkout (its own git repo,
+branch `chore/library-catchup-2026-08-17`, currently uncommitted there). Reinstalling or losing
+that skill on this machine, or checking this repo out fresh elsewhere, silently reverts the gate
+to FAIL with no record in `agent-factory` of what the precedence ever said. The gate check itself
+is also a naive substring match (`if "impeccable" in txt.lower()`) — it cannot tell a real
+precedence statement from the word appearing once in a heading, so passing it is not itself
+evidence of anything; the content is. For both reasons the precedence text is mirrored verbatim
+below so the claim survives independently of that external file.
+
+<details>
+<summary>Mirrored verbatim from <code>~/.claude/skills/living-systems-ui/SKILL.md</code>, added under its existing "Read this first — where this sits" section, 2026-08-22</summary>
+
+> ### Where `impeccable` sits in this chain
+>
+> `impeccable` is a fifth design authority with a trigger broad enough to fire on the same work: "design,
+> redesign, shape, critique, audit, polish… a frontend interface" covers a living-systems page just as
+> much as a product UI. Its scope is not the same as the four skills above, and it does not outrank them.
+>
+> - **`impeccable` never owns a self-contained Artifact's build decisions.** Its workflow — `init` /
+>   `new-work`, `PRODUCT.md` / `DESIGN.md`, the hook-driven edit loop, `live` browser iteration — assumes
+>   a persistent project with a repo and a running dev server. A living-systems page has neither: it is one
+>   HTML file with no build step, calibrated by `artifact-design` and modeled by this skill. Never let
+>   `impeccable`'s routing open a `new-work`/`shape` flow on top of an Artifact in place of `artifact-design`'s
+>   own calibration — that is scope creep from a skill whose default target is a full product surface, not
+>   a single figure.
+> - **`impeccable`'s *detector* is a useful, optional, additive check — after the four above, not instead
+>   of them.** Run it (`node .claude/skills/impeccable/scripts/detect.mjs <file> --json`, or `npx impeccable
+>   detect`) as a supplementary static/browser pass over a *finished* artifact. Its 59 deterministic rules
+>   catch generic frontend anti-patterns — AI-slop visual tells (side-tab borders, hero-eyebrow chips),
+>   computed WCAG contrast ratios, undersized/tiny text, cramped padding — that the other four skills do
+>   not enumerate as checklist items. It needs no browser for the static engine and nothing here replaces
+>   running it.
+> - **On a genuine conflict, split by domain, not by seniority.** `artifact-motion`'s
+>   `references/QUALITY_GATES.md` is authoritative for anything touching motion, reduced-motion behavior, or
+>   whether a figure's geometry is computed from a real measured number — `impeccable`'s detector has no
+>   rule for any of that and is not a vote on it. `impeccable`'s detector is authoritative for the generic
+>   UI-quality lane it actually measures — contrast, spacing, typography, AI-slop tells — where the four
+>   Artifact skills state principles (rule 3, "every number carries its basis"; "seamless, not a card grid")
+>   but do not run a deterministic scan.
+> - **A finding from `impeccable`'s detector is a claim, not a fact, until checked against the rendered
+>   page.** Its static-HTML engine does not evaluate `@media` blocks and only partially resolves CSS custom
+>   properties across `:root[data-theme]` variants — a page that swaps its whole palette under
+>   `prefers-color-scheme` or a `data-theme` attribute (the pattern `artifact-design` itself mandates) can
+>   produce contrast findings quoting colors the browser never actually pairs. Verify a sample against the
+>   source before acting on a bulk finding; don't let an uninstalled-parser degraded run (`DEGRADED — HTML
+>   parser modules unavailable`, falling back to regex) stand in for the real 59-rule pass either — install
+>   `htmlparser2`, `css-select`, `css-tree`, `domutils` alongside `scripts/detect.mjs` first.
+
+</details>
+
 ⚠ **Both defects that render pass doc found are already fixed on this branch**, by commit
 `330742d fix(artifact): draw the category the figure declared, stop the sideways scroll, make
 drift fail the suite` — landed after that doc was written, before this pass ran. Re-running
