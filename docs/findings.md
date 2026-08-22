@@ -22,6 +22,14 @@ Every entry carries four things, and an entry missing any of them is not a findi
 | **MEASURED BY** | the discriminating test, so the reader can re-run it rather than trust you |
 | **AFFECTS** | lanes, gates or files that inherit the premise |
 
+⚠ **Numbering: take a block, do not take the next number.** Three sessions on 2026-08-22 each
+appended "F11" and "F12" to their own worktree, independently and correctly by sequence — the
+ledger is one file and parallel lanes cannot see each other's appends. On merge the ids collide
+and `F11` stops resolving, in the one file whose purpose is pointing a lane at a correction.
+Claim a block before you write: **control-plane F20-F29, certify F30-F39, judgement F40-F49,
+artifact F50-F59, grain F60-F69**, and anything from a non-lane session F70+. A colliding id is
+not a formatting nit; it silently breaks the reference.
+
 ⭐ **Closing a lane with nothing to add is itself an entry.** Write `NOTHING TO REPORT` with the
 date and lane. Silence has to mean "checked and found nothing", not "nobody looked" — the same
 distinction between ZERO and NOT-RECORDED that the contract's four verdicts exist to protect.
@@ -165,7 +173,7 @@ you have.
 
 ## 2026-08-22 · session: boot pre-flight + three-lane launch
 
-### F11 — Gate `finishes` can never pass, however well the agent performs
+### F20 — Gate `finishes` can never pass, however well the agent performs
 
 - **BELIEVED** — "3/14 runs finished" is a score that improves as the loop gets more reliable, so
   landing the reaper and re-running the loop will move it. [[F4]] says the numbers are stale;
@@ -188,7 +196,7 @@ you have.
   whether a reaper-emitted terminal counts as "finished"; if it does not, the gate needs a window
   instead.
 
-### F12 — Gate `succeeds` is an all-time ratio, so one bad day poisons it permanently
+### F21 — Gate `succeeds` is an all-time ratio, so one bad day poisons it permanently
 
 - **BELIEVED** — "a stage fails 6.1× more than it succeeds" is a current reliability rate, and a
   run of good stages will pull it back over the line.
