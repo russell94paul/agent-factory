@@ -389,3 +389,138 @@ you have.
 - **AFFECTS** — the `judgement` lane and anyone changing **when** a run reaches a terminal
   state. Changing the timing of a terminal event is not an internal change: at least one
   downstream consumer treats the first one as final and writes to a client-facing surface.
+
+---
+
+## 2026-08-22 · lane: control-plane (second session)
+
+### F23 — `ControlRefused` subclasses `ValueError`, so `/restart` answers a refusal with 404
+
+- **BELIEVED** — a control that raises `ControlRefused` gets a sensible HTTP answer for
+  free, because it subclasses `ValueError` and "the HTTP layer's existing handlers turn it
+  into a 4xx rather than a 500". That sentence is in the exception's own docstring.
+- **ACTUALLY** — *which* 4xx is not free, and it was wrong on the route that matters.
+  `_handle_post_pipeline_restart`'s `except ValueError` answers **404**, and both of the
+  dashboard's retry buttons POST to `/restart`. 404 tells the browser the pipeline does not
+  exist, so no client can distinguish a refusal from a typo — and the attempt cap's
+  override, which the cap's entire safety argument rests on, could never be offered. The
+  two handlers did not even agree: `/retry-stage` answered 400 for the identical exception.
+  Now 409 with `{"control": ..., "refused": true}` in the body, via `_send_refusal`.
+- **MEASURED BY** — drive the real handler with a stage at the cap:
+  subclass `server.OrchestratorHandler`, stub `_json_body`/`_send_json`/`_send_error_json`,
+  set `_attempts = MAX_ATTEMPTS_PER_STAGE`, call
+  `_handle_post_pipeline_restart("pipe_x")` with `{"stage_name": ...}` → `404`.
+  `grep -c ControlRefused orchestrator/server.py` → `0`, at `a2c4820`.
+  Now asserted by `tests/orchestrator/test_control_refusal_status.py`, including an AST
+  check that no future `_handle_*` can reach a cap-checked call without a refusal clause.
+- **AFFECTS** — the **judgement** lane most: `cost` and `ceiling` add controls to the same
+  file that will refuse the same way. A new control that raises `ControlRefused` and is not
+  caught explicitly inherits whatever status its handler's generic clause happens to use.
+  Also every lane that adds a control a human is expected to be able to override.
+
+### F24 — A wiring check that greps the source is satisfied by a surviving import
+
+- **BELIEVED** — checking that the server is wired to a new mechanism with
+  `"cloud_reaper" in source` / `"report_external_handle=" in source` is weak but adequate:
+  if the string is there, the wiring is there.
+- **ACTUALLY** — an independent review deleted the registration call and gutted the
+  reporter's body, leaving the import and the call sites in place. **All three checks still
+  read "yes", 677 tests still passed, and the gate still reported "dispatched work is
+  leased, reaped and its cloud work killed"** over a system where no handle is ever
+  recorded and no terminator ever registered. `"cloud_reaper" in src` was satisfied by the
+  import alone; an ordering guard compared **string positions**, which the import also
+  satisfies; and `count("_report_run(ctx,")` counts CALL SITES, so gutting the callee was
+  invisible.
+- **MEASURED BY** — in a scratch copy: replace `_cloud_reaper.register(engine)` with
+  nothing and `_report_run`'s body with `pass`, then
+  `PREFECT_CONNECTORS=<copy> python -m factory.readiness` → still PASS, all wiring lines
+  "yes". Fixed by extracting `server.build_script_context()` and
+  `server.wire_cloud_terminators()` as named seams the tests and the gate now **call**,
+  asserting `_TERMINATORS` is non-empty and that a returned context's callback really
+  writes a handle to the record. Both mutations are now in
+  `scripts/mutate_readiness_probes.py`.
+- **AFFECTS** — every lane. This is F18 one hop further out: F18 was about a probe handing
+  itself its precondition; this is about a probe checking that a *wire exists* by looking
+  for the word. **If a check would still pass with the function body deleted, it is not
+  measuring the function.** Extract a named seam and call it.
+
+### F25 — A probe that measures one half of an interface and invents the other
+
+- **BELIEVED** — the browser probe for the cap override was rigorous: it derived the
+  engine's real refusal **message** rather than typing one, precisely because F19 is about
+  a pattern never shown to match a real line. Eight checks, all green.
+- **ACTUALLY** — it wrote `{status: 400}` into its own fetch stub. The route answers 404,
+  and the browser guard branched on the status. So the probe proved the half that had
+  already gone wrong once and assumed the half that had not, and reported a control as
+  reachable when no operator could reach it. One changed literal in the review exposed it.
+  The probe now drives `_handle_post_pipeline_restart` and takes **status and body**
+  from the thing that answers; run against the 404 server it fails six of ten checks.
+- **MEASURED BY** — `scripts/dashboard_cap_override_probe.py`, before/after transcripts in
+  `docs/evidence/control-plane-2026-08-22/dashboard/`. `before-404.txt` is the probe
+  against a server that answers 404.
+- **AFFECTS** — every lane that writes a probe against an interface. F19 said *a pattern
+  must be shown to match a positive case*; the generalisation is **take the whole answer
+  from the thing that answers**. Anything the probe supplies to itself is a premise, not a
+  measurement — and the part nobody has been burned on yet is exactly where the invention
+  will be.
+
+### F26 — pytest inherits `addopts` from a directory ABOVE the repo, so output parsing depends on where the checkout sits
+
+- **BELIEVED** — a harness that reads pytest's summary line works the same wherever the
+  repo is.
+- **ACTUALLY** — pytest walks **upwards** for its rootdir config. The connectors worktrees
+  for these lanes live inside `agent-factory`, whose `pyproject.toml` carries
+  `addopts = "-q"`, so the connectors suite silently inherits `-q` from an unrelated
+  repository two directories up and prints a bare `10 failed, 36 deselected in 13.53s`.
+  The same files anywhere else print `====== 10 failed … ======`. A harness anchored on
+  `^\d+ (passed|failed)` matched the first and not the second, and announced
+  *"12 control(s) that nothing tests"* about a suite that had just failed exactly as
+  designed.
+- **MEASURED BY** — run the identical command in the lane worktree and in a copy of the
+  same tree in the system temp directory; only the padding differs.
+  `grep addopts agent-factory/pyproject.toml` → `-q`; `prefect-connectors` has none of its
+  own.
+- **AFFECTS** — every lane, and anything parsing tool output from a nested worktree. Also a
+  reason to be careful reading a *green* run: the inheritance flows both ways.
+
+### F27 — the reaper thread is also the only ungated dispatcher, so anything slow in a reap strands work
+
+- **BELIEVED** — making the reaper do more (kill cloud work, call `az`) costs only reap
+  latency.
+- **ACTUALLY** — `_reaper_loop` runs `reap_expired_leases()` and then
+  `dispatch_deferred_stages()` **sequentially on the same thread**, and per F14 that sweep
+  is the only ungated path that ever picks a ceiling-deferred stage back up. Handles
+  accumulate without bound — `trigger_backfill_and_wait` records one per `create_flow_run`
+  inside its launch loop, so a 30-partition backfill retried twice leaves ~90 on one stage
+  — and each costs up to `az container list` 30s + `az container show` 20s +
+  `az container delete` 120s. An unbounded reap therefore strands exactly the pipelines the
+  ceiling deferred: **the outage the ceiling exists to prevent, arriving through the
+  reaper.** Bounded by `TERMINATION_BUDGET_SEC = 120` for the whole sweep; work not reached
+  is `NOT_ATTEMPTED` with its reason, keeps its handles, and is retried next sweep.
+- **MEASURED BY** — traced call path (`server.py::_reaper_loop`, `pipelines.py`
+  `_terminate_external_work`, `cloud_reaper.py` subprocess timeouts). **Not reproduced
+  against real Azure** — there is no subscription here, so this is a traced path, not a
+  measurement. The budget's behaviour is tested with a fake clock.
+- **AFFECTS** — the **judgement** lane directly: `cost` and `ceiling` want a spend check
+  before dispatch, and the obvious place is that same loop. Anything added there is added
+  in front of the only sweep that rescues deferred work.
+
+### F28 — a reaper that closes the record has done half the job, and the gate could not tell
+
+- **BELIEVED** — `reaper` PASS ("dispatched work is leased and reaped, watched") meant
+  dispatched work is either finished or killed.
+- **ACTUALLY** — it killed only the **record**. The Prefect flow run and its ACI container
+  survive the orchestrator, and the reaped stage's own error string handed that half to a
+  human: *"if this stage launches cloud work, check whether it is still running."* The
+  record was never the thing holding the 10-core quota. Now: a durable handle recorded at
+  every `create_flow_run`, a terminator that fails closed on unproven ownership, and the
+  contract's four verdicts rather than a boolean.
+  ⚠ **`NOT_RECORDED` does not mean "it launched nothing"** — it means we cannot tell, and
+  every stage dispatched before 2026-08-22 is in that state.
+- **MEASURED BY** — delete the termination call in a scratch copy and re-run the gate:
+  it used to stay PASS; it now FAILs. Both mutations in `mutate_readiness_probes.py`.
+- **AFFECTS** — every lane that adds a control terminating work with an outside effect.
+  Ask what the control's name promises, then ask which half of it the gate can see. ⚠ And
+  note the limit that remains: **no container has ever been deleted by this code.** There
+  is no Azure subscription in the suite, so the three `az`/Prefect seams are untested by
+  construction.
