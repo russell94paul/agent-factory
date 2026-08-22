@@ -3,7 +3,12 @@
 Lane `control-plane`, gates `cap`, `reaper`, `concurrency`, `bounded`, `truthful`,
 `from-history`. Code in `prefect-connectors/orchestrator/`, branch `lane/control-plane`.
 
-**Measured: 7 of 30 gates → 14 of 30. All six lane gates FAIL → PASS.**
+**Session 1 (2026-08-22, morning) measured: 7 of 30 gates → 14 of 30. All six lane
+gates FAIL → PASS.** ⚠ That is this document's FIRST session only, and it is not the
+current number — an independent review found it read as a live headline. Session 2,
+below, measured 15 of 30 before and 15 of 30 after: the count did not move, because
+the work was making already-passing gates honest. `python -m factory.readiness` is
+always the live answer.
 
 ⚠ **The lane earns 6 of that +7, not 7.** `chain` also flipped FAIL→PASS in the same
 window. `g_impeccable_precedence_settled` reads
@@ -748,7 +753,7 @@ check that fails closed; the refusal to believe a verdict outside the vocabulary
 
 | suite | result |
 |---|---|
-| `prefect-connectors` `tests/orchestrator` | **674 passed, 1 failed** |
+| `prefect-connectors` `tests/orchestrator` | **673 passed, 1 failed** — 674 collected. I wrote 694, corrected it to 674, and 674 was the COLLECTED total, not the pass count; an independent review re-derived it |
 | `agent-factory` `pytest` | **147 passed, 2 xfailed** |
 
 The one failure is `test_logbook.py::TestResolution::test_recurrence_after_resolution_is_marked_regressed`,
@@ -779,3 +784,199 @@ pre-existing and unrelated — it fails identically on the unmodified checkout a
    Carried forward unfixed from the last session, deliberately.
 7. **`jira_notifier` still does not read the `reopenable` flag** (F22), so an early close
    can post a wrong, client-visible completion and latch it.
+
+---
+
+# The independent read, and the two things it found that were dead in production
+
+An opus reviewer was given this lane's gates and the five questions the lane's brief
+requires: has each control been **watched refusing**; which numbers were measured and which
+inferred; **is this goalpost-moving**; what changed that nothing tests; correctness and
+blast radius.
+
+It reproduced everything it reported, and **every finding below was re-derived here before
+it was fixed** — the sub-agent's report is a claim, not a measurement (F5).
+
+## ⛔ 1. The cap's override was STILL unreachable. The route answered 404.
+
+The previous section of this document claims the override now reaches the wire. It did not.
+
+`ControlRefused` subclasses `ValueError` — deliberately, and its own docstring says so, "so
+the HTTP layer's existing handlers turn it into a 4xx rather than a 500". *Which* 4xx is
+not free. `_handle_post_pipeline_restart`'s `except ValueError` answers **404**, and both
+of the dashboard's retry buttons POST to `/restart`. 404 says *the pipeline does not
+exist*. The two handlers did not even agree — `/retry-stage` answered 400 for the identical
+exception, and nothing in `server.py` mentioned `ControlRefused` at all.
+
+Measured by driving the real handler with a stage at the cap: `404`.
+
+### And the browser probe could not see it, for a reason worth keeping
+
+The probe took deliberate care to use **the engine's real refusal message** rather than one
+typed into the test — that is finding F19's discipline, and F19 is about a message. It then
+wrote `{status: 400}` into its own fetch stub. The status is the half the browser guard
+actually branched on.
+
+So: the half that had already gone wrong once was measured, and the half that had not was
+invented. Eight green checks over a control no operator could reach. One changed literal in
+the review exposed it.
+
+**The generalisation, now F25: take the whole answer from the thing that answers.** Anything
+a probe supplies to itself is a premise, and the part nobody has been burned on yet is
+exactly where the invention will be.
+
+### What was done
+
+* `_send_refusal` answers **409 Conflict** — the request was understood, the resource
+  exists, the state forbids it — with `{"control": "attempt_cap", "refused": true}`.
+  409 is emitted from nowhere else: `_send_refusal` is its only source and its only two
+  callers are `except ControlRefused` clauses, so a client may treat 409 as a refusal
+  without reading the body.
+* The dashboard branches on the **field**. The regex over English prose is gone entirely —
+  a stronger answer to F19 than a better-tested pattern.
+* `tests/orchestrator/test_control_refusal_status.py` asserts the status and body on both
+  routes, that a genuinely missing pipeline still reads as missing (the same collapse
+  pointing the other way), that a reasoned override still gets through, and — structurally,
+  by AST — that no future `_handle_*` can reach a cap-checked engine call without a
+  refusal clause.
+* The probe now drives `_handle_post_pipeline_restart` and takes **status and body** from
+  it. Against a 404-answering server it fails six of ten checks (`dashboard/before-404.txt`).
+* A second-order defect behind it: `retryWithCapOverride` toasted success without reading
+  `dispatched`. The dispatch ceiling is checked *before* the `_cap_grant` is consumed, so
+  with four stages already dispatched the override succeeds and nothing runs. It now says
+  which happened.
+
+**Checked and NOT defects**, recorded so nobody re-opens them: the structural guard also
+flagged `_agent_restart` and `_ci_image_restart`. `_ci_image_restart` wraps its call in
+`except Exception`; `_agent_restart` is bare, but both call sites inside
+`pipeline_agent._handle_stage_failed` are wrapped and record `retry_failed`. So the
+watchdog survives the cap refusing it — which matters, because the watchdog is the path
+that re-dispatched one permanently-failing stage every thirty minutes overnight on
+2026-08-13, and it is now guaranteed to meet the cap.
+
+## ⛔ 2. The reaper's cloud half could be entirely dead, with the gate PASS and the suite green
+
+Everything connecting the running server to the new reaper was a substring search. The
+reviewer deleted the registration call and gutted `_report_run`'s body — **keeping the
+import** — and got:
+
+```
+BEFORE   1 failed, 677 passed   |   PASS  Is dispatched work either finished or killed?
+AFTER    1 failed, 677 passed   |   PASS  Is dispatched work either finished or killed?
+                                     . 3 of 3 flow-run launch sites report their handle
+                                     . server binds the recorder into every script stage: yes
+                                     . server registers the cloud terminators at startup: yes
+```
+
+Every wiring line reading "yes" over a system where no handle is ever recorded and no
+terminator ever registered. Reproduced here before fixing.
+
+Why each grep survived:
+
+| check | why it did not see the deletion |
+|---|---|
+| `"cloud_reaper" in src` | satisfied by the surviving `import` line alone |
+| `src.index("cloud_reaper") < src.index("reaper_thread.start()")` | compares **string positions**; the import satisfies it, and so would a comment |
+| `count("_report_run(ctx,")` | counts **call sites**, so gutting the callee is invisible |
+
+This is F18 one hop further out. F18 was a probe handing itself its precondition; this is a
+probe checking that a *wire exists* by looking for the word. **If a check would still pass
+with the function body deleted, it is not measuring the function.**
+
+### What was done
+
+`server.build_script_context(req, wt_path=None)` and
+`server.wire_cloud_terminators(engine)` are named seams, so the tests and the gate **call
+them and ask the engine what it holds**:
+
+* the returned context's callback really writes a handle to the record, and to **its own**
+  stage — a script cannot report against someone else's run;
+* `_TERMINATORS` afterwards contains `prefect_flow_run`, and the registered function **is**
+  `cloud_reaper.terminate_prefect_flow_run` — `callable()` would have accepted a no-op,
+  which is the same shape as the greps this replaced;
+* `_report_run`'s **body** is driven, including that a broken engine seam cannot abort a
+  backfill;
+* launch sites `== ` reports, not `>=`, so a surplus mention cannot mask a missing one;
+* ordering is asserted by **AST statement order**, not string index;
+* the gate-check path builds its context through the same seam, and exactly one
+  `ScriptContext(` construction site is asserted — the no-op default recorder is
+  fail-**open**, so a hand-built context on a path that later launches cloud work would
+  drop its handle silently.
+
+The gate does all of this too, and drives `_report_run` itself. If `prefect_ops` will not
+import it reports NOT-IMPORTABLE rather than quietly falling back to the count.
+
+Both of the reviewer's edits are now mutations. `mutate_readiness_probes.py` gained a
+per-mutation **target file** so a mutation can reach `server.py` and `prefect_ops.py`, and
+its scratch tree now carries `.deploy` — without it `prefect_ops` cannot import and the
+gate would FAIL for a reason unrelated to the mutation, which is a kill credited to the
+wrong half (F18's tail).
+
+## Finding 3 — an unbounded reap is the ceiling's own outage, arriving through the reaper
+
+Traced, not reproduced: there is no Azure subscription here.
+
+`_reaper_loop` runs `reap_expired_leases()` and then `dispatch_deferred_stages()`
+**sequentially on the same thread**, and per F14 that sweep is the only ungated path that
+ever picks a ceiling-deferred stage back up. Handles accumulate without bound —
+`trigger_backfill_and_wait` records one per `create_flow_run` inside its launch loop, so a
+30-partition backfill retried twice leaves ~90 on a single stage — and each costs up to
+`az container list` 30s + `az container show` 20s + `az container delete` 120s.
+
+So an unbounded reap does not merely run long: it strands exactly the pipelines the ceiling
+deferred. **The outage the ceiling was added to prevent, arriving through the reaper.**
+
+`TERMINATION_BUDGET_SEC = 120` bounds the whole sweep, not each stage. What it does not
+reach is `NOT_ATTEMPTED` with its reason, **keeps its handles**, and is retried next sweep —
+the budget defers work, it does not discard it. Four negative controls, including that a
+sweep within budget still terminates everything, because a budget that refuses everything
+is not a budget.
+
+## And one the harness found about itself
+
+Adding `_deadline` to the termination call stopped **both** harnesses' anchors for "the
+call that kills the cloud work" from matching. The connectors harness reported
+ANCHOR-MISSING and exited 1. The factory harness did not — it had last been *run* before
+the refactor, and its "All 12 mutations flipped" was already quoted in a commit message: a
+true statement about a tree that no longer existed.
+
+A mutation anchor is a copy of production source, so it rots on refactor, and each harness
+takes ~20 minutes. `tests/test_mutation_anchors_still_match.py` now checks all 28 anchors
+in 0.07s inside the ordinary suite, so the slow harness is never what discovers a stale
+one. Recorded as F29.
+
+## What the review confirmed rather than overturned
+
+Re-derived independently by the reviewer: the 26 negative controls; 12 of 12 connectors
+mutations and 10 of 10 probe mutations at that commit; that the harness no longer touches
+the real tree; the `-q` rootdir inheritance, checked hardest because it was the most
+surprising; the real-record write and its no-regression claim, by diffing the rollback
+snapshot against the live file (two records before, two after, exactly one field changed);
+and that the `test_logbook` failure is pre-existing on every tree.
+
+It also confirmed the gate was made **strictly harder, not merely different** —
+`g_orphans_are_reaped`'s old pass condition is now an explicit `_fail` branch — while
+noting correctly that three of the new sub-conditions were greps, which is Finding 2 above.
+
+**Numbers it corrected:** `674 passed` was wrong (673 at that commit); the document's
+headline still carried the previous session's `7 of 30 -> 14 of 30`; and "3 new probe
+mutations" in a handoff was 2. Silence on everything else in that category means checked.
+
+## Categories where the review found nothing — checked, not skipped
+
+The four-verdict vocabulary and the refusal to believe an unrecognised one; the
+NOT_RECORDED-vs-absence distinction in the engine, the audit event, the reap event and the
+operator-facing sentence; the ownership fail-closed rule and run-id matching; the reap →
+`_close_if_terminal` reconciliation (F17); in-process corruption of the pipeline store from
+the new script-thread writer (two candidate paths, both died in verification); double
+dispatch; and whether `apiStrict` breaks any existing dashboard path.
+
+## ⚠ A decision that should be made out loud, not inherited from a docstring
+
+`cloud_reaper.is_armed()` defaults **ON**, against the production resource group
+`aldcprodrsgpprefectworkers1c`, with an env-var kill switch as the only brake and no
+dry-run mode. The module argues the case explicitly — a default-off switch is off during
+the incident — and the ownership check fails closed. The reviewer agreed with the argument
+and still flagged it, correctly: *"an unattended process will `az container delete` in prod
+by default"* is a call for a human to make, not something to inherit from a comment.
+**Nobody has made it yet.**
