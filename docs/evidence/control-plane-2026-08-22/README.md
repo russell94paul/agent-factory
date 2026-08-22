@@ -744,7 +744,7 @@ write.
 | harness | before | after |
 |---|---|---|
 | `mutate_readiness_probes.py` — do the GATES depend on the controls? | 8 of 8 | **12 of 12** (the two extra are the review's own edits: the registration call, and `_report_run`'s body) |
-| `mutate_control_plane.py` — do the TESTS depend on the controls? | 8 of 8 | **15 of 15** (12 after session 2's first pass; the 409 status, the control name in the body and the sweep budget came from the review) |
+| `mutate_control_plane.py` — do the TESTS depend on the controls? | 8 of 8 | **18 of 18** — 12 after session 2's first pass, then the 409 status, the control name in the body and the sweep budget from review round one, then the retry pass, settled-verdict handling and clause ORDER from round two |
 
 New mutations, all LOAD-BEARING: the termination call; the durable handle; the ownership
 check that fails closed; the refusal to believe a verdict outside the vocabulary.
@@ -753,8 +753,8 @@ check that fails closed; the refusal to believe a verdict outside the vocabulary
 
 | suite | result |
 |---|---|
-| `prefect-connectors` `tests/orchestrator` | **697 passed, 1 failed** at the end of session 2. Earlier in this file: 673 passed / 674 collected — I wrote 694, corrected it to 674, and 674 was the COLLECTED total. Wrong three times, corrected each time by someone re-deriving it |
-| `agent-factory` `pytest` | **175 passed, 2 xfailed** |
+| `prefect-connectors` `tests/orchestrator` | **705 passed, 1 failed** at the end of session 2. Earlier in this file: 697, and before that 673 passed / 674 collected — I wrote 694, corrected it to 674, and 674 was the COLLECTED total. Wrong three times, corrected each time by someone re-deriving it |
+| `agent-factory` `pytest` | **178 passed, 2 xfailed** |
 
 The one failure is `test_logbook.py::TestResolution::test_recurrence_after_resolution_is_marked_regressed`,
 pre-existing and unrelated — it fails identically on the unmodified checkout at `3da40f6`.
@@ -980,3 +980,130 @@ the incident — and the ownership check fails closed. The reviewer agreed with 
 and still flagged it, correctly: *"an unattended process will `az container delete` in prod
 by default"* is a call for a human to make, not something to inherit from a comment.
 **Nobody has made it yet.**
+
+---
+
+# The second independent read — and the promise I wrote that was not true
+
+The reviewer was sent back over the fixes to its own findings, because those fixes were
+themselves unreviewed. It verified both round-one findings closed by **re-running its exact
+attacks**, and found two more. Both were reproduced here before being believed.
+
+## ⛔ A. The budget deferred nothing, and the record promised it would
+
+`_terminate_external_work` has exactly **one caller**, `reap_expired_leases`, which only
+reads stages whose status is `dispatched` — and the reap sets the stage to `failed` three
+lines later. So every handle the budget skipped sat on a stage nothing would ever read
+again. A stage carrying 90 accumulated handles would have killed one or two and **leaked the
+rest permanently**, each holding a core on the shared 10-core quota this whole lane exists to
+protect.
+
+Driven, four sweeps with a full budget available each time:
+
+```
+SWEEP 1: terminated ['run-00']   stage status=failed   handles on record=5
+SWEEP 2: terminated NOTHING
+SWEEP 3: terminated NOTHING
+SWEEP 4: terminated NOTHING
+```
+
+Three places said otherwise: the per-handle detail the operator reads
+(*"it is UNTOUCHED and the next sweep will try again"*), the constant's docstring, and a
+test called `test_the_skipped_handles_survive_for_the_next_sweep`.
+
+⭐ **The test could not see it.** Its body asserted that the handles were still on the
+record — which a record nothing will ever read again satisfies exactly as well as one that
+will. **The promise was in the name.** That is the "check that cannot fail" shape, written
+by this lane, in the same session as a finding warning about it.
+
+**In fairness to the code:** the stage's headline `error` string was honest throughout —
+*"anything not KILLED may STILL BE RUNNING and holding quota"* — so a human reading only
+that was correctly warned. The false claim was underneath it. That is arguably worse than a
+silent gap: **a promised automatic recovery is the thing that stops someone acting.**
+
+### The fix
+
+`sweep_unterminated_handles()`, run by `_reaper_loop` after each reap. Every handle now
+carries its `last_verdict` on the record. Only **NOT_ATTEMPTED** and **FAILED** are retried;
+KILLED and NOT_FOUND are settled, and re-asking the cloud about a container we already
+deleted is `az` calls every sweep forever with no information in return.
+
+The same driven scenario now drains — 2, then 1, 1, 1. All five.
+
+Seven negative controls, asserting the **drain** rather than the storage: the backlog
+drains; a KILLED handle is never asked about twice; nor a NOT_FOUND one; a FAILED one **is**
+retried; a handle recorded before any terminator existed is picked up once one is
+registered; the retry pass respects its own budget; and a stage with nothing pending costs
+nothing. The old test is renamed `test_the_skipped_handles_are_kept_on_the_record` and now
+states what it does not cover.
+
+## ⛔ B. The order guard was order-blind
+
+`ControlRefused` subclasses `ValueError`, and Python dispatches `except` clauses **in
+order** — so a broad clause first makes the refusal clause **dead code with the clause
+visibly present**. That is the original 404 defect exactly, and the AST guard written to
+prevent it could not see it: it asked only whether a clause mentioning `ControlRefused`
+existed anywhere in the function.
+
+Reproduced two ways:
+
+| edit | result |
+|---|---|
+| swap the two clauses in `_handle_post_pipeline_restart` | `2 failed, 9 passed` — and the AST guard was **among the 9 that passed**. Only the hardcoded behavioural pair caught it |
+| add a plausible `_handle_post_pipeline_release` with the clauses in that order | **`24 passed`**, and the route answered `404 \| control field: None`. A route in no list gets no behavioural test |
+
+Now the guard compares handler **indexes** within each `ast.Try`, and the behavioural
+parametrisation is **discovered** from the same AST walk rather than listed — so the
+invented route earns three behavioural failures for free, plus the guard's own. A discovered
+route the driver cannot exercise **fails loudly** rather than being skipped.
+
+## C. The budget bounds a start, not a duration
+
+`TERMINATION_BUDGET_SEC` is checked at the top of the per-handle loop, so a terminator
+entered a millisecond before the deadline runs to completion outside it. One handle's worst
+case is roughly 300s — Prefect's cancel carries a `Retry(total=3, backoff_factor=1)` policy
+on a 15s timeout, plus `az` list 30s + show 20s + delete 120s. So a sweep's real ceiling is
+nearer 120 + 300s than 120s.
+
+Traced arithmetic, **not measured** — it needs a real endpoint. The design is unchanged and
+is still two orders of magnitude better than the unbounded four hours; the docstring now
+says what the constant actually bounds rather than what its name suggests.
+
+## D. A branch I had just added was watched by nothing
+
+`retryWithCapOverride`'s new `else` — *"Override recorded, but nothing was dispatched"* — is
+the fix for the reviewer's round-one secondary point, and the probe's stub always answered
+`dispatched: 1`, so only the success branch was ever exercised. A fourth scenario now drives
+the ceiling-full case and asserts the toast is `info`, not `success`.
+
+## Final measurements
+
+| instrument | result |
+|---|---|
+| `prefect-connectors` `tests/orchestrator` | **705 passed, 1 failed** (`test_logbook`, pre-existing on unmodified trees) |
+| `agent-factory` `pytest` | **178 passed, 2 xfailed** |
+| `mutate_control_plane.py` | **18 of 18 load-bearing** |
+| `mutate_readiness_probes.py` | **12 of 12 flip their gate off PASS** |
+| `dashboard_cap_override_probe.py` | **12 of 12 watched in Chromium** |
+| `python -m factory.readiness` | **15 of 30 — unchanged, for the fourth measurement** |
+
+## What the second read confirmed rather than overturned
+
+Both round-one findings are closed, verified by re-applying the exact edits: the wiring
+mutations now fail two tests each and flip the gate with the evidence line naming which half
+died, and the identity assertion added in `5754ccd` closes the "returns True having
+registered something useless" attack the reviewer had queued. It independently reached the
+same conclusions I did on three of the four questions I had checked by hand, traced
+`apiStrict`'s four error paths, confirmed 409 is unreachable for a non-refusal, and confirmed
+`build_script_context` produces a byte-identical object on the script path and changes
+nothing on the gate-check path.
+
+**Still could not check:** the `az`/Prefect seams, and anything under real load.
+
+## ⚠ Still true, and the largest gap by far
+
+**Nothing has run.** Three rounds of review, four instruments, 18 load-bearing mutations and
+a browser probe do not add up to one execution. The orchestrator has not run since
+2026-05-28, and no container has ever been deleted by this code.
+
+**And the round-two fixes are themselves unreviewed.** A third pass has not been run.
