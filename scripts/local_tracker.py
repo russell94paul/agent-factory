@@ -171,19 +171,24 @@ def _wt() -> str:
     return shutil.which("wt") or shutil.which("wt.exe") or ""
 
 
-def start_all_command(lane_ids, make: bool = True):
-    """One `wt` invocation opening a tab per lane. Tabs, not panes: a Claude session needs the
-    vertical room, and three panes on one screen gives each a third of a screen to think in.
-    Switch `new-tab` to `split-pane` below if you would rather see them all at once.
+def start_all_command(lane_ids, make: bool = True, panes: bool = True):
+    """One `wt` invocation for every eligible lane.
+
+    `panes=True` opens one tab and splits it, so all sessions are visible at once — what Paul
+    asked for. Alternating vertical/horizontal keeps three or four panes near-square rather than
+    degrading into slivers. `panes=False` gives a tab each, which is better for working IN one
+    since a Claude session wants the vertical room. Both are offered; neither is imposed.
     """
     args, notes = [], []
     for i, lid in enumerate(lane_ids):
         cmd, f, cwd = launch_command(lid, make=make)
-        inner = cmd[-1]                      # the powershell -Command payload built above
+        tail = list(cmd[-2:])                # ["-File", "<lane>.ps1"] — styled, semicolon-free
         if i:
             args.append(";")
-        args += ["new-tab", "--title", f"lane: {lid}", "--startingDirectory", str(cwd),
-                 "powershell", "-NoExit", "-ExecutionPolicy", "Bypass", "-Command", inner]
+        verb = ["new-tab"] if (not i or not panes) else ["split-pane", "-V" if i % 2 else "-H"]
+        args += verb + ["--title", f"lane {lid}", "--startingDirectory", str(cwd),
+                        "--colorScheme", WT_SCHEME,
+                        "powershell", "-NoExit", "-ExecutionPolicy", "Bypass"] + tail
         notes.append(lid)
     return ([_wt()] + args) if args else [], notes
 
@@ -587,7 +592,11 @@ def render(when: datetime.datetime, tab: str = "gates") -> str:
         w(f'<a href="/start-all" style="display:inline-block;font-size:12.5px;padding:7px 14px;'
           f'margin:10px 0 0;border:1px solid var(--pass);border-radius:3px;'
           f'background:var(--pass);color:var(--paper);text-decoration:none;'
-          f'font-family:ui-monospace,monospace">&#9654; start all {len(ready_now)} eligible</a>')
+          f'font-family:ui-monospace,monospace">&#9654; start all {len(ready_now)} in one split view</a>')
+        w('<a href="/start-all?layout=tabs" style="display:inline-block;font-size:12.5px;'
+          'padding:7px 14px;margin:10px 0 0 6px;border:1px solid var(--rule);border-radius:3px;'
+          'background:var(--raise);color:var(--ink);text-decoration:none;'
+          'font-family:ui-monospace,monospace">or as separate tabs</a>')
         if len(ready_now) < len(pset):
             held_back = [l for l in pset if l not in ready_now]
             w(f'<p style="font-size:12px;color:var(--unmeas);margin:6px 0 0">'
@@ -1037,7 +1046,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
                     skipped.append(f"{lid} ({exc})")
             done = []
             if eligible and _wt():
-                cmd, done = start_all_command(eligible, make=not dry)
+                panes = "layout=tabs" not in (urllib.parse.urlparse(self.path).query or "")
+                cmd, done = start_all_command(eligible, make=not dry, panes=panes)
                 if dry:
                     for lid in eligible:
                         claimlib.release(lid)
