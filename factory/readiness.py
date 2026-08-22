@@ -673,14 +673,51 @@ def g_evaluator_is_a_service():
             if f.name not in ("readiness.py", "__init__.py")
             and "class EvaluatorClient" in f.read_text(encoding="utf-8", errors="replace")]
     ev = [f"$AGENT_FACTORY_EVALUATOR: {endpoint or '(unset)'}",
-          f"client implementation: {', '.join(impl) or 'none'}",
-          "the verifier runs in-process today, with the same identity as whatever invokes it",
-          "R3's ranking: external evaluator service with its own identity is rank 1; a separate "
-          "local process is rank 5 and 'mostly theatre'",
-          "'Moving only the files to another directory changes nothing; moving "
-          "ownership/credentials out of the agent's capability set does'"]
+          f"client implementation: {', '.join(impl) or 'none'}"]
+
+    # The old PASS text read "configured and reachable" while measuring neither reachability nor
+    # who answered. A gate that asserts a word it never tested is the same species of defect as a
+    # probe matching its own source, so both words are now measured — and reported as evidence
+    # rather than folded into the pass condition, because this gate asks whether the evaluator IS
+    # a separate principal, not whether it happens to be up this second.
+    live, mode = None, "unconfigured"
+    if endpoint:
+        from .evaluator import EvaluatorClient, endpoint_mode
+        mode = endpoint_mode(endpoint)
+        try:
+            live = EvaluatorClient(endpoint, timeout=1.5).health()
+        except Exception as exc:                                   # noqa: BLE001
+            ev.append(f"health check: NO ANSWER ({type(exc).__name__}) — configured is not running")
+    if live:
+        ev.append(f"health check: answered as {live.get('identity', 'unidentified')}, "
+                  f"bundle {str(live.get('bundle_sha256', ''))[:12]}, "
+                  f"corpus {live.get('corpus_id', '?')}, "
+                  f"{live.get('verdicts_recorded', 0)} verdict(s) recorded")
+        ev.append(f"the submission vocabulary it accepts: {live.get('submission_fields')} "
+                  "— no corpus, no manifest, no evaluator")
+
+    # ⚠ Deployment rank is not design rank, and this gate must not let the two be confused. Same
+    # code on loopback and in a container with a managed identity gives very different protection.
+    if mode == "loopback":
+        ev.append("deployment: LOOPBACK — R3 rank 5, 'mostly theatre'. Same uid can write the "
+                  "verdict store and restart the evaluator; the design is rank 1 and the "
+                  "remaining gap is a managed identity the agent sandbox does not hold, which is "
+                  "a deployment change, not a code change")
+    elif mode == "remote":
+        ev.append("deployment: REMOTE — rank 1 shape. Confirm the agent sandbox cannot obtain "
+                  "the evaluator's identity before treating this as isolation")
+
+    ev += ["the agent supplies {artifact_uri, artifact_sha256, run_id} and nothing else; the "
+           "corpus, the manifest and the assertion set are resolved by the service",
+           "known hole: the contract is parameterised by a blueprint the graded party writes. "
+           "A target floor and the artefact hash narrow it; a pinned per-connector target closes "
+           "it, and nobody has written one",
+           "R3's ranking: external evaluator service with its own identity is rank 1; a separate "
+           "local process is rank 5 and 'mostly theatre'",
+           "'Moving only the files to another directory changes nothing; moving "
+           "ownership/credentials out of the agent's capability set does'"]
     if endpoint and impl:
-        return _pass("an evaluator service is configured and reachable", ev, src)
+        return _pass(f"the evaluator is a separate principal ({mode} deployment)", ev, src)
     return _notrun("the evaluator is not yet a separate principal", ev, src)
 
 
@@ -706,7 +743,10 @@ def _followup_gate(n: int, subject: str):
         ev = [f"looking for docs/research/answers/R{n}-followup*.md",
               f"subject: {subject}"]
         if hits:
-            return _pass(f"answered: {hits[0]}", ev, src)
+            # "dispatched", not "answered": these files hold the QUESTION, and the gate's
+            # own NOTRUN text is "not asked yet". A gate that tracks asking must not read
+            # as though it tracked answering.
+            return _pass(f"dispatched: {hits[0]}", ev, src)
         return _notrun("not asked yet", ev, src)
     return probe
 
