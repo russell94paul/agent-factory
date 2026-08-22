@@ -6,6 +6,8 @@ proved could fail is the 965-run loop again.
 """
 from __future__ import annotations
 
+from dataclasses import replace
+
 import copy
 
 import pytest
@@ -219,13 +221,33 @@ def test_a_crashing_instrument_is_unmeasurable_not_fail():
     assert r.verdict is Verdict.UNMEASURABLE and "timed out" in r.detail
 
 
-def test_shipped_blueprint_cannot_certify_tenancy_until_a_human_fills_it():
-    """The shipped target declares no account ids, so A12 must block rather than wave through."""
-    res = build_contract(load_target(BLUEPRINT), CtxProbes()).run(known_good_world())
+def test_an_unscoped_target_cannot_certify_tenancy():
+    """A target declaring no account ids must block rather than wave through.
+
+    This asserted the SHIPPED blueprint was unscoped until 2026-08-21, when the six Navira
+    account ids were sourced from connector/accounts/GEP/deployments/windsorai.py and filled in.
+    The property under test was never "the blueprint is empty" — it was "an empty scope blocks".
+    So it now builds an unscoped target explicitly instead of relying on the shipped one staying
+    incomplete, which is the kind of coupling that turns a real fix into a red suite.
+    """
+    unscoped = replace(load_target(BLUEPRINT), allowed_tenants=[])
+    res = build_contract(unscoped, CtxProbes()).run(known_good_world())
     a12 = next(r for r in res.results if r.name.startswith("A12"))
     assert a12.verdict is Verdict.UNMEASURABLE
     assert "declares no tenancy scope" in a12.detail
     assert res.verdict is Verdict.UNMEASURABLE, "an unscoped target must not go green"
+
+
+def test_the_shipped_blueprint_now_declares_a_scope():
+    """The counterpart: having sourced the ids, the shipped target must actually carry them.
+
+    Without this, deleting allowed_tenants would silently restore the old UNMEASURABLE and the
+    suite above would still be green — a fix that can be undone without a test noticing.
+    """
+    target = load_target(BLUEPRINT)
+    assert len(target.allowed_tenants) == 6, "six Navira Google Ads accounts, per GP-226"
+    assert all("-" in t for t in target.allowed_tenants), (
+        "Windsor emits account_id dash-formatted for this source")
 
 
 def test_a_missing_session_id_is_unmeasurable_not_fail():

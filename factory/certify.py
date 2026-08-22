@@ -30,15 +30,21 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--json", action="store_true", help="emit JSON only")
     args = ap.parse_args(argv)
 
-    target = load_target(args.blueprint)
     scored_against = None
     if args.calibrate:
-        from .calibration import known_good_world, provenance
+        from .calibration import calibration_target, known_good_world, provenance
         # Read the stamp BEFORE scoring: if the corpus does not verify, this raises here rather
         # than producing a verdict nobody can tie to a world.
         scored_against = provenance()
+        # Calibration scores the CORPUS world against the CORPUS's own declared scope, not
+        # against the shipped blueprint's. It has to: the corpus is a closed world whose rows and
+        # tenants must agree with each other, while the blueprint's tenants describe live runs.
+        # Mixing them made A12 fail the moment the real account ids were filled in — the contract
+        # correctly rejecting a placeholder world, but reported as a broken calibration.
+        target = calibration_target()
         result = build_contract(target, CtxProbes()).run(known_good_world())
     else:
+        target = load_target(args.blueprint)
         result = build_contract(target, Probes()).run({})
 
     payload = {

@@ -128,19 +128,33 @@ def _blueprint() -> dict:
     p = FACTORY / "blueprints" / "windsorai_gep.yaml"
     if not p.is_file():
         raise Unmeasurable(f"no blueprint at {p}")
+    # Deliberately tiny: a real YAML parse would pull a dependency into a probe that must keep
+    # working when the environment is broken. It handles scalars, `key: []`, and block lists.
+    # It previously dropped block lists entirely -- `allowed_tenants:` set the key to "" and the
+    # `- item` lines below it were skipped, so filling in six account ids left the gate still
+    # reporting "empty". A probe that cannot see the fix is worse than no probe.
     out, key = {}, None
     for line in p.read_text(encoding="utf-8").splitlines():
         s = line.split("#")[0].rstrip()
-        if not s.strip() or s.strip().startswith("-") and key:
-            if s.strip().startswith("-") and key:
-                out.setdefault(key, [])
-                if isinstance(out[key], list):
-                    out[key].append(s.strip()[1:].strip())
+        stripped = s.strip()
+        if not stripped:
+            continue
+        if stripped.startswith("- ") or stripped == "-":
+            if key is None:
+                continue
+            if not isinstance(out.get(key), list):
+                out[key] = []          # promote: `key:` with nothing after it opens a block list
+            out[key].append(stripped[1:].strip().strip("'\""))
             continue
         if ":" in s and not s.startswith(" "):
             key, _, v = s.partition(":")
             key, v = key.strip(), v.strip()
-            out[key] = v.strip("'\"") if v not in ("", "[]") else ([] if v == "[]" else "")
+            if v == "[]":
+                out[key] = []
+            elif v == "":
+                out[key] = ""          # may be promoted to a list by the lines beneath it
+            else:
+                out[key] = v.strip("'\"")
     return out
 
 

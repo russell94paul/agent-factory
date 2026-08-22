@@ -46,9 +46,40 @@ key_column: account_id
 date_column: date
 non_null_positive: [spend]
 
-# ⛔ NOT MEASURED — the Navira/GEP account ids. One ALDC Windsor key returns EVERY client's
-# accounts, so an unfiltered pull lands Fusion92 rows in a GEP table and nothing downstream can
-# tell. Until this list is filled, A12 reports UNMEASURABLE and the contract cannot go green.
-# That is the intended behaviour, not a gap to work around.
+# DERIVED — sourced 2026-08-21 from prefect-connectors
+# connector/accounts/GEP/deployments/windsorai.py:23, which declares what the flow REQUESTS.
+# That distinction is the whole point: this list is the requested scope, not the observed
+# landing. Reading it out of landed rows would make completeness unfalsifiable — the exact hole
+# the calibration matrix caught in A9.
+#
+# Its own provenance, quoted from that file: "Navira's Windsor-authorized Google Ads accounts
+# (GP-226, verified 2026-05-29: an unfiltered team-key pull returns 45 Google accounts, of which
+# these 6 are Navira's)". One ALDC Windsor key returns EVERY client's accounts — 45 of them — so
+# an unfiltered pull lands Fusion92 rows in a GEP table and nothing downstream can tell.
+#
+# ⚠ STALENESS, carried deliberately. Verified 2026-05-29, ~12 weeks before this blueprint, and
+# the source file itself says "Confirm against a live pull before activation." A12 now has a
+# declared scope to test against, which is a real improvement over having none — but a PASS on
+# A12 means "the landing matched what we declared", not "what we declared is still correct".
+# Re-confirm against a live account list before certifying anything for promotion.
 tenant_column: account_id
-allowed_tenants: []
+allowed_tenants:
+  - "389-957-4788"   # Brinno
+  - "842-825-0313"   # Bridgford
+  - "126-436-3882"   # bigsostore
+  - "524-661-7349"   # Cibu
+  - "703-152-5903"   # Slobproof
+  - "232-341-9629"   # GEP-Amazon
+
+# ⚠ SHAPE CORRECTION. These are DASH-formatted, which is how Windsor emits `account_id` for
+# this source. The calibration corpus was pinned with placeholder ids commented "real shape
+# (10-digit Google Ads)" — that comment was wrong about the shape. The corpus is not edited to
+# match, because it replays what a run recorded and nobody has measured which accounts actually
+# landed; inventing them would be fabrication. calibration_target() overrides allowed_tenants
+# from the corpus, so calibration stays self-consistent and this list governs live runs only.
+#
+# ⛔ STILL NOT MEASURED — Meta/Facebook. The same source file records 3 Navira accounts
+# authorized in Windsor (of 19 returned unfiltered) whose literal ids were never written down,
+# and holds `REPLACE_BEFORE_ACTIVATION_SEE_TODO` in their place. That placeholder is good
+# design, not an oversight: it matches nothing, so the flow lands zero rows rather than silently
+# mixing in another client's. This blueprint covers the Google Ads flow only.

@@ -1030,12 +1030,12 @@ hr.rule{border:0; border-top:1px solid var(--rule); margin:44px 0}
   </div>
   <div class="tracker rv">
     <div class="tracker-head">
-      <h3 class="disp">2 of 15 gates pass</h3>
+      <h3 class="disp">3 of 15 gates pass</h3>
       <span class="basis m">measured on build</span>
     </div>
     <div style="padding:0 18px 18px">
-      <div style="height:6px;background:var(--rule);position:relative;margin:14px 0 10px" role="img" aria-label="2 of 15 gates pass"><span style="position:absolute;inset:0 auto 0 0;width:13%;background:var(--pass)"></span></div>
-      <p style="font-size:14px;color:var(--ink-2)">Unattended means the loop runs, its gates can refuse, and its output can be certified. Today 2 of those 15 conditions holds. The gap is the work.</p>
+      <div style="height:6px;background:var(--rule);position:relative;margin:14px 0 10px" role="img" aria-label="3 of 15 gates pass"><span style="position:absolute;inset:0 auto 0 0;width:20%;background:var(--pass)"></span></div>
+      <p style="font-size:14px;color:var(--ink-2)">Unattended means the loop runs, its gates can refuse, and its output can be certified. Today 3 of those 15 conditions holds. The gap is the work.</p>
     </div>
   </div>
   <div class="tracker rv">
@@ -1196,7 +1196,7 @@ hr.rule{border:0; border-top:1px solid var(--rule); margin:44px 0}
   <div class="tracker rv">
     <div class="tracker-head">
       <h3 class="disp">Can its output be certified?</h3>
-      <span class="basis a">2 of 5</span>
+      <span class="basis a">3 of 5</span>
     </div>
     <div style="overflow-x:auto">
       <table class="derived">
@@ -1205,7 +1205,7 @@ hr.rule{border:0; border-top:1px solid var(--rule); margin:44px 0}
           <tr>
             <td><span class="chip pass">pass</span></td>
             <td class="what"><b>Is the certification suite green and honest?</b><br>
-              <span style="color:var(--ink-2)">55 passed</span>
+              <span style="color:var(--ink-2)">56 passed</span>
               <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
                 <li>includes test_every_assertion_has_been_proved_able_to_fail</li>
               </ul>
@@ -1226,15 +1226,15 @@ hr.rule{border:0; border-top:1px solid var(--rule); margin:44px 0}
             <td class="n"><span class="mono">factory/certify.py</span></td>
           </tr>
           <tr>
-            <td><span class="chip unmeas">unmeasurable</span></td>
+            <td><span class="chip pass">pass</span></td>
             <td class="what"><b>Is blast radius certifiable?</b><br>
-              <span style="color:var(--ink-2)">allowed_tenants is empty</span>
+              <span style="color:var(--ink-2)">6 tenant(s) declared</span>
               <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
-                <li>allowed_tenants is empty — one ALDC Windsor key returns every client's accounts, so an unfiltered pull lands Fusion92 rows in a GEP table and nothing downstream can tell. Blast radius is uncertifiable until someone writes the Navira account ids down.</li>
+                <li>['389-957-4788', '842-825-0313', '126-436-3882', '524-661-7349', '703-152-5903', '232-341-9629']</li>
               </ul>
               <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>Certifying a pull whose scope is unknown certifies nothing.</i></div>
             </td>
-            <td class="n"><span class="mono">&mdash;</span></td>
+            <td class="n"><span class="mono">blueprints/windsorai_gep.yaml</span></td>
           </tr>
           <tr>
             <td><span class="chip fail">fail</span></td>
