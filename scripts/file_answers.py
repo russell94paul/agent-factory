@@ -54,6 +54,18 @@ PROMPTS = {
 CANONICAL = {n: f"R{n}-answer-{slug}.md" for n, (slug, _) in PROMPTS.items()}
 
 
+
+def _next_run_name(want: str, root: pathlib.Path, planned: dict) -> str:
+    """R4-answer-x.md -> R4-answer-x-run2.md, skipping any run number already taken."""
+    stem, suffix = want[:-3], want[-3:]
+    n = 2
+    while True:
+        candidate = f"{stem}-run{n}{suffix}"
+        if not (root / candidate).exists() and candidate not in planned:
+            return candidate
+        n += 1
+
+
 def score(text: str) -> dict[int, int]:
     low = text.lower()
     out = {}
@@ -100,6 +112,24 @@ def main(argv=None) -> int:
         if want in planned:
             problems.append(f"  ! {p.name:<34} also claims {want}  [{detail}]")
             continue
+
+        # A second answer to the same prompt is not an error — running a prompt twice is a
+        # legitimate thing to do, and where two runs disagree is a finding. But the target may
+        # already be occupied, and renaming onto it would destroy the earlier answer silently.
+        # This branch exists because that nearly happened: a second R4 run appeared under a
+        # generic filename and the first version of this script would have overwritten the first.
+        occupied = ANSWERS / want
+        if occupied.exists() and occupied.resolve() != p.resolve():
+            if occupied.read_bytes() == p.read_bytes():
+                problems.append(
+                    f"  = {p.name:<34} byte-identical to {want} — a re-drop, not a second run. "
+                    f"Delete it or leave it; nothing to file.")
+                continue
+            want = _next_run_name(want, ANSWERS, planned)
+            print(f"  -> {p.name:<33} becomes {want}   SECOND RUN of this prompt  [{detail}]")
+            planned[want] = p
+            continue
+
         planned[want] = p
         flag = "SWAPPED/MISNAMED" if p.name != want else ""
         print(f"  -> {p.name:<33} becomes {want}   {flag}  [{detail}]")
