@@ -4,3 +4,4 @@ __pycache__/
 .data/
 .sessions/
 *.egg-info/
+tracker.html
