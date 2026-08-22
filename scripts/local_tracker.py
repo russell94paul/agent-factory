@@ -82,6 +82,31 @@ def launch_command(lane_id: str, make: bool = True):
              "-ExecutionPolicy", "Bypass", "-Command", inner], f, cwd)
 
 
+def _wt() -> str:
+    """Windows Terminal, if present. One window with a titled tab per lane beats five loose
+    console windows, and it is already installed — building terminals into the web page would be
+    a PTY bridge plus a multiplexer, to arrive somewhere worse than wt already is."""
+    import shutil
+    return shutil.which("wt") or shutil.which("wt.exe") or ""
+
+
+def start_all_command(lane_ids, make: bool = True):
+    """One `wt` invocation opening a tab per lane. Tabs, not panes: a Claude session needs the
+    vertical room, and three panes on one screen gives each a third of a screen to think in.
+    Switch `new-tab` to `split-pane` below if you would rather see them all at once.
+    """
+    args, notes = [], []
+    for i, lid in enumerate(lane_ids):
+        cmd, f, cwd = launch_command(lid, make=make)
+        inner = cmd[-1]                      # the powershell -Command payload built above
+        if i:
+            args.append(";")
+        args += ["new-tab", "--title", f"lane: {lid}", "--startingDirectory", str(cwd),
+                 "powershell", "-NoExit", "-ExecutionPolicy", "Bypass", "-Command", inner]
+        notes.append(lid)
+    return ([_wt()] + args) if args else [], notes
+
+
 def launch(lane_id: str, dry: bool = False):
     """Claim, then spawn. Returns (ok, message). The claim runs FIRST so a conflicting lane is
     refused before anything is started."""
@@ -763,7 +788,7 @@ def render(when: datetime.datetime, tab: str = "gates") -> str:
           'background:var(--paper);color:var(--ink)"></textarea>')
         w('<button type="submit" style="font-size:12.5px;padding:6px 14px;margin-top:8px;'
           'cursor:pointer;border:1px solid var(--rule);border-radius:3px;background:var(--raise);'
-          'color:var(--ink);font-family:ui-monospace,monospace">regenerate with this note</button>')
+          'color:var(--ink);font-family:ui-monospace,monospace">add this note to the handoff below</button>')
         w('</form>')
         text = ho.session_handoff(_HANDOFF_NOTE)
         w('<button type="button" data-copy="handoff-text" style="font-size:12.5px;'
@@ -897,7 +922,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.send_response(303); self.send_header("Location", "/lanes"); self.end_headers()
             return
         if self.path.rstrip("/") == "/start-all":
-            done, skipped = [], []
+            import subprocess as _sp
+            dry = "dry=1" in (urllib.parse.urlparse(self.path).query or "")
+            eligible, skipped = [], []
             for lid in claimlib.parallel_set():
                 lane = next((l for l in LANES if l.id == lid), None)
                 # A lane whose declared blocker is unanswered would launch and immediately ask.
@@ -905,9 +932,39 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 if lane is not None and lane.needs_paul and not opans.get(lid):
                     skipped.append(f"{lid} (blocker unanswered)")
                     continue
-                ok, msg = launch(lid)
-                (done if ok else skipped).append(lid if ok else f"{lid} ({msg})")
-            _CLAIM_MSG = (bool(done), "started " + (", ".join(done) or "nothing")
+                # Claim BEFORE building the command, so a lane that cannot be claimed never
+                # reaches the terminal, and a partial failure leaves no orphan claims.
+                try:
+                    claimlib.claim(lid, who="start-all")
+                    eligible.append(lid)
+                except claimlib.ClaimError as exc:
+                    skipped.append(f"{lid} ({exc})")
+            done = []
+            if eligible and _wt():
+                cmd, done = start_all_command(eligible, make=not dry)
+                if dry:
+                    for lid in eligible:
+                        claimlib.release(lid)
+                    _CLAIM_MSG = (True, f"DRY RUN — one wt window, {len(done)} tab(s): "
+                                        + ", ".join(done))
+                    self.send_response(303); self.send_header("Location", "/lanes"); self.end_headers()
+                    return
+                try:
+                    _sp.Popen(cmd, close_fds=True)
+                except Exception as exc:                            # noqa: BLE001
+                    for lid in eligible:
+                        claimlib.release(lid)
+                    done, skipped = [], skipped + [f"all ({type(exc).__name__}: {exc})"]
+            elif eligible:
+                # No Windows Terminal: fall back to one window each rather than doing nothing.
+                for lid in eligible:
+                    claimlib.release(lid)
+                    ok, msg = launch(lid)
+                    (done if ok else skipped).append(lid if ok else f"{lid} ({msg})")
+            _CLAIM_MSG = (bool(done),
+                          (f"started {len(done)} lane(s) in one Windows Terminal window: "
+                           + ", ".join(done) if done and _wt()
+                           else "started " + (", ".join(done) or "nothing"))
                           + ("; skipped " + "; ".join(skipped) if skipped else ""))
             print(f"  start-all: {_CLAIM_MSG[1]}")
             self.send_response(303); self.send_header("Location", "/lanes"); self.end_headers()

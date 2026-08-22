@@ -401,3 +401,26 @@ Every one of R6's recommendations arrived with *what it catches, what it cannot 
 make it fire on purpose* — the last being the property this programme cares about most. A control
 nobody has watched refuse something is decoration, so none of these is done until it has been made
 to fail deliberately.
+
+### 10.7 What got built while answering these — flagged, not pursued
+
+Paul, 2026-08-22: *"what we have built here is a session orchestrator... I want to flag this
+because it could be efficient, but let's keep on track."* Recording it because he is right and
+because nobody set out to build it.
+
+The readiness tracker began as a page that re-measured 30 gates. Over one session it acquired:
+lane definitions grouped by file locality, a dependency order and a conflict map, per-lane model
+recommendations, a claim/release lock, one git worktree and branch per lane, launch-into-terminal,
+a pre-answer channel for declared blockers, a preflight, and generated per-lane and per-session
+handoffs. That is a **session orchestrator for agent work** — the build plane's build plane.
+
+⚠ **It is not on the gate list and nothing measures it.** No gate in the readiness set asks
+whether it works, so by this programme's own standard it is unproven infrastructure with a nice
+interface. Its parts have been individually exercised — claim refusal, worktree lifecycle, handoff
+preflight, blocked launch — but the orchestrator as a whole has never run three lanes to
+completion. Before it is trusted or extended, it should earn gates like everything else.
+
+The efficiency claim is plausible and unmeasured. R5's question 2 asked what parallel agent
+sessions actually save and at what coordination cost; the honest position is that we now have the
+apparatus to find out and no measurement yet.
+
