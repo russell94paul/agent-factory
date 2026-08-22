@@ -295,6 +295,72 @@ def runnable_now(passing: Optional[Set[str]] = None) -> List[str]:
     return sorted(l.id for l in LANES if not w[l.id])
 
 
+def unblocks(lane_id: str, passing: Optional[Set[str]] = None) -> int:
+    """How many not-yet-passing gates are waiting, transitively, on this lane's gates.
+
+    This is the only ranking input that is about consequence rather than convenience, so it
+    dominates the score. Computed from the authored dependency graph, not guessed.
+    """
+    from .board import DEPENDS
+    passing = passing or set()
+    mine = {g for l in LANES if l.id == lane_id for g in l.gates}
+    # reverse edges: gate -> gates that wait on it
+    rev: Dict[str, Set[str]] = {}
+    for gid, deps in DEPENDS.items():
+        for d in deps:
+            rev.setdefault(d, set()).add(gid)
+    seen, stack = set(), list(mine)
+    while stack:
+        cur = stack.pop()
+        for nxt in rev.get(cur, ()):
+            if nxt not in seen and nxt not in mine:
+                seen.add(nxt)
+                stack.append(nxt)
+    return len([g for g in seen if g not in passing])
+
+
+def recommend(passing: Optional[Set[str]] = None,
+              running: Optional[Set[str]] = None) -> List[tuple]:
+    """[(lane, score, reason)] best first. The reason is the point — a bare ranking is an oracle.
+
+    ⚠ The WEIGHTING is a judgement, not a measurement. Stated here so it can be disagreed with:
+
+      +100 per not-yet-passing gate that transitively waits on this lane   consequence
+      +  8 if nothing in the lane is done yet                              momentum, cheap tiebreak
+      -  5 per gate already passing                                        avoid re-treading
+      - 40 if the lane needs Paul for something                            cannot start unattended
+      - 60 if a conflicting lane is already running                        the seat is taken
+      -  6 per gate in the lane                                            prefer a finishable lane
+    """
+    passing, running = passing or set(), running or set()
+    waits, clash = waits_on(passing), conflicts()
+    out = []
+    for lane in LANES:
+        if lane.id in running:
+            continue                                   # already being worked; not a suggestion
+        if waits[lane.id]:
+            continue                                   # not startable; not a recommendation
+        done = [g for g in lane.gates if g in passing]
+        if len(done) == len(lane.gates):
+            continue                                   # nothing left to do here
+        blocked_by_running = sorted(set(clash[lane.id]) & running)
+        n_unblocks = unblocks(lane.id, passing)
+        score = (100 * n_unblocks + (8 if not done else 0) - 5 * len(done)
+                 - (40 if lane.needs_paul else 0) - (60 if blocked_by_running else 0)
+                 - 6 * len(lane.gates))
+        bits = []
+        if n_unblocks:
+            bits.append(f"unblocks {n_unblocks} gate(s) downstream")
+        bits.append(f"{len(lane.gates) - len(done)} gate(s) left")
+        bits.append(f"run on {lane.model}")
+        if blocked_by_running:
+            bits.append(f"⚠ conflicts with {', '.join(blocked_by_running)}, already running")
+        if lane.needs_paul:
+            bits.append(f"needs Paul: {lane.needs_paul}")
+        out.append((lane, score, " · ".join(bits)))
+    return sorted(out, key=lambda r: -r[1])
+
+
 def coverage() -> Dict[str, List[str]]:
     """Which gates no lane claims. Not an error — some gates are this session's own work — but
     an unclaimed gate is one nobody has decided who does, which is worth being able to see."""

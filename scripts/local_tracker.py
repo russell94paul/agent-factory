@@ -31,7 +31,7 @@ from factory.readiness import (  # noqa: E402
     CONNECTORS, FACTORY, FAIL, NOT_RUN, PASS, PHASES, UNMEASURABLE, measure)
 from factory.board import (  # noqa: E402
     BLOCKED, DONE, READY, board, critical_path)
-from factory.lanes import LANES, SIZE, conflicts, waits_on  # noqa: E402
+from factory.lanes import LANES, SIZE, conflicts, recommend, waits_on  # noqa: E402
 from factory.findings import by_lane  # noqa: E402
 
 OUT = FACTORY / "tracker.html"
@@ -170,7 +170,7 @@ def hot_reload():
             g[n] = getattr(r, n)
         for n in ("BLOCKED", "DONE", "READY", "board", "critical_path"):
             g[n] = getattr(b, n)
-        for n in ("LANES", "SIZE", "conflicts", "waits_on"):
+        for n in ("LANES", "SIZE", "conflicts", "recommend", "waits_on"):
             g[n] = getattr(mods["factory.lanes"], n)
         import importlib as _il
         g["by_lane"] = getattr(_il.reload(_il.import_module("factory.findings")), "by_lane")
@@ -372,6 +372,23 @@ def render(when: datetime.datetime) -> str:
     w('<h1>Start a lane</h1>')
     w(f'<div class="sub">{len(LANES)} lanes &middot; <b>{len(ready_lanes)} can start now</b> '
       '&middot; copy a prompt into a fresh session</div>')
+    ranked = recommend(passing)
+    if ranked:
+        top, _, why = ranked[0]
+        w('<div class="par" style="margin-top:12px;border-color:var(--pass)">')
+        w(f'<h3 style="margin-top:0">Start here: {e(top.title)} '
+          f'<span style="font-weight:400;color:var(--ink3);font-size:13px">'
+          f'&middot; <code>{e(top.id)}</code></span></h3>')
+        w(f'<p style="font-size:13.5px;color:var(--ink2);margin:0 0 6px">{e(why)}</p>')
+        if len(ranked) > 1:
+            rest = " &middot; ".join(f'{e(l.title)} <span style="color:var(--ink3)">'
+                                     f'({e(l.id)})</span>' for l, _, _ in ranked[1:])
+            w(f'<p style="font-size:12.5px;color:var(--ink3);margin:0">then: {rest}</p>')
+        w('<p style="font-size:12px;color:var(--ink3);margin:8px 0 0">The inputs are measured '
+          '&mdash; gate verdicts, the dependency graph, file conflicts. The <b>weighting is a '
+          'judgement</b>, written down in <code>factory/lanes.py::recommend</code> so you can '
+          'disagree with it rather than guess what it did.</p>')
+        w('</div>')
     w('<div class="sub" style="font-size:12.5px;color:var(--ink3);margin-top:6px">'
       '<b>waits on</b> is derived from gate dependencies &mdash; the work is not ready. '
       '<b>conflicts with</b> is derived from the files a lane writes &mdash; the work is ready '
