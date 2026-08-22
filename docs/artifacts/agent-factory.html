@@ -1,0 +1,1403 @@
+<title>The Agent Factory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;800&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+/* ============================================================ tokens (light) */
+:root{
+  --paper:#EEF0F2; --surface:#F8F9FA; --raise:#FFFFFF;
+  --ink:#171A1D; --ink-2:#4C555D; --ink-3:#6C767E;
+  --rule:#D2D8DC; --rule-2:#E3E7EA;
+  --accent:#1D4E6B; --accent-soft:#E2EBF1;
+  --pass:#1F7A4D; --fail:#A8332A; --unmeas:#B07E14; --notrun:#78838B;
+  --grid:#DCE2E6;
+  --shadow:0 1px 2px rgba(16,24,32,.06), 0 8px 24px -16px rgba(16,24,32,.28);
+  --f-display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --f-body:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#0E1418; --surface:#141B21; --raise:#182128;
+    --ink:#E7ECEF; --ink-2:#A9B4BC; --ink-3:#828E97;
+    --rule:#26333B; --rule-2:#1E2A31;
+    --accent:#6FB3D6; --accent-soft:#152A38;
+    --pass:#4FBF89; --fail:#E4756A; --unmeas:#E3A93D; --notrun:#8A97A0;
+    --grid:#1D272E;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0E1418; --surface:#141B21; --raise:#182128;
+  --ink:#E7ECEF; --ink-2:#A9B4BC; --ink-3:#828E97;
+  --rule:#26333B; --rule-2:#1E2A31;
+  --accent:#6FB3D6; --accent-soft:#152A38;
+  --pass:#4FBF89; --fail:#E4756A; --unmeas:#E3A93D; --notrun:#8A97A0;
+  --grid:#1D272E;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.8);
+}
+
+/* ============================================================ base */
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:var(--f-body); font-size:17px; line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4,.disp{font-family:var(--f-display); font-weight:800; letter-spacing:-.02em; text-wrap:balance; margin:0}
+p{margin:0 0 1.05em}
+a{color:var(--accent); text-decoration:none; border-bottom:1px solid color-mix(in srgb, var(--accent) 35%, transparent)}
+a:hover{border-bottom-color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent); outline-offset:3px; border-radius:2px}
+code,.mono{font-family:var(--f-mono); font-size:.86em}
+.num{font-variant-numeric:tabular-nums}
+
+.wrap{max-width:1240px; margin:0 auto; padding:0 28px}
+.col{max-width:68ch}
+.eyebrow{font-family:var(--f-mono); font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3)}
+
+/* ============================================================ masthead */
+.mast{border-bottom:1px solid var(--rule); background:
+   linear-gradient(180deg, color-mix(in srgb, var(--accent) 6%, var(--paper)) 0%, var(--paper) 70%)}
+.mast-in{padding:64px 0 44px}
+.mast h1{font-size:clamp(42px,6.4vw,76px); line-height:.98; margin:14px 0 18px}
+.mast h1 em{font-style:normal; color:var(--accent)}
+.lede{font-size:clamp(18px,2.1vw,21px); color:var(--ink-2); max-width:60ch}
+.mast-meta{display:flex; flex-wrap:wrap; gap:10px 26px; margin-top:26px; align-items:center}
+.stamp{font-family:var(--f-mono); font-size:11.5px; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--ink-3); display:flex; align-items:center; gap:8px}
+.stamp b{color:var(--ink); font-weight:600}
+
+/* headline stats */
+.stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(168px,1fr)); gap:1px;
+  background:var(--rule); border:1px solid var(--rule); margin:38px 0 0}
+.stat{background:var(--surface); padding:18px 20px 16px}
+.stat .v{font-family:var(--f-display); font-weight:800; font-size:clamp(28px,3.6vw,40px);
+  line-height:1; letter-spacing:-.03em; font-variant-numeric:tabular-nums}
+.stat .k{font-family:var(--f-mono); font-size:11px; letter-spacing:.09em; text-transform:uppercase;
+  color:var(--ink-3); margin-top:9px; line-height:1.45}
+.stat.is-unmeas .v{color:var(--unmeas)}
+.stat.is-pass .v{color:var(--pass)}
+.stat.is-fail .v{color:var(--fail)}
+
+/* ============================================================ layout */
+.body-grid{display:grid; grid-template-columns:210px minmax(0,1fr); gap:56px; padding:52px 0 96px}
+@media(max-width:940px){ .body-grid{grid-template-columns:1fr; gap:0} .rail{display:none} }
+.rail{position:sticky; top:22px; align-self:start; font-family:var(--f-mono); font-size:12px}
+.rail ol{list-style:none; margin:0; padding:0}
+.rail li{margin:0 0 2px}
+.rail a{display:flex; gap:10px; padding:5px 8px; border:0; color:var(--ink-3); border-radius:3px; line-height:1.35}
+.rail a:hover{color:var(--ink); background:var(--rule-2)}
+.rail a.on{color:var(--ink); background:var(--accent-soft); box-shadow:inset 2px 0 0 var(--accent)}
+.rail .n{color:var(--ink-3); font-variant-numeric:tabular-nums}
+.rail .cap{display:block; margin:0 0 10px 8px; color:var(--ink-3); letter-spacing:.12em; text-transform:uppercase; font-size:10.5px}
+
+section{scroll-margin-top:20px; padding:0 0 60px}
+section > .col > h2, .sec-h{font-size:clamp(26px,3.2vw,34px); line-height:1.12; margin:0 0 6px}
+.sec-h-wrap{border-top:2px solid var(--ink); padding-top:14px; margin-bottom:22px}
+.sec-n{font-family:var(--f-mono); font-size:11.5px; letter-spacing:.14em; color:var(--ink-3); text-transform:uppercase}
+.sec-sub{color:var(--ink-2); max-width:64ch; margin-top:8px}
+
+/* ============================================================ components */
+.chip{display:inline-flex; align-items:center; gap:6px; font-family:var(--f-mono); font-size:11px;
+  letter-spacing:.06em; text-transform:uppercase; padding:3px 8px; border:1px solid currentColor;
+  border-radius:2px; line-height:1.5; white-space:nowrap}
+.chip.pass{color:var(--pass)} .chip.fail{color:var(--fail)}
+.chip.unmeas{color:var(--unmeas)} .chip.notrun{color:var(--notrun)}
+.chip.live{color:var(--pass)} .chip.prop{color:var(--ink-3); border-style:dashed}
+
+.callout{border-left:3px solid var(--accent); background:var(--surface); padding:16px 20px; margin:26px 0;
+  box-shadow:var(--shadow)}
+.callout.warn{border-left-color:var(--unmeas)}
+.callout.stop{border-left-color:var(--fail)}
+.callout p:last-child{margin-bottom:0}
+.callout .lbl{font-family:var(--f-mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--ink-3); display:block; margin-bottom:6px}
+
+.tbl-scroll{overflow-x:auto; margin:24px 0; border:1px solid var(--rule); background:var(--surface)}
+table{border-collapse:collapse; width:100%; font-size:14.5px; font-family:var(--f-body)}
+th,td{text-align:left; padding:10px 14px; border-bottom:1px solid var(--rule-2); vertical-align:top}
+thead th{font-family:var(--f-mono); font-size:11px; letter-spacing:.09em; text-transform:uppercase;
+  color:var(--ink-3); background:var(--raise); border-bottom:1px solid var(--rule); white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+td.n, th.n{text-align:right; font-family:var(--f-mono); font-variant-numeric:tabular-nums; white-space:nowrap}
+
+figure{margin:34px 0; }
+figure .fig-box{border:1px solid var(--rule); background:var(--surface); padding:20px; overflow-x:auto}
+figcaption{font-size:14px; color:var(--ink-2); margin-top:12px; max-width:70ch}
+figcaption b{color:var(--ink); font-weight:600}
+svg{max-width:100%; height:auto; display:block}
+.svg-wide{min-width:720px}
+
+/* basis marks */
+.basis{font-family:var(--f-mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase;
+  padding:2px 6px; border-radius:2px; border:1px solid var(--rule); color:var(--ink-3); white-space:nowrap}
+.basis.m{color:var(--pass); border-color:currentColor}
+.basis.d{color:var(--accent); border-color:currentColor}
+.basis.a{color:var(--unmeas); border-color:currentColor; border-style:dashed}
+
+/* ============================================================ motion */
+.rv{opacity:1; transform:none}
+.js .rv{opacity:0; transform:translateY(9px);
+  transition:opacity .52s cubic-bezier(.22,.61,.36,1), transform .52s cubic-bezier(.22,.61,.36,1);
+  transition-delay:calc(var(--i,0) * 55ms)}
+.js .rv.in{opacity:1; transform:none}
+@media (prefers-reduced-motion:reduce){
+  .js .rv, .js .rv.in{opacity:1 !important; transform:none !important; transition:none !important}
+  *{animation-duration:.001ms !important; animation-iteration-count:1 !important;
+    transition-duration:.001ms !important; scroll-behavior:auto !important}
+}
+</style>
+<style>
+/* ============================================================ drill-down map */
+.map{margin:34px 0 10px}
+.plane-tabs{display:flex; gap:0; border:1px solid var(--rule); background:var(--surface); flex-wrap:wrap}
+.plane-tabs button{
+  flex:1 1 180px; appearance:none; background:transparent; border:0; border-right:1px solid var(--rule);
+  padding:14px 16px; text-align:left; cursor:pointer; color:var(--ink-2); font-family:var(--f-mono);
+  font-size:12px; letter-spacing:.04em; transition:background .16s ease-out, color .16s ease-out}
+.plane-tabs button:last-child{border-right:0}
+.plane-tabs button b{display:block; font-family:var(--f-display); font-size:15px; letter-spacing:-.01em;
+  color:var(--ink); font-weight:600; margin-bottom:3px}
+.plane-tabs button:hover{background:var(--rule-2)}
+.plane-tabs button[aria-selected="true"]{background:var(--accent-soft); color:var(--ink);
+  box-shadow:inset 0 -3px 0 var(--accent)}
+.detail{border:1px solid var(--rule); border-top:0; background:var(--surface)}
+.detail-pane{padding:22px 20px 18px; overflow-x:auto}
+.detail-pane > h4{font-family:var(--f-display); font-size:16px; margin:0 0 4px}
+.detail-pane > .d-sub{font-size:14px; color:var(--ink-2); margin:0 0 16px; max-width:74ch}
+.js .detail-pane[hidden]{display:none}
+.detail-pane[hidden]{display:block}          /* no-JS: every plane stacked and readable */
+.js .detail-pane{animation:swap .24s cubic-bezier(.22,.61,.36,1)}
+@keyframes swap{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none}}
+.replay{appearance:none; border:1px solid var(--rule); background:var(--raise); color:var(--ink-2);
+  font-family:var(--f-mono); font-size:11.5px; letter-spacing:.06em; text-transform:uppercase;
+  padding:7px 12px; cursor:pointer; border-radius:2px}
+.replay:hover{color:var(--ink); border-color:var(--ink-3)}
+.pane-foot{display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+  padding:12px 20px; border-top:1px solid var(--rule-2); font-size:13.5px; color:var(--ink-2)}
+
+/* svg node staging */
+.stage-node{opacity:1}
+.js .playing .stage-node{opacity:.18}
+.js .playing .stage-node.lit{opacity:1; transition:opacity .28s ease-out}
+.flow-dot{opacity:0}
+.js .playing .flow-dot{opacity:1}
+
+/* ============================================================ assertion grid */
+.agrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(232px,1fr)); gap:1px;
+  background:var(--rule); border:1px solid var(--rule); margin:26px 0}
+.acell{background:var(--surface); padding:13px 15px 14px; display:flex; flex-direction:column; gap:6px}
+.acell .id{font-family:var(--f-mono); font-size:11px; letter-spacing:.07em; color:var(--ink-3)}
+.acell .claim{font-size:14.5px; line-height:1.42}
+.acell .foot{display:flex; align-items:center; gap:8px; margin-top:auto; padding-top:6px}
+.acell.u{box-shadow:inset 3px 0 0 var(--unmeas)}
+.acell.p{box-shadow:inset 3px 0 0 var(--pass)}
+.phase-band{font-family:var(--f-mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--ink-3)}
+
+/* ============================================================ tracker */
+.tracker{border:1px solid var(--rule); background:var(--surface); margin:26px 0}
+.tracker-head{display:flex; justify-content:space-between; align-items:baseline; gap:16px; flex-wrap:wrap;
+  padding:16px 20px; border-bottom:1px solid var(--rule)}
+.tracker-head h3{font-size:18px}
+.tracker table{font-size:14px}
+.tracker td:first-child{width:34px; text-align:center}
+.tracker input[type="checkbox"]{width:16px; height:16px; accent-color:var(--accent); cursor:pointer}
+.tracker .note{min-height:1.5em; font-family:var(--f-body); color:var(--ink-2);
+  border-bottom:1px dashed var(--rule); padding:2px 4px; border-radius:2px}
+.tracker .note:focus{outline:2px solid var(--accent); outline-offset:1px; background:var(--raise); color:var(--ink)}
+.tracker .note:empty::before{content:"add a note"; color:var(--ink-3); font-style:italic; opacity:.65}
+.derived td{color:var(--ink-2)}
+.derived .what{color:var(--ink)}
+.owner{font-family:var(--f-mono); font-size:12px; color:var(--ink-3)}
+.ro-note{padding:12px 20px; border-top:1px solid var(--rule-2); font-size:13px; color:var(--ink-3)}
+
+/* ============================================================ misc */
+.two{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:22px; margin:26px 0}
+.card{border:1px solid var(--rule); background:var(--surface); padding:18px 20px}
+.card h4{font-family:var(--f-display); font-size:16px; margin:0 0 8px}
+.card p{font-size:14.5px; color:var(--ink-2); margin:0 0 .7em}
+.card p:last-child{margin:0}
+.kv{display:grid; grid-template-columns:auto 1fr; gap:4px 14px; font-size:14px; margin:14px 0 0}
+.kv dt{font-family:var(--f-mono); font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3); padding-top:3px}
+.kv dd{margin:0}
+hr.rule{border:0; border-top:1px solid var(--rule); margin:44px 0}
+.foot{border-top:1px solid var(--rule); padding:30px 0 60px; color:var(--ink-3); font-size:13.5px}
+.foot .col{max-width:74ch}
+</style>
+
+<header class="mast">
+  <div class="wrap mast-in">
+    <div class="eyebrow">Zeus Pantheon &middot; build programme &middot; 2026-08-20</div>
+    <h1>The Agent<br>Factory<em>.</em></h1>
+    <p class="lede">A plan for building agent teams that can prove they did the work &mdash; written
+      after two mechanisms here acted for months without anything measuring whether the action
+      helped.</p>
+    <div class="mast-meta">
+      <span class="stamp">Estate <b>ALDC</b></span>
+      <span class="stamp">Repos <b>prefect-connectors &middot; clients &middot; agent-factory</b></span>
+      <span class="stamp">Status <b style="color:var(--unmeas)">Phase A &mdash; calibrated, unwired</b></span>
+    </div>
+    <div class="stats">
+      <div class="stat is-fail"><div class="v num" data-to="965">965</div>
+        <div class="k">automated runs<br>at a 1.6% success rate</div></div>
+      <div class="stat is-fail"><div class="v num" data-to="0">0</div>
+        <div class="k">fixes applied by the<br>retired agent, in 234 escalations</div></div>
+      <div class="stat is-pass"><div class="v num" data-to="12">12</div>
+        <div class="k">contract assertions,<br>each proved able to fail</div></div>
+      <div class="stat is-unmeas"><div class="v" data-to="1">1</div>
+        <div class="k">assertion still blocking<br>certification &mdash; tenancy</div></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap body-grid">
+<nav class="rail" aria-label="Sections">
+  <span class="cap">Contents</span>
+  <ol>
+    <li><a href="#measured"><span class="n">01</span><span>What is measured today</span></a></li>
+    <li><a href="#map"><span class="n">02</span><span>The system, three planes</span></a></li>
+    <li><a href="#failed"><span class="n">03</span><span>How it failed twice</span></a></li>
+    <li><a href="#contract"><span class="n">04</span><span>The GreenContract</span></a></li>
+    <li><a href="#anatomy"><span class="n">05</span><span>Agent, team, version</span></a></li>
+    <li><a href="#team-one"><span class="n">06</span><span>Team one</span></a></li>
+    <li><a href="#tenancy"><span class="n">07</span><span>Tenancy &amp; blast radius</span></a></li>
+    <li><a href="#absent"><span class="n">08</span><span>Deliberately absent</span></a></li>
+    <li><a href="#route"><span class="n">09</span><span>The route</span></a></li>
+    <li><a href="#tracker"><span class="n">10</span><span>Readiness</span></a></li>
+  </ol>
+</nav>
+
+<main>
+
+<!-- ============================================================ 01 -->
+<section id="measured">
+  <div class="col sec-h-wrap rv">
+    <div class="sec-n">01 &mdash; the ledger</div>
+    <h2 class="sec-h">What is measured today</h2>
+    <p class="sec-sub">Opening with reality rather than ambition. Every figure below carries its
+      basis, and an assumed figure is never drawn as a counted one.</p>
+  </div>
+
+  <div class="col rv">
+    <p>The estate this factory is being built into is not a greenfield. It runs seven connectors in
+      production, serves a live chat surface over real client financial data, and has two automated
+      mechanisms in its recent history that ran for months while reporting success. Those two are the
+      reason the sequence in section 09 is what it is.</p>
+  </div>
+
+  <div class="tbl-scroll rv">
+    <table>
+      <thead><tr><th>Figure</th><th class="n">Value</th><th>Basis</th><th>Source</th></tr></thead>
+      <tbody>
+        <tr><td>Connector modules in the fleet</td><td class="n">49</td>
+            <td><span class="basis m">measured</span></td><td class="mono">import of each module, 2026-08-18</td></tr>
+        <tr><td>&mdash; live on Prefect v3 today</td><td class="n">7</td>
+            <td><span class="basis m">measured</span></td><td class="mono">CONNECTOR_WORK_PLAN &sect;0</td></tr>
+        <tr><td>&mdash; importable, not migrated</td><td class="n">13</td>
+            <td><span class="basis m">measured</span></td><td class="mono">CONNECTOR_WORK_PLAN &sect;0</td></tr>
+        <tr><td>&mdash; do not import</td><td class="n">29</td>
+            <td><span class="basis m">measured</span></td><td class="mono">CONNECTOR_WORK_PLAN &sect;0</td></tr>
+        <tr><td>Broken modules cleared by two mechanical fixes</td><td class="n">25</td>
+            <td><span class="basis m">measured</span></td><td class="mono">import + source scan</td></tr>
+        <tr><td>Connector failures over 81 days</td><td class="n">976</td>
+            <td><span class="basis m">measured</span></td><td class="mono">orchestrator/data/</td></tr>
+        <tr><td>Prefect deployments</td><td class="n">37</td>
+            <td><span class="basis m">measured</span></td><td class="mono">deployment list, 2026-08-20</td></tr>
+        <tr><td>&mdash; that the QA gate can actually validate</td><td class="n">1</td>
+            <td><span class="basis m">measured</span></td><td class="mono">only smoke-test-exchange-rates exists</td></tr>
+        <tr><td>DAX measures in the Power BI model</td><td class="n">306</td>
+            <td><span class="basis d">derived</span></td><td class="mono">snapshot dated 2026-06-19, re-dump before quoting</td></tr>
+        <tr><td>&mdash; that the Zeus Chat path actually reads</td><td class="n">50</td>
+            <td><span class="basis m">measured</span></td><td class="mono">NAVIRA_CATALOG, 50/50 verified present</td></tr>
+        <tr><td>DAX time-intelligence functions across all 306</td><td class="n">0</td>
+            <td><span class="basis m">measured</span></td><td class="mono">instrument live: CALCULATE 98, FILTER 121</td></tr>
+        <tr><td>Contract assertions, each proved able to fail</td><td class="n">12</td>
+            <td><span class="basis m">measured</span></td><td class="mono">agent-factory, 47 tests</td></tr>
+        <tr><td>Agent crews with an eval</td><td class="n">0</td>
+            <td><span class="basis m">measured</span></td><td class="mono">Crucible, 7 crews</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="col rv">
+    <p>That zero on time-intelligence is publishable for a specific reason: the same scan that
+      returned zero returned CALCULATE 98 and FILTER 121, so the instrument is demonstrably live. A
+      zero from an instrument nobody has shown can see is not a measurement.</p>
+  </div>
+
+  <figure class="rv">
+    <div class="fig-box">
+      <svg viewBox="0 0 900 150" role="img" class="svg-wide"
+        aria-label="Of 49 connector modules, 7 run live today, 13 import but are not migrated, and 29 do not import.">
+        <text x="0" y="14" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" opacity=".62"
+          letter-spacing="1.4">THE FLEET &mdash; 49 MODULES, WIDTH PROPORTIONAL TO COUNT</text>
+        <rect x="0" y="30" width="128.6" height="46" fill="var(--pass)" opacity=".82"></rect>
+        <rect x="128.6" y="30" width="238.8" height="46" fill="var(--accent)" opacity=".5"></rect>
+        <rect x="367.4" y="30" width="532.6" height="46" fill="var(--fail)" opacity=".62"></rect>
+        <text x="10" y="59" font-family="IBM Plex Mono, monospace" font-size="15" font-weight="600" fill="#fff">7</text>
+        <text x="138" y="59" font-family="IBM Plex Mono, monospace" font-size="15" font-weight="600" fill="var(--ink)">13</text>
+        <text x="377" y="59" font-family="IBM Plex Mono, monospace" font-size="15" font-weight="600" fill="#fff">29</text>
+        <text x="0" y="96" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" opacity=".72">LIVE</text>
+        <text x="128.6" y="96" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" opacity=".72">IMPORTS, NOT MIGRATED</text>
+        <text x="367.4" y="96" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" opacity=".72">DOES NOT IMPORT</text>
+        <line x1="367.4" y1="106" x2="826.6" y2="106" stroke="currentColor" stroke-width="1" opacity=".45"></line>
+        <line x1="367.4" y1="102" x2="367.4" y2="110" stroke="currentColor" stroke-width="1" opacity=".45"></line>
+        <line x1="826.6" y1="102" x2="826.6" y2="110" stroke="currentColor" stroke-width="1" opacity=".45"></line>
+        <text x="380" y="126" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" opacity=".72">25 of these 29 clear on two mechanical fixes &mdash; the fleet's problem is not mostly code</text>
+      </svg>
+    </div>
+    <figcaption><b>The broken majority is cheap.</b> 29 of 49 modules do not import, and 25 of those
+      fail on one of two shared causes. What is expensive sits elsewhere: credentials nobody can
+      obtain on a client's behalf, private-network reachability, and correctness judgement on client
+      data.</figcaption>
+  </figure>
+</section>
+
+<style>
+.plane-g{transition:opacity .24s ease-out}
+.js .map-top[data-active] .plane-g{opacity:.42}
+.js .map-top[data-active="build"] .plane-g[data-p="build"],
+.js .map-top[data-active="data"] .plane-g[data-p="data"],
+.js .map-top[data-active="serve"] .plane-g[data-p="serve"]{opacity:1}
+.flow-dot{transform-box:view-box; transform-origin:0 0}
+.js .playing .flow-dot{animation:flowx 2.3s cubic-bezier(.4,0,.6,1) forwards}
+@keyframes flowx{from{transform:translateX(0)} to{transform:translateX(var(--travel,700px))}}
+@media (prefers-reduced-motion:reduce){
+  .js .playing .flow-dot{animation:none}
+  .js .playing .stage-node{opacity:1}
+}
+</style>
+
+<!-- ============================================================ 02 -->
+<section id="map">
+  <div class="col sec-h-wrap rv">
+    <div class="sec-n">02 &mdash; the map</div>
+    <h2 class="sec-h">The system, in three planes</h2>
+    <p class="sec-sub">Build, data, serving. Pick a plane to drill into what actually moves through
+      it, and which assertion watches each hop. Every arrow is labelled with the operation
+      performed, not the relationship implied.</p>
+  </div>
+
+  <div class="map">
+    <figure style="margin:0 0 22px">
+      <div class="fig-box">
+        <svg viewBox="0 0 900 176" role="img" class="svg-wide map-top" data-active="build"
+          aria-label="Three planes: the build plane publishes an image, the data plane lands rows in the warehouse, the serving plane reads them.">
+          <defs>
+            <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="currentColor"></path>
+            </marker>
+          </defs>
+          <g class="plane-g" data-p="build">
+            <rect x="0" y="26" width="252" height="96" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.5"></rect>
+            <text x="16" y="50" font-family="Archivo, sans-serif" font-size="15" font-weight="600" fill="currentColor">BUILD PLANE</text>
+            <text x="16" y="72" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" opacity=".78">repo &#8594; CI &#8594; image &#8594; deployment</text>
+            <text x="16" y="92" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" opacity=".78">the orchestrator, 37 deployments</text>
+            <text x="16" y="110" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--accent)">A1 &#183; A2 &#183; A3 &#183; A4 &#183; A5</text>
+          </g>
+          <g class="plane-g" data-p="data">
+            <rect x="324" y="26" width="252" height="96" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.5"></rect>
+            <text x="340" y="50" font-family="Archivo, sans-serif" font-size="15" font-weight="600" fill="currentColor">DATA PLANE</text>
+            <text x="340" y="72" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" opacity=".78">vendor API &#8594; container &#8594; stage</text>
+            <text x="340" y="92" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" opacity=".78">&#8594; merge &#8594; warehouse table</text>
+            <text x="340" y="110" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--accent)">A6 &#183; A7 &#183; A8 &#183; A9 &#183; A10 &#183; A12</text>
+          </g>
+          <g class="plane-g" data-p="serve">
+            <rect x="648" y="26" width="252" height="96" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.5"></rect>
+            <text x="664" y="50" font-family="Archivo, sans-serif" font-size="15" font-weight="600" fill="currentColor">SERVING PLANE</text>
+            <text x="664" y="72" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" opacity=".78">Power BI &#183; Zeus Chat &#183; Cube</text>
+            <text x="664" y="92" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" opacity=".78">306 measures, 50 on the chat path</text>
+            <text x="664" y="110" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".6">no contract yet</text>
+          </g>
+          <line x1="252" y1="74" x2="316" y2="74" stroke="currentColor" stroke-width="1.5" marker-end="url(#ar)"></line>
+          <text x="284" y="64" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" opacity=".8">runs</text>
+          <line x1="576" y1="74" x2="640" y2="74" stroke="currentColor" stroke-width="1.5" marker-end="url(#ar)"></line>
+          <text x="608" y="64" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" opacity=".8">reads</text>
+          <text x="0" y="152" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".62">THE FACTORY BUILDS TEAMS THAT WORK THE BUILD PLANE. THE CONTRACT JUDGES THE DATA PLANE. THE SERVING PLANE IS WHERE A CLIENT NOTICES.</text>
+        </svg>
+      </div>
+    </figure>
+
+    <div class="plane-tabs" role="tablist" aria-label="System planes">
+      <button role="tab" id="tab-build" aria-controls="pane-build" aria-selected="true" data-plane="build">
+        <b>Build plane</b>repo &#8594; image &#8594; deployment</button>
+      <button role="tab" id="tab-data" aria-controls="pane-data" aria-selected="false" data-plane="data">
+        <b>Data plane</b>API &#8594; stage &#8594; warehouse</button>
+      <button role="tab" id="tab-serve" aria-controls="pane-serve" aria-selected="false" data-plane="serve">
+        <b>Serving plane</b>warehouse &#8594; model &#8594; person</button>
+    </div>
+
+    <div class="detail">
+      <!-- ---------------------------------------------- BUILD -->
+      <div class="detail-pane" id="pane-build" role="tabpanel" aria-labelledby="tab-build" style="--travel:712px">
+        <h4>Build plane &mdash; what has to be true before a run is worth spending</h4>
+        <p class="d-sub">Five assertions sit here, and all five are cheap. A canary run that fails
+          because the image predates the merge proves nothing and costs a warehouse write.</p>
+        <svg viewBox="0 0 900 220" role="img" class="svg-wide"
+          aria-label="Build plane: pull request through CI to a merge commit, an image built after the merge, a deployment pinning that digest, and the run.">
+          <g class="stage-node" data-s="0">
+            <rect x="0" y="40" width="140" height="58" fill="var(--raise)" stroke="currentColor" stroke-width="1.2"></rect>
+            <text x="12" y="64" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="currentColor">Pull request</text>
+            <text x="12" y="84" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".7">PR #50</text>
+          </g>
+          <g class="stage-node" data-s="1">
+            <rect x="188" y="40" width="140" height="58" fill="var(--raise)" stroke="currentColor" stroke-width="1.2"></rect>
+            <text x="200" y="64" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="currentColor">Merge commit</text>
+            <text x="200" y="84" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".7">4db9556 &#183; 09:46:51Z</text>
+          </g>
+          <g class="stage-node" data-s="2">
+            <rect x="376" y="40" width="140" height="58" fill="var(--raise)" stroke="var(--accent)" stroke-width="1.6"></rect>
+            <text x="388" y="64" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="currentColor">Image digest</text>
+            <text x="388" y="84" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--accent)">built 09:50:18Z</text>
+          </g>
+          <g class="stage-node" data-s="3">
+            <rect x="564" y="40" width="140" height="58" fill="var(--raise)" stroke="currentColor" stroke-width="1.2"></rect>
+            <text x="576" y="64" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="currentColor">Deployment</text>
+            <text x="576" y="84" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".7">1 of 37</text>
+          </g>
+          <g class="stage-node" data-s="4">
+            <rect x="752" y="40" width="148" height="58" fill="var(--raise)" stroke="currentColor" stroke-width="1.2"></rect>
+            <text x="764" y="64" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="currentColor">Canary run</text>
+            <text x="764" y="84" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".7">costs money</text>
+          </g>
+          <line x1="140" y1="69" x2="180" y2="69" stroke="currentColor" stroke-width="1.4" marker-end="url(#ar)"></line>
+          <text x="160" y="34" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" opacity=".78">8 CI checks</text>
+          <line x1="328" y1="69" x2="368" y2="69" stroke="currentColor" stroke-width="1.4" marker-end="url(#ar)"></line>
+          <text x="348" y="34" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" opacity=".78">builds</text>
+          <line x1="516" y1="69" x2="556" y2="69" stroke="currentColor" stroke-width="1.4" marker-end="url(#ar)"></line>
+          <text x="536" y="34" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" opacity=".78">pins</text>
+          <line x1="704" y1="69" x2="744" y2="69" stroke="currentColor" stroke-width="1.4" marker-end="url(#ar)"></line>
+          <text x="724" y="34" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" opacity=".78">dispatches</text>
+          <circle class="flow-dot" cx="150" cy="69" r="5.5" fill="var(--accent)"></circle>
+          <g font-family="IBM Plex Mono, monospace" font-size="10.5">
+            <rect x="376" y="126" width="140" height="52" fill="none" stroke="var(--accent)" stroke-dasharray="3 3"></rect>
+            <text x="386" y="144" fill="var(--accent)">A3 &mdash; this digest</text>
+            <text x="386" y="158" fill="currentColor" opacity=".8">imports the connector</text>
+            <text x="386" y="172" fill="currentColor" opacity=".8">and postdates the merge</text>
+            <rect x="564" y="126" width="140" height="52" fill="none" stroke="var(--accent)" stroke-dasharray="3 3"></rect>
+            <text x="574" y="144" fill="var(--accent)">A4 &mdash; byte-for-byte</text>
+            <text x="574" y="158" fill="currentColor" opacity=".8">the deployment pins</text>
+            <text x="574" y="172" fill="currentColor" opacity=".8">the digest A3 proved</text>
+            <line x1="446" y1="98" x2="446" y2="126" stroke="var(--accent)" stroke-width="1" stroke-dasharray="3 3"></line>
+            <line x1="634" y1="98" x2="634" y2="126" stroke="var(--accent)" stroke-width="1" stroke-dasharray="3 3"></line>
+          </g>
+          <text x="0" y="204" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".62">A SUCCESSFUL IMPORT ON THE ORCHESTRATOR HOST PROVES NOTHING &#8212; THE CONTAINER RUNS CODE BAKED INTO THE IMAGE.</text>
+        </svg>
+        <div class="pane-foot">
+          <span>The 2026-08-20 windsorai run passed all five &mdash; the image was checked to postdate the merge before a run was spent.</span>
+          <button class="replay" data-replay="pane-build">Replay the path</button>
+        </div>
+      </div>
+
+      <!-- ---------------------------------------------- DATA -->
+      <div class="detail-pane" id="pane-data" role="tabpanel" aria-labelledby="tab-data" hidden style="--travel:700px">
+        <h4>Data plane &mdash; where &ldquo;the run finished&rdquo; and &ldquo;the work happened&rdquo; come apart</h4>
+        <p class="d-sub">The connector returns an empty dataframe on any non-200 response and raises
+          nothing. So the flow run reaches COMPLETED with zero rows landed, and a run-state check
+          calls that success. The lower path is that failure, drawn as the path it actually takes.</p>
+        <svg viewBox="0 0 900 260" role="img" class="svg-wide"
+          aria-label="Data plane: vendor API to container to staging to the warehouse, each row stamped with the run session id. A lower branch shows a non-200 response producing an empty dataframe, a completed run and zero rows.">
+          <g class="stage-node" data-s="0">
+            <rect x="0" y="34" width="132" height="56" fill="var(--raise)" stroke="currentColor" stroke-width="1.2"></rect>
+            <text x="11" y="57" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="currentColor">Vendor API</text>
+            <text x="11" y="76" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".7">windsor.ai</text>
+          </g>
+          <g class="stage-node" data-s="1">
+            <rect x="184" y="34" width="132" height="56" fill="var(--raise)" stroke="currentColor" stroke-width="1.2"></rect>
+            <text x="195" y="57" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="currentColor">Container</text>
+            <text x="195" y="76" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".7">add_response()</text>
+          </g>
+          <g class="stage-node" data-s="2">
+            <rect x="368" y="34" width="132" height="56" fill="var(--raise)" stroke="currentColor" stroke-width="1.2"></rect>
+            <text x="379" y="57" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="currentColor">Staging</text>
+            <text x="379" y="76" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".7">STG_&lt;session&gt;</text>
+          </g>
+          <g class="stage-node" data-s="3">
+            <rect x="552" y="34" width="132" height="56" fill="var(--raise)" stroke="var(--pass)" stroke-width="1.6"></rect>
+            <text x="563" y="57" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="currentColor">Warehouse</text>
+            <text x="563" y="76" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--pass)">20 rows landed</text>
+          </g>
+          <g class="stage-node" data-s="4">
+            <rect x="736" y="34" width="164" height="56" fill="var(--raise)" stroke="currentColor" stroke-width="1.2"></rect>
+            <text x="747" y="57" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="currentColor">Session stamp</text>
+            <text x="747" y="76" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".7">452d3402&hellip;</text>
+          </g>
+          <line x1="132" y1="62" x2="176" y2="62" stroke="currentColor" stroke-width="1.4" marker-end="url(#ar)"></line>
+          <text x="154" y="28" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" opacity=".78">GET 200</text>
+          <line x1="316" y1="62" x2="360" y2="62" stroke="currentColor" stroke-width="1.4" marker-end="url(#ar)"></line>
+          <text x="338" y="28" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" opacity=".78">parquet</text>
+          <line x1="500" y1="62" x2="544" y2="62" stroke="currentColor" stroke-width="1.4" marker-end="url(#ar)"></line>
+          <text x="522" y="28" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" opacity=".78">MERGE</text>
+          <line x1="684" y1="62" x2="728" y2="62" stroke="currentColor" stroke-width="1.4" marker-end="url(#ar)"></line>
+          <text x="706" y="28" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" opacity=".78">stamps</text>
+          <circle class="flow-dot" cx="144" cy="62" r="5.5" fill="var(--accent)"></circle>
+
+          <path d="M66,90 L66,150 L184,150" fill="none" stroke="var(--fail)" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#ar)"></path>
+          <text x="76" y="142" font-family="IBM Plex Mono, monospace" font-size="10" fill="var(--fail)">non-200 &#8594; returns [ ] &#183; raises nothing</text>
+          <g>
+            <rect x="184" y="160" width="200" height="52" fill="none" stroke="var(--fail)" stroke-width="1.2" stroke-dasharray="5 4"></rect>
+            <text x="196" y="180" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="currentColor">Empty dataframe</text>
+            <text x="196" y="198" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".75">run state: COMPLETED</text>
+          </g>
+          <line x1="384" y1="186" x2="428" y2="186" stroke="var(--fail)" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#ar)"></line>
+          <g font-family="IBM Plex Mono, monospace" font-size="11">
+            <rect x="436" y="160" width="120" height="52" fill="none" stroke="var(--pass)" stroke-width="1.2"></rect>
+            <text x="448" y="182" fill="var(--pass)">A6 &mdash; PASS</text>
+            <text x="448" y="199" fill="currentColor" opacity=".72" font-size="10">run completed</text>
+            <rect x="576" y="160" width="150" height="52" fill="none" stroke="var(--fail)" stroke-width="1.6"></rect>
+            <text x="588" y="182" fill="var(--fail)">A7 &mdash; FAIL</text>
+            <text x="588" y="199" fill="currentColor" opacity=".72" font-size="10">0 rows this session</text>
+          </g>
+          <text x="0" y="240" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".62">THE SESSION STAMP IS WHAT MAKES A ROW COUNT A PROOF OF THIS RUN. A TABLE A PRIOR RUN FILLED RETURNS A HEALTHY NUMBER THAT PROVES NOTHING.</text>
+        </svg>
+        <div class="pane-foot">
+          <span>A6 passing while A7 fails is the shape of both historical failures in this estate.</span>
+          <button class="replay" data-replay="pane-data">Replay the path</button>
+        </div>
+      </div>
+
+      <!-- ---------------------------------------------- SERVE -->
+      <div class="detail-pane" id="pane-serve" role="tabpanel" aria-labelledby="tab-serve" hidden style="--travel:520px">
+        <h4>Serving plane &mdash; two consumers, one much smaller than it looks</h4>
+        <p class="d-sub">Power BI is not only the reporting layer; it sits inside Zeus Chat's read
+          path. But the chat path reads 50 measures, not 306 &mdash; which is the difference between
+          a migration and a rewrite.</p>
+        <svg viewBox="0 0 900 250" role="img" class="svg-wide"
+          aria-label="Serving plane: the warehouse feeds the Power BI model, which serves two bound reports and the Zeus Chat adapter. The chat adapter declares 50 of the model's 306 measures. Cube and Superset are scaffolded, not deployed.">
+          <g class="stage-node" data-s="0">
+            <rect x="0" y="76" width="150" height="58" fill="var(--raise)" stroke="var(--pass)" stroke-width="1.6"></rect>
+            <text x="12" y="100" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="currentColor">Warehouse</text>
+            <text x="12" y="119" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--pass)">live</text>
+          </g>
+          <g class="stage-node" data-s="1">
+            <rect x="226" y="76" width="180" height="58" fill="var(--raise)" stroke="currentColor" stroke-width="1.2"></rect>
+            <text x="238" y="100" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="currentColor">Power BI model</text>
+            <text x="238" y="119" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".72">66151728 &#183; 306 measures</text>
+          </g>
+          <g class="stage-node" data-s="2">
+            <rect x="482" y="18" width="180" height="54" fill="var(--raise)" stroke="currentColor" stroke-width="1.2"></rect>
+            <text x="494" y="41" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="currentColor">2 bound reports</text>
+            <text x="494" y="59" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".72">dashboard half, uncounted</text>
+          </g>
+          <g class="stage-node" data-s="3">
+            <rect x="482" y="138" width="180" height="54" fill="var(--raise)" stroke="var(--accent)" stroke-width="1.6"></rect>
+            <text x="494" y="161" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="currentColor">Zeus Chat adapter</text>
+            <text x="494" y="179" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--accent)">50 measures &#183; 50/50 verified</text>
+          </g>
+          <g class="stage-node" data-s="4">
+            <rect x="720" y="138" width="180" height="54" fill="var(--raise)" stroke="var(--pass)" stroke-width="1.6"></rect>
+            <text x="732" y="161" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="currentColor">zeus.analyticlabs.io</text>
+            <text x="732" y="179" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--pass)">live &#183; client financial data</text>
+          </g>
+          <line x1="150" y1="105" x2="218" y2="105" stroke="currentColor" stroke-width="1.4" marker-end="url(#ar)"></line>
+          <text x="184" y="97" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" opacity=".78">imports</text>
+          <path d="M406,96 L444,96 L444,45 L474,45" fill="none" stroke="currentColor" stroke-width="1.4" marker-end="url(#ar)"></path>
+          <path d="M406,114 L444,114 L444,165 L474,165" fill="none" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#ar)"></path>
+          <text x="452" y="134" font-family="IBM Plex Mono, monospace" font-size="10" fill="var(--accent)">DAX query</text>
+          <line x1="662" y1="165" x2="712" y2="165" stroke="currentColor" stroke-width="1.4" marker-end="url(#ar)"></line>
+          <text x="687" y="157" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" opacity=".78">answers</text>
+          <circle class="flow-dot" cx="160" cy="105" r="5.5" fill="var(--accent)"></circle>
+          <g>
+            <rect x="226" y="204" width="436" height="34" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="5 4" opacity=".75"></rect>
+            <text x="238" y="226" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".8">CUBE + SUPERSET &#8212; scaffolded in aldc-launchpad, not deployed &#183; dashed because proposed</text>
+          </g>
+          <text x="700" y="226" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".62">306 &#8594; 50 IS THE REAL SCOPE</text>
+        </svg>
+        <div class="pane-foot">
+          <span>No GreenContract exists for this plane yet. It is where a client notices, and it is unmeasured.</span>
+          <button class="replay" data-replay="pane-serve">Replay the path</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="callout warn rv">
+      <span class="lbl">Read this before trusting the map</span>
+      <p>The serving plane carries no assertions. Everything in section 04 judges whether rows landed
+        correctly &mdash; nothing yet judges whether the number a person reads is the number the
+        warehouse holds. That gap is deliberate for team one, and it is the first candidate for team two.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 03 -->
+<section id="failed">
+  <div class="col sec-h-wrap rv">
+    <div class="sec-n">03 &mdash; the precedent</div>
+    <h2 class="sec-h">How this failed twice already</h2>
+    <p class="sec-sub">Both mechanisms were capable. Neither was measurable. That distinction is the
+      entire design premise of what follows.</p>
+  </div>
+
+  <div class="col rv">
+    <p>A pipeline agent ran for 81 days. It produced 233 diagnoses and 234 escalations, and applied
+      zero fixes. Separately, an automated loop ran 965 times, recorded its own success rate at
+      1.6%, and never adjusted. Neither was stopped by a monitor, because in both cases the thing
+      being counted was <em>activity</em> &mdash; and activity was exactly what both were good at.</p>
+  </div>
+
+  <figure class="rv">
+    <div class="fig-box">
+      <svg viewBox="0 0 900 200" role="img" class="svg-wide"
+        aria-label="Of 965 automated runs, 1.6 percent succeeded: a sliver 15 pixels wide against a bar 900 wide. Below, the retired agent's loop: diagnose, escalate, repeat, with no edge that applies a fix.">
+        <text x="0" y="14" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" opacity=".62" letter-spacing="1.4">965 RUNS &#183; SELF-RECORDED SUCCESS RATE 1.6% &#183; WIDTH PROPORTIONAL</text>
+        <rect x="0" y="26" width="900" height="30" fill="var(--fail)" opacity=".28"></rect>
+        <rect x="0" y="26" width="15.4" height="30" fill="var(--pass)"></rect>
+        <line x1="15.4" y1="20" x2="15.4" y2="62" stroke="currentColor" stroke-width="1"></line>
+        <text x="24" y="46" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor">15 succeeded</text>
+        <text x="700" y="46" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" opacity=".85">950 did not</text>
+
+        <text x="0" y="96" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" opacity=".62" letter-spacing="1.4">THE RETIRED AGENT &#183; 81 DAYS &#183; THE EDGE THAT WOULD HAVE MATTERED IS THE ONE THAT IS MISSING</text>
+        <g>
+          <rect x="0" y="112" width="150" height="52" fill="var(--raise)" stroke="currentColor" stroke-width="1.2"></rect>
+          <text x="12" y="134" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="currentColor">Detect failure</text>
+          <text x="12" y="152" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".7">976 available</text>
+          <rect x="230" y="112" width="150" height="52" fill="var(--raise)" stroke="currentColor" stroke-width="1.2"></rect>
+          <text x="242" y="134" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="currentColor">Diagnose</text>
+          <text x="242" y="152" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".7">233 times</text>
+          <rect x="460" y="112" width="150" height="52" fill="var(--raise)" stroke="currentColor" stroke-width="1.2"></rect>
+          <text x="472" y="134" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="currentColor">Escalate</text>
+          <text x="472" y="152" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".7">234 times</text>
+          <rect x="690" y="112" width="210" height="52" fill="none" stroke="var(--fail)" stroke-width="1.6" stroke-dasharray="6 4"></rect>
+          <text x="702" y="134" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="var(--fail)">Apply a fix</text>
+          <text x="702" y="152" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--fail)">0 times &#183; never happened</text>
+          <line x1="150" y1="138" x2="222" y2="138" stroke="currentColor" stroke-width="1.4" marker-end="url(#ar)"></line>
+          <line x1="380" y1="138" x2="452" y2="138" stroke="currentColor" stroke-width="1.4" marker-end="url(#ar)"></line>
+          <line x1="610" y1="138" x2="682" y2="138" stroke="var(--fail)" stroke-width="1.4" stroke-dasharray="6 4" marker-end="url(#ar)"></line>
+          <path d="M535,112 L535,88 L75,88 L75,112" fill="none" stroke="currentColor" stroke-width="1.2" marker-end="url(#ar)" opacity=".8"></path>
+          <text x="300" y="82" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" opacity=".8">and around again &#8212; the loop that closed</text>
+        </g>
+        <text x="0" y="190" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".62">A SELF-IMPROVING LOOP POINTED AT THESE COUNTERS WOULD HAVE MADE THE AGENT ESCALATE FASTER AND CALLED IT PROGRESS.</text>
+      </svg>
+    </div>
+    <figcaption><b>Every activity metric here moved. No outcome metric existed.</b> This is why the
+      factory pairs each activity metric with an outcome metric that can only move when the work
+      actually succeeded &mdash; and why a metric with no pair is refused rather than displayed.</figcaption>
+  </figure>
+
+  <div class="col">
+    <div class="callout stop rv">
+      <span class="lbl">The sequencing objection, in the estate's own words</span>
+      <p>The original brief proposed roughly ten new subsystems &mdash; an army tier, a gym, an
+        optimizer, five communication topologies, ten team types, a platform UI and a simulator. Six
+        of them are downstream of one missing artifact: an eval. An optimizer is a search over
+        configurations; a search needs a fitness function; the fitness function <em>is</em> the eval.
+        Build the machine first and you have built a bigger version of the thing that already failed
+        here twice.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 04 -->
+<section id="contract">
+  <div class="col sec-h-wrap rv">
+    <div class="sec-n">04 &mdash; the instrument</div>
+    <h2 class="sec-h">The GreenContract</h2>
+    <p class="sec-sub">Twelve assertions. Every one states a positive fact that must be observed
+      &mdash; none is satisfied by the absence of an error, because the runtime can fail totally and
+      raise nothing.</p>
+  </div>
+
+  <div class="col rv">
+    <p>The four verdicts are never collapsed. <span class="chip pass">PASS</span> was asserted and
+      held. <span class="chip fail">FAIL</span> was asserted and did not hold.
+      <span class="chip unmeas">UNMEASURABLE</span> means the instrument could not run &mdash; and it
+      is not a pass. <span class="chip notrun">NOT_RUN</span> was never attempted. Collapsing the
+      third into the first is how a measurement that never happened passes for one that did; it is
+      also, precisely, the live defect in the QA gate.</p>
+  </div>
+
+  <div class="agrid rv">
+    <div class="acell p"><span class="id">A1 &middot; preflight</span><span class="claim">Connection and options construct for this account, and at least one account resolves.</span><span class="foot"><span class="chip pass">pass</span></span></div>
+    <div class="acell p"><span class="id">A2 &middot; preflight</span><span class="claim">A live call authenticates and returns a non-empty body. Presence in Key Vault does not count.</span><span class="foot"><span class="chip pass">pass</span></span></div>
+    <div class="acell p"><span class="id">A3 &middot; preflight</span><span class="claim">The digest that will run imports the connector, was built from the expected commit, and postdates the merge.</span><span class="foot"><span class="chip pass">pass</span></span></div>
+    <div class="acell p"><span class="id">A4 &middot; preflight</span><span class="claim">The deployment pins that digest, byte for byte.</span><span class="foot"><span class="chip pass">pass</span></span></div>
+    <div class="acell p"><span class="id">A5 &middot; certification</span><span class="claim">The pinned suite is green at the pinned revision &mdash; a revision, never a test count.</span><span class="foot"><span class="chip pass">pass</span></span></div>
+    <div class="acell p"><span class="id">A6 &middot; canary</span><span class="claim">The flow run reached COMPLETED. Necessary, and nowhere near sufficient.</span><span class="foot"><span class="chip pass">pass</span></span></div>
+    <div class="acell p"><span class="id">A7 &middot; canary</span><span class="claim">Rows exist carrying <em>this</em> run's session id. The stamp is what makes it a proof of this run.</span><span class="foot"><span class="chip pass">pass</span></span></div>
+    <div class="acell p"><span class="id">A8 &middot; canary</span><span class="claim">Rows landed equals rows the connector reported emitting.</span><span class="foot"><span class="chip pass">pass</span></span></div>
+    <div class="acell p"><span class="id">A9 &middot; canary</span><span class="claim">The connector's own meaning holds: every requested key present, dates correct, key unique, measures non-null.</span><span class="foot"><span class="chip pass">pass</span></span></div>
+    <div class="acell p"><span class="id">A10 &middot; canary</span><span class="claim">Landed counts agree with the source of truth, re-queried. The independent second instrument.</span><span class="foot"><span class="chip pass">pass</span></span></div>
+    <div class="acell p"><span class="id">A11 &middot; canary</span><span class="claim">No secret in logs, no write outside the landing schema, no gate bypassed, no test modified.</span><span class="foot"><span class="chip pass">pass</span></span></div>
+    <div class="acell u"><span class="id">A12 &middot; canary &middot; new</span><span class="claim">Every landed row belongs to a declared tenant. Blocks today: nobody has written the account ids down.</span><span class="foot"><span class="chip unmeas">unmeasurable</span></span></div>
+  </div>
+
+  <div class="col rv">
+    <h3 class="disp" style="font-size:19px; margin:34px 0 10px">Calibration, before it judges anything</h3>
+    <p>A contract first exercised on a broken connector cannot tell &ldquo;the connector is broken&rdquo;
+      from &ldquo;the contract is wrong&rdquo;. So it was calibrated against the one connector with a
+      recorded end-to-end success: windsorai, which landed its first row ever on 2026-08-20 after ten
+      attempts and zero completions.</p>
+  </div>
+
+  <div class="tbl-scroll rv">
+    <table>
+      <thead><tr><th>Calibration run</th><th>Expected</th><th>Observed</th><th>What it proves</th></tr></thead>
+      <tbody>
+        <tr><td>Known-good world, tenancy declared</td><td><span class="chip pass">pass</span></td>
+            <td><span class="chip pass">pass 12/12</span></td><td>the contract does not cry wolf</td></tr>
+        <tr><td>Credential mutated to HTTP 401</td><td>A2 fails</td>
+            <td><span class="chip fail">fail</span></td><td>credential detection fires and blocks</td></tr>
+        <tr><td>One requested account dropped from the landing</td><td>A9 and A10 fail, A6 still passes</td>
+            <td><span class="chip fail">fail</span> <span class="chip pass">A6 pass</span></td>
+            <td>the semantic assertions catch what a run-state check cannot</td></tr>
+        <tr><td>Non-200 swallowed &mdash; empty dataframe</td><td>A7 fails, A6 still passes</td>
+            <td><span class="chip fail">fail</span> <span class="chip pass">A6 pass</span></td>
+            <td>&ldquo;the run finished&rdquo; is not &ldquo;the work happened&rdquo;</td></tr>
+        <tr><td>Rows present, but from a previous session</td><td>A7 fails</td>
+            <td><span class="chip fail">fail</span></td><td>a healthy row count from a prior run proves nothing</td></tr>
+        <tr><td>Probes unconfigured</td><td>all unmeasurable</td>
+            <td><span class="chip unmeas">unmeasurable</span></td><td>an unwired harness refuses to certify</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="col">
+    <div class="callout rv">
+      <span class="lbl">What the calibration found that review had not</span>
+      <p>On its first run the matrix <em>passed</em> a partial extraction &mdash; an entire account
+        missing from the landing, and A9 reporting &ldquo;18 rows satisfy every declared
+        invariant&rdquo;. The completeness check was guarded on a blueprint field the blueprint left
+        empty, so it silently never ran. It was fixed structurally rather than by filling the list:
+        the requested keys now come from the live config observation, and when nothing can supply
+        them A9 reports UNMEASURABLE.</p>
+      <p><b>An invariant that quietly does not run is an assertion that quietly stopped being
+        made</b> &mdash; and from the outside it is indistinguishable from a pass.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 05 -->
+<section id="anatomy">
+  <div class="col sec-h-wrap rv">
+    <div class="sec-n">05 &mdash; anatomy</div>
+    <h2 class="sec-h">An agent, a team, and what a version means</h2>
+    <p class="sec-sub">An agent is not a name. It is a tuple, and the tuple is the version &mdash; so
+      a silent model upgrade cannot inherit a certification nobody re-checked.</p>
+  </div>
+
+  <div class="two">
+    <div class="card rv">
+      <h4>The agent</h4>
+      <p>Prompt, model, effort, tools, turn cap, dollar cap, and one explicit prohibition. The
+        version id is a hash of that config. Change any element and it is a different agent whose
+        certification does not transfer.</p>
+      <dl class="kv">
+        <dt>caps</dt><dd>every launch carries <code>--max-turns</code> and <code>--max-budget-usd</code></dd>
+        <dt>prohibition</dt><dd>each agent states what it must not do, in its own config</dd>
+        <dt>version</dt><dd>sha256 of the config, first 12 &mdash; not a label someone types</dd>
+      </dl>
+    </div>
+    <div class="card rv">
+      <h4>The team</h4>
+      <p>Two levels, one topology: manager to agent. A supervisor tier gets added when a second team
+        exists <em>and</em> coordination between them is measurably the bottleneck &mdash; not before.</p>
+      <p>Every extra topology is a new seam, and every measured failure in this estate has been a
+        seam failure: nobody owned &ldquo;did the deploy finish?&rdquo;, nobody owned &ldquo;who
+        reads this output?&rdquo;</p>
+    </div>
+  </div>
+
+  <div class="col rv">
+    <p>Deploying an agent to a repo is already solved here and does not need reinventing: a git
+      worktree is created on a fresh branch, the agent is launched inside it with a turn cap and a
+      dollar cap, stdout is streamed to a transcript, and the worktree is reclaimed afterwards.
+      Elevated permission is granted only because the worktree isolates it. What is <em>not</em>
+      solved is deploying a <b>team</b> &mdash; several agents against one change, with an ownership
+      rule or a merge order. That is the narrow open question, and it is question 8 in the research
+      brief.</p>
+  </div>
+</section>
+
+<!-- ============================================================ 06 -->
+<section id="team-one">
+  <div class="col sec-h-wrap rv">
+    <div class="sec-n">06 &mdash; the only team</div>
+    <h2 class="sec-h">Team one: the data pipeline team</h2>
+    <p class="sec-sub">Scope decided: source &rarr; container &rarr; Prefect &rarr; warehouse. Power BI
+      is out until a team has proved it can land rows.</p>
+  </div>
+
+  <div class="col rv">
+    <p>The brief listed ten team types. This builds one. The estate's own analysis had already
+      reduced seven crews to four and called two of those seats rather than crews; expanding to ten
+      moves backwards from a conclusion already reached with evidence. One team, one contract, one
+      connector proved end to end &mdash; then the second team is chosen by whatever the first one
+      hurt.</p>
+  </div>
+
+  <figure class="rv">
+    <div class="fig-box">
+      <svg viewBox="0 0 900 132" role="img" class="svg-wide"
+        aria-label="Team one's scope runs from source to warehouse. The Power BI and Zeus Chat surfaces sit beyond a boundary line and are out of scope for team one.">
+        <rect x="0" y="30" width="596" height="62" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.5"></rect>
+        <text x="14" y="22" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--accent)" letter-spacing="1.2">TEAM ONE &#183; IN SCOPE &#183; JUDGED BY A1&#8211;A12</text>
+        <text x="16" y="58" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="currentColor">source</text>
+        <text x="150" y="58" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="currentColor">container</text>
+        <text x="310" y="58" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="currentColor">Prefect</text>
+        <text x="450" y="58" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="currentColor">warehouse</text>
+        <line x1="80" y1="52" x2="140" y2="52" stroke="currentColor" stroke-width="1.3" marker-end="url(#ar)"></line>
+        <line x1="240" y1="52" x2="300" y2="52" stroke="currentColor" stroke-width="1.3" marker-end="url(#ar)"></line>
+        <line x1="376" y1="52" x2="440" y2="52" stroke="currentColor" stroke-width="1.3" marker-end="url(#ar)"></line>
+        <text x="16" y="80" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".75">connector migration &#183; onboarding &#183; the 25 mechanical fixes</text>
+        <line x1="620" y1="8" x2="620" y2="124" stroke="var(--unmeas)" stroke-width="2" stroke-dasharray="7 5"></line>
+        <text x="630" y="22" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--unmeas)" letter-spacing="1.2">OUT OF SCOPE FOR TEAM ONE</text>
+        <rect x="630" y="30" width="270" height="62" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="5 4" opacity=".7"></rect>
+        <text x="646" y="58" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="currentColor" opacity=".8">Power BI &#183; Zeus Chat</text>
+        <text x="646" y="80" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".65">the 50-measure catalogue problem</text>
+      </svg>
+    </div>
+    <figcaption><b>The boundary is the decision.</b> Adding the BI surface would hand a team that has
+      not yet proved it can land rows a second consumer layer to certify. The line moves when one
+      connector is green end to end.</figcaption>
+  </figure>
+</section>
+
+<!-- ============================================================ 07 -->
+<section id="tenancy">
+  <div class="col sec-h-wrap rv">
+    <div class="sec-n">07 &mdash; blast radius</div>
+    <h2 class="sec-h">Tenancy, the gate that does not exist</h2>
+    <p class="sec-sub">One vendor key returns every client's accounts. An agent fleet acting across
+      GEP and Fusion92 without a tenancy check is one bad filter away from a cross-client leak.</p>
+  </div>
+
+  <div class="col rv">
+    <p>This is not hypothetical here. A single ALDC Windsor key returns accounts belonging to every
+      client on it, so a pull that omits the account filter lands another client's rows in this
+      client's table &mdash; and nothing downstream can tell, because the rows are perfectly
+      well-formed. They pass every other assertion in the contract.</p>
+  </div>
+
+  <figure class="rv">
+    <div class="fig-box">
+      <svg viewBox="0 0 900 190" role="img" class="svg-wide"
+        aria-label="One vendor key returns accounts for several clients. Without a tenant filter, foreign rows cross into the client's table and satisfy every other assertion. A12 is the only assertion that stops at that boundary.">
+        <rect x="0" y="46" width="180" height="70" fill="var(--raise)" stroke="currentColor" stroke-width="1.2"></rect>
+        <text x="12" y="72" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="currentColor">One vendor key</text>
+        <text x="12" y="92" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".72">returns ALL accounts</text>
+        <path d="M180,66 L280,66" fill="none" stroke="var(--pass)" stroke-width="1.6" marker-end="url(#ar)"></path>
+        <text x="192" y="58" font-family="IBM Plex Mono, monospace" font-size="10" fill="var(--pass)">GEP rows</text>
+        <path d="M180,96 L280,96" fill="none" stroke="var(--fail)" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#ar)"></path>
+        <text x="192" y="114" font-family="IBM Plex Mono, monospace" font-size="10" fill="var(--fail)">Fusion92 rows</text>
+        <line x1="330" y1="14" x2="330" y2="176" stroke="var(--unmeas)" stroke-width="2.5"></line>
+        <text x="340" y="26" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--unmeas)" letter-spacing="1.2">A12 &#8212; THE TENANCY BOUNDARY</text>
+        <rect x="400" y="46" width="230" height="70" fill="var(--raise)" stroke="currentColor" stroke-width="1.2"></rect>
+        <text x="414" y="72" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="currentColor">GEP landing table</text>
+        <text x="414" y="92" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".72">well-formed rows either way</text>
+        <path d="M330,66 L392,66" fill="none" stroke="var(--pass)" stroke-width="1.6" marker-end="url(#ar)"></path>
+        <path d="M300,96 L326,96" fill="none" stroke="var(--fail)" stroke-width="1.6" stroke-dasharray="5 4"></path>
+        <circle cx="330" cy="96" r="9" fill="none" stroke="var(--fail)" stroke-width="2"></circle>
+        <line x1="324" y1="90" x2="336" y2="102" stroke="var(--fail)" stroke-width="2"></line>
+        <text x="666" y="60" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".8">A7 pass &#183; A8 pass &#183; A9 pass</text>
+        <text x="666" y="78" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".8">A10 pass &#183; A11 pass</text>
+        <text x="666" y="100" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--fail)">A12 &#8212; the only one that fails</text>
+        <text x="0" y="164" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".62">FOREIGN ROWS ARE NOT MALFORMED. THEY ARE CORRECT ROWS IN THE WRONG TABLE &#8212; WHICH IS WHY NO OTHER ASSERTION CAN SEE THEM.</text>
+      </svg>
+    </div>
+    <figcaption><b>A12 blocks certification today, on purpose.</b> The windsorai blueprint ships with
+      an empty tenant list, so the contract reports UNMEASURABLE rather than green. Filling that list
+      is a human act, and it is the shortest path to a certified connector.</figcaption>
+  </figure>
+</section>
+
+<!-- ============================================================ 08 -->
+<section id="absent">
+  <div class="col sec-h-wrap rv">
+    <div class="sec-n">08 &mdash; the deferred list</div>
+    <h2 class="sec-h">What is deliberately absent</h2>
+    <p class="sec-sub">Each is cheap to add after its precondition and expensive to unwind before it.
+      This is the section most technical documents omit, and the one that protects the next reader.</p>
+  </div>
+
+  <div class="tbl-scroll rv">
+    <table>
+      <thead><tr><th>Not built</th><th>Why not yet</th><th>Unlocked by</th></tr></thead>
+      <tbody>
+        <tr><td><b>AgnosticOptimizer</b></td><td>A search over configurations needs a fitness function, and the fitness function is the eval</td><td>a working eval &mdash; then it is nearly free</td></tr>
+        <tr><td><b>Agent Army tier</b></td><td>With zero certified teams, a five-level hierarchy is ceremony rather than structure</td><td>one certified team, plus evidence a tier helps</td></tr>
+        <tr><td><b>Agentic Gym</b></td><td>It is the eval corpus plus a scoreboard, not a separate system</td><td>the corpus existing</td></tr>
+        <tr><td><b>Four more comms topologies</b></td><td>With one team you need exactly manager&#8594;agent; every extra topology is a new seam</td><td>a second team that must talk to the first</td></tr>
+        <tr><td><b>Nine more team types</b></td><td>The estate's own analysis had already cut seven crews to four</td><td>whatever team one turns out to hurt</td></tr>
+        <tr><td><b>Platform UI</b></td><td>Configuring a system nobody has certified optimises the wrong thing</td><td>numbers worth looking at &mdash; then read-only first</td></tr>
+        <tr><td><b>Brand video walkthrough</b></td><td>Genuinely valuable</td><td>genuinely last</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="col">
+    <div class="callout warn rv">
+      <span class="lbl">The bound that must exist before any optimizer does</span>
+      <p>The measured incident was an uncapped watchdog re-dispatching a permanently failing stage
+        every thirty minutes overnight, with its attempt counter living in an in-memory dict &mdash;
+        so every restart handed it a fresh budget. Per-session caps already exist; the
+        <em>re-dispatch</em> loop is what was unbounded. An optimizer that iterates until optimal
+        with an in-memory counter is that incident with a larger bill.</p>
+      <p>Three rules travel with it: the eval lives outside the agent's writable tree, promotion is a
+        human act, and the evaluator is a frozen versioned artifact the thing being evaluated cannot
+        modify.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 09 -->
+<section id="route">
+  <div class="col sec-h-wrap rv">
+    <div class="sec-n">09 &mdash; the route</div>
+    <h2 class="sec-h">Six phases, in dependency order</h2>
+    <p class="sec-sub">Not a schedule. A chain in which each link is impossible before the one to its
+      left.</p>
+  </div>
+
+  <figure class="rv">
+    <div class="fig-box">
+      <svg viewBox="0 0 900 210" role="img" class="svg-wide"
+        aria-label="Six phases in dependency order: eval harness, the team, one connector certified, the optimizer, a second team, then UI, gym and army tiers. Phase A is in progress; everything after it is blocked on the phase to its left.">
+        <g>
+          <rect x="0" y="40" width="132" height="76" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.8"></rect>
+          <text x="12" y="62" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--accent)">PHASE A</text>
+          <text x="12" y="82" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="currentColor">Eval harness</text>
+          <text x="12" y="100" font-family="IBM Plex Mono, monospace" font-size="10" fill="var(--unmeas)">in progress</text>
+          <rect x="154" y="40" width="132" height="76" fill="var(--raise)" stroke="currentColor" stroke-width="1.2"></rect>
+          <text x="166" y="62" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".7">PHASE B</text>
+          <text x="166" y="82" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="currentColor">The team</text>
+          <text x="166" y="100" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" opacity=".6">2 levels, 1 topology</text>
+          <rect x="308" y="40" width="132" height="76" fill="var(--raise)" stroke="currentColor" stroke-width="1.2"></rect>
+          <text x="320" y="62" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".7">PHASE C</text>
+          <text x="320" y="82" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="currentColor">One connector</text>
+          <text x="320" y="100" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" opacity=".6">certified by A</text>
+          <rect x="462" y="40" width="132" height="76" fill="var(--raise)" stroke="currentColor" stroke-width="1.2"></rect>
+          <text x="474" y="62" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".7">PHASE D</text>
+          <text x="474" y="82" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="currentColor">Optimizer</text>
+          <text x="474" y="100" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" opacity=".6">fitness = phase A</text>
+          <rect x="616" y="40" width="132" height="76" fill="var(--raise)" stroke="currentColor" stroke-width="1.2"></rect>
+          <text x="628" y="62" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".7">PHASE E</text>
+          <text x="628" y="82" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="currentColor">Second team</text>
+          <text x="628" y="100" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" opacity=".6">chosen by C's pain</text>
+          <rect x="770" y="40" width="130" height="76" fill="var(--raise)" stroke="currentColor" stroke-width="1.2" stroke-dasharray="5 4"></rect>
+          <text x="782" y="62" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".7">PHASE F</text>
+          <text x="782" y="82" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="currentColor" opacity=".85">UI &#183; gym &#183; army</text>
+          <text x="782" y="100" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" opacity=".6">the whole brief</text>
+        </g>
+        <line x1="132" y1="78" x2="146" y2="78" stroke="currentColor" stroke-width="1.4" marker-end="url(#ar)"></line>
+        <line x1="286" y1="78" x2="300" y2="78" stroke="currentColor" stroke-width="1.4" marker-end="url(#ar)"></line>
+        <line x1="440" y1="78" x2="454" y2="78" stroke="currentColor" stroke-width="1.4" marker-end="url(#ar)"></line>
+        <line x1="594" y1="78" x2="608" y2="78" stroke="currentColor" stroke-width="1.4" marker-end="url(#ar)"></line>
+        <line x1="748" y1="78" x2="762" y2="78" stroke="currentColor" stroke-width="1.4" marker-end="url(#ar)"></line>
+        <text x="0" y="26" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".62" letter-spacing="1.2">EACH LINK IS IMPOSSIBLE BEFORE THE ONE TO ITS LEFT &#8212; NOT MERELY UNWISE</text>
+        <g>
+          <rect x="0" y="140" width="900" height="42" fill="none" stroke="var(--unmeas)" stroke-width="1.4"></rect>
+          <text x="14" y="158" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--unmeas)">EXIT GATE FOR A&#8211;C</text>
+          <text x="14" y="174" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".82">a version-locked line passes a private eval &#183; the exact built image passes viability &#183; a second person approves the merge &#183; one connector green source&#8594;warehouse with no required assertion unmeasured</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption><b>Phase A is the only phase in progress.</b> The contract exists and is calibrated;
+      its instruments are not yet wired to Prefect, Snowflake, the registry or the vendor API. That
+      wiring is the next unit of work, and each probe needs a credential.</figcaption>
+  </figure>
+</section>
+
+<style>
+/* per-viewer UI state rides on data-local-* so it never becomes a document edit */
+.js .detail-pane{display:none}
+.js .map[data-local-active="build"] #pane-build,
+.js .map[data-local-active="data"] #pane-data,
+.js .map[data-local-active="serve"] #pane-serve{display:block; animation:swap .24s cubic-bezier(.22,.61,.36,1)}
+.js .map-top[data-local-active] .plane-g{opacity:.42}
+.js .map-top[data-local-active="build"] .plane-g[data-p="build"],
+.js .map-top[data-local-active="data"] .plane-g[data-p="data"],
+.js .map-top[data-local-active="serve"] .plane-g[data-p="serve"]{opacity:1}
+.plane-tabs button[data-local-sel="1"]{background:var(--accent-soft); color:var(--ink); box-shadow:inset 0 -3px 0 var(--accent)}
+.js [data-local-playing] .stage-node{opacity:.18; transition:opacity .28s ease-out}
+.js [data-local-playing] .stage-node[data-local-lit="1"]{opacity:1}
+.js [data-local-playing] .flow-dot{animation:flowx 2.3s cubic-bezier(.4,0,.6,1) forwards}
+@media (prefers-reduced-motion:reduce){
+  .js [data-local-playing] .stage-node{opacity:1 !important}
+  .js [data-local-playing] .flow-dot{animation:none}
+}
+</style>
+
+<!-- ============================================================ 10 -->
+<section id="tracker">
+  <div class="col sec-h-wrap rv">
+    <div class="sec-n">10 &mdash; the record</div>
+    <h2 class="sec-h">Can a team run a migration unattended?</h2>
+    <p class="sec-sub">Thirteen gates, every one of them <b>measured from a file</b> when this page was built &mdash; not ticked by hand. Each row names the path it was measured from, so a wrong row means a wrong repo, not a stale checkbox. Regenerate with <span class="mono">python scripts/build_tracker.py</span>.</p>
+  </div>
+  <div class="tracker rv">
+    <div class="tracker-head">
+      <h3 class="disp">1 of 13 gates pass</h3>
+      <span class="basis m">measured on build</span>
+    </div>
+    <div style="padding:0 18px 18px">
+      <div style="height:6px;background:var(--rule);position:relative;margin:14px 0 10px" role="img" aria-label="1 of 13 gates pass"><span style="position:absolute;inset:0 auto 0 0;width:8%;background:var(--pass)"></span></div>
+      <p style="font-size:14px;color:var(--ink-2)">Unattended means the loop runs, its gates can refuse, and its output can be certified. Today 1 of those 13 conditions holds. The gap is the work.</p>
+    </div>
+  </div>
+  <div class="tracker rv">
+    <div class="tracker-head">
+      <h3 class="disp">Can the loop run?</h3>
+      <span class="basis a">0 of 3</span>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="derived">
+        <thead><tr><th style="width:96px">Verdict</th><th>Gate</th><th class="n">Measured from</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="chip fail">fail</span></td>
+            <td class="what"><b>Does a run finish without a human?</b><br>
+              <span style="color:var(--ink-2)">3/14 runs finished</span>
+              <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
+                <li>3 of 14 recorded runs reached pipeline_completed</li>
+                <li>4 sit at stage_started with no terminal event: pipe_5546c123, pipe_66d2326d, pipe_7274e774, pipe_c34bfbe5</li>
+              </ul>
+              <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>Unattended means the pipeline reaches its terminal stage on its own.</i></div>
+            </td>
+            <td class="n"><span class="mono">orchestrator/data/audits/*.json</span></td>
+          </tr>
+          <tr>
+            <td><span class="chip fail">fail</span></td>
+            <td class="what"><b>Do stages succeed more often than they fail?</b><br>
+              <span style="color:var(--ink-2)">a stage attempt fails 6.1x more than it succeeds</span>
+              <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
+                <li>1001 stage_failed against 165 stage_completed</li>
+                <li>1004 restarts recorded</li>
+              </ul>
+              <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>A loop that mostly fails cannot be left alone, however good its gates.</i></div>
+            </td>
+            <td class="n"><span class="mono">orchestrator/data/audits/*.json</span></td>
+          </tr>
+          <tr>
+            <td><span class="chip fail">fail</span></td>
+            <td class="what"><b>Is failure bounded?</b><br>
+              <span style="color:var(--ink-2)">no attempt cap on restart</span>
+              <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
+                <li>pipelines.py records the 2026-08-14 incident verbatim: the stage was 'auto-restarted with no attempt cap', and ten containers took the whole 10-core canadacentral quota</li>
+                <li>worst observed: 352 restarts of 'trigger-run' in pipe_c34bfbe5</li>
+              </ul>
+              <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>Without an attempt cap one stuck stage consumes the whole quota.</i></div>
+            </td>
+            <td class="n"><span class="mono">orchestrator/pipelines.py:456 + audits</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="tracker rv">
+    <div class="tracker-head">
+      <h3 class="disp">Can it tell success from failure?</h3>
+      <span class="basis a">0 of 5</span>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="derived">
+        <thead><tr><th style="width:96px">Verdict</th><th>Gate</th><th class="n">Measured from</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="chip fail">fail</span></td>
+            <td class="what"><b>Has any gate ever refused a run?</b><br>
+              <span style="color:var(--ink-2)">no gate has ever refused a run</span>
+              <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
+                <li>22 gate events recorded, 0 of them a refusal</li>
+                <li>14 x "auto-pilot: conditions met"</li>
+                <li>8 x (empty note)</li>
+              </ul>
+              <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>A gate never observed refusing is decoration. Same rule as an eval.</i></div>
+            </td>
+            <td class="n"><span class="mono">orchestrator/data/audits/*.json</span></td>
+          </tr>
+          <tr>
+            <td><span class="chip fail">fail</span></td>
+            <td class="what"><b>Do the gates have programmatic checks?</b><br>
+              <span style="color:var(--ink-2)">5 gates have no programmatic check</span>
+              <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
+                <li>2 of 7 gates across all pipelines have a gate_check</li>
+                <li>connector-migration/promote-gate — manual, check=None</li>
+                <li>connector-promotion/uat-gate — manual, check=None</li>
+                <li>connector-promotion/prod-gate — manual, check=None</li>
+                <li>connector-canary/cutover-gate — manual, check=None</li>
+                <li>connector-activation/activation-gate — manual, check=None</li>
+              </ul>
+              <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>A manual gate with check=None is a human clicking approve, not a control.</i></div>
+            </td>
+            <td class="n"><span class="mono">orchestrator/pipelines.py :: PIPELINE_DEFS</span></td>
+          </tr>
+          <tr>
+            <td><span class="chip fail">fail</span></td>
+            <td class="what"><b>Does a completed run mean the work was correct?</b><br>
+              <span style="color:var(--ink-2)">a run reports success over failures it could not see</span>
+              <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
+                <li>3 completed run(s) carried recorded failures</li>
+                <li>pipe_4ba17e16 reported completed after 115 stage_failed events</li>
+                <li>pipe_4d518245 reported completed after 21 stage_failed events</li>
+                <li>pipe_a146ee06 reported completed after 15 stage_failed events</li>
+              </ul>
+              <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>This is the estate's signature failure: success reported over an unseen population.</i></div>
+            </td>
+            <td class="n"><span class="mono">orchestrator/data/audits/*.json</span></td>
+          </tr>
+          <tr>
+            <td><span class="chip fail">fail</span></td>
+            <td class="what"><b>Is cost observable when things fail?</b><br>
+              <span style="color:var(--ink-2)">cost is recorded only on success</span>
+              <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
+                <li>events carrying a non-zero cost_usd: stage_completed=19</li>
+                <li>so a stage that failed 100 times contributes $0.00 — the real spend is unknown, not small</li>
+              </ul>
+              <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>An optimiser cannot price a path whose failures are free.</i></div>
+            </td>
+            <td class="n"><span class="mono">orchestrator/data/audits/*.json</span></td>
+          </tr>
+          <tr>
+            <td><span class="chip fail">fail</span></td>
+            <td class="what"><b>Can QA validate any connector, not one?</b><br>
+              <span style="color:var(--ink-2)">QA verification targets a smoke-test twin</span>
+              <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
+                <li>orchestrator/stage_scripts/promotion_ops.py:43 builds the deployment name as f"smoke-test-{connector}"</li>
+                <li>so it measures a twin, not the connector's own deployment</li>
+              </ul>
+              <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>A gate that can only pass for a twin cannot certify a fleet.</i></div>
+            </td>
+            <td class="n"><span class="mono">orchestrator/stage_scripts/promotion_ops.py</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="tracker rv">
+    <div class="tracker-head">
+      <h3 class="disp">Can its output be certified?</h3>
+      <span class="basis a">1 of 5</span>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="derived">
+        <thead><tr><th style="width:96px">Verdict</th><th>Gate</th><th class="n">Measured from</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="chip pass">pass</span></td>
+            <td class="what"><b>Is the certification suite green and honest?</b><br>
+              <span style="color:var(--ink-2)">47 passed</span>
+              <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
+                <li>includes test_every_assertion_has_been_proved_able_to_fail</li>
+              </ul>
+              <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>Green is worthless unless every assertion has been shown able to fail.</i></div>
+            </td>
+            <td class="n"><span class="mono">tests/</span></td>
+          </tr>
+          <tr>
+            <td><span class="chip notrun">not run</span></td>
+            <td class="what"><b>Is the output actually certified?</b><br>
+              <span style="color:var(--ink-2)">12 assertions have no instrument wired</span>
+              <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
+                <li>connector-e2e/windsorai@GEP: UNMEASURABLE (UNMEASURABLE=12)</li>
+                <li>Probes refuses every instrument by design — this is the harness declaring it has not measured, not a failure</li>
+              </ul>
+              <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>The contract must measure a live run, not a replayed one.</i></div>
+            </td>
+            <td class="n"><span class="mono">factory/certify.py</span></td>
+          </tr>
+          <tr>
+            <td><span class="chip unmeas">unmeasurable</span></td>
+            <td class="what"><b>Is blast radius certifiable?</b><br>
+              <span style="color:var(--ink-2)">allowed_tenants is empty</span>
+              <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
+                <li>allowed_tenants is empty — one ALDC Windsor key returns every client's accounts, so an unfiltered pull lands Fusion92 rows in a GEP table and nothing downstream can tell. Blast radius is uncertifiable until someone writes the Navira account ids down.</li>
+              </ul>
+              <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>Certifying a pull whose scope is unknown certifies nothing.</i></div>
+            </td>
+            <td class="n"><span class="mono">&mdash;</span></td>
+          </tr>
+          <tr>
+            <td><span class="chip fail">fail</span></td>
+            <td class="what"><b>Is the eval corpus outside the agent-writable tree?</b><br>
+              <span style="color:var(--ink-2)">the eval corpus lives in the tree the agents can write to</span>
+              <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
+                <li>factory/calibration.py holds the known-good world every assertion is scored against</li>
+                <li>an agent that can edit its own grader is not graded</li>
+              </ul>
+              <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>An agent that can edit its own grader is not graded.</i></div>
+            </td>
+            <td class="n"><span class="mono">factory/calibration.py</span></td>
+          </tr>
+          <tr>
+            <td><span class="chip fail">fail</span></td>
+            <td class="what"><b>Does the factory survive this machine?</b><br>
+              <span style="color:var(--ink-2)">local git only — no remote</span>
+              <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
+                <li>one rm -rf from gone</li>
+              </ul>
+              <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>Unpushed work is one accident from gone.</i></div>
+            </td>
+            <td class="n"><span class="mono">git remote</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="tracker rv">
+    <div class="tracker-head">
+      <h3 class="disp">Needs a person, not a probe</h3>
+      <span class="basis a">three open questions</span>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="derived"><tbody>
+        <tr><td class="what"><b>Which Navira account ids are in scope?</b><br><span style="color:var(--ink-3)">Blocks A12, and therefore blocks certification. One ALDC Windsor key returns every client&rsquo;s accounts.</span></td></tr>
+        <tr><td class="what"><b>Is the landing table one account or two?</b><br><span style="color:var(--ink-3)">20 rows across 18 campaigns on one date cannot be unique on <span class="mono">(account_id, campaign_id, date)</span>. If it is one account, the declared primary key is wrong.</span></td></tr>
+        <tr><td class="what"><b>Which Jira ticket does the factory work belong to?</b><br><span style="color:var(--ink-3)">Nothing in either repo records one, and a branch name is not evidence.</span></td></tr>
+      </tbody></table>
+    </div>
+    <div class="ro-note">These three are not tick boxes and there is nothing to tick. Answer one and it stops appearing here, because the row above it starts measuring true.</div>
+  </div>
+  <div class="col">
+    <div class="callout rv">
+      <span class="lbl">Why there is nothing to tick</span>
+      <p>This section used to be checkboxes and free-text notes with no storage bound to them &mdash; a tick vanished on reload. It now regenerates from the two repositories, so republishing cannot lose anything and the page cannot claim a step is done while the repo says otherwise. Run <span class="mono">scripts/build_tracker.py --check</span> to find out whether the published page still matches.</p>
+    </div>
+  </div>
+</section>
+
+</main>
+</div>
+
+<footer class="foot">
+  <div class="wrap">
+    <div class="col">
+      <p><b>Basis.</b> Figures marked <span class="basis m">measured</span> were counted in this
+        estate on the date shown. <span class="basis d">Derived</span> figures are computed from
+        measured ones. <span class="basis a">Assumed</span> figures are drawn dashed and have not
+        been tested here. The 306-measure count is a snapshot dated 2026-06-19 and should be
+        re-dumped before being quoted outside the team.</p>
+      <p><b>Not measured on this page.</b> No live probe has run: every contract result shown is a
+        replay of the recorded 2026-08-20 windsorai evidence, not a fresh query against Prefect or
+        Snowflake. No credential was used to build this page.</p>
+      <p style="color:var(--ink-3)">Agent Factory &middot; Zeus Pantheon &middot; source in
+        <span class="mono">agent-factory/docs/artifacts/agent-factory.html</span></p>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var root = document.documentElement;
+  root.classList.add('js');
+  var STILL = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------------------------------------------------------- reveal */
+  var rv = [].slice.call(document.querySelectorAll('.rv'));
+  function show(el){ el.classList.add('in'); }
+  if (STILL) { rv.forEach(show); }
+  else {
+    var io = null;
+    if ('IntersectionObserver' in window) {
+      io = new IntersectionObserver(function(entries){
+        entries.forEach(function(e){ if (e.isIntersecting){ show(e.target); io.unobserve(e.target); } });
+      }, {threshold:.15, rootMargin:'0px 0px -8% 0px'});
+      rv.forEach(function(el){ io.observe(el); });
+    }
+    /* second mechanism: observers do not run in a tab that is never rendered */
+    var sweeping = false;
+    function sweep(){
+      sweeping = false;
+      var bottom = window.innerHeight || 800;
+      rv.forEach(function(el){
+        if (el.classList.contains('in')) return;
+        var r = el.getBoundingClientRect();
+        if (r.top < bottom * 1.05) { show(el); if (io) io.unobserve(el); }
+      });
+    }
+    addEventListener('scroll', function(){ if(!sweeping){ sweeping = true; setTimeout(sweep, 120); } }, {passive:true});
+    setTimeout(sweep, 400);
+    setTimeout(function(){ rv.forEach(show); }, 4000);   /* nothing stays hidden, ever */
+  }
+
+  /* ---------------------------------------------------------- count-ups */
+  var stats = [].slice.call(document.querySelectorAll('.stat .v[data-to]'));
+  function settle(){ stats.forEach(function(el){ el.textContent = el.getAttribute('data-to'); }); }
+  if (!STILL && !document.hidden) {
+    stats.forEach(function(el){
+      var to = parseFloat(el.getAttribute('data-to')), t0 = null, dur = 900;
+      el.textContent = '0';
+      function step(ts){
+        if (t0 === null) t0 = ts;
+        var k = Math.min(1, (ts - t0) / dur);
+        el.textContent = String(Math.round(to * (1 - Math.pow(1 - k, 3))));
+        if (k < 1) requestAnimationFrame(step); else el.textContent = el.getAttribute('data-to');
+      }
+      requestAnimationFrame(step);
+    });
+  }
+  setTimeout(settle, 2000);   /* the authored value wins whether or not a frame ever ticked */
+
+  /* ---------------------------------------------------------- plane drill-down */
+  var map = document.querySelector('.map');
+  var top_ = document.querySelector('.map-top');
+  var tabs = [].slice.call(document.querySelectorAll('.plane-tabs button'));
+  var panes = [].slice.call(document.querySelectorAll('.detail-pane'));
+  panes.forEach(function(p){ p.removeAttribute('hidden'); });
+  if (top_) top_.removeAttribute('data-active');
+
+  function selectPlane(name){
+    if (map) map.setAttribute('data-local-active', name);
+    if (top_) top_.setAttribute('data-local-active', name);
+    tabs.forEach(function(b){
+      var on = b.getAttribute('data-plane') === name;
+      b.setAttribute('data-local-sel', on ? '1' : '0');
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    var pane = document.getElementById('pane-' + name);
+    if (pane) play(pane);
+  }
+  tabs.forEach(function(b){
+    b.addEventListener('click', function(){ selectPlane(b.getAttribute('data-plane')); });
+  });
+
+  /* ---------------------------------------------------------- staged playback */
+  var timers = [];
+  function play(pane){
+    timers.forEach(clearTimeout); timers = [];
+    var nodes = [].slice.call(pane.querySelectorAll('.stage-node'));
+    nodes.forEach(function(n){ n.setAttribute('data-local-lit','0'); });
+    if (STILL) { pane.removeAttribute('data-local-playing'); return; }
+    pane.removeAttribute('data-local-playing');
+    /* force a reflow so the dot animation restarts on replay */
+    void pane.offsetWidth;
+    pane.setAttribute('data-local-playing','1');
+    nodes.forEach(function(n, i){
+      timers.push(setTimeout(function(){ n.setAttribute('data-local-lit','1'); }, 120 + i * 460));
+    });
+    timers.push(setTimeout(function(){
+      pane.removeAttribute('data-local-playing');
+      nodes.forEach(function(n){ n.setAttribute('data-local-lit','0'); });
+    }, 160 + nodes.length * 460 + 500));
+  }
+  [].slice.call(document.querySelectorAll('.replay')).forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var pane = document.getElementById(btn.getAttribute('data-replay'));
+      if (pane) play(pane);
+    });
+  });
+  selectPlane('build');
+
+  /* ---------------------------------------------------------- rail */
+  var links = [].slice.call(document.querySelectorAll('.rail a'));
+  var secs = links.map(function(a){ return document.querySelector(a.getAttribute('href')); });
+  function mark(){
+    var best = 0, bestTop = -1e9;
+    secs.forEach(function(s, i){
+      if (!s) return;
+      var t = s.getBoundingClientRect().top - 90;
+      if (t <= 0 && t > bestTop) { bestTop = t; best = i; }
+    });
+    links.forEach(function(a, i){ a.classList.toggle('on', i === best); });
+  }
+  var ticking = false;
+  addEventListener('scroll', function(){
+    if (ticking) return; ticking = true;
+    setTimeout(function(){ ticking = false; mark(); }, 150);
+  }, {passive:true});
+  mark();
+})();
+</script>
