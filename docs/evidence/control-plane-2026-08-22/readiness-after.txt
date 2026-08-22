@@ -43,9 +43,9 @@ connectors   C:\Users\PaulRussell\repos\agent-factory\.worktrees\prefect-connect
             . live lease -> 0 reaped; a still-running stage is left alone
             . a handle recorded by the engine's own recorder (yes) was carried to the terminator on reap: d894339e -> KILLED
             . a reaped stage carrying no handle reports 'NOT_RECORDED' — an unknown, not an absence
-            . 3 of 3 flow-run launch sites report their handle
-            . server binds the recorder into every script stage: yes
-            . server registers the cloud terminators at startup: yes
+            . 3 of 3 flow-run launch sites report their handle, and the function they call does report it
+            . the context the server builds writes a handle to the record: yes
+            . calling the server's own wiring leaves a terminator registered: yes
 
   Can it tell success from failure?  [2/8]
     PASS    Is the terminal verdict computed from history?       the verdict is derived from the event log

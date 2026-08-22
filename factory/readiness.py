@@ -21,6 +21,7 @@ import collections
 from datetime import datetime, timezone
 import re
 import glob
+import importlib
 import json
 import os
 import pathlib
@@ -899,22 +900,66 @@ def g_orphans_are_reaped():
               f"a reaped stage carrying no handle reports '{unknown}': whether it left a "
               f"container running is being read as nothing to kill")
 
-    # The wiring, checked at the source rather than assumed: a recorder nothing calls
-    # records nothing, and every launch site must report or its container is invisible.
+    # ⛔ The wiring, DRIVEN. This was three substring searches over server.py until an
+    # independent review deleted the registration call, gutted `_report_run`, and watched
+    # all three keep reading "yes" — the ordering one compared string POSITIONS and was
+    # satisfied by the surviving `import cloud_reaper` line. The gate reported "server
+    # registers the cloud terminators at startup: yes" over a system where nothing was
+    # registered. A recorder nothing calls records nothing, and a grep cannot tell.
+    #
+    # So the two seams are named functions in server.py now, and this calls them and asks
+    # the engine what it actually holds.
     ops = _src("orchestrator/stage_scripts/prefect_ops.py")
     launches, reports = ops.count("prefect.create_flow_run"), ops.count("_report_run(ctx,")
-    srv = _src("orchestrator/server.py")
-    wiring = [f"{reports} of {launches} flow-run launch sites report their handle",
-              "server binds the recorder into every script stage: "
-              + ("yes" if "report_external_handle=" in srv else "NO — nothing ever records one"),
-              "server registers the cloud terminators at startup: "
-              + ("yes" if "cloud_reaper" in srv else "NO — every reap would be NOT_ATTEMPTED")]
-    ev += wiring
+    try:
+        srv_mod = importlib.import_module("orchestrator.server")
+    except Exception as exc:
+        raise Unmeasurable(f"orchestrator.server will not import: {type(exc).__name__}: {exc}")
+
+    engine.clear_terminators()
+    registered = bool(srv_mod.wire_cloud_terminators(engine)) and bool(engine._TERMINATORS)
+    engine.clear_terminators()
+
+    w = _scratch_pipeline(engine, "pipe_wired",
+                          [_scratch_stage("trigger-run", status="dispatched", type="script")])
+    srv_mod.build_script_context({"pipeline_id": "pipe_wired", "stage_name": "trigger-run"})         .report_external_handle("prefect_flow_run", HANDLE, "moose")
+    bound = [h["id"] for h in (w["stages"][0].get("_external_handles") or [])] == [HANDLE]
+
+    # And the callee, driven. `ops.count("_report_run(ctx,")` counts CALL SITES, so
+    # gutting the function they all call was invisible to this gate — the second half of
+    # the same review finding. Importing prefect_ops is affordable here; if it ever is not,
+    # the gate says NOT-IMPORTABLE rather than quietly falling back to the count.
+    reported = None
+    try:
+        po = importlib.import_module("orchestrator.stage_scripts.prefect_ops")
+        seen = []
+
+        class _Ctx:
+            def report_external_handle(self, kind, hid, name=""):
+                seen.append(hid)
+
+        po._report_run(_Ctx(), {"id": HANDLE, "name": "moose"})
+        reported = (seen == [HANDLE])
+    except Exception as exc:
+        ev.append(f"could not drive _report_run: {type(exc).__name__}: {exc}")
+
+    ev += [f"{reports} of {launches} flow-run launch sites report their handle, and the "
+           f"function they call "
+           + ({True: "does report it", False: "REPORTS NOTHING — every launch is invisible "
+                                              "to the reaper",
+               None: "could not be driven (NOT-IMPORTABLE), so only the call sites are "
+                     "measured"}[reported]),
+           "the context the server builds writes a handle to the record: "
+           + ("yes" if bound else "NO — the recorder is bound to nothing"),
+           "calling the server's own wiring leaves a terminator registered: "
+           + ("yes" if registered else "NO — every reap would be NOT_ATTEMPTED and the "
+                                      "container would keep its core")]
 
     cloud_ok = (killed_handles == [HANDLE] and term.get("verdict") == "KILLED"
                 and unknown == "NOT_RECORDED"
-                and launches and reports >= launches
-                and "report_external_handle=" in srv and "cloud_reaper" in srv)
+                and launches and reports == launches
+                and reported is True
+                and bound and registered)
 
     if killed and after == "failed" and "stage_failed" in log and not spared and cloud_ok:
         return _pass("dispatched work is leased, reaped and its cloud work killed", ev, src)

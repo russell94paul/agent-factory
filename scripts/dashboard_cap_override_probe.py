@@ -9,15 +9,23 @@ Pipeline, which is the 2026-08-14 workaround that destroyed the evidence along w
 loop.
 
 This probe is the consumer-layer check for that fix: a real Chromium, the real
-`index.html`, the real functions, and — the part that matters — **the real refusal
-message, produced by driving `check_attempt_cap` in this process**, not a string typed
-here. `isAttemptCapRefusal` is a regex, and finding F19 in this programme is a regex guard
-that had never been shown to match the line it was written for. A pattern tested against a
-message the test invented proves nothing.
+`index.html`, the real functions, and — the part that matters — **the whole real HTTP
+response, produced by driving `_handle_post_pipeline_restart` in this process** with
+exactly the body the dashboard sends.
+
+⛔ The first version of this probe derived only the MESSAGE and then invented the status,
+writing `{status: 400}` into its own stub. The route actually answered **404**, because
+`ControlRefused` subclasses `ValueError` and that handler's `except ValueError` answers
+404 — so the override was still unreachable and this probe reported eight green checks
+over it. An independent review found it by changing one literal.
+
+That is finding F19 with the lesson only half learned: the message was measured because
+F19 was about a message, and the status was invented because nothing had gone wrong there
+yet. **Take the whole answer from the thing that answers.**
 
     python scripts/dashboard_cap_override_probe.py [--screenshot DIR]
 
-Exit 0 means all eight behaviours were watched happening in a browser.
+Exit 0 means all ten behaviours were watched — two at the route, eight in a browser.
 """
 from __future__ import annotations
 
@@ -34,36 +42,66 @@ CONNECTORS = pathlib.Path(os.environ.get("PREFECT_CONNECTORS",
 INDEX = CONNECTORS / "orchestrator" / "static" / "index.html"
 
 
-def real_refusal_message() -> str:
-    """The message the engine actually produces, by making it refuse."""
+def real_refusal_response() -> tuple:
+    """The status AND body the ROUTE answers, by driving the real handler at the cap.
+
+    Not `check_attempt_cap` — the handler. The refusal has to travel through
+    `_handle_post_pipeline_restart`'s exception clauses to become an HTTP answer, and that
+    journey is where it turned into a 404. A probe that stops at the engine measures the
+    half that was already right.
+
+    The body sent is exactly the one `retryStage` sends on its first attempt.
+    """
     sys.path.insert(0, str(CONNECTORS))
     from orchestrator import pipelines as engine
     from orchestrator.engine import audit as audit_trail
+    from orchestrator import server as srv
 
     tmp = pathlib.Path(tempfile.mkdtemp(prefix="cap-probe-"))
     audit_trail.configure(tmp, tmp / "sessions")
     engine.configure(tmp)
     engine._pipelines.clear()
     stage = {"name": "trigger-run", "status": "failed", "depends_on": [], "type": "script",
-             "timeout_min": 10, "_attempts": engine.MAX_ATTEMPTS_PER_STAGE}
+             "timeout_min": 10, "_attempts": engine.MAX_ATTEMPTS_PER_STAGE,
+             "auto_advance": True}
     pipeline = {"id": "pipe_probe", "ticket_id": "GP-PROBE", "ticket_title": "cap probe",
                 "pipeline_type": "connector-migration", "client_code": "GEP",
                 "status": "running", "stages": [stage], "params": {}, "prior_results": {},
                 "budget_usd": 0}
     engine._pipelines["pipe_probe"] = pipeline
-    try:
-        engine.check_attempt_cap(pipeline, stage, "probe")
-    except engine.ControlRefused as exc:
-        return str(exc)
-    raise SystemExit("the cap did NOT refuse at the ceiling — nothing to test")
+
+    captured = {}
+
+    class _Probe(srv.OrchestratorHandler):
+        def __init__(self):  # no socket, no server — just the method under test
+            pass
+
+        def _json_body(self):
+            return {"stage_name": "trigger-run"}
+
+        def _send_json(self, data, status=200):
+            captured["status"], captured["body"] = status, data
+
+        def _send_error_json(self, status, message):
+            captured["status"], captured["body"] = status, {"error": message}
+
+    _Probe()._handle_post_pipeline_restart("pipe_probe")
+    if not captured:
+        raise SystemExit("the handler answered nothing — the probe is not driving it")
+    if captured["status"] < 400:
+        raise SystemExit(f"the cap did NOT refuse at the ceiling: {captured}")
+    return captured["status"], captured["body"]
 
 
 DRIVER = """
-(async (message) => {
+(async (refusal) => {
   const seen = [];
   const toasts = [];
   let prompted = null;
 
+  // `refusal.status` and `refusal.body` come from driving the real route in Python. The
+  // probe does not get to choose them — choosing the status is how the previous version
+  // reported eight green checks over a control the operator could not reach.
   window.fetch = async (url, opts) => {
     const body = opts && opts.body ? JSON.parse(opts.body) : {};
     seen.push({ url: String(url), body });
@@ -71,8 +109,8 @@ DRIVER = """
       return new Response(JSON.stringify({ ok: true, dispatched: 1 }),
                           { status: 200, headers: {'Content-Type': 'application/json'} });
     }
-    return new Response(JSON.stringify({ error: message }),
-                        { status: 400, headers: {'Content-Type': 'application/json'} });
+    return new Response(JSON.stringify(refusal.body),
+                        { status: refusal.status, headers: {'Content-Type': 'application/json'} });
   };
 
   const realToast = window.toast;
@@ -110,8 +148,10 @@ def main() -> int:
         print(f"no dashboard at {INDEX}")
         return 2
 
-    message = real_refusal_message()
-    print(f"the engine's own refusal:\n  {message}\n")
+    status, body = real_refusal_response()
+    message = body.get("error", "")
+    print(f"the ROUTE's own refusal:  HTTP {status}")
+    print(f"  body    {json.dumps(body)}\n")
 
     from playwright.sync_api import sync_playwright
 
@@ -122,7 +162,7 @@ def main() -> int:
         page.add_init_script("window.confirm = () => true;")
         page.goto(INDEX.as_uri())
         page.wait_for_function("typeof window.retryStage === 'function'", timeout=15000)
-        result = page.evaluate(DRIVER, message)
+        result = page.evaluate(DRIVER, {"status": status, "body": body})
 
         if args.screenshot:
             out = pathlib.Path(args.screenshot)
@@ -145,6 +185,14 @@ def main() -> int:
         nonlocal ok
         ok = ok and bool(cond)
         print(f"  {'ok ' if cond else '!! '} {label}{('  — ' + detail) if detail else ''}")
+
+    check("the route answers a control refusal with a status that is not 404",
+          status != 404,
+          f"HTTP {status}" + (" — 404 tells the browser the pipeline does not exist, so "
+                              "no client can distinguish a refusal from a typo"
+                              if status == 404 else ""))
+    check("the refusal names the control in its body, so no client parses prose",
+          body.get("control") == "attempt_cap", json.dumps(body))
 
     a = result["withOverride"]
     check("the refusal was recognised as a cap refusal, not a generic error",

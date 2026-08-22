@@ -15,9 +15,9 @@ Exit code 0 means every control-plane gate is load-bearing.
 
 ⚠ Nothing under the real checkout is ever written. The whole point of a probe mutation is
 that it must not require breaking the thing being measured, and a harness that mutated the
-live tree would be one crash away from leaving a control removed. Compare
-`prefect-connectors/tests/orchestrator/mutate_control_plane.py`, which does mutate in place
-and therefore refuses to start against a dirty file.
+live tree would be one crash away from leaving a control removed —
+`prefect-connectors/tests/orchestrator/mutate_control_plane.py` did exactly that until
+2026-08-22, and a tool timeout killed it mid-mutation once. It now copies too.
 """
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ FACTORY = pathlib.Path(__file__).resolve().parent.parent
 CONNECTORS = pathlib.Path(os.environ.get("PREFECT_CONNECTORS",
                                          FACTORY.parent / "prefect-connectors"))
 
-#: (gate id, [(anchor, replacement)], what the mutation removes)
+#: (gate id, [(anchor, replacement)], what the mutation removes[, target file])
 MUTATIONS = [
     ("cap",
      [("""    used = attempts(stage)
@@ -110,6 +110,23 @@ MUTATIONS = [
        "                        \"recorded_at\": _now_iso()})",
        "        pass")],
      "the durable handle — nothing is left for the reaper to kill"),
+
+    # The two an independent review used to satisfy this gate while the production
+    # path was dead. Both edits leave the IMPORT in place, which is precisely how the
+    # old substring checks survived them: `"cloud_reaper" in src` was true of a module
+    # that registered nothing, and `_report_run(ctx,` counted CALL SITES while the
+    # function they all called did nothing at all.
+    ("reaper",
+     [("        _cloud_reaper.register(engine)\n        return True",
+       "        return True")],
+     "the registration call — the terminator is never wired, though the import remains",
+     "orchestrator/server.py"),
+
+    ("reaper",
+     [('        rid = (run or {}).get("id") or ""\n        if rid:\n            ctx.report_external_handle("prefect_flow_run", rid, (run or {}).get("name", ""))',
+       "        pass")],
+     "the BODY of _report_run — every launch site still calls it and it records nothing",
+     "orchestrator/stage_scripts/prefect_ops.py"),
 ]
 
 
@@ -141,12 +158,24 @@ def main() -> int:
 
     print(f"connectors  {CONNECTORS}\n")
     results = []
-    for gate_id, edits, removes in MUTATIONS:
+    for mutation in MUTATIONS:
+        gate_id, edits, removes = mutation[:3]
+        target_rel = mutation[3] if len(mutation) > 3 else 'orchestrator/pipelines.py'
         scratch = pathlib.Path(tempfile.mkdtemp(prefix="probe-mutation-"))
         try:
             shutil.copytree(CONNECTORS / "orchestrator", scratch / "orchestrator",
                             ignore=shutil.ignore_patterns("__pycache__", "data", "data-pr",
                                                           "sessions", "health"))
+            # `prefect_ops` inserts ACTIVATION_API_DIR on sys.path and imports
+            # PrefectService from it, so a scratch tree holding only `orchestrator/`
+            # cannot import it — and the reaper gate would then report NOT-IMPORTABLE
+            # and FAIL for a reason that has nothing to do with the mutation. A kill
+            # credited to the wrong half is the tail of finding F18, so the copy
+            # carries `.deploy` too.
+            src_deploy = CONNECTORS / '.deploy'
+            if src_deploy.is_dir():
+                shutil.copytree(src_deploy, scratch / '.deploy',
+                                ignore=shutil.ignore_patterns('__pycache__'))
             # The history-measured gates need the audit files; they are small.
             src_audits = CONNECTORS / "orchestrator" / "data" / "audits"
             if src_audits.is_dir():
@@ -155,7 +184,7 @@ def main() -> int:
             if pj.is_file():
                 shutil.copy2(pj, scratch / "orchestrator" / "data" / "pipelines.json")
 
-            target = scratch / "orchestrator" / "pipelines.py"
+            target = scratch / target_rel
             body = target.read_text(encoding="utf-8")
             missing = [a for a, _ in edits if body.count(a) != 1]
             if missing:
