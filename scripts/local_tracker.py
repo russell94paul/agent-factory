@@ -565,7 +565,7 @@ def render(when: datetime.datetime, tab: str = "gates") -> str:
                   f'padding:5px 10px;margin:0 0 8px 6px;border:1px solid var(--rule);'
                   f'border-radius:3px;background:var(--raise);color:var(--ink);'
                   f'text-decoration:none;font-family:ui-monospace,monospace;{dis}">'
-                  f'{"blocked" if blocked else "claim this lane"}</a>')
+                  f'{"blocked - a conflicting lane is running" if blocked else "reserve (I start it myself)"}</a>')
             # pre-wrap: a <pre> of long lines would widen the page, which is a defect already fixed
             # once today on the artifact. Do not "tidy" this to nowrap.
             w(f'<pre id="ln-{e(lane.id)}" style="white-space:pre-wrap;word-break:break-word;'
