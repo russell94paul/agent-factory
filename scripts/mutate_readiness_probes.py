@@ -98,7 +98,7 @@ MUTATIONS = [
     # that closes the record perfectly and leaves the container burning a shared core —
     # which is what the gate said PASS to for its whole life before this mutation existed.
     ("reaper",
-     [("            termination = _terminate_external_work(pipeline[\"id\"], stage)",
+     [("            termination = _terminate_external_work(pipeline[\"id\"], stage, _deadline)",
        "            termination = []")],
      "the call that kills the cloud work behind a reaped stage"),
 

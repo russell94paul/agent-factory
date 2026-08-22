@@ -524,3 +524,27 @@ you have.
   note the limit that remains: **no container has ever been deleted by this code.** There
   is no Azure subscription in the suite, so the three `az`/Prefect seams are untested by
   construction.
+
+### F29 — A mutation anchor is a copy of the source, so a refactor disarms it silently
+
+- **BELIEVED** — "all N mutations flipped their gate off PASS" is a current fact about the
+  tree. A mutation harness that reports every control load-bearing has certified the code
+  as it stands.
+- **ACTUALLY** — the harness works by holding a **copy of a line of production source** and
+  replacing it, so the anchor is a duplicate and duplicates rot. Adding a `_deadline`
+  argument to the reaper's termination call stopped both harnesses' anchors matching. The
+  connectors harness caught it on the next run (ANCHOR-MISSING, exit 1) — but the factory
+  harness had last been run **before** the refactor and was still reporting *"All 12
+  mutations flipped their gate off PASS"*, a true statement about a tree that no longer
+  existed, already quoted in a commit message. **An instrument whose input is a copy of the
+  source certifies the version it last ran against, not the one in the tree** — and each
+  harness takes ~20 minutes, so nobody re-runs it casually.
+- **MEASURED BY** — `tests/test_mutation_anchors_still_match.py` (new): loads both
+  harnesses' `MUTATIONS` lists and asserts every anchor appears **exactly once** in its
+  target file. 28 anchors, 0.07s, in the ordinary suite. Shown non-vacuous by pointing
+  `$PREFECT_CONNECTORS` at a scratch tree with one mutated line: it reports
+  `its anchor appears 0 time(s)`.
+- **AFFECTS** — every lane that owns a mutation harness, which is now the control-plane and
+  (via `scripts/mutate_readiness_probes.py`) anyone editing a gate's control. Two rules
+  follow: **re-run the harness after the last refactor, not before**, and never quote a
+  load-bearing count that predates a change to the lines it anchors on.
