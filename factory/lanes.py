@@ -79,8 +79,10 @@ class Lane:
 
     @property
     def full_prompt(self) -> str:
-        """What actually gets copied: shared guidance plus this lane's specifics."""
-        return PREAMBLE + self.prompt + POSTAMBLE
+        """What actually gets copied or launched: shared guidance, this lane's specifics, and any
+        operator answer to its declared blocker."""
+        from .operator import block
+        return PREAMBLE + self.prompt + POSTAMBLE + block(self)
 
 
 LANES: List[Lane] = [

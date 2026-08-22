@@ -35,6 +35,7 @@ from factory.lanes import LANES, SIZE, conflicts, recommend, waits_on  # noqa: E
 from factory.findings import by_lane  # noqa: E402
 from factory import synthesis as synth  # noqa: E402
 from factory import claims as claimlib  # noqa: E402
+from factory import operator as opans  # noqa: E402
 
 OUT = FACTORY / "tracker.html"
 
@@ -226,6 +227,7 @@ def hot_reload():
         g["by_lane"] = getattr(_il.reload(_il.import_module("factory.findings")), "by_lane")
         g["synth"] = _il.reload(_il.import_module("factory.synthesis"))
         g["claimlib"] = _il.reload(_il.import_module("factory.claims"))
+        g["opans"] = _il.reload(_il.import_module("factory.operator"))
         _RELOADED_AT = datetime.datetime.now()
         return True, f"reloaded {len(_HOT)} modules, {len(r.GATES)} gates"
     except Exception as exc:                                          # noqa: BLE001
@@ -526,6 +528,15 @@ def render(when: datetime.datetime, tab: str = "gates") -> str:
             if lane.needs_paul:
                 w(f'<p style="font-size:12.5px;color:var(--unmeas);margin:0 0 8px">'
                   f'<b>Needs Paul:</b> {e(lane.needs_paul)}</p>')
+                ans = opans.get(lane.id)
+                if ans and not ans.get('broken'):
+                    w(f'<div style="font-size:12.5px;color:var(--pass);margin:0 0 8px;padding:8px 10px;border-left:2px solid var(--pass);background:var(--paper)">'
+                      f'<b>Answered {e(ans["at"][:16])}</b> &middot; <a href="/unanswer/{e(lane.id)}">clear</a><br>{e(ans["text"])}</div>')
+                else:
+                    w(f'<form method="POST" action="/answer-blocker" style="margin:0 0 8px">'
+                      f'<input type="hidden" name="lane" value="{e(lane.id)}">'
+                      f'<textarea name="text" rows="2" placeholder="answer it now and the session never has to ask" style="width:100%;box-sizing:border-box;font-size:12px;padding:7px;border:1px solid var(--rule);border-radius:3px;background:var(--paper);color:var(--ink);font-family:ui-monospace,monospace"></textarea>'
+                      f'<button type="submit" style="font-size:12px;padding:4px 10px;margin-top:5px;cursor:pointer;border:1px solid var(--rule);border-radius:3px;background:var(--raise);color:var(--ink);font-family:ui-monospace,monospace">record answer</button></form>')
             blocked = claimlib.blockers(lane.id, held)
             mine = held.get(lane.id)
             if mine:
@@ -723,8 +734,19 @@ document.querySelectorAll('[data-copy]').forEach(function (b) {
 
 class Handler(http.server.BaseHTTPRequestHandler):
     def do_POST(self):
-        global _ANSWER_MSG
+        global _ANSWER_MSG, _CLAIM_MSG
         import urllib.parse
+        if self.path.rstrip("/") == "/answer-blocker":
+            raw = self.rfile.read(int(self.headers.get("Content-Length") or 0)).decode("utf-8", "replace")
+            f = urllib.parse.parse_qs(raw, keep_blank_values=True)
+            try:
+                opans.record((f.get("lane") or [""])[0], (f.get("text") or [""])[0])
+                _CLAIM_MSG = (True, f"answer recorded for {(f.get('lane') or [''])[0]} — it will "
+                                    "be appended to that lane's prompt")
+            except opans.OperatorError as exc:
+                _CLAIM_MSG = (False, str(exc))
+            self.send_response(303); self.send_header("Location", "/lanes"); self.end_headers()
+            return
         if self.path.rstrip("/") != "/answer":
             self.send_error(404)
             return
@@ -760,6 +782,12 @@ class Handler(http.server.BaseHTTPRequestHandler):
         global _SYNC_MSG
         global _CLAIM_MSG
         import urllib.parse
+        um = re.match(r"^/unanswer/([a-z0-9-]+)$", self.path.rstrip("/"))
+        if um:
+            ok = opans.clear(um.group(1))
+            _CLAIM_MSG = (True, f"cleared the answer for {um.group(1)}" if ok else "nothing to clear")
+            self.send_response(303); self.send_header("Location", "/lanes"); self.end_headers()
+            return
         lm = re.match(r"^/start/([a-z0-9-]+)$", urllib.parse.urlparse(self.path).path.rstrip("/"))
         if lm:
             dry = "dry=1" in (urllib.parse.urlparse(self.path).query or "")
