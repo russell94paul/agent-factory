@@ -38,13 +38,13 @@ below so the claim survives independently of that external file.
 >   computed WCAG contrast ratios, undersized/tiny text, cramped padding — that the other four skills do
 >   not enumerate as checklist items. It needs no browser for the static engine and nothing here replaces
 >   running it.
-> - **On a genuine conflict, split by domain, not by seniority.** `artifact-motion`'s
->   `references/QUALITY_GATES.md` is authoritative for anything touching motion, reduced-motion behavior, or
->   whether a figure's geometry is computed from a real measured number — `impeccable`'s detector has no
->   rule for any of that and is not a vote on it. `impeccable`'s detector is authoritative for the generic
->   UI-quality lane it actually measures — contrast, spacing, typography, AI-slop tells — where the four
->   Artifact skills state principles (rule 3, "every number carries its basis"; "seamless, not a card grid")
->   but do not run a deterministic scan.
+> - **On a genuine conflict, split by domain, not by seniority.** `artifact-motion` — and this skill's own
+>   `references/QUALITY_GATES.md`, which operationalizes it for a living-systems page — is authoritative for
+>   anything touching motion, reduced-motion behavior, or whether a figure's geometry is computed from a
+>   real measured number: `impeccable`'s detector has no rule for any of that and is not a vote on it.
+>   `impeccable`'s detector is authoritative for the generic UI-quality lane it actually measures —
+>   contrast, spacing, typography, AI-slop tells — where the four Artifact skills state principles (rule 3,
+>   "every number carries its basis"; "seamless, not a card grid") but do not run a deterministic scan.
 > - **A finding from `impeccable`'s detector is a claim, not a fact, until checked against the rendered
 >   page.** Its static-HTML engine does not evaluate `@media` blocks and only partially resolves CSS custom
 >   properties across `:root[data-theme]` variants — a page that swaps its whole palette under
@@ -55,6 +55,12 @@ below so the claim survives independently of that external file.
 >   `htmlparser2`, `css-select`, `css-tree`, `domutils` alongside `scripts/detect.mjs` first.
 
 </details>
+
+*(Corrected once already: the conflict-authority bullet originally pointed at
+`artifact-motion`'s `references/QUALITY_GATES.md`. That directory doesn't exist —
+`artifact-motion` ships only `SKILL.md`; the file lives at
+`living-systems-ui/references/QUALITY_GATES.md`, this skill's own. Caught by the same
+`reviewer` pass noted below; fixed in the live file and re-mirrored here.)*
 
 ⚠ **Both defects that render pass doc found are already fixed on this branch**, by commit
 `330742d fix(artifact): draw the category the figure declared, stop the sideways scroll, make
@@ -93,7 +99,7 @@ coincidence worth re-checking on a rule change, not a guarantee the two stay in 
 
 | Rule | Count | Verdict after checking against the source |
 |---|---|---|
-| `low-contrast` | 258 | **~97% are a detector artifact — see below.** A handful are unresolved. |
+| `low-contrast` | 258 | **All 258 are a detector artifact, verified against a real browser — see below.** A real, smaller, different contrast defect (225 near-miss failures, light theme only) was hiding underneath and is reported there instead. |
 | `undersized-ui-text` | 25 | Not independently checked this pass. |
 | `all-caps-body` | 11 | Not independently checked this pass. |
 | `tiny-text` | 9 | Not independently checked this pass. |
@@ -102,49 +108,105 @@ coincidence worth re-checking on a rule change, not a guarantee the two stay in 
 | `hero-eyebrow-chip` | 1 | Not independently checked this pass. |
 | `wide-tracking` | 1 | Not independently checked this pass. |
 
-## ⭐ The low-contrast finding is dominated by a false-positive class, proven by token cross-reference
+## ⭐ The low-contrast finding is ~100% noise — and a real, different, smaller defect was hiding under it
 
-`low-contrast`'s 258 findings collapse to 10 distinct `text-color on bg-color` pairs. The two
-largest, **251 of 258 (97%)**, pair a hex value that exists **only** in this page's dark-theme
-token block with a hex value that exists **only** in the light-theme block:
+**Revision note, same day.** The paragraphs below replace an earlier version of this section that
+overstated its own proof and got caught by an independent `reviewer` pass. Kept for the record,
+corrected in place: the earlier draft folded 196 of the 258 findings (`#000000 on #141b21` ×195,
+`#000000 on #0e1418` ×1) into a "97% proven false positive" headline on the strength of a grep
+that only ever covered 56 of them (the `#828e97`/`#a9b4bc`/`#e7ecef` rows). It then separately,
+two paragraphs later, listed those same 196 as "not dismissed… recorded as open" — a direct
+self-contradiction a careful reader would have caught before I did. It also cited a corroborating
+instrument (`render-pass-2026-08-22.md`'s dark-token check) that never actually reads any
+element's text color — only three named CSS variables and the body background — so "no black text
+was observed there" was never something that check could have observed. And it cited two source
+lines as the detector's own documented mechanism; both citations were wrong (one documents an
+already-suppressed alpha-fallback class, the other is scoped to an unrelated border pre-pass, and
+the real cascade builder *does* flatten `@media` blocks — see below). None of that changes the
+verdict, only how it's supported. Corrected, with real measurements this time:
+
+**56 of 258 are provably impossible by token cross-reference**, same as before. `low-contrast`'s
+258 findings collapse to 10 distinct `text-color on bg-color` pairs; three of them pair a hex
+value that exists **only** in this page's dark-theme token block with a hex value that exists
+**only** in the light-theme block:
 
 | Snippet | Count | Text color is only… | Background color is only… |
 |---|---|---|---|
-| `#000000 on #141b21` | 195 | *(unresolved — see below)* | `--surface`, dark (`docs/artifacts/agent-factory.html:21,31`) |
-| `#828e97 on #ffffff` | 32 | `--ink-3`, dark (`:22,32`) | `--raise`, light (`:8`) |
+| `#828e97 on #ffffff` | 32 | `--ink-3`, dark (`docs/artifacts/agent-factory.html:22,32`) | `--raise`, light (`:8`) |
 | `#a9b4bc on #ffffff` | 18 | `--ink-2`, dark (`:22,32`) | `--raise`, light (`:8`) |
 | `#e7ecef on #ffffff` | 6 | `--ink`, dark (`:22,32`) | `--raise`, light (`:8`) |
-| `#000000 on #0e1418` | 1 | *(unresolved)* | `--paper`, dark (`:21,31`) |
 
-**A browser can never paint any of these five pairs.** `grep -n "828E97\|A9B4BC\|E7ECEF" docs/artifacts/agent-factory.html`
-returns only the two dark-token definition lines (`:22`, `:32`) — those hex values are never
-hand-written elsewhere, so the only way text paints `#828e97` is the dark theme being active, and
-the only way a `--raise` background paints `#ffffff` is the light theme being active. One page,
-one theme, one paint. The pairing is a **contradiction**, not an edge case.
+`grep -n "828E97\|A9B4BC\|E7ECEF" docs/artifacts/agent-factory.html` returns only the two
+dark-token definition lines — those hex values are never hand-written elsewhere, so the only way
+text paints `#828e97` is the dark theme being active, and the only way a `--raise` background
+paints `#ffffff` is the light theme being active. One page, one theme, one paint; the pairing is a
+contradiction. (`#ffffff` as a *background* specifically is real, not a further artifact: the
+detector's own comment at `checks.mjs:~1765` — *"Guessing white here is what flooded dark themes
+with false `on #ffffff` findings"* — records that it deliberately refuses to guess white and only
+reports it when a real `--raise:#FFFFFF` resolves, which the light theme's own token, correctly,
+does.)
 
-The mechanism: the detector's own source documents the class. `scripts/detector/rules/checks.mjs:181-186`
-— *"In jsdom mode the detector can't resolve `var(--X)` color tokens, so a dark section sitting
-between the text and the body's decorative gradient is invisible to us — we end up measuring
-contrast against \[the wrong] bg."* `css-cascade.mjs:34` separately states `@media` blocks are
-ignored outright. Between the two, this page's `--ink`/`--ink-2`/`--ink-3` custom properties
-resolve inconsistently against its `--raise`/`--surface`/`--paper` properties across the same
-static pass — some elements pick up the dark declaration (`:root[data-theme="dark"]`, a plain
-attribute-selector rule, not `@media`-wrapped, so it *is* read), others don't, and the two streams
-get paired as if they belonged to one render.
+**The other 202 (the 196 `#000000` findings, plus the 6 remaining same-theme-accent pairs) are
+false positives too — proven directly, not inferred.** Rather than keep reverse-engineering the
+static tool's internals (the previous draft's failure mode), this pass opened the real, current
+file in the real, installed Chrome via Playwright — `color-scheme: dark` and `color-scheme: light`
+separately, `getComputedStyle` on every element with direct text — and asked the only question
+that matters: **does anything actually paint black text, or any of the other disputed pairs, in
+this browser?**
 
-**Corroborating instrument:** `docs/evidence/render-pass-2026-08-22.md` already rendered this
-exact file with Playwright in a real dark-mode browser and reported *"Verdict tokens hold — dark:
-PASS — `#E4756A` / `#4FBF89` / `#E3A93D` on `rgb(14,20,24)`."* No black text was observed there.
-Two independent instruments — a real browser and a token-definition grep — agree the dark theme
-renders correctly; only the static jsdom-cascade path disagrees, and it disagrees with itself
-(mismatched theme streams) more than with reality.
+```
+dark:  776 elements checked with direct text, 3 have computed color rgb(0,0,0) —
+       and all 3 are <title> and <style> tags: never rendered, not text a visitor sees.
+       Zero real black text anywhere in the dark theme.
+```
 
-**Not dismissed as false positives:** the remaining 7 findings, all same-theme pairs
-(`#e7ecef on #6fb3d6`, `#6fb3d6 on #6fb3d6`, `#828e97 on #6fb3d6`, `#a9b4bc on #6fb3d6`,
-`#e3a93d on #6fb3d6` — all dark-only tokens against `--accent`) and the `#000000` pairs above
-(text color not attributable to any token, so not provably cross-theme either way). These need a
-targeted browser check before either fixing or discarding them — recorded as open, not closed
-either direction.
+That is decisive for both `#000000` rows (196 findings) and, by the same run, the remaining 6
+same-theme-accent findings never appeared as a genuine failure either — a real WCAG check across
+every element in the actual dark render found exactly **one** contrast failure, and it isn't any
+of the 258 reported ones:
+
+```
+dark:  1 real near-miss — --ink-3 (rgb(130,142,151)) on --accent-soft (rgb(21,42,56)),
+       ratio 4.41, needs 4.5. 0.09 short. Not in the static detector's output at all.
+```
+
+**Light mode has a real, previously-unreported defect the static pass never surfaced,** buried
+under its own noise: the same real-browser WCAG sweep against `color-scheme: light` found **225
+genuine failures**, none of them coincidentally matching any of the 258 static findings above
+(different colors entirely — the static pass's light-mode noise used dark-theme hexes paired with
+`#ffffff`; the real light-mode failures use light-theme's own `--ink-3`/`--unmeas` tokens against
+light-theme's own surfaces):
+
+| Real color pair (light theme, both tokens genuine) | Ratio | Needed | Count |
+|---|---|---|---|
+| `--ink-3` `rgb(108,118,126)` on `--surface` `rgb(248,249,250)` | 4.40 | 4.5 | 144 |
+| `--ink-3` `rgb(108,118,126)` on `--paper` `rgb(238,240,242)` | 4.06 | 4.5 | 56 |
+| `--unmeas` `rgb(176,126,20)` on `--surface` `rgb(248,249,250)` | ~3.15–3.2 | 4.5 | 19 |
+| `--unmeas` `rgb(176,126,20)` on `--paper` `rgb(238,240,242)` | ~3.15–3.2 | 4.5 | 3 |
+| (3 further one-off pairs, same tokens, minor variants) | 3.8–4.4 | 4.5 | 3 |
+
+All 225 are near-misses (worst measured: 3.15:1, none below 3.0), not gross failures — `--ink-3`
+captions/labels/breadcrumb numerals across the whole light theme sit ~0.1–0.4 short of AA, and the
+`--unmeas` amber verdict token used as bold 11.5px text (not large enough to qualify for the 3.0
+large-text threshold) sits further short at ~3.15–3.2:1. This is a real, minor, systemic light-mode
+contrast shortfall on this page. Neither the static detector (buried it under 258 false hits using
+the wrong theme's colors) nor the original render pass (asserts nothing about text-color contrast
+at all — see the retraction above) had found it before this pass.
+
+Reproduce: `python scripts/render_pass.py` does not run this check; it was written as a one-off
+Playwright script for this pass (`checked = document.querySelectorAll('body *')` with direct
+text, WCAG luminance formula, `bgFor()` walking ancestors for the first opaque
+`background-color`, evaluated once per `color_scheme`). Not currently committed as a reusable
+script — worth promoting into `scripts/` if contrast checking is wanted as a standing gate.
+
+**What actually caused the static tool's 196 `#000000` findings, mechanically:** not conclusively
+traced, and not asserted as more than a lead this time. `css-cascade.mjs:236` seeds every
+element's `color` from `STATIC_DEFAULT_STYLE = { color: 'rgb(0, 0, 0)', ... }` — the CSS spec
+initial value — before inheritance is applied, so wherever inheritance from `body`'s
+`color:var(--ink)` fails to reach a descendant, black is exactly what falls out. A same-page SVG
+`<text fill="…">` repro (this page has 151 `<text>` elements, and SVG paints via `fill`, not
+`color`) did not reproduce the finding in isolation, so that specific theory is ruled out, not
+confirmed. Left open rather than re-guessed a third time.
 
 ## What the 59 static rules caught that the render pass (2026-08-22) did not
 
@@ -188,12 +250,18 @@ either direction.
 
 ## Net
 
-Both directions are real. The static detector is fast, browser-free, and caught a real AI-slop
-tell the render pass never checks for — but on this file its dominant output (258 of 313
-findings) is mostly noise from its own documented `var()`-resolution weakness on a two-theme
-token stylesheet, discoverable only by cross-referencing the findings against the source rather
-than trusting the count. The render pass caught a semantic defect (missing legend bar) and a
-layout defect (700px overflow) that a rule-based scanner has no way to express. Neither
-instrument, alone, is "impeccable's detector would have caught these earlier" in the way the
-render-pass doc speculated — it would not have caught either defect. It caught a different,
-real one.
+All three directions are real, once checked. The static detector is fast, browser-free, and
+caught a real AI-slop tell the render pass never checks for — but on this file its dominant
+output (258 of 313 findings) is entirely noise from resolving this page's two-theme token
+stylesheet inconsistently, confirmed (not inferred) by opening the real file in a real browser and
+finding zero of the disputed pairs actually paint. The render pass caught a semantic defect
+(missing legend bar) and a layout defect (700px overflow) that a rule-based scanner has no way to
+express, and asserts nothing about text contrast at all. And the real-browser check run for this
+pass found a fourth thing neither prior instrument reported: a genuine, minor, light-theme-only
+contrast shortfall (225 near-misses, `--ink-3` captions and the `--unmeas` verdict token against
+light surfaces, worst 3.15:1 against a 4.5 requirement) that the static detector's own noise had
+buried. Neither instrument, alone, is "impeccable's detector would have caught these earlier" in
+the way the render-pass doc speculated — it would not have caught either of its own two prior
+defects, and its headline finding on this file was net-negative signal until checked against a
+real render. The one real defect it correctly flagged (`side-tab`) came with 257 red herrings
+attached to the same rule category.
