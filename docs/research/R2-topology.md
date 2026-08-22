@@ -1,7 +1,13 @@
 # R2 — Multi-agent topology: what is actually proven
 
-**Run after R1** — its answer changes what a team needs to be measurable. Paste everything inside
-the fence. Save the answer as `docs/research/answers/R2-answer.md`.
+**Run it whenever — it is standalone.** Nothing inside the fence depends on R1's output, so run it
+in parallel rather than waiting. Save the answer as `docs/research/answers/R2-answer.md`.
+
+The coupling to R1 is real but soft, and it is worth one follow-up **in the R2 thread** once R1
+lands, rather than a delay: *"R1 concluded [X] about what makes agent work measurable — does that
+change your recommendation on team composition or on the tester role?"* R1 shapes how we would
+**measure** whether a team beats one agent; it does not change what the published evidence already
+says, which is what R2 asks for.
 
 **This is the load-bearing one for us.** We have a three-agent team specification written from
 judgement, with no method behind it and no run history. R2 is the framework we do not have.

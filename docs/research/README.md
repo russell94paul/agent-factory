@@ -8,13 +8,20 @@ checked.
 | # | File | Question | Order |
 |---|---|---|---|
 | R1 | `R1-eval-harness.md` | Grade the eval harness we built; what did we get wrong? | first |
-| R2 | `R2-topology.md` | One agent or a team — and is our 3-role sketch defensible? | after R1 |
+| R2 | `R2-topology.md` | One agent or a team — and is our 3-role sketch defensible? | any time |
 | R3 | `R3-optimizer-sandbox.md` | The optimizer, its bounds, the sandbox — or don't build it yet | last |
 | R4 | `R4-agnostic-optimizer.md` | Can it work on *any* repo? Fitness discovery, transfer, prior art | parallel with R3 |
 
-**Order matters for R1 -> R2 -> R3.** R1's answer changes what a team must be able to prove, which
-changes R2. R2's topology changes what the optimizer searches over, which changes R3. Running those
-three out of order produces answers that do not compose.
+**Only one hard ordering: R3 last.** R3 asks how to search a configuration space, and R2's topology
+decides what that space contains — so R3 written before R2 lands would search the wrong thing.
+
+**R1, R2 and R4 are standalone and should be run in parallel.** Every fenced block carries its own
+context and none references another's output. An earlier version of this file said R1 -> R2 -> R3
+strictly; that overstated it and would have cost days of serialised Deep Research runs for a
+coupling better handled as a follow-up question. Once R1 lands, ask in the **R2 thread**: *"R1
+concluded [X] about what makes agent work measurable — does that change your recommendation on team
+composition or the tester role?"* R1 shapes how we would measure whether a team wins; it does not
+change what the literature already reports.
 
 **R4 runs in parallel with R3.** Different literature — R3 asks how to search and how to bound it,
 R4 asks whether the thing being searched can be made repo-agnostic at all. Neither depends on the
