@@ -21,6 +21,7 @@ from typing import List, Optional
 from . import bus as _bus
 from . import claims as _claims
 from . import findings as _findings
+from . import sessions as _sessions
 from . import worktrees as _wt
 
 
@@ -58,6 +59,16 @@ def checks(lane: str, base: str | None = None) -> List[str]:
     path = _wt.path_for(lane)
     if not path.is_dir():
         return [f"no worktree at {path} — nothing to finish"]
+    # A claim released out from under a LIVE session is how a second agent gets into the same
+    # worktree. On 2026-08-22 exactly that happened: finish() released control-plane while its
+    # session was still alive, a relaunch saw a free lane, and three sessions ended up sharing one
+    # worktree and one branch. Nothing collided, which was luck rather than a control.
+    livesess = _sessions.live(lane)
+    if livesess:
+        problems.append(
+            "the lane still has {} live session(s) ({}) — close them before finishing, or a "
+            "relaunch will start a second agent in this worktree".format(
+                len(livesess), ", ".join(str(s["pid"]) + ":" + str(s["status"]) for s in livesess)))
     if _wt.is_dirty(lane):
         problems.append("the worktree is dirty — commit or discard before finishing; "
                         "uncommitted work does not survive the worktree being removed")

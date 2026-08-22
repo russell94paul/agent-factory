@@ -213,6 +213,19 @@ def launch(lane_id: str, dry: bool = False):
     """Claim, then spawn. Returns (ok, message). The claim runs FIRST so a conflicting lane is
     refused before anything is started."""
     import subprocess
+    # Refuse BEFORE claiming. A claim is an intent, not a process: a lane whose claim was released
+    # while its session was still alive would otherwise accept a second agent into the same
+    # worktree — the shared-checkout arrangement this whole model exists to avoid.
+    try:
+        from factory import sessions as _sess
+        running = _sess.live(lane_id)
+    except Exception:                                              # noqa: BLE001
+        running = []
+    if running:
+        return False, ("{} already has {} live session(s) ({}) in its worktree — close them first. "
+                       "Two agents on one branch is the 41.7% conflict case.").format(
+                           lane_id, len(running),
+                           ", ".join(str(s["pid"]) + ":" + str(s["status"]) for s in running))
     try:
         claimlib.claim(lane_id, who="launched from tracker")
     except claimlib.ClaimError as exc:

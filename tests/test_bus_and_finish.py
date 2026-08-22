@@ -113,3 +113,50 @@ def test_finish_never_merges(monkeypatch):
     r = finish.finish("certify", push=False)
     assert r["merged"] is False
     assert not any("merge" in d.lower() for d in r["did"]), r["did"]
+
+
+# ------------------------------------------------- a claim is not a process
+
+def test_finish_refuses_while_a_session_is_still_live(monkeypatch):
+    """The defect this guard exists for: finish() released a claim out from under a live session,
+    a relaunch saw a free lane, and three agents ended up in one worktree on one branch."""
+    from factory import finish, sessions
+    monkeypatch.setattr(sessions, "live", lambda lane: [{"pid": 123, "status": "idle"}])
+    monkeypatch.setattr(finish._wt, "is_dirty", lambda lane: False)
+    monkeypatch.setattr(finish._wt, "path_for", lambda lane: __import__("pathlib").Path("."))
+    problems = finish.checks("certify")
+    assert any("live session" in p for p in problems), problems
+
+
+def test_finish_allows_once_the_session_has_exited(monkeypatch):
+    """The guard must be able to PASS, or it is a wall rather than a check."""
+    from factory import finish, sessions
+    monkeypatch.setattr(sessions, "live", lambda lane: [])
+    problems = finish.checks("certify")
+    assert not any("live session" in p for p in problems), problems
+
+
+def test_a_stale_registry_file_is_not_a_live_session(tmp_path, monkeypatch):
+    """The file outlives the process. Checking existence instead of liveness would report every
+    historical session as live and refuse every launch."""
+    from factory import sessions
+    import json as _j
+    monkeypatch.setattr(sessions, "REGISTRY", tmp_path)
+    (tmp_path / "999999.json").write_text(_j.dumps(
+        {"pid": 999999, "status": "idle", "cwd": "/repo/.worktrees/certify"}), encoding="utf-8")
+    monkeypatch.setattr(sessions, "_running_pids", lambda: set())      # nothing running
+    assert sessions.live("certify") == []
+    monkeypatch.setattr(sessions, "_running_pids", lambda: {999999})   # now it is
+    assert len(sessions.live("certify")) == 1
+
+
+def test_unknown_process_table_is_not_reported_as_nothing_running(tmp_path, monkeypatch):
+    """'I cannot see the process table' and 'nothing is running' are different verdicts."""
+    from factory import sessions
+    import json as _j
+    monkeypatch.setattr(sessions, "REGISTRY", tmp_path)
+    (tmp_path / "42.json").write_text(_j.dumps(
+        {"pid": 42, "status": "busy", "cwd": "/repo/.worktrees/certify"}), encoding="utf-8")
+    monkeypatch.setattr(sessions, "_running_pids", lambda: None)       # could not look
+    live = sessions.live("certify")
+    assert len(live) == 1 and live[0]["unverified"] is True
