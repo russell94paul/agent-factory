@@ -12,7 +12,7 @@ connectors   C:\Users\PaulRussell\repos\agent-factory\.worktrees\prefect-connect
             . 1004 restarts recorded
     PASS    Is failure bounded?                                  failure is bounded at 5 attempts, watched
             . pipelines.py records the 2026-08-14 incident verbatim: the stage was 'auto-restarted with no attempt cap', and ten containers took the whole 10-core canadacentral quota
-            . worst in the recorded history (2026-05-26 to 2026-08-22): 352 restarts of 'trigger-run' in pipe_c34bfbe5 — before any cap existed
+            . worst in the recorded history (2026-05-26 to 2026-05-28): 352 restarts of 'trigger-run' in pipe_c34bfbe5 — before any cap existed
             . simulated an uncapped watchdog: asked for 50 dispatches, the engine granted 5 and then refused
             . the stage was left 'failed', so it is not re-offered forever
 
@@ -22,7 +22,8 @@ connectors   C:\Users\PaulRussell\repos\agent-factory\.worktrees\prefect-connect
             . retry_stage at the cap -> REFUSED (attempt_cap)
             . restart_from_stage at the cap -> REFUSED (attempt_cap)
             . a first dispatch is still permitted
-            . history, 2026-05-26 to 2026-08-22: 1,004 restart_from_stage events, worst 352 in one run, all of it before this cap existed
+            . and that dispatch moved the counter: 0 -> 1
+            . history, 2026-05-26 to 2026-05-28: 1,004 restart_from_stage events, worst 352 in one run, all of it before this cap existed
     FAIL    Is spend checked before dispatch?                    no spend ceiling enforced before dispatch
             . 0 pre-dispatch comparison(s) of accrued cost against a budget
             . budget_usd is declared per stage but nothing was found comparing accrued spend to it before dispatch
@@ -34,17 +35,18 @@ connectors   C:\Users\PaulRussell\repos\agent-factory\.worktrees\prefect-connect
             . then asked a SECOND pipeline for one more: 0 granted — the ceiling is global
             . manual gates hold no slot, so paused runs cannot starve the rest
     PASS    Is dispatched work either finished or killed?        dispatched work is leased and reaped, watched
-            . 4 of 14 recorded runs (2026-05-26 to 2026-08-22) sit at stage_started with no terminal event
+            . 4 of 14 recorded runs (2026-05-26 to 2026-05-28) sit at stage_started with no terminal event
             . documented: a container outlived its stage and ten of them took a 10-core quota
             . expired lease -> 1 reaped, stage left 'failed'
             . reaped work was NOT made runnable again
-            . the log gained a terminal event: yes (stage_reaped, stage_failed)
+            . the log gained a terminal event: yes (stage_reaped, stage_failed, pipeline_completed, verdict_recorded)
             . live lease -> 0 reaped; a still-running stage is left alone
 
   Can it tell success from failure?  [2/8]
     PASS    Is the terminal verdict computed from history?       the verdict is derived from the event log
             . any_failed iterates over: event_outcomes
             . drove a stage to fail 7x then succeed: status='succeeded', failures_in_log=7, clean=False
+            . a stage whose log ends stage_failed but whose status field says completed: verdict=failed — the verdict follows the log
             . with no audit log at all: basis=UNMEASURABLE, status=failed — an unreadable history fails closed
     FAIL    Has any gate ever refused a run?                     no gate has ever refused a run
             . 22 gate events recorded, 0 of them a refusal

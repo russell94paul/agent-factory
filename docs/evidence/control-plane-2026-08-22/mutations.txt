@@ -1,31 +1,35 @@
   ok  cap — the attempt ceiling
        removed: both cap checks — the entry points and the choke point
-       TestAttemptCapRefuses or TestAttemptCapOverride  ->  10 failed, 32 deselected in 23.35s
+       TestAttemptCapRefuses or TestAttemptCapOverride  ->  10 failed, 36 deselected in 13.53s
   ok  concurrency — the dispatch ceiling
        removed: the ceiling branch in _build_stage_requests
-       TestDispatchCeiling  ->  5 failed, 3 passed, 34 deselected in 20.63s
+       TestDispatchCeiling  ->  6 failed, 3 passed, 37 deselected in 17.63s
   ok  reaper — the lease
        removed: reap_expired_leases, which now returns nothing
-       TestReaperKills  ->  5 failed, 1 passed, 36 deselected in 17.13s
-  ok  from-history — the terminal verdict
-       removed: the history replay — any_failed reads pipeline[stages] again, as it did before
-       TestVerdictIsComputedFromHistory  ->  1 failed, 5 passed, 36 deselected in 31.14s
+       TestReaperKills  ->  7 failed, 1 passed, 38 deselected in 13.45s
+  ok  from-history — any_failed ALONE, nothing else
+       removed: ONLY the verdict's history replay — the single edit that nothing caught
+       TestVerdictIsComputedFromHistory  ->  1 failed, 6 passed, 39 deselected in 28.81s
+  ok  from-history — the replay and the unwitnessed check together
+       removed: the replay AND the unwitnessed-stage check — a compound, credited as one before
+       TestVerdictIsComputedFromHistory  ->  2 failed, 5 passed, 39 deselected in 36.62s
   ok  from-history — the failure count behind `clean`
        removed: the retry count from `clean`, so succeeded-after-100-failures reads clean again
-       TestVerdictIsComputedFromHistory  ->  2 failed, 4 passed, 36 deselected in 35.60s
+       TestVerdictIsComputedFromHistory  ->  2 failed, 5 passed, 39 deselected in 35.80s
   ok  from-history — failing closed on an unreadable log
        removed: the refusal to treat a missing log as an empty one — audit.get_audit's own bug
-       TestVerdictIsComputedFromHistory  ->  1 failed, 5 passed, 36 deselected in 40.37s
+       TestVerdictIsComputedFromHistory  ->  1 failed, 6 passed, 39 deselected in 38.55s
   ok  truthful — reachability
        removed: reachability — _reachable asks only whether a pending stage EXISTS, as before
-       TestStatusCannotContradictItsLog  ->  3 failed, 2 passed, 37 deselected in 27.87s
+       TestStatusCannotContradictItsLog  ->  3 failed, 2 passed, 41 deselected in 23.44s
 
   LOAD-BEARING   cap — the attempt ceiling
   LOAD-BEARING   concurrency — the dispatch ceiling
   LOAD-BEARING   reaper — the lease
-  LOAD-BEARING   from-history — the terminal verdict
+  LOAD-BEARING   from-history — any_failed ALONE, nothing else
+  LOAD-BEARING   from-history — the replay and the unwitnessed check together
   LOAD-BEARING   from-history — the failure count behind `clean`
   LOAD-BEARING   from-history — failing closed on an unreadable log
   LOAD-BEARING   truthful — reachability
 
-All 7 controls are load-bearing: removing each one makes its own negative controls fail.
+All 8 controls are load-bearing: removing each one makes its own negative controls fail.

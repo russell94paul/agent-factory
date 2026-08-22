@@ -72,6 +72,23 @@ MUTATIONS = [
         return {}""")],
      "the refusal to treat a missing log as an empty one"),
 
+    # The mutation this harness did not have, and the reason the gate needed rewriting a
+    # second time: reverting ONLY `any_failed` to the original last-write-wins expression
+    # left the gate reading PASS over a system with the defect it is named for.
+    ("from-history",
+     [("""    any_failed = any(o["last_terminal"] == "failed" and not o["tolerated"]
+                     for o in event_outcomes)""",
+       """    any_failed = any(s["status"] == "failed" and not s.get("continue_on_failure")
+                     for s in stage_records)""")],
+     "the verdict's history replay ALONE — the defect the gate is named for"),
+
+    # Likewise for `cap`: the probe builds a stage with _attempts already at the ceiling,
+    # so it never established that the production path INCREMENTS the counter.
+    ("cap",
+     [('        stage["_attempts"] = attempts(stage) + 1',
+       '        stage["_attempts"] = attempts(stage)')],
+     "the only write to _attempts — the cap can now never fire"),
+
     ("reaper",
      [('            stage["status"] = "failed"\n            stage["error"] = error',
        '            stage["status"] = "pending"\n            stage["error"] = error')],
@@ -136,7 +153,11 @@ def main() -> int:
 
             before = _gate_verdict(gate_id, CONNECTORS)
             after = _gate_verdict(gate_id, scratch)
-            ok = before == "PASS" and after != "PASS"
+            # after == "FAIL" specifically. `!= "PASS"` also accepted UNMEASURABLE and
+            # ERROR, so a mutation that merely broke the scratch tree's import would have
+            # reported LOAD-BEARING — the gate noticing nothing except that it could not
+            # look. A control-plane gate must REFUSE, not merely fail to measure.
+            ok = before == "PASS" and after == "FAIL"
             results.append((gate_id, "LOAD-BEARING" if ok else "NOT MEASURING", removes))
             print(f"  {'ok ' if ok else '!! '} {gate_id}")
             print(f"       removed: {removes}")

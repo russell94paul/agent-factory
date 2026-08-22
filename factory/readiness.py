@@ -585,10 +585,19 @@ def _scratch_stage(name, **kw):
 #: Every audit file in the estate dates from this window. Carried into the evidence of the
 #: gates whose history is stale (finding F4) so a reader is never shown a three-month-old
 #: number as if it described the system now.
+#: Only events a RUN produces. The first version of this took every event in the file, and
+#: the moment the reconciler wrote status_reconciled / verdict_recorded events the window
+#: stretched to today — so evidence about a history that stopped in May started reading as
+#: though the system had been busy through August. An instrument that includes its own
+#: writes in the period it reports is measuring itself.
+_ACTIVITY = {"stage_started", "stage_completed", "stage_failed", "stage_skipped",
+             "restart_from_stage", "retry_stage", "gate_approved", "gate_rejected"}
+
+
 def _history_window():
     runs = _audits()
     stamps = sorted(e.get("timestamp", "") for r in runs for e in r["events"]
-                    if e.get("timestamp"))
+                    if e.get("timestamp") and e.get("event_type") in _ACTIVITY)
     if not stamps:
         return ""
     return f"{stamps[0][:10]} to {stamps[-1][:10]}"
@@ -625,23 +634,49 @@ def g_attempt_cap_on_the_live_path():
             watched[path] = f"raised {type(exc).__name__}"
 
     # A guard that refuses everything would satisfy the two checks above while silently
-    # disabling retry altogether, so the honest direction is measured too.
+    # disabling retry altogether, so the honest direction is measured too — and the SAME
+    # dispatch establishes that the production path actually increments the counter.
+    #
+    # ⭐ This second half is why the probe was rewritten twice. It used to hand itself a
+    # stage with `_attempts` already at the ceiling, which proves the comparison fires but
+    # proves nothing about whether anything ever moves the counter. Deleting the single
+    # line that writes `_attempts` left this gate reporting "watched refusing" over an
+    # engine whose cap could never fire.
     p = _scratch_pipeline(engine, "pipe_cap_honest", [_scratch_stage("fresh")])
+    before_attempts = engine.attempts(p["stages"][0])
     permitted = bool(engine.start_pipeline(p["id"]))
+    counts = engine.attempts(p["stages"][0]) > before_attempts
 
-    cleared = _grep("orchestrator/server.py", r"pop\(\s*.._retry_count")
+    # The counter the cap is measured against must not be resettable from the dashboard.
+    # `_retry_count` is now only informational — `attempts()` reads `_attempts` — so this
+    # greps for a pop of EITHER. Guarding only the old field would have let a future
+    # `clear_context` zero the real counter with this gate still green.
+    # ⚠ The quote is matched EXPLICITLY. The original regex here was
+    # `pop\(\s*.._retry_count`, and it never matched the line it was written to catch:
+    # after `pop(` the source reads `"_retry_count`, so `..` consumes `"_` and the literal
+    # then has to match `retry_count` against `retry_count` one character too late. The
+    # `not cleared` half of this gate's pass condition was therefore VACUOUSLY TRUE — at
+    # ea888b0 and in the first version of this rewrite. Verified by running both patterns
+    # against the real line from server.py at 3da40f6.
+    cleared = _grep("orchestrator/server.py",
+                    r"""pop\(\s*['"](_attempts|_retry_count)""")
     for path, control in watched.items():
         ev.append(f"{path} at the cap -> "
                   + (f"REFUSED ({control})" if control == "attempt_cap"
                      else f"NOT REFUSED ({control})"))
     ev.append("a first dispatch is still permitted" if permitted
               else "a first dispatch was ALSO refused — the cap disables the feature")
+    ev.append(f"and that dispatch moved the counter: {before_attempts} -> "
+              f"{engine.attempts(p['stages'][0])}" if counts
+              else "⛔ the dispatch did NOT move the counter — the cap can never fire")
     if cleared:
-        ev.append(f"server.py:{cleared[0][0]} POPS _retry_count, resetting the counter")
+        ev.append(f"server.py:{cleared[0][0]} POPS the attempt counter, resetting it: "
+                  f"{cleared[0][1]}")
     ev.append(f"history, {_history_window()}: 1,004 restart_from_stage events, worst 352 "
               f"in one run, all of it before this cap existed")
 
-    if all(c == "attempt_cap" for c in watched.values()) and permitted and not cleared:
+    if (all(c == "attempt_cap" for c in watched.values())
+            and permitted and counts and not cleared):
         return _pass("the restarting path is capped, and was watched refusing", ev, src)
     return _fail("the restarting path is not capped", ev, src)
 
@@ -853,6 +888,28 @@ def g_verdict_is_computed_from_history():
     ev.append(f"drove a stage to fail {FAILS}x then succeed: status='{p['status']}', "
               f"failures_in_log={v.get('failures_in_log')}, clean={v.get('clean')}")
 
+    # ⭐ The discriminating case, and the reason this probe was rewritten a second time.
+    # An independent review reverted `any_failed` to the original last-write-wins
+    # expression — one edit — and this gate still read PASS, because everything it checked
+    # (failures_in_log, clean) comes from the log INDEPENDENTLY of any_failed. The gate
+    # could not see the defect it is named for.
+    #
+    # In the current engine every status write is mirrored by an audit event, so the two
+    # expressions agree on any state the engine can reach on its own. This constructs the
+    # one state where they cannot: a stage whose log ends stage_failed and whose status
+    # field says completed. Reading the field gives `succeeded`; reading the log gives
+    # `failed`.
+    d = _scratch_pipeline(engine, "pipe_verdict_liar", [_scratch_stage("liar")])
+    engine.start_pipeline(d["id"])
+    engine.on_session_complete(d["id"], "liar", "ses", success=False, error="real")
+    d["stages"][0]["status"] = "completed"     # the field, without the log
+    d["status"] = "running"
+    d.pop("verdict", None)
+    liar = verdict_fn(d) or {}
+    ev.append(f"a stage whose log ends stage_failed but whose status field says completed: "
+              f"verdict={liar.get('status')} — the verdict follows "
+              f"{'the log' if liar.get('status') == 'failed' else 'the STATUS FIELD'}")
+
     # A log that cannot be read must not read as a clean one.
     q = _scratch_pipeline(engine, "pipe_verdict_nolog",
                           [_scratch_stage("a", status="completed")])
@@ -862,11 +919,15 @@ def g_verdict_is_computed_from_history():
               f"{'fails closed' if blind.get('status') == 'failed' else 'reads as success'}")
 
     saw_failures = v.get("failures_in_log") == FAILS and v.get("clean") is False
+    follows_log = liar.get("status") == "failed"
     fails_closed = blind.get("basis") == "UNMEASURABLE" and blind.get("status") == "failed"
-    if saw_failures and fails_closed:
+    if saw_failures and follows_log and fails_closed:
         return _pass("the verdict is derived from the event log", ev, src)
     if not saw_failures:
         ev.append("the verdict could not see failures that are in the log")
+    if not follows_log:
+        ev.append("the verdict followed the status field over the log — this is the "
+                  "last-write-wins defect itself")
     return _fail("the verdict reads current state, not history", ev, src)
 
 
