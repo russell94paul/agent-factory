@@ -56,6 +56,13 @@ been WATCHED REFUSING something, whether any number you are reporting was measur
 and what you changed that nothing tests. Fix what it finds or record why not. A lane that closes
 green without an independent read is the shape of defect this whole programme exists to stop.
 
+CHECKPOINT AS YOU GO. You are working in your own git worktree on branch lane/<id>, so the
+files survive a crash — but only what you COMMITTED survives losing the session. Commit at every
+meaningful step, with the gate id in the message. A crash then costs minutes, not an evening. The
+tracker shows each worktree's commits-ahead and whether it is dirty, so a lane that has not
+committed in a long time is visible as a stalled one — which is the progress marker R6 recommends
+over a heartbeat.
+
 LAST: append what you learned to agent-factory/docs/findings.md — corrected premises only — or
 write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not unlooked-at."""
 

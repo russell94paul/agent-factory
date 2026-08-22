@@ -36,6 +36,7 @@ from factory.findings import by_lane  # noqa: E402
 from factory import synthesis as synth  # noqa: E402
 from factory import claims as claimlib  # noqa: E402
 from factory import operator as opans  # noqa: E402
+from factory import worktrees as wt  # noqa: E402
 
 OUT = FACTORY / "tracker.html"
 
@@ -55,7 +56,7 @@ _ANSWER_MSG = None
 _CLAIM_MSG = None
 
 
-def launch_command(lane_id: str):
+def launch_command(lane_id: str, make: bool = True):
     """(command_list, prompt_path) for starting `lane_id` in its own terminal. Never spawns."""
     lane = next((l for l in LANES if l.id == lane_id), None)
     if lane is None:
@@ -66,10 +67,17 @@ def launch_command(lane_id: str):
     f.write_text(lane.full_prompt, encoding="utf-8")
     # Get-Content -Raw hands the whole file to claude as ONE argument. Interpolating the prompt
     # into the command line instead is how quoting silently truncates it.
-    inner = (f"Set-Location -LiteralPath '{FACTORY}'; "
+    # Each lane runs in its OWN worktree and branch. Three sessions committing to one shared
+    # branch is the setup R5 measured at a 41.7% cross-agent conflict rate, mostly structural.
+    # `make=False` for a dry run: inspecting the command must not create a branch and a
+    # checkout on disk. A dry run with side effects is just a run you did not admit to.
+    cwd, note = (wt.ensure(lane.id) if make
+                 else (wt.path_for(lane.id), 'would create the worktree'))
+    inner = (f"Set-Location -LiteralPath '{cwd}'; "
+             f"Write-Host '{note} - {lane.id}' -ForegroundColor Cyan; "
              f"claude --model {lane.model} (Get-Content -Raw -LiteralPath '{f}')")
     return (["cmd", "/c", "start", f"lane {lane.id}", "powershell", "-NoExit",
-             "-ExecutionPolicy", "Bypass", "-Command", inner], f)
+             "-ExecutionPolicy", "Bypass", "-Command", inner], f, cwd)
 
 
 def launch(lane_id: str, dry: bool = False):
@@ -81,21 +89,22 @@ def launch(lane_id: str, dry: bool = False):
     except claimlib.ClaimError as exc:
         return False, str(exc)
     try:
-        cmd, f = launch_command(lane_id)
+        cmd, f, cwd = launch_command(lane_id, make=not dry)
     except claimlib.ClaimError as exc:
         claimlib.release(lane_id)
         return False, str(exc)
     if dry:
         claimlib.release(lane_id)
-        return True, "DRY RUN, nothing started — " + " ".join(cmd[:6]) + f" … prompt at {f.name}"
+        return True, f"DRY RUN, nothing started — worktree {cwd.name}, prompt {f.name}"
     try:
-        subprocess.Popen(cmd, cwd=str(FACTORY), close_fds=True)
+        subprocess.Popen(cmd, cwd=str(cwd), close_fds=True)
     except Exception as exc:                                       # noqa: BLE001
         # Roll the claim back: a lane marked running with no session is worse than an unclaimed
         # one, because it blocks its conflicts for nothing.
         claimlib.release(lane_id)
         return False, f"could not start a terminal ({type(exc).__name__}: {exc}); claim released"
-    return True, f"started {lane_id} in a new terminal, claimed and blocking its conflicts"
+    return True, (f"started {lane_id} in a new terminal, in its own worktree "
+                  f"({cwd.name}) on branch lane/{lane_id}")
 
 
 def _answer_path(prompt: pathlib.Path) -> pathlib.Path:
@@ -228,6 +237,7 @@ def hot_reload():
         g["synth"] = _il.reload(_il.import_module("factory.synthesis"))
         g["claimlib"] = _il.reload(_il.import_module("factory.claims"))
         g["opans"] = _il.reload(_il.import_module("factory.operator"))
+        g["wt"] = _il.reload(_il.import_module("factory.worktrees"))
         _RELOADED_AT = datetime.datetime.now()
         return True, f"reloaded {len(_HOT)} modules, {len(r.GATES)} gates"
     except Exception as exc:                                          # noqa: BLE001
@@ -462,6 +472,29 @@ def render(when: datetime.datetime, tab: str = "gates") -> str:
         w(f'<h3 style="margin-top:0">{len(pset)} can run at the same time</h3>')
         w(f'<p style="font-size:13.5px;color:var(--ink2);margin:0">'
           f'<code>{e(" · ".join(pset))}</code></p>')
+        ready_now = [l for l in pset
+                     if not (next((x for x in LANES if x.id == l), None).needs_paul
+                             and not opans.get(l))]
+        w(f'<a href="/start-all" style="display:inline-block;font-size:12.5px;padding:7px 14px;'
+          f'margin:10px 0 0;border:1px solid var(--pass);border-radius:3px;'
+          f'background:var(--pass);color:var(--paper);text-decoration:none;'
+          f'font-family:ui-monospace,monospace">&#9654; start all {len(ready_now)} eligible</a>')
+        if len(ready_now) < len(pset):
+            held_back = [l for l in pset if l not in ready_now]
+            w(f'<p style="font-size:12px;color:var(--unmeas);margin:6px 0 0">'
+              f'{e(", ".join(held_back))} held back &mdash; answer the blocker above and it '
+              f'joins the set.</p>')
+        wts = wt.status()
+        if wts:
+            rows = "".join(
+                f'<li><code>{e(x["lane"])}</code> &middot; branch <code>lane/{e(x["lane"])}</code>'
+                + (' &middot; <b style="color:var(--unmeas)">uncommitted changes</b>' if x["dirty"] else '')
+                + f' &middot; {e(x["commits_ahead"])} commit(s) ahead</li>' for x in wts)
+            w(f'<p style="font-size:12.5px;color:var(--ink2);margin:10px 0 0"><b>Worktrees:</b></p>')
+            w(f'<ul style="margin:4px 0 0 16px;padding:0;font-size:12.5px">{rows}</ul>')
+            w('<p style="font-size:12px;color:var(--ink3);margin:6px 0 0">Never removed '
+              'automatically &mdash; a worktree can hold the only copy of a session&rsquo;s work. '
+              'Remove one deliberately with <code>git worktree remove</code>.</p>')
         w('<p style="font-size:12px;color:var(--ink3);margin:8px 0 0">The largest set with no shared '
           'files between them, taken greedily down the recommendation order. Five lanes have no '
           'unmet dependency; only these can be worked <i>together</i>.</p>')
@@ -786,6 +819,22 @@ class Handler(http.server.BaseHTTPRequestHandler):
         if um:
             ok = opans.clear(um.group(1))
             _CLAIM_MSG = (True, f"cleared the answer for {um.group(1)}" if ok else "nothing to clear")
+            self.send_response(303); self.send_header("Location", "/lanes"); self.end_headers()
+            return
+        if self.path.rstrip("/") == "/start-all":
+            done, skipped = [], []
+            for lid in claimlib.parallel_set():
+                lane = next((l for l in LANES if l.id == lid), None)
+                # A lane whose declared blocker is unanswered would launch and immediately ask.
+                # Skipping it here is the whole point of pre-answering.
+                if lane is not None and lane.needs_paul and not opans.get(lid):
+                    skipped.append(f"{lid} (blocker unanswered)")
+                    continue
+                ok, msg = launch(lid)
+                (done if ok else skipped).append(lid if ok else f"{lid} ({msg})")
+            _CLAIM_MSG = (bool(done), "started " + (", ".join(done) or "nothing")
+                          + ("; skipped " + "; ".join(skipped) if skipped else ""))
+            print(f"  start-all: {_CLAIM_MSG[1]}")
             self.send_response(303); self.send_header("Location", "/lanes"); self.end_headers()
             return
         lm = re.match(r"^/start/([a-z0-9-]+)$", urllib.parse.urlparse(self.path).path.rstrip("/"))
