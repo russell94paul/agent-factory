@@ -1,0 +1,134 @@
+
+Unattended-migration readiness: 14 of 30 gates pass
+factory      C:\Users\PaulRussell\repos\agent-factory\.worktrees\control-plane
+connectors   C:\Users\PaulRussell\repos\agent-factory\.worktrees\prefect-connectors
+
+  Can the loop run?  [1/3]
+    FAIL    Does a run finish without a human?                   4/14 runs finished
+            . 4 of 14 recorded runs reached pipeline_completed
+            . 4 sit at stage_started with no terminal event: pipe_5546c123, pipe_66d2326d, pipe_7274e774, pipe_c34bfbe5
+    FAIL    Do stages succeed more often than they fail?         a stage attempt fails 6.1x more than it succeeds
+            . 1001 stage_failed against 165 stage_completed
+            . 1004 restarts recorded
+    PASS    Is failure bounded?                                  failure is bounded at 5 attempts, watched
+            . pipelines.py records the 2026-08-14 incident verbatim: the stage was 'auto-restarted with no attempt cap', and ten containers took the whole 10-core canadacentral quota
+            . worst in the recorded history (2026-05-26 to 2026-08-22): 352 restarts of 'trigger-run' in pipe_c34bfbe5 — before any cap existed
+            . simulated an uncapped watchdog: asked for 50 dispatches, the engine granted 5 and then refused
+            . the stage was left 'failed', so it is not re-offered forever
+
+  Is it bounded? (build order 1-2)  [3/4]
+    PASS    Is the retry cap enforced on the path that restarts? the restarting path is capped, and was watched refusing
+            . MAX_ATTEMPTS_PER_STAGE = 5
+            . retry_stage at the cap -> REFUSED (attempt_cap)
+            . restart_from_stage at the cap -> REFUSED (attempt_cap)
+            . a first dispatch is still permitted
+            . history, 2026-05-26 to 2026-08-22: 1,004 restart_from_stage events, worst 352 in one run, all of it before this cap existed
+    FAIL    Is spend checked before dispatch?                    no spend ceiling enforced before dispatch
+            . 0 pre-dispatch comparison(s) of accrued cost against a budget
+            . budget_usd is declared per stage but nothing was found comparing accrued spend to it before dispatch
+            . cost is recorded only on stage_completed, so the accrued figure a ceiling would read is itself blind to every failure
+    PASS    Is concurrent dispatch bounded outside the agent?    stage dispatch is bounded at 4, watched deferring
+            . 10 max_parallel reference(s) in the wave scheduler — those bound how many PIPELINES start together
+            . MAX_PARALLEL_STAGE_DISPATCH = 4
+            . asked for 7 concurrent stage dispatches in one run: 4 granted, 3 left pending
+            . then asked a SECOND pipeline for one more: 0 granted — the ceiling is global
+            . manual gates hold no slot, so paused runs cannot starve the rest
+    PASS    Is dispatched work either finished or killed?        dispatched work is leased and reaped, watched
+            . 4 of 14 recorded runs (2026-05-26 to 2026-08-22) sit at stage_started with no terminal event
+            . documented: a container outlived its stage and ten of them took a 10-core quota
+            . expired lease -> 1 reaped, stage left 'failed'
+            . reaped work was NOT made runnable again
+            . the log gained a terminal event: yes (stage_reaped, stage_failed)
+            . live lease -> 0 reaped; a still-running stage is left alone
+
+  Can it tell success from failure?  [2/8]
+    PASS    Is the terminal verdict computed from history?       the verdict is derived from the event log
+            . any_failed iterates over: event_outcomes
+            . drove a stage to fail 7x then succeed: status='succeeded', failures_in_log=7, clean=False
+            . with no audit log at all: basis=UNMEASURABLE, status=failed — an unreadable history fails closed
+    FAIL    Has any gate ever refused a run?                     no gate has ever refused a run
+            . 22 gate events recorded, 0 of them a refusal
+            . 14 x "auto-pilot: conditions met"
+            . 8 x (empty note)
+    FAIL    Do the gates have programmatic checks?               5 gates have no programmatic check
+            . 2 of 7 gates across all pipelines have a gate_check
+            . connector-migration/promote-gate — manual, check=None
+            . connector-promotion/uat-gate — manual, check=None
+            . connector-promotion/prod-gate — manual, check=None
+            . connector-canary/cutover-gate — manual, check=None
+            . connector-activation/activation-gate — manual, check=None
+    FAIL    Can a run be tied to the ticket it was doing?        2 runs cannot be tied to a Jira ticket
+            . 13 of 14 runs carry a ticket key in their worktree name
+            . tickets: GP-271, GP-272, GP-273, GP-274, GP-275, KA-15
+            . not real Jira keys: GP-MIGRATE-EXCHANGERATESAPI
+            . unattributable: cda9155f
+    PASS    Does a recorded status match its own event log?      recorded status agrees with the event log
+            . 2 pipelines listed, 14 with an event log
+    FAIL    Does a completed run mean the work was correct?      a run reports success over failures it could not see
+            . 4 completed run(s) carried recorded failures
+            . pipe_29b8edf6 reported completed after 1 stage_failed events
+            . pipe_4ba17e16 reported completed after 115 stage_failed events
+            . pipe_4d518245 reported completed after 21 stage_failed events
+            . pipe_a146ee06 reported completed after 15 stage_failed events
+    FAIL    Is cost observable when things fail?                 cost is recorded only on success
+            . events carrying a non-zero cost_usd: stage_completed=19
+            . so a stage that failed 100 times contributes $0.00 — the real spend is unknown, not small
+    FAIL    Can QA validate any connector, not one?              QA verification targets a smoke-test twin
+            . orchestrator/stage_scripts/promotion_ops.py:43 builds the deployment name as f"smoke-test-{connector}"
+            . so it measures a twin, not the connector's own deployment
+
+  Can its output be certified?  [3/8]
+    FAIL    Does the eval corpus have enough breadth to calibrate? 1 case(s), 0 strata — below any calibration threshold
+            . 1 corpus case(s), 0 declared stratum/strata
+            . R1 graded one-run calibration FOLKLORE: a blind spot affecting 10% of a stratum needs 29 cases for a 95% chance of being seen once
+            . target is two distributions — a regression corpus of every distinct historical failure, and a challenge corpus across 15 mechanisms — neither prevalence-weighted
+    FAIL    Does the version hash cover what makes an agent an agent? 15 dimensions absent from the version
+            . 0 of 15 dimensions in the hashed config
+            . missing: prompt, model, effort, tools, max_turns, budget_usd, tool_implementation, sandbox_image, model_routing, context_policy, external_knowledge, permissions, contract_version, harness_version, side_effect_replay
+            . contract_version is the one that bites now — a certification granted under contract V4 silently transfers to V5
+    NOTRUN  Is the evaluator a principal the agent cannot impersonate? the evaluator is not yet a separate principal
+            . $AGENT_FACTORY_EVALUATOR: (unset)
+            . client implementation: evaluator.py
+            . the agent supplies {artifact_uri, artifact_sha256, run_id} and nothing else; the corpus, the manifest and the assertion set are resolved by the service
+            . known hole: the contract is parameterised by a blueprint the graded party writes. A target floor and the artefact hash narrow it; a pinned per-connector target closes it, and nobody has written one
+            . R3's ranking: external evaluator service with its own identity is rank 1; a separate local process is rank 5 and 'mostly theatre'
+            . 'Moving only the files to another directory changes nothing; moving ownership/credentials out of the agent's capability set does'
+    PASS    Is the certification suite green and honest?         88 passed
+            . includes test_every_assertion_has_been_proved_able_to_fail
+    NOTRUN  Is the output actually certified?                    12 assertions have no instrument wired
+            . connector-e2e/windsorai@GEP: UNMEASURABLE (UNMEASURABLE=12)
+            . Probes refuses every instrument by design — this is the harness declaring it has not measured, not a failure
+    PASS    Is blast radius certifiable?                         6 tenant(s) declared
+            . ['389-957-4788', '842-825-0313', '126-436-3882', '524-661-7349', '703-152-5903', '232-341-9629']
+    FAIL    Is the grader tamper-evident and separable?          tamper-evident, but separation is not enforced
+            . 1 corpus file(s) pinned: windsorai-2026-08-20
+            . every pinned corpus matches its manifest hash
+            . corpus is data only — no executable files under evals/
+            . certify records corpus id + sha on every replayed verdict
+            . NOT ENFORCED: the corpus still lives in a repo this agent can write to. Tampering is evident, not prevented. $AGENT_FACTORY_EVALS makes the move a config change.
+    PASS    Does the factory survive this machine?               pushed to origin
+
+  Is it handed over honestly?  [5/7]
+    PASS    Has R1 been asked what else depended on the misattribution? dispatched: R1-followup.md
+            . looking for docs/research/answers/R1-followup*.md
+            . subject: does anything else depend on the Prefect misattribution?
+    PASS    Has R2 been asked whether to move the build plane onto Prefect? dispatched: R2-followup.md
+            . looking for docs/research/answers/R2-followup*.md
+            . subject: our build plane is not Prefect — move onto it, or reimplement?
+    PASS    Has R3 been asked the false-succeeded correction?    dispatched: R3-followup.md
+            . looking for docs/research/answers/R3-followup*.md
+            . subject: terminal verdict from append-only history, and its negative control
+    PASS    Has anyone looked at the published surface and recorded it? recorded: render-pass-2026-08-22.md
+            . a static check proves the file parses, not that a visual painted
+            . five defects shipped into the published figure and a human found every one
+    PASS    Is impeccable's place in the skill chain stated?     the chain names impeccable
+            . impeccable installed 2026-08-21 — 1 skill, 23 commands, 59 deterministic detector rules
+            . its trigger overlaps artifact-design, artifact-motion and living-systems-ui
+    FAIL    Is the landing-table grain settled?                  the landing-table grain is still an open question
+            . 20 rows across 18 campaigns on one date cannot be unique on (account_id, campaign_id, date) under a single account
+            . if the real table holds one account the declared primary key is wrong, and the calibration world is built on a mistake
+            . set grain_confirmed in the blueprint once someone has queried the table
+    UNMEAS  Does this work have a ticket, or a decision that it needs none? no drafts directory at C:\Users\PaulRussell\repos\agent-factory\.worktrees\aldc-
+            . no drafts directory at C:\Users\PaulRussell\repos\agent-factory\.worktrees\aldc-launchpad\boot-prompts\drafts
+
+UNMEASURABLE is not a pass.

@@ -1,0 +1,31 @@
+  ok  cap — the attempt ceiling
+       removed: both cap checks — the entry points and the choke point
+       TestAttemptCapRefuses or TestAttemptCapOverride  ->  10 failed, 29 deselected in 17.89s
+  ok  concurrency — the dispatch ceiling
+       removed: the ceiling branch in _build_stage_requests
+       TestDispatchCeiling  ->  4 failed, 1 passed, 34 deselected in 20.03s
+  ok  reaper — the lease
+       removed: reap_expired_leases, which now returns nothing
+       TestReaperKills  ->  5 failed, 1 passed, 33 deselected in 15.13s
+  ok  from-history — the terminal verdict
+       removed: the history replay — any_failed reads pipeline[stages] again, as it did before
+       TestVerdictIsComputedFromHistory  ->  1 failed, 5 passed, 33 deselected in 25.09s
+  ok  from-history — the failure count behind `clean`
+       removed: the retry count from `clean`, so succeeded-after-100-failures reads clean again
+       TestVerdictIsComputedFromHistory  ->  2 failed, 4 passed, 33 deselected in 29.43s
+  ok  from-history — failing closed on an unreadable log
+       removed: the refusal to treat a missing log as an empty one — audit.get_audit's own bug
+       TestVerdictIsComputedFromHistory  ->  1 failed, 5 passed, 33 deselected in 32.92s
+  ok  truthful — reachability
+       removed: reachability — _reachable asks only whether a pending stage EXISTS, as before
+       TestStatusCannotContradictItsLog  ->  3 failed, 2 passed, 34 deselected in 19.92s
+
+  LOAD-BEARING   cap — the attempt ceiling
+  LOAD-BEARING   concurrency — the dispatch ceiling
+  LOAD-BEARING   reaper — the lease
+  LOAD-BEARING   from-history — the terminal verdict
+  LOAD-BEARING   from-history — the failure count behind `clean`
+  LOAD-BEARING   from-history — failing closed on an unreadable log
+  LOAD-BEARING   truthful — reachability
+
+All 7 controls are load-bearing: removing each one makes its own negative controls fail.
