@@ -106,7 +106,10 @@ def main(argv=None) -> int:
             problems.append(f"  ? {p.name:<34} cannot tell  [{detail}]")
             continue
         want = CANONICAL[n]
-        if p.name == want:
+        # `R4-answer-x.md` and `R4-answer-x-run2.md` are BOTH already-correct names for prompt 4.
+        # Comparing only against the base name made this non-idempotent: every run re-classified
+        # run2 as a fresh second run and bumped it to run3, then run4, forever.
+        if p.name == want or re.fullmatch(re.escape(want[:-3]) + r"-run\d+\.md", p.name):
             print(f"  = {p.name:<34} already correct  [{detail}]")
             continue
         if want in planned:
