@@ -78,6 +78,44 @@ def _notrun(h, ev=None, src=""):
 # --------------------------------------------------------------------------- instruments
 
 
+#: The date the control primitives landed (cap, bounded, concurrency, reaper, from-history —
+#: prefect-connectors `0a5c393`). Runs before it are the OLD, uncontrolled system: real evidence
+#: of what happened, and no evidence at all about what the controls do.
+#:
+#: Two gates were unpassable without this, and not by a margin — by construction (F20/F21).
+#: `finishes` required EVERY recorded run to be terminal while four sit at stage_started forever,
+#: so each new run raised both sides and equality was unreachable. `succeeds` was an all-time
+#: ratio needing 837 net successful stages, permanently carrying one capped incident. A gate that
+#: cannot pass is the mirror of one that cannot refuse: it stops measuring the work and starts
+#: reporting failure at work already done.
+#:
+#: ⚠ Windowing is NOT forgiving. An empty window is UNMEASURABLE, never PASS — "no runs since the
+#: controls landed" is the honest answer today and must not read as "the controls work". Excluded
+#: runs are named in the evidence so nothing hides, and the audits are never deleted, because the
+#: `bounded` gate cites them.
+MEASURED_SINCE = "2026-08-22"
+
+
+def _started(run: dict) -> str:
+    """Earliest event timestamp in a run, or '' when it carries none."""
+    ts = [e.get("timestamp", "") for e in run.get("events", []) if e.get("timestamp")]
+    return min(ts) if ts else ""
+
+
+def _since(runs: List[dict], since: str = MEASURED_SINCE):
+    """(in_window, excluded). ISO-8601 sorts lexically, so a prefix compare is the whole test."""
+    inw = [r for r in runs if _started(r) >= since]
+    ids = {id(r) for r in inw}
+    return inw, [r for r in runs if id(r) not in ids]
+
+
+def _basis(extra: str = "") -> str:
+    """Every windowed gate states where and when it measured. A number without its basis is the
+    defect F72 recorded: this board reads 9 or 10 at the same commit depending only on cwd."""
+    return (f"basis: runs since {MEASURED_SINCE} · connectors {CONNECTORS}"
+            + (f" · {extra}" if extra else ""))
+
+
 def _audits() -> List[dict]:
     """Every recorded pipeline run. Raises rather than returning an empty list —
     a zero from an instrument that cannot see is not a measurement."""
@@ -172,21 +210,40 @@ def g_finishes():
         ev.append(f"{len(stuck)} sit at stage_started with no terminal event: "
                   + ", ".join(sorted(stuck)))
     src = "orchestrator/data/audits/*.json"
-    if len(fin) == len(runs):
-        return _pass(f"all {len(runs)} runs finished", ev, src)
-    return _fail(f"{len(fin)}/{len(runs)} runs finished", ev, src)
+    inw, out = _since(runs)
+    ev.append(_basis(f"{len(out)} run(s) started before it are excluded"))
+    if not inw:
+        raise Unmeasurable(
+            f"no run started since {MEASURED_SINCE}, when the controls landed — "
+            f"{len(runs)} older run(s) on record, {len(fin)} of them finished. Run the loop.")
+    fin_w = [r for r in inw if r["id"] in set(fin)]
+    if len(fin_w) == len(inw):
+        return _pass(f"all {len(inw)} runs since {MEASURED_SINCE} finished", ev, src)
+    return _fail(f"{len(fin_w)}/{len(inw)} runs since {MEASURED_SINCE} finished", ev, src)
 
 
 def g_succeeds_more_than_fails():
-    c = _counts(_audits())
-    done, failed = c["stage_completed"], c["stage_failed"]
-    ev = [f"{failed} stage_failed against {done} stage_completed",
-          f"{c['restart_from_stage']} restarts recorded"]
+    runs = _audits()
+    allc = _counts(runs)
+    inw, out = _since(runs)
     src = "orchestrator/data/audits/*.json"
+    ev = [f"all-time: {allc['stage_failed']} stage_failed against {allc['stage_completed']} "
+          f"stage_completed, {allc['restart_from_stage']} restarts",
+          "all-time is NOT the rate now — most of those failures are the 2026-08-14 "
+          "uncapped-restart incident, which the cap has since bounded",
+          _basis(f"{len(out)} run(s) started before it are excluded")]
+    if not inw:
+        raise Unmeasurable(
+            f"no run started since {MEASURED_SINCE}, when the controls landed — the all-time "
+            f"ratio describes the uncontrolled system, not this one. Run the loop.")
+    c = _counts(inw)
+    done, failed = c["stage_completed"], c["stage_failed"]
+    ev.insert(0, f"in window: {failed} stage_failed against {done} stage_completed")
     if failed == 0 and done == 0:
-        raise Unmeasurable("no stage outcomes recorded at all")
+        raise Unmeasurable(f"{len(inw)} run(s) since {MEASURED_SINCE}, but not one stage outcome "
+                           "recorded in any of them")
     if done > failed:
-        return _pass(f"{done} succeed vs {failed} fail", ev, src)
+        return _pass(f"{done} succeed vs {failed} fail since {MEASURED_SINCE}", ev, src)
     return _fail(f"a stage attempt fails {failed / max(done,1):.1f}x more than it "
                  f"succeeds", ev, src)
 
@@ -947,7 +1004,12 @@ def main() -> int:
     results = measure()
     n_pass = sum(1 for _, r in results if r.ok)
     glyph = {PASS: "PASS", FAIL: "FAIL", UNMEASURABLE: "UNMEAS", NOT_RUN: "NOTRUN"}
-    print(f"\nUnattended-migration readiness: {n_pass} of {len(results)} gates pass")
+    # F72: this board reads 9 or 10 at the SAME COMMIT depending only on the cwd it ran from,
+    # because CONNECTORS resolves relative to FACTORY. A headline quoted without its basis is
+    # not a measurement, so the basis travels WITH the number, not two lines below it where a
+    # copy-paste loses it.
+    print(f"\nUnattended-migration readiness: {n_pass} of {len(results)} gates pass"
+          f"  [connectors: {CONNECTORS.name} · loop measured since {MEASURED_SINCE}]")
     print(f"factory      {FACTORY}")
     print(f"connectors   {CONNECTORS}\n")
     for phase, title in PHASES.items():
