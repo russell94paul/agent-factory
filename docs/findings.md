@@ -102,3 +102,24 @@ distinction between ZERO and NOT-RECORDED that the contract's four verdicts exis
   spawnable, no policy) and `list_connected_browsers` still returns `[]`.
 - **MEASURED BY** — `docs/evidence/render-pass-2026-08-22.md`, which tabulates every link.
 - **AFFECTS** — artifact lane, and anyone tempted to spend another session on the extension.
+
+### F7 — I fed R6 a false constraint, and it changed the answer
+
+- **BELIEVED** — stated as fact in `docs/research/R6-automation-and-alerting.md`: *"there is
+  currently no runner budget or appetite for one."* I wrote it as a constraint on the question.
+- **ACTUALLY** — the same GitHub org already runs three Actions workflows in
+  `prefect-connectors` (`ci.yml`, `quality-gate.yml`, `branch-sync.yml`). Actions is available and
+  in daily use. `agent-factory` simply has no `.github/workflows` directory, which is an absence,
+  not a constraint.
+- **MEASURED BY** — `ls prefect-connectors/.github/workflows/` → three files. One command.
+- **AFFECTS** — every lane, and R6's answer itself. R6 explicitly deferred *"a full CI on every
+  push"* on the strength of my sentence, and instead ranked a nightly scheduled check first. Read
+  its Q1 with that correction in hand: CI-on-push may well be the right first move after all, and
+  the honest position is that R6 was never asked the real question.
+
+⭐ **This is the F1 pattern, committed by me, inside a prompt whose own Method note warns against
+it.** *An object named by a ticket, boot prompt or handoff is a hypothesis, not a finding.* A
+constraint asserted in a research prompt is exactly that kind of object, and I asserted one I had
+not checked — while telling the reader to check everything I asserted. Before writing a constraint
+into a prompt, measure it; a research pass optimises against the world you describe, not the one
+you have.
