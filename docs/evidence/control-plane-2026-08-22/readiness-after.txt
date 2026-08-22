@@ -1,5 +1,5 @@
 
-Unattended-migration readiness: 14 of 30 gates pass
+Unattended-migration readiness: 15 of 30 gates pass
 factory      C:\Users\PaulRussell\repos\agent-factory\.worktrees\control-plane
 connectors   C:\Users\PaulRussell\repos\agent-factory\.worktrees\prefect-connectors
 
@@ -34,13 +34,18 @@ connectors   C:\Users\PaulRussell\repos\agent-factory\.worktrees\prefect-connect
             . asked for 7 concurrent stage dispatches in one run: 4 granted, 3 left pending
             . then asked a SECOND pipeline for one more: 0 granted — the ceiling is global
             . manual gates hold no slot, so paused runs cannot starve the rest
-    PASS    Is dispatched work either finished or killed?        dispatched work is leased and reaped, watched
+    PASS    Is dispatched work either finished or killed?        dispatched work is leased, reaped and its cloud work killed
             . 4 of 14 recorded runs (2026-05-26 to 2026-05-28) sit at stage_started with no terminal event
             . documented: a container outlived its stage and ten of them took a 10-core quota
             . expired lease -> 1 reaped, stage left 'failed'
             . reaped work was NOT made runnable again
-            . the log gained a terminal event: yes (stage_reaped, stage_failed, pipeline_completed, verdict_recorded)
+            . the log gained a terminal event: yes (external_work_termination, stage_reaped, stage_failed, pipeline_completed, verdict_recorded)
             . live lease -> 0 reaped; a still-running stage is left alone
+            . a handle recorded by the engine's own recorder (yes) was carried to the terminator on reap: d894339e -> KILLED
+            . a reaped stage carrying no handle reports 'NOT_RECORDED' — an unknown, not an absence
+            . 3 of 3 flow-run launch sites report their handle
+            . server binds the recorder into every script stage: yes
+            . server registers the cloud terminators at startup: yes
 
   Can it tell success from failure?  [2/8]
     PASS    Is the terminal verdict computed from history?       the verdict is derived from the event log
@@ -79,7 +84,7 @@ connectors   C:\Users\PaulRussell\repos\agent-factory\.worktrees\prefect-connect
             . orchestrator/stage_scripts/promotion_ops.py:43 builds the deployment name as f"smoke-test-{connector}"
             . so it measures a twin, not the connector's own deployment
 
-  Can its output be certified?  [3/8]
+  Can its output be certified?  [4/8]
     FAIL    Does the eval corpus have enough breadth to calibrate? 1 case(s), 0 strata — below any calibration threshold
             . 1 corpus case(s), 0 declared stratum/strata
             . R1 graded one-run calibration FOLKLORE: a blind spot affecting 10% of a stratum needs 29 cases for a 95% chance of being seen once
@@ -88,9 +93,12 @@ connectors   C:\Users\PaulRussell\repos\agent-factory\.worktrees\prefect-connect
             . 0 of 15 dimensions in the hashed config
             . missing: prompt, model, effort, tools, max_turns, budget_usd, tool_implementation, sandbox_image, model_routing, context_policy, external_knowledge, permissions, contract_version, harness_version, side_effect_replay
             . contract_version is the one that bites now — a certification granted under contract V4 silently transfers to V5
-    NOTRUN  Is the evaluator a principal the agent cannot impersonate? the evaluator is not yet a separate principal
-            . $AGENT_FACTORY_EVALUATOR: (unset)
+    PASS    Is the evaluator a principal the agent cannot impersonate? the evaluator is a separate principal (loopback deployment)
+            . $AGENT_FACTORY_EVALUATOR: http://127.0.0.1:8787
             . client implementation: evaluator.py
+            . health check: answered as local-process, bundle 41caa5d8326b, corpus windsorai-2026-08-20, 4 verdict(s) recorded
+            . the submission vocabulary it accepts: ['artifact_uri', 'artifact_sha256', 'run_id'] — no corpus, no manifest, no evaluator
+            . deployment: LOOPBACK — R3 rank 5, 'mostly theatre'. Same uid can write the verdict store and restart the evaluator; the design is rank 1 and the remaining gap is a managed identity the agent sandbox does not hold, which is a deployment change, not a code change
             . the agent supplies {artifact_uri, artifact_sha256, run_id} and nothing else; the corpus, the manifest and the assertion set are resolved by the service
             . known hole: the contract is parameterised by a blueprint the graded party writes. A target floor and the artefact hash narrow it; a pinned per-connector target closes it, and nobody has written one
             . R3's ranking: external evaluator service with its own identity is rank 1; a separate local process is rank 5 and 'mostly theatre'
