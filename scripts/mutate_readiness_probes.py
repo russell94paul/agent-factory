@@ -93,6 +93,23 @@ MUTATIONS = [
      [('            stage["status"] = "failed"\n            stage["error"] = error',
        '            stage["status"] = "pending"\n            stage["error"] = error')],
      "the terminal kill — the reaper now recovers instead, so the orphan runs again"),
+
+    # The half the gate was blind to until 2026-08-22. Removing the call leaves a reaper
+    # that closes the record perfectly and leaves the container burning a shared core —
+    # which is what the gate said PASS to for its whole life before this mutation existed.
+    ("reaper",
+     [("            termination = _terminate_external_work(pipeline[\"id\"], stage)",
+       "            termination = []")],
+     "the call that kills the cloud work behind a reaped stage"),
+
+    # And the recorder, separately: a terminator nothing can hand a handle to is a
+    # terminator that is never reached. Two halves, two mutations, because a compound one
+    # reports a kill and lets you credit it to the wrong half (finding F18).
+    ("reaper",
+     [("        handles.append({\"kind\": kind, \"id\": handle_id, \"name\": handle_name,\n"
+       "                        \"recorded_at\": _now_iso()})",
+       "        pass")],
+     "the durable handle — nothing is left for the reaper to kill"),
 ]
 
 

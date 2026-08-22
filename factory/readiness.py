@@ -847,8 +847,79 @@ def g_orphans_are_reaped():
     ev.append(f"live lease -> {len(spared)} reaped; a still-running stage is left alone"
               if not spared else "a LIVE lease was reaped — the reaper kills honest work")
 
+    # 3. ⭐ The half this gate could not see. "Either finished or killed" was satisfied for
+    # a year by a reaper that closed the RECORD and handed the container to a human in an
+    # error string — and the container is the thing that holds the quota. Ten of them took
+    # the whole 10-core canadacentral allocation on 2026-08-13 while every record looked
+    # tidy. So the probe now requires the reap to REACH the terminator with the stage's own
+    # handle, and requires an unrecorded handle to be reported as an unknown rather than
+    # as an absence.
+    #
+    # The handle is put there by `record_external_handle` — the same function server.py
+    # binds into every script stage's ScriptContext — rather than written into the dict by
+    # the probe. That distinction is finding F18: a probe that constructs the precondition
+    # proves the comparison fires and proves nothing about whether the system reaches it.
+    killed_handles, unknown_handles, wiring = [], [], []
+    reg = getattr(engine, "register_terminator", None)
+    rec = getattr(engine, "record_external_handle", None)
+    if reg is None or rec is None:
+        ev.append("the engine has no external-handle registry, so a reaped stage's cloud "
+                  "work cannot be killed or even identified — the record is closed and "
+                  "the container is left to a human")
+        return _fail("dispatched work is leased and reaped, but its cloud work is not", ev, src)
+
+    HANDLE = "d894339e-900c-4244-b81a-72d43e2760da"
+    reached = []
+    engine.clear_terminators() if hasattr(engine, "clear_terminators") else None
+    reg("prefect_flow_run", lambda hid, name: (reached.append(hid), {"verdict": "KILLED"})[1])
+
+    r = _scratch_pipeline(engine, "pipe_reap_handle",
+                          [_scratch_stage("trigger-run", status="dispatched", type="script",
+                                          lease_expires_at=_iso(-120))])
+    wrote = rec("pipe_reap_handle", "trigger-run", "prefect_flow_run", HANDLE, "moose")
+    reap()
+    killed_handles = list(reached)
+    term = (r["stages"][0].get("_termination") or [{}])[0]
+
+    # and the honest-unknown branch: a stage dispatched before handles existed
+    s = _scratch_pipeline(engine, "pipe_reap_nohandle",
+                          [_scratch_stage("old", status="dispatched", type="script",
+                                          lease_expires_at=_iso(-120))])
+    reap()
+    unknown = (s["stages"][0].get("_termination") or [{}])[0].get("verdict")
+    if hasattr(engine, "clear_terminators"):
+        engine.clear_terminators()
+
+    ev.append(f"a handle recorded by the engine's own recorder ({'yes' if wrote else 'NO'}) "
+              f"was carried to the terminator on reap: "
+              f"{killed_handles and killed_handles[0][:8] or 'NOTHING REACHED IT'} "
+              f"-> {term.get('verdict')}")
+    ev.append(f"a reaped stage carrying no handle reports '{unknown}' — an unknown, not an "
+              f"absence" if unknown == "NOT_RECORDED" else
+              f"a reaped stage carrying no handle reports '{unknown}': whether it left a "
+              f"container running is being read as nothing to kill")
+
+    # The wiring, checked at the source rather than assumed: a recorder nothing calls
+    # records nothing, and every launch site must report or its container is invisible.
+    ops = _src("orchestrator/stage_scripts/prefect_ops.py")
+    launches, reports = ops.count("prefect.create_flow_run"), ops.count("_report_run(ctx,")
+    srv = _src("orchestrator/server.py")
+    wiring = [f"{reports} of {launches} flow-run launch sites report their handle",
+              "server binds the recorder into every script stage: "
+              + ("yes" if "report_external_handle=" in srv else "NO — nothing ever records one"),
+              "server registers the cloud terminators at startup: "
+              + ("yes" if "cloud_reaper" in srv else "NO — every reap would be NOT_ATTEMPTED")]
+    ev += wiring
+
+    cloud_ok = (killed_handles == [HANDLE] and term.get("verdict") == "KILLED"
+                and unknown == "NOT_RECORDED"
+                and launches and reports >= launches
+                and "report_external_handle=" in srv and "cloud_reaper" in srv)
+
+    if killed and after == "failed" and "stage_failed" in log and not spared and cloud_ok:
+        return _pass("dispatched work is leased, reaped and its cloud work killed", ev, src)
     if killed and after == "failed" and "stage_failed" in log and not spared:
-        return _pass("dispatched work is leased and reaped, watched", ev, src)
+        return _fail("the record is reaped; the cloud work it started is not", ev, src)
     return _fail("no lease, timeout or reaper for dispatched work", ev, src)
 
 

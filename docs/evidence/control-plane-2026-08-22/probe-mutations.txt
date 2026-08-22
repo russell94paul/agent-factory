@@ -24,6 +24,12 @@ connectors  C:\Users\PaulRussell\repos\agent-factory\.worktrees\prefect-connecto
   ok  reaper
        removed: the terminal kill — the reaper now recovers instead, so the orphan runs again
        intact -> PASS   mutated -> FAIL
+  ok  reaper
+       removed: the call that kills the cloud work behind a reaped stage
+       intact -> PASS   mutated -> FAIL
+  ok  reaper
+       removed: the durable handle — nothing is left for the reaper to kill
+       intact -> PASS   mutated -> FAIL
 
   LOAD-BEARING   cap            both cap checks — the entry points and the choke point
   LOAD-BEARING   bounded        the ceiling at the choke point, so a watchdog can dispatch forever
@@ -33,5 +39,7 @@ connectors  C:\Users\PaulRussell\repos\agent-factory\.worktrees\prefect-connecto
   LOAD-BEARING   from-history   the verdict's history replay ALONE — the defect the gate is named for
   LOAD-BEARING   cap            the only write to _attempts — the cap can now never fire
   LOAD-BEARING   reaper         the terminal kill — the reaper now recovers instead, so the orphan runs again
+  LOAD-BEARING   reaper         the call that kills the cloud work behind a reaped stage
+  LOAD-BEARING   reaper         the durable handle — nothing is left for the reaper to kill
 
-All 8 mutations flipped their gate off PASS: every control-plane gate is measuring the control it names.
+All 10 mutations flipped their gate off PASS: every control-plane gate is measuring the control it names.
