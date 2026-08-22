@@ -1,9 +1,14 @@
 # Synthesis — what four research passes concluded, and what changes
 
-**2026-08-21.** Five documents, ~293KB: R1 eval harness, R2 topology, R3 control plane, R4
-agnostic optimiser (twice). This is the decision record. Where the answers disagree, or where they
-contradict something already built or already said in this session, that is recorded rather than
-smoothed.
+**2026-08-21, extended 2026-08-22.** Seven documents: R1 eval harness, R2 topology, R3 control
+plane, R4 agnostic optimiser (twice), and — added 08-22 — **R5 build velocity** and **R6 automation
+and alerting**. This is the decision record. Where the answers disagree, or where they contradict
+something already built or already said in this session, that is recorded rather than smoothed.
+
+⚠ **R1–R4 asked about the product. R5–R6 asked about the process that builds it.** They are not
+graded against each other, and §10 says which earlier sections they amend. One of them was answered
+under a false constraint I wrote into its prompt — §10.4 — and the distortion is recorded, not
+carried forward.
 
 Raw answers in `answers/`. Read them before overriding anything here.
 
@@ -194,6 +199,20 @@ the optimisation score itself is not safe to trust."*
 Step 3 is ours, not R3's: R3 said "Prefect failure propagation", which is the wrong plane. The
 correct form is a terminal verdict derived from the append-only event log.
 
+**R5 amends step 1 rather than reordering anything** (2026-08-22). Asked for the fastest path to a
+certifiable end-to-end run, it ranked *"prototype a lean runner with sandbox and circuit-breakers"*
+Very High and called it the gating step — which is step 1 with the caps made concrete:
+
+```
+--memory 512m --cpus 1.0 --security-opt no-new-privileges
+read-only filesystem except the work directory, no network by default
+circuit-break after 3–5 consecutive failures or T minutes
+a human approval step before any container launch
+```
+
+So the order stands; R5 supplies the numbers step 1 was missing. Nothing in R5 or R6 moves steps
+2–9.
+
 ## 6. What not to build, and what would unlock it
 
 From R2's deferral list and R3's do-not-optimise table.
@@ -253,6 +272,9 @@ Ordered by the build order above, with what already exists noted.
 | 2 | Record the false-`succeeded` mechanism | **done** — `../evidence/false-succeeded-mechanism.md` |
 | 3 | Readiness gates for the build order — one gate per prerequisite | **next** |
 | 4 | Version hash: add the nine missing dimensions, contract version first | pending |
+| 10 | One branch/worktree per lane — §10.1, both passes agree | **not started, highest evidence** |
+| 11 | CI on push in `agent-factory` — see §10.4, the premise that suppressed it was false | **not started** |
+| 12 | Gate-verdict diff against last good state, as a CI step | **not started** |
 | 5 | Corpus: regression + challenge split, 15 strata, unclassified as its own | pending — largest single item |
 | 6 | Evaluator as a service with its own identity, not a directory move | pending — retires the `$AGENT_FACTORY_EVALS` plan |
 | 7 | Single-worker topology blueprint replacing the three-agent one | pending |
@@ -277,3 +299,105 @@ Cheaper than re-running, and they carry the context. None require a new prompt.
    Prefect rather than reimplement its primitives?**
 3. **R1 thread** — one-liner: the COMPLETED-over-failures defect is not Prefect but a
    last-write-wins status field. Does anything else in your answer depend on that misattribution?
+
+---
+
+## 10. R5 and R6 — the passes about how we build (added 2026-08-22)
+
+Two passes on the build process rather than the product. Read with §5 and §7; they amend §5's step
+1 (above) and add three rows to §8.
+
+### 10.1 The convergence — and it is the strongest signal in either document
+
+**Both passes independently recommend one branch or git worktree per parallel agent session**, and
+they arrived by different routes:
+
+- **R5, from data.** A study of ~33,000 agent-generated GitHub PRs: *same-agent* PRs in flight
+  conflicted **19.8%** of the time, *different-agent* PRs **41.7%** — and most conflicts were
+  **structural** (one agent deleting a file another edited), not line-level.
+- **R6, as an Observed practice.** Branch-per-lane / worktree-per-agent, merged one at a time.
+
+Agreement between independent passes is the control, divergence is the finding — so this is the
+recommendation with the least room to argue. **It is also not implemented.** All five lanes in
+`factory/lanes.py` point at one shared branch, `feat/readiness-generator`. At a 41.7% cross-agent
+conflict rate that is a bad bet, and it is the highest-evidence unbuilt change in the programme.
+
+The lane grouping *itself* is vindicated: R5 confirms file locality, not the dependency graph, is
+the binding constraint on parallelism. `factory/lanes.py::conflicts()` already computes it.
+
+### 10.2 Where R5 disagrees with this session — unresolved, with the deciding fact named
+
+**R5 contradicts a recommendation made in-session.** Asked how to get team one running, the session
+proposed fixing the existing orchestrator's missing attempt cap and then driving it. R5 instead
+ranks *building a lean runner inside the factory repo* as the gating step, with the orchestrator
+reviewed in parallel rather than repaired first.
+
+**Not resolved here, because one checkable fact decides it:** how much of the orchestrator's
+18-stage migration pipeline team one actually needs for one connector. If most of it, a "lean
+runner" means reimplementing it and R5 is underestimating the work. If team one's path is genuinely
+source → container → Prefect → warehouse, the orchestrator is a detour and R5 is right.
+
+⚠ Note what R5 did *not* know: that the 18 stages exist and encode real work. Neither answer should
+be adopted before someone reads the stage list.
+
+### 10.3 What they say we already got right
+
+- **The findings ledger.** R6 endorses a shared cross-session knowledge store; R5 names it directly
+  as part of "enable safe parallelism". Built 2026-08-22, six entries at the time of writing.
+- **Evidence required on close.** R6 found prior art for the `close_lane` idea — a tracker that
+  refuses to close an item without evidence attached. Our version is currently a *prompt asking*,
+  which is a convention, not a control.
+- **Backlog growth is discovery, not failure.** R5 reads the gate set going 13 → 30 in 6.4h as
+  legitimate discovery of omitted work, with the caveat that intake-vs-throughput should be tracked
+  explicitly and converge. `factory/schedule.py` already measures both and refuses an ETA while
+  they diverge.
+
+### 10.4 ⛔ R6 was answered under a false constraint, and it changed the ranking
+
+The prompt in `R6-automation-and-alerting.md` asserts, as a constraint: *"there is currently no
+runner budget or appetite for one."* **That is false.** The same GitHub org runs three Actions
+workflows in `prefect-connectors` (`ci.yml`, `quality-gate.yml`, `branch-sync.yml`). `agent-factory`
+merely has no `.github/workflows` directory — an absence, not a constraint.
+
+R6 explicitly deferred *"a full CI on every push"* on the strength of that sentence and ranked a
+nightly scheduled gate-diff first instead. **So R6's Q1 ordering optimises against a world that was
+described to it, not the one that exists**, and CI-on-push is very likely the correct first move.
+
+Recorded as `docs/findings.md` **F7**. It is the F1 pattern — an unverified premise carried into
+research — committed by the author of a prompt whose own Method note warns against it. The lesson
+generalises: *a constraint asserted in a research prompt is a hypothesis like any other.*
+
+### 10.5 What the answers could not settle
+
+Both declared their own gaps when asked to, which is worth more than six confident answers:
+
+| Question | Gap |
+|---|---|
+| When to freeze a measurement-derived backlog | R5: no studies found; inferred from agile theory |
+| Drift across multiple generated surfaces | R5: no direct analogue in the literature |
+| Handoffs between agent sessions | R5: little published; analogy to human handoffs |
+| Alert thresholds for agent work | R6: no AI-specific guidance on where to set them |
+| Multi-agent repo standards | R6: **no widely adopted standard exists** — blog posts and academic prototypes only |
+| Recovering from a failed pre-close check | R6: tooling is just emerging |
+
+The fifth row is the one to remember. There is no consensus practice for what we are about to do,
+so our own measurements are the best evidence available and should be recorded as they accumulate.
+
+### 10.6 R6's shortlist, re-ordered for the F7 correction
+
+R6's order, with CI restored to where the corrected premise puts it:
+
+```
+1  CI on push — run the suite; the org already has Actions        ← moved up, see §10.4
+2  branch/worktree per lane                                        ← §10.1, both passes
+3  gate-verdict diff against the last good state, as a CI step
+4  pre-push hook for fast local feedback  (bypassable: --no-verify)
+5  attribution — bisect, or per-lane branches measured at merge
+6  progress markers, not heartbeats: "alive ≠ working"
+7  evidence required on close
+```
+
+Every one of R6's recommendations arrived with *what it catches, what it cannot catch, and how to
+make it fire on purpose* — the last being the property this programme cares about most. A control
+nobody has watched refuse something is decoration, so none of these is done until it has been made
+to fail deliberately.

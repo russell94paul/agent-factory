@@ -33,6 +33,7 @@ from factory.board import (  # noqa: E402
     BLOCKED, DONE, READY, board, critical_path)
 from factory.lanes import LANES, SIZE, conflicts, recommend, waits_on  # noqa: E402
 from factory.findings import by_lane  # noqa: E402
+from factory import synthesis as synth  # noqa: E402
 
 OUT = FACTORY / "tracker.html"
 
@@ -178,6 +179,7 @@ def hot_reload():
             g[n] = getattr(mods["factory.lanes"], n)
         import importlib as _il
         g["by_lane"] = getattr(_il.reload(_il.import_module("factory.findings")), "by_lane")
+        g["synth"] = _il.reload(_il.import_module("factory.synthesis"))
         _RELOADED_AT = datetime.datetime.now()
         return True, f"reloaded {len(_HOT)} modules, {len(r.GATES)} gates"
     except Exception as exc:                                          # noqa: BLE001
@@ -477,6 +479,35 @@ def render(when: datetime.datetime, tab: str = "gates") -> str:
                                                  for a in adir.glob("*.md"))
                 if not answered:
                     pending.append(f)
+        gap = synth.unsynthesised()
+        w('<div class="par" style="margin-top:34px;border-color:'
+          + ("var(--unmeas)" if gap else "var(--rule)") + '">')
+        w('<h3 style="margin-top:0">Decision record</h3>')
+        if gap:
+            w(f'<p style="font-size:13.5px;color:var(--ink2);margin:0 0 8px">'
+              f'<b>SYNTHESIS.md does not mention {e(", ".join(gap))}</b>, which have filed '
+              f'answers. The record has fallen behind the research it reconciles.</p>')
+            w('<button type="button" data-copy="synth-prompt" style="font-size:12px;'
+              'padding:5px 10px;margin-bottom:8px;cursor:pointer;border:1px solid var(--rule);'
+              'border-radius:3px;background:var(--raise);color:var(--ink);'
+              'font-family:ui-monospace,monospace">copy reconciling prompt</button>')
+            w(f'<pre id="synth-prompt" style="white-space:pre-wrap;word-break:break-word;'
+              f'font-family:ui-monospace,monospace;font-size:11.5px;line-height:1.55;margin:0;'
+              f'padding:10px;border:1px solid var(--rule);border-radius:3px;'
+              f'background:var(--paper);color:var(--ink2);max-height:220px;overflow:auto">'
+              f'{e(synth.prompt())}</pre>')
+        else:
+            w('<p style="font-size:13.5px;color:var(--ink2);margin:0">'
+              '<code>docs/research/SYNTHESIS.md</code> mentions every filed answer.</p>')
+        # Deliberately not "up to date": the check asserts MENTION, not engagement. There is no
+        # synthesize button because synthesis is judgement, and a button that cannot exercise it
+        # would either fake it or do nothing.
+        w('<p style="font-size:12px;color:var(--ink3);margin:8px 0 0">Checks that each answer is '
+          '<i>mentioned</i>, not that it was engaged with &mdash; it catches a record nobody '
+          'touched, and nothing subtler. There is no synthesize button: synthesis is judgement.'
+          '</p>')
+        w('</div>')
+
         # Always render the heading, even with nothing outstanding: a nav link to a blank page
         # reads as broken, and "everything is answered" is a real and useful state to see.
         filed = sorted(adir.glob("R[0-9]*-answer*.md")) if adir.is_dir() else []
