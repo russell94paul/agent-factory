@@ -162,3 +162,50 @@ you have.
 - **AFFECTS** — every lane, since any of them can launch a terminal. Put **no semicolons** in the `-Command` payload;
   use `--startingDirectory` for the cwd. And note the lesson under it: a dry run proves the
   command you built, never the thing that will parse it.
+
+## 2026-08-22 · session: boot pre-flight + three-lane launch
+
+### F11 — Gate `finishes` can never pass, however well the agent performs
+
+- **BELIEVED** — "3/14 runs finished" is a score that improves as the loop gets more reliable, so
+  landing the reaper and re-running the loop will move it. [[F4]] says the numbers are stale;
+  the natural inference is that fresh runs fix them. For this gate that inference is wrong.
+- **ACTUALLY** — `readiness.py:175` passes only on `len(fin) == len(runs)` — **every** recorded
+  run finished, all-time, with no window. Four runs (`pipe_5546c123`, `pipe_66d2326d`,
+  `pipe_7274e774`, `pipe_c34bfbe5`) sit at `stage_started` with no terminal event and, being
+  history, will never gain one. Each new run increments both sides, so the ratio can approach
+  14/18, 14/50 — never equality. The gate is not a hard target, it is unreachable: a perfect
+  agent from now until forever still reads FAIL. A gate that cannot pass is the mirror of the
+  decoration-gate this repo already refuses — it stops being a measurement and becomes a wall,
+  and the board reports failure at work that is already fixed.
+- **MEASURED BY** — read `factory/readiness.py:175`; the pass condition is equality, not a rate.
+  Then note the four ids in the gate's own evidence lines. No run appended after today can
+  satisfy it, because the shortfall is in runs that already ended.
+- **AFFECTS** — control-plane lane (`finishes`, and the `reaper` it is building), and anyone
+  reading the 30-gate score as progress. The reaper is the fix, but only if it **backfills a
+  terminal event for those four historical runs** rather than only bounding future dispatch —
+  emitting terminal events for new work leaves this gate exactly where it is. Decide deliberately
+  whether a reaper-emitted terminal counts as "finished"; if it does not, the gate needs a window
+  instead.
+
+### F12 — Gate `succeeds` is an all-time ratio, so one bad day poisons it permanently
+
+- **BELIEVED** — "a stage fails 6.1× more than it succeeds" is a current reliability rate, and a
+  run of good stages will pull it back over the line.
+- **ACTUALLY** — `readiness.py:188` passes on `done > failed` counted over **every audit file
+  ever written**, unwindowed and undated. It stands at 165 completed against 1001 failed, so
+  flipping it needs **837 net successful stage completions** — with zero new failures, 837
+  consecutive good stages. Most of the 1001 come from the single 2026-08-14 incident where an
+  uncapped restart loop took the region quota (352 restarts of `trigger-run` in one run), so the
+  metric permanently carries a fault that has since been capped. It answers "has this system ever
+  been reliable" when the question every reader asks of it is "is it reliable now".
+- **MEASURED BY** — read `factory/readiness.py:180-190`: `_counts(_audits())` over
+  `orchestrator/data/audits/*.json`, no date filter, pass condition `done > failed`. Arithmetic:
+  1001 − 165 = 836, so 837 net successes to cross. Compare against the incident evidence already
+  in the `bounded` gate.
+- **AFFECTS** — control-plane and judgement lanes, and any before/after claim made with
+  `python -m factory.readiness`. Either window the ratio (last N runs, or since a stated date) or
+  quarantine the incident's audits behind a declared exclusion — and whichever is chosen, the gate
+  must **state its basis in its own evidence line**, so the number is never read as current when
+  it is cumulative. Do not simply delete the audits: that destroys the evidence the `bounded` gate
+  cites.
