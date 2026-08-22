@@ -9,7 +9,7 @@ checked.
 |---|---|---|---|
 | R1 | `R1-eval-harness.md` | Grade the eval harness we built; what did we get wrong? | first |
 | R2 | `R2-topology.md` | One agent or a team — and is our 3-role sketch defensible? | any time |
-| R3 | `R3-optimizer-sandbox.md` | The optimizer, its bounds, the sandbox — or don't build it yet | last |
+| R3 | `R3-control-plane-and-optimizer.md` | Bounding, orphan reaping, sandbox, tenancy — optimizer last | ready now |
 | R4 | `R4-agnostic-optimizer.md` | Can it work on *any* repo? Fitness discovery, transfer, prior art | parallel with R3 |
 
 **Only one hard ordering: R3 last.** R3 asks how to search a configuration space, and R2's topology

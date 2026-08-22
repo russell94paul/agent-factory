@@ -1,3 +1,14 @@
+> # SUPERSEDED 2026-08-21 — do not run this.
+>
+> Replaced by `R3-control-plane-and-optimizer.md`. Two of its questions were answered before it
+> was ever sent: R2 concluded "one end-to-end agent, not the three-agent team", so the team
+> configuration space this asked how to search is a space we are not going to build; and its Q10
+> ("is building an optimizer now the right move at all?") was answered independently by both R1
+> and R2 — fix the control plane first.
+>
+> Kept for the record, because what a prompt asked before the evidence arrived is part of the
+> evidence trail.
+
 # R3 — The optimizer, its bounds, the sandbox, and scaffolding
 
 **Run last** — its shape depends on R1's fitness function and R2's topology. Paste everything
