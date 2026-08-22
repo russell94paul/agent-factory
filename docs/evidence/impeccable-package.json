@@ -1,0 +1,11 @@
+{
+  "name": "impeccable-detector-deps",
+  "private": true,
+  "description": "Direct dependencies of scripts/detect.mjs. WITHOUT THESE the detector does not fail - it silently degrades to a regex-only engine and reports 1 finding where the real engine reports 313. A zero from an instrument you have not proved can see is not a measurement. Install with: npm install --prefix ~/.claude/skills/impeccable",
+  "dependencies": {
+    "css-select": "^7.0.0",
+    "css-tree": "^3.2.1",
+    "domutils": "^4.0.2",
+    "htmlparser2": "^12.0.0"
+  }
+}
