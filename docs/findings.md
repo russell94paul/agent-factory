@@ -159,6 +159,6 @@ you have.
   `error 2147942402 (0x80070002) ... The system cannot find the file specified`.
 - **MEASURED BY** — Paul's first real click. Every prior test was a dry run that inspected the
   command without executing it, so nothing had exercised wt's parsing.
-- **AFFECTS** — any lane launching a terminal. Put **no semicolons** in the `-Command` payload;
+- **AFFECTS** — every lane, since any of them can launch a terminal. Put **no semicolons** in the `-Command` payload;
   use `--startingDirectory` for the cwd. And note the lesson under it: a dry run proves the
   command you built, never the thing that will parse it.
