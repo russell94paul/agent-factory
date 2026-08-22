@@ -1,0 +1,15 @@
+[control] attempt_cap refused pipe_probe/trigger-run: stage 'trigger-run' has been dispatched 5 times; the cap is 5. Re-running it again will not fix it and each attempt costs real money. Supply an explicit override reason to buy one more attempt.
+the engine's own refusal:
+  stage 'trigger-run' has been dispatched 5 times; the cap is 5. Re-running it again will not fix it and each attempt costs real money. Supply an explicit override reason to buy one more attempt.
+
+screenshot -> docs\evidence\control-plane-2026-08-22\dashboard\cap-override-toasts.png
+  ok  the refusal was recognised as a cap refusal, not a generic error  — the operator was asked for a reason
+  ok  the first request carried no override
+  ok  the second request carried the override to the wire  — {"stage_name": "trigger-run", "override_reason": "credential was fixed, GP-318"}
+  ok  the refusal was shown to the operator as an ERROR, not a success  — [error] stage 'trigger-run' has been dispatched 5 times; the cap is ; [success] Attempt cap overridden — one more attempt, recorded
+  ok  no success toast was raised before the override succeeded
+  ok  cancelling sends NOTHING  — 1 request(s)
+  ok  cancelling says nothing was retried
+  ok  a whitespace-only reason is not an override  — 1 request(s)
+
+WATCHED: the dashboard refuses, and the override reaches the wire.
