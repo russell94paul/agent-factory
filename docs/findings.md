@@ -162,3 +162,75 @@ you have.
 - **AFFECTS** — every lane, since any of them can launch a terminal. Put **no semicolons** in the `-Command` payload;
   use `--startingDirectory` for the cwd. And note the lesson under it: a dry run proves the
   command you built, never the thing that will parse it.
+
+## 2026-08-22 · session: artifact lane — gate `chain`, impeccable's detector
+
+### F11 — `node scripts/detect.mjs` silently under-counts to 1 finding without four npm packages
+
+- **BELIEVED** — running impeccable's bundled detector directly
+  (`node ~/.claude/skills/impeccable/scripts/detect.mjs <file> --json`) runs the real 59-rule pass.
+- **ACTUALLY** — the static-HTML engine needs `htmlparser2`, `css-select`, `css-tree`, `domutils`,
+  none of which ship with the skill. Without them it falls back to regex matching and prints
+  `DEGRADED — HTML parser modules unavailable` **to stderr only** — stdout still returns
+  well-formed JSON, just 1 finding instead of 313 on the same file, and the exit code is non-zero
+  either way so it doesn't distinguish the two modes.
+- **MEASURED BY** — `node scripts/detect.mjs docs/artifacts/agent-factory.html --json` → 1 finding,
+  stderr shows `DEGRADED`. After `cd ~/.claude/skills/impeccable && npm install htmlparser2
+  css-select css-tree domutils --no-save` → 313 findings, stderr empty.
+- **AFFECTS** — every lane that runs impeccable's detector on this machine for the first time.
+  Install the four packages first, or a "clean" result is actually an unmeasured one. Also: `npx
+  impeccable detect` sidesteps the missing-deps problem but resolves the **npm-published** version
+  (3.6.0 observed) rather than the **locally installed skill** (4.1.1, whose registry file —
+  `scripts/detector/registry/antipatterns.mjs`, 59 `id:` entries — is what "59 deterministic
+  detector rules" actually refers to). The two happened to match byte-for-byte on this file; don't
+  assume they stay in sync.
+
+### F12 — a bulk `low-contrast` finding count is not evidence until checked in a real browser — proven both ways, including on my own draft
+
+- **BELIEVED** (my own first draft of `docs/evidence/impeccable-detector-pass-2026-08-22.md`) —
+  cross-referencing 56 of 258 `low-contrast` findings against the page's CSS token definitions and
+  finding them cross-theme-impossible was enough to call **251 of 258 (97%)** proven false
+  positives, corroborated by a render-pass check that (it turned out, on inspection) never reads
+  any element's text color at all.
+- **ACTUALLY** — an independent opus `reviewer` pass caught the overclaim: the grep covered only
+  56 rows: 195 of the 258 (the `#000000 on #141b21` rows) were simultaneously claimed "proven" in
+  one paragraph and "not dismissed, recorded as open" two paragraphs later — a direct
+  self-contradiction that shipped uncaught. Correcting it required going further than the original
+  grep-only proof: opening the real file in the real, installed Chrome via Playwright and sweeping
+  every element's actual computed color/background across both themes. That found: **zero** of the
+  258 static findings correspond to anything a real browser paints (dark mode: 1 genuine near-miss
+  at 4.41:1, not among the 258; light mode: 225 genuine near-misses, none of them the pairs the
+  static detector reported — a real, different, previously-unreported defect the static noise had
+  buried).
+- **MEASURED BY** — `docs/evidence/impeccable-detector-pass-2026-08-22.md`, "⭐ The low-contrast
+  finding is ~100% noise" section, which keeps the retracted claim visible with a revision note
+  rather than silently overwriting it.
+- **AFFECTS** — every lane, and reinforces F5. A grep against source that proves *some* findings
+  false does not license folding *adjacent, unproven* findings into the same verdict — and a cited
+  "corroborating instrument" must be checked to actually measure the thing it's cited for (F5's
+  html.escape() and cross-both-svgs failures were exactly this: an instrument assumed to see
+  something it structurally could not). The fix that actually worked was cheaper than the
+  reverse-engineering that failed twice: don't trace a third-party static tool's internals to
+  defend a claim — open the real artifact in a real browser and measure the disputed property
+  directly.
+
+### F13 — `scripts/render_pass.py`'s all-PASS does not mean the page's text contrast is fine
+
+- **BELIEVED** — a lane reading `render-pass-2026-08-22.md` or a fresh `python
+  scripts/render_pass.py` all-PASS could reasonably conclude the artifact's contrast is clean —
+  the doc even reports specific token hex values under "Verdict tokens hold".
+- **ACTUALLY** — `render_pass.py` asserts on exactly three named CSS variables
+  (`--fail`/`--pass`/`--unmeas`) and the body background; it contains no general per-element WCAG
+  contrast check and never reads `getComputedStyle(el).color` for any element other than
+  `document.body`. A real sweep (this session, Playwright, both `color-scheme`s, every element
+  with direct text) found the page's light theme has **225 genuine near-miss contrast failures**
+  (`--ink-3` captions/labels at ~4.06–4.44:1 against light surfaces, the `--unmeas` amber verdict
+  token at ~3.15–3.2:1 as bold 11.5px text) — all against a 4.5:1 requirement neither prior
+  instrument checked.
+- **MEASURED BY** — `docs/evidence/impeccable-detector-pass-2026-08-22.md`, same section as F12;
+  `grep -n "body-fg\|getComputedStyle" scripts/render_pass.py` shows the one uncollected read.
+- **AFFECTS** — every lane treating render-pass PASS as a general design-quality signal. It checks
+  what it checks (marks/legend/gaps/reveal/overlap/scroll/named-token-values/reduced-motion) and
+  nothing else; contrast is not one of the things it checks. Not fixed this pass — recorded as an
+  open, real, minor defect. The one-off contrast-sweep script used to find it is not currently
+  committed; worth promoting into `scripts/` if a standing contrast gate is wanted.
