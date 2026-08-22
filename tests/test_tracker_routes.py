@@ -38,8 +38,32 @@ def test_research_renders_without_measuring(research_page, monkeypatch):
 
 
 def test_each_tab_shows_only_its_own_content(research_page):
-    assert "Run a research pass" in research_page
+    """The tab must identify itself whether or not anything is outstanding.
+
+    The first version of this test asserted the *pending-prompts* header, which vanished the hour
+    both prompts got answered — the guard rendered nothing and the tab became a blank page under
+    a nav link. What should always hold is that the tab says what it is; what is conditional is
+    whether it has work to offer.
+    """
+    assert "Run a research pass" in research_page or "<h1>Research</h1>" in research_page, (
+        "the research tab rendered neither outstanding prompts nor an empty state")
     assert "Start here" not in research_page, "lane content leaked onto the research tab"
+
+
+def test_a_filed_answer_is_still_visible_somewhere(research_page):
+    """Answered work must not become invisible work.
+
+    The prompt drops off the outstanding list once answered — that is the self-clearing behaviour
+    — but the answer itself is the thing most worth re-reading, so it has to remain findable.
+    """
+    import pathlib
+    adir = pathlib.Path(lt.FACTORY) / "docs" / "research" / "answers"
+    filed = sorted(adir.glob("R[0-9]*-answer*.md"))
+    if not filed:
+        pytest.skip("no answers filed yet")
+    assert "<h1>Answered</h1>" in research_page
+    for a in filed:
+        assert a.name in research_page, f"{a.name} is filed but not listed on the research tab"
 
 
 def test_the_research_tab_offers_only_unanswered_prompts(research_page):

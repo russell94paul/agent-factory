@@ -477,6 +477,16 @@ def render(when: datetime.datetime, tab: str = "gates") -> str:
                                                  for a in adir.glob("*.md"))
                 if not answered:
                     pending.append(f)
+        # Always render the heading, even with nothing outstanding: a nav link to a blank page
+        # reads as broken, and "everything is answered" is a real and useful state to see.
+        filed = sorted(adir.glob("R[0-9]*-answer*.md")) if adir.is_dir() else []
+        if not pending:
+            w('<div class="head" style="margin-top:44px">')
+            w('<h1>Research</h1>')
+            w(f'<div class="sub">Nothing outstanding &mdash; every written prompt has a filed '
+              f'answer. Write a new one into <code>docs/research/</code> as '
+              f'<code>R&lt;n&gt;-&lt;topic&gt;.md</code> and it appears here automatically.</div>')
+            w('</div>')
         if pending:
             w('<div class="head" style="margin-top:44px">')
             w('<h1>Run a research pass</h1>')
@@ -524,6 +534,22 @@ def render(when: datetime.datetime, tab: str = "gates") -> str:
                   'background:var(--raise);color:var(--ink);font-family:ui-monospace,monospace">'
                   'save answer</button>')
                 w('</form>')
+                w('</div>')
+        if filed:
+            w('<div class="head" style="margin-top:40px">')
+            w('<h1>Answered</h1>')
+            w(f'<div class="sub">{len(filed)} filed &middot; the prompt drops off the list above '
+              'once its answer lands</div>')
+            w('</div>')
+            for a in filed:
+                first = next((ln.lstrip("# ").strip()
+                              for ln in a.read_text(encoding="utf-8", errors="replace").splitlines()
+                              if ln.startswith("# ")), a.stem)
+                w('<div class="par" style="margin-top:12px">')
+                w(f'<h3 style="margin-top:0">{e(first)}</h3>')
+                w(f'<p style="font-size:12.5px;color:var(--ink3);margin:0">'
+                  f'<code>docs/research/answers/{e(a.name)}</code> &middot; '
+                  f'{a.stat().st_size:,} bytes</p>')
                 w('</div>')
 
     w('<footer>')
