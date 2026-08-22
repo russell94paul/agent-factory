@@ -156,9 +156,10 @@ Write-Host "$e[{accent}m  AGENT FACTORY $e[0m$e[38;5;250m{subtitle}$e[0m"
 Write-Host "$e[38;5;244m  {name}$e[0m"
 Write-Host "$e[{accent}m{bar}$e[0m"
 Write-Host ""
-claude (Get-Content -Raw -LiteralPath '{prompt_file}')
+claude (Get-Content -Raw -Encoding UTF8 -LiteralPath '{prompt_file}')
 """
-    f.write_text(body, encoding="utf-8")
+    # utf-8-SIG: PowerShell 5.1 reads a BOM-less .ps1 as ANSI and mangles the box rules.
+    f.write_text(body, encoding="utf-8-sig")
     return f
 
 
