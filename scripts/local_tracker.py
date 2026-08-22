@@ -36,6 +36,10 @@ from factory.findings import by_lane  # noqa: E402
 
 OUT = FACTORY / "tracker.html"
 
+#: (key, href, label). The key is what render() switches on.
+TABS = [("gates", "/", "Gates"), ("lanes", "/lanes", "Lanes"),
+        ("research", "/research", "Research")]
+
 #: Modules whose source can change while the server is running, newest-dependency-last: board and
 #: lanes both import from readiness, so readiness must be reloaded before them or they keep
 #: references to the old Gate objects.
@@ -249,265 +253,278 @@ def e(t) -> str:
     return html.escape(str(t), quote=False)
 
 
-def render(when: datetime.datetime) -> str:
-    results = measure()
+def render(when: datetime.datetime, tab: str = "gates") -> str:
+    # Research needs no measurement, and a full measure is ~10s of probes. Paying that to read a
+    # prompt was the main reason this page felt slow.
+    results = measure() if tab != "research" else []
     n = sum(1 for _, r in results if r.ok)
     total = len(results)
     pct = round(100 * n / total) if total else 0
+    nav = "".join(
+        f'<a href="{href}" style="display:inline-block;padding:7px 14px;margin-right:6px;'
+        f'font-size:13px;text-decoration:none;border:1px solid var(--rule);border-radius:3px;'
+        f'background:{"var(--ink)" if tab == key else "var(--raise)"};'
+        f'color:{"var(--paper)" if tab == key else "var(--ink2)"}">{label}</a>'
+        for key, href, label in TABS)
 
     o = ['<!doctype html><html lang="en"><head><meta charset="utf-8">',
          '<meta name="viewport" content="width=device-width,initial-scale=1">',
          '<title>Readiness</title>', f"<style>{CSS}</style></head><body><div class='wrap'>"]
     w = o.append
+    w(f'<nav style="padding:22px 0 4px">{nav}</nav>')
 
-    w('<div class="head">')
-    w('<h1>Can a team run a migration unattended?</h1>')
-    w(f'<div class="sub">measured {e(when.strftime("%Y-%m-%d %H:%M:%S"))} local &middot; '
-      f'refresh this page to re-measure</div>')
-    # Refresh re-measures; reload re-reads the CODE. They are different things and the page says
-    # so, because conflating them is exactly how this page sat on a 23-gate list for hours.
-    reloaded = (f' &middot; code reloaded {_RELOADED_AT.strftime("%H:%M:%S")}'
-                if _RELOADED_AT else ' &middot; code as at server start')
-    w(f'<div class="sub" style="margin-top:10px">'
-      f'<a href="/reload" style="display:inline-block;padding:6px 12px;border:1px solid '
-      f'var(--rule);border-radius:3px;background:var(--raise);color:var(--ink);'
-      f'text-decoration:none;font-size:13px">&#8635; reload code &amp; re-measure</a>'
-      f'<a href="/sync" style="display:inline-block;margin-left:8px;padding:6px 12px;'
-      f'border:1px solid var(--rule);border-radius:3px;background:var(--raise);'
-      f'color:var(--ink);text-decoration:none;font-size:13px">&#8681; sync artifact file</a>'
-      f'<span style="color:var(--ink3);font-size:12.5px">&nbsp; refresh re-measures'
-      f'{reloaded}</span></div>')
-    # The published page is a SEPARATE copy. Saying so on the page is the cheapest possible
-    # guard against reading a stale artifact as current state — which already happened.
-    w('<div class="sub" style="color:var(--ink3);font-size:12.5px;margin-top:4px">'
-      'sync rewrites the local <code>docs/artifacts/agent-factory.html</code>. '
-      'Publishing to claude.ai is a separate step &mdash; the published page only moves when '
-      'someone republishes it.</div>')
-    if _SYNC_MSG:
-        okc = 'var(--pass)' if _SYNC_MSG[0] else 'var(--fail)'
-        w(f'<div class="sub" style="color:{okc};font-size:13px">{e(_SYNC_MSG[1])}</div>')
-    if _ANSWER_MSG:
-        okc = 'var(--pass)' if _ANSWER_MSG[0] else 'var(--fail)'
-        w(f'<div class="sub" style="color:{okc};font-size:13px">{e(_ANSWER_MSG[1])}</div>')
-    if _RELOAD_MSG:
-        okc = 'var(--pass)' if _RELOAD_MSG[0] else 'var(--fail)'
-        w(f'<div class="sub" style="color:{okc};font-size:13px">{e(_RELOAD_MSG[1])}</div>')
-    w(f'<div class="score"><b>{n}</b><span>of {total} gates pass</span></div>')
-    w(f'<div class="bar"><i style="width:{pct}%"></i></div>')
-    w(f'<div class="sub">factory {e(FACTORY)}<br>connectors {e(CONNECTORS)}</div>')
-    w('</div>')
-
-    for phase, title in PHASES.items():
-        rows = [(g, r) for g, r in results if g.phase == phase]
-        if not rows:
-            continue
-        ok = sum(1 for _, r in rows if r.ok)
-        w('<section class="phase"><header>')
-        w(f'<h2>{e(title)}</h2><span class="count">{ok} of {len(rows)}</span>')
-        w('</header>')
-        for g, r in rows:
-            cls, label = CHIP[r.verdict]
-            w('<div class="g">')
-            w(f'<div><span class="chip {cls}">{label}</span></div>')
-            w('<div>')
-            w(f'<div class="q">{e(g.question)}</div>')
-            w(f'<div class="hl">{e(r.headline)}</div>')
-            if r.evidence:
-                w('<ul>' + "".join(f"<li>{e(x)}</li>" for x in r.evidence) + '</ul>')
-            w(f'<div class="why">{e(g.why)}</div>')
-            if r.source:
-                w(f'<div class="src">{e(r.source)}</div>')
-            w('</div></div>')
-        w('</section>')
-
-    # ------------------------------------------------------------------ the work
-    rows = board()
-    n_done = sum(1 for _, _, st, _ in rows if st == DONE)
-    ready = [(g, r) for g, r, st, _ in rows if st == READY]
-    blocked = [(g, r, u) for g, r, st, u in rows if st == BLOCKED]
-    CH = {DONE: ("done", "done"), READY: ("ready", "ready"), BLOCKED: ("blocked", "blocked")}
-
-    w('<div class="head" style="margin-top:44px">')
-    w('<h1>What is left</h1>')
-    w(f'<div class="sub">generated from the {len(rows)} gates above &middot; nothing typed by hand '
-      f'&middot; {n_done} done, {len(ready)} can start now, {len(blocked)} blocked</div>')
-    w('</div>')
-
-    if ready:
-        w('<div class="par">')
-        w(f'<h3>{len(ready)} can run in parallel right now</h3>')
-        w('<p style="font-size:13.5px;color:var(--ink3);margin:0 0 8px">No unmet dependency '
-          'between any of these. Computed from the dependency graph, not judged.</p>')
-        w('<ul>' + "".join(f'<li>{e(g.question)}</li>' for g, _ in ready) + '</ul>')
+    if tab == "gates":
+        w('<div class="head">')
+        w('<h1>Can a team run a migration unattended?</h1>')
+        w(f'<div class="sub">measured {e(when.strftime("%Y-%m-%d %H:%M:%S"))} local &middot; '
+          f'refresh this page to re-measure</div>')
+        # Refresh re-measures; reload re-reads the CODE. They are different things and the page says
+        # so, because conflating them is exactly how this page sat on a 23-gate list for hours.
+        reloaded = (f' &middot; code reloaded {_RELOADED_AT.strftime("%H:%M:%S")}'
+                    if _RELOADED_AT else ' &middot; code as at server start')
+        w(f'<div class="sub" style="margin-top:10px">'
+          f'<a href="/reload" style="display:inline-block;padding:6px 12px;border:1px solid '
+          f'var(--rule);border-radius:3px;background:var(--raise);color:var(--ink);'
+          f'text-decoration:none;font-size:13px">&#8635; reload code &amp; re-measure</a>'
+          f'<a href="/sync" style="display:inline-block;margin-left:8px;padding:6px 12px;'
+          f'border:1px solid var(--rule);border-radius:3px;background:var(--raise);'
+          f'color:var(--ink);text-decoration:none;font-size:13px">&#8681; sync artifact file</a>'
+          f'<span style="color:var(--ink3);font-size:12.5px">&nbsp; refresh re-measures'
+          f'{reloaded}</span></div>')
+        # The published page is a SEPARATE copy. Saying so on the page is the cheapest possible
+        # guard against reading a stale artifact as current state — which already happened.
+        w('<div class="sub" style="color:var(--ink3);font-size:12.5px;margin-top:4px">'
+          'sync rewrites the local <code>docs/artifacts/agent-factory.html</code>. '
+          'Publishing to claude.ai is a separate step &mdash; the published page only moves when '
+          'someone republishes it.</div>')
+        if _SYNC_MSG:
+            okc = 'var(--pass)' if _SYNC_MSG[0] else 'var(--fail)'
+            w(f'<div class="sub" style="color:{okc};font-size:13px">{e(_SYNC_MSG[1])}</div>')
+        if _ANSWER_MSG:
+            okc = 'var(--pass)' if _ANSWER_MSG[0] else 'var(--fail)'
+            w(f'<div class="sub" style="color:{okc};font-size:13px">{e(_ANSWER_MSG[1])}</div>')
+        if _RELOAD_MSG:
+            okc = 'var(--pass)' if _RELOAD_MSG[0] else 'var(--fail)'
+            w(f'<div class="sub" style="color:{okc};font-size:13px">{e(_RELOAD_MSG[1])}</div>')
+        w(f'<div class="score"><b>{n}</b><span>of {total} gates pass</span></div>')
+        w(f'<div class="bar"><i style="width:{pct}%"></i></div>')
+        w(f'<div class="sub">factory {e(FACTORY)}<br>connectors {e(CONNECTORS)}</div>')
         w('</div>')
 
-    if blocked:
-        w('<section class="phase" style="margin-top:26px"><header>')
-        w(f'<h2>Blocked</h2><span class="count">{len(blocked)}</span></header>')
-        for g, r, unmet in blocked:
-            w('<div class="t">')
-            w('<div><span class="st blocked">blocked</span></div>')
-            w('<div class="sz">&mdash;</div>')
-            w(f'<div><div class="tt">{e(g.question)}</div>')
-            w(f'<div class="tw">{e(r.headline)}</div>')
-            w(f'<div class="dep">waits on: {e(", ".join(unmet))}</div></div></div>')
-        w('</section>')
+        for phase, title in PHASES.items():
+            rows = [(g, r) for g, r in results if g.phase == phase]
+            if not rows:
+                continue
+            ok = sum(1 for _, r in rows if r.ok)
+            w('<section class="phase"><header>')
+            w(f'<h2>{e(title)}</h2><span class="count">{ok} of {len(rows)}</span>')
+            w('</header>')
+            for g, r in rows:
+                cls, label = CHIP[r.verdict]
+                w('<div class="g">')
+                w(f'<div><span class="chip {cls}">{label}</span></div>')
+                w('<div>')
+                w(f'<div class="q">{e(g.question)}</div>')
+                w(f'<div class="hl">{e(r.headline)}</div>')
+                if r.evidence:
+                    w('<ul>' + "".join(f"<li>{e(x)}</li>" for x in r.evidence) + '</ul>')
+                w(f'<div class="why">{e(g.why)}</div>')
+                if r.source:
+                    w(f'<div class="src">{e(r.source)}</div>')
+                w('</div></div>')
+            w('</section>')
 
-    cp = critical_path()
-    w('<div class="par" style="border-color:var(--rule)">')
-    w('<h3>Longest dependency chain</h3>')
-    w(f'<p style="font-family:ui-monospace,monospace;font-size:13.5px;margin:0">'
-      f'{e(" &rarr; ".join(cp))}</p>'.replace("&amp;rarr;", "&rarr;"))
-    w('<p style="font-size:13px;color:var(--ink3);margin:8px 0 0">This is the part that cannot be '
-      'parallelised away. Everything else can be done alongside it.</p>')
-    w('</div>')
+    if tab == "gates":
+        # ------------------------------------------------------------------ the work
+        rows = board()
+        n_done = sum(1 for _, _, st, _ in rows if st == DONE)
+        ready = [(g, r) for g, r, st, _ in rows if st == READY]
+        blocked = [(g, r, u) for g, r, st, u in rows if st == BLOCKED]
+        CH = {DONE: ("done", "done"), READY: ("ready", "ready"), BLOCKED: ("blocked", "blocked")}
 
-    # ---------------------------------------------------------------- lanes
-    verdict = {g.id: r.verdict for g, r in results}
-    passing = {gid for gid, v in verdict.items() if v == PASS}
-    lane_waits, lane_conflicts = waits_on(passing), conflicts()
-    lane_findings = by_lane()
-    ready_lanes = [l.id for l in LANES if not lane_waits[l.id]]
-    w('<div class="head" style="margin-top:44px">')
-    w('<h1>Start a lane</h1>')
-    w(f'<div class="sub">{len(LANES)} lanes &middot; <b>{len(ready_lanes)} can start now</b> '
-      '&middot; copy a prompt into a fresh session</div>')
-    ranked = recommend(passing)
-    if ranked:
-        top, _, why = ranked[0]
-        w('<div class="par" style="margin-top:12px;border-color:var(--pass)">')
-        w(f'<h3 style="margin-top:0">Start here: {e(top.title)} '
-          f'<span style="font-weight:400;color:var(--ink3);font-size:13px">'
-          f'&middot; <code>{e(top.id)}</code></span></h3>')
-        w(f'<p style="font-size:13.5px;color:var(--ink2);margin:0 0 6px">{e(why)}</p>')
-        if len(ranked) > 1:
-            rest = " &middot; ".join(f'{e(l.title)} <span style="color:var(--ink3)">'
-                                     f'({e(l.id)})</span>' for l, _, _ in ranked[1:])
-            w(f'<p style="font-size:12.5px;color:var(--ink3);margin:0">then: {rest}</p>')
-        w('<p style="font-size:12px;color:var(--ink3);margin:8px 0 0">The inputs are measured '
-          '&mdash; gate verdicts, the dependency graph, file conflicts. The <b>weighting is a '
-          'judgement</b>, written down in <code>factory/lanes.py::recommend</code> so you can '
-          'disagree with it rather than guess what it did.</p>')
-        w('</div>')
-    w('<div class="sub" style="font-size:12.5px;color:var(--ink3);margin-top:6px">'
-      '<b>waits on</b> is derived from gate dependencies &mdash; the work is not ready. '
-      '<b>conflicts with</b> is derived from the files a lane writes &mdash; the work is ready '
-      'but the seat is taken. Two different reasons not to start, and only one of them is about '
-      'the dependency graph.</div>')
-    w('</div>')
-    for lane in LANES:
-        done_n = sum(1 for gid in lane.gates if verdict.get(gid) == PASS)
-        chips = " ".join(
-            f'<span style="font-family:ui-monospace,monospace;font-size:11.5px;padding:1px 6px;'
-            f'border:1px solid var(--rule);border-radius:2px;'
-            f'color:{"var(--pass)" if verdict.get(gid) == PASS else "var(--ink3)"}">{e(gid)}</span>'
-            for gid in lane.gates)
-        w('<div class="par" style="margin-top:16px">')
-        w(f'<h3>{e(lane.title)} <span style="font-weight:400;color:var(--ink3);font-size:13px">'
-          f'&middot; {done_n} of {len(lane.gates)} done &middot; {e(SIZE[lane.size])}</span></h3>')
-        w(f'<p style="font-size:13.5px;color:var(--ink2);margin:0 0 8px">{e(lane.why)}</p>')
-        w(f'<p style="font-size:12.5px;color:var(--ink3);margin:0 0 8px">'
-          f'<code>{e(lane.repo)}</code> &middot; touches <code>{e(lane.touches)}</code></p>')
-        w(f'<p style="font-size:12.5px;color:var(--ink3);margin:0 0 8px">'
-          f'run this session on <b style="color:var(--ink)">{e(lane.model)}</b> &mdash; '
-          f'{e(lane.model_why)}</p>')
-        hits = lane_findings.get(lane.id) or []
-        if hits:
-            items = "".join(
-                f'<li style="margin-bottom:3px"><b>{e(h.id)}</b> {e(h.title)}</li>' for h in hits)
-            w(f'<div style="font-size:12.5px;color:var(--ink2);margin:0 0 8px;padding:8px 10px;'
-              f'border-left:2px solid var(--unmeas);background:var(--paper)">'
-              f'<b>Read before starting &mdash; corrections that hit this lane:</b>'
-              f'<ul style="margin:6px 0 0 16px;padding:0">{items}</ul></div>')
-        waits, clash = lane_waits[lane.id], lane_conflicts[lane.id]
-        if waits:
-            w(f'<p style="font-size:12.5px;color:var(--unmeas);margin:0 0 8px">'
-              f'<b>waits on:</b> {e(", ".join(waits))}</p>')
-        else:
-            w('<p style="font-size:12.5px;color:var(--pass);margin:0 0 8px">'
-              '<b>no unmet dependency &mdash; can start now</b></p>')
-        if clash:
-            w(f'<p style="font-size:12.5px;color:var(--fail);margin:0 0 8px">'
-              f'<b>cannot run at the same time as:</b> {e(", ".join(clash))} '
-              f'&mdash; shared files</p>')
-        w(f'<p style="display:flex;flex-wrap:wrap;gap:5px;margin:0 0 10px">{chips}</p>')
-        if lane.needs_paul:
-            w(f'<p style="font-size:12.5px;color:var(--unmeas);margin:0 0 8px">'
-              f'<b>Needs Paul:</b> {e(lane.needs_paul)}</p>')
-        w(f'<button type="button" data-copy="ln-{e(lane.id)}" style="font-size:12px;'
-          f'padding:5px 10px;margin-bottom:8px;cursor:pointer;border:1px solid var(--rule);'
-          f'border-radius:3px;background:var(--raise);color:var(--ink);'
-          f'font-family:ui-monospace,monospace">copy prompt</button>')
-        # pre-wrap: a <pre> of long lines would widen the page, which is a defect already fixed
-        # once today on the artifact. Do not "tidy" this to nowrap.
-        w(f'<pre id="ln-{e(lane.id)}" style="white-space:pre-wrap;word-break:break-word;'
-          f'font-family:ui-monospace,monospace;font-size:11.5px;line-height:1.55;margin:0;'
-          f'padding:10px;border:1px solid var(--rule);border-radius:3px;background:var(--paper);'
-          f'color:var(--ink2);max-height:230px;overflow:auto">{e(lane.full_prompt)}</pre>')
-        w('</div>')
-
-    # ---------------------------------------------------------------- research prompts
-    rdir = FACTORY / "docs" / "research"
-    adir = rdir / "answers"
-    pending = []
-    if rdir.is_dir():
-        for f in sorted(rdir.glob("R[0-9]*.md")):
-            # R[0-9]* not R* — the plain glob matched README.md and offered it as a research
-            # prompt. A directory scan is only as good as its pattern.
-            stem = f.name.split("-")[0]
-            answered = adir.is_dir() and any(a.name.startswith(f"{stem}-answer") or
-                                             a.name.startswith(f"{stem}-followup-answer")
-                                             for a in adir.glob("*.md"))
-            if not answered:
-                pending.append(f)
-    if pending:
         w('<div class="head" style="margin-top:44px">')
-        w('<h1>Run a research pass</h1>')
-        w(f'<div class="sub">{len(pending)} prompt(s) written and not yet answered &middot; '
-          'paste into Deep Research; the answer lands in '
-          '<code>docs/research/answers/</code></div>')
+        w('<h1>What is left</h1>')
+        w(f'<div class="sub">generated from the {len(rows)} gates above &middot; nothing typed by hand '
+          f'&middot; {n_done} done, {len(ready)} can start now, {len(blocked)} blocked</div>')
         w('</div>')
-        for f in pending:
-            body = f.read_text(encoding="utf-8")
-            first = next((ln.lstrip("# ").strip() for ln in body.splitlines()
-                          if ln.startswith("# ")), f.stem)
+
+        if ready:
+            w('<div class="par">')
+            w(f'<h3>{len(ready)} can run in parallel right now</h3>')
+            w('<p style="font-size:13.5px;color:var(--ink3);margin:0 0 8px">No unmet dependency '
+              'between any of these. Computed from the dependency graph, not judged.</p>')
+            w('<ul>' + "".join(f'<li>{e(g.question)}</li>' for g, _ in ready) + '</ul>')
+            w('</div>')
+
+        if blocked:
+            w('<section class="phase" style="margin-top:26px"><header>')
+            w(f'<h2>Blocked</h2><span class="count">{len(blocked)}</span></header>')
+            for g, r, unmet in blocked:
+                w('<div class="t">')
+                w('<div><span class="st blocked">blocked</span></div>')
+                w('<div class="sz">&mdash;</div>')
+                w(f'<div><div class="tt">{e(g.question)}</div>')
+                w(f'<div class="tw">{e(r.headline)}</div>')
+                w(f'<div class="dep">waits on: {e(", ".join(unmet))}</div></div></div>')
+            w('</section>')
+
+        cp = critical_path()
+        w('<div class="par" style="border-color:var(--rule)">')
+        w('<h3>Longest dependency chain</h3>')
+        w(f'<p style="font-family:ui-monospace,monospace;font-size:13.5px;margin:0">'
+          f'{e(" &rarr; ".join(cp))}</p>'.replace("&amp;rarr;", "&rarr;"))
+        w('<p style="font-size:13px;color:var(--ink3);margin:8px 0 0">This is the part that cannot be '
+          'parallelised away. Everything else can be done alongside it.</p>')
+        w('</div>')
+
+    if tab == "lanes":
+        # ---------------------------------------------------------------- lanes
+        verdict = {g.id: r.verdict for g, r in results}
+        passing = {gid for gid, v in verdict.items() if v == PASS}
+        lane_waits, lane_conflicts = waits_on(passing), conflicts()
+        lane_findings = by_lane()
+        ready_lanes = [l.id for l in LANES if not lane_waits[l.id]]
+        w('<div class="head" style="margin-top:44px">')
+        w('<h1>Start a lane</h1>')
+        w(f'<div class="sub">{len(LANES)} lanes &middot; <b>{len(ready_lanes)} can start now</b> '
+          '&middot; copy a prompt into a fresh session</div>')
+        ranked = recommend(passing)
+        if ranked:
+            top, _, why = ranked[0]
+            w('<div class="par" style="margin-top:12px;border-color:var(--pass)">')
+            w(f'<h3 style="margin-top:0">Start here: {e(top.title)} '
+              f'<span style="font-weight:400;color:var(--ink3);font-size:13px">'
+              f'&middot; <code>{e(top.id)}</code></span></h3>')
+            w(f'<p style="font-size:13.5px;color:var(--ink2);margin:0 0 6px">{e(why)}</p>')
+            if len(ranked) > 1:
+                rest = " &middot; ".join(f'{e(l.title)} <span style="color:var(--ink3)">'
+                                         f'({e(l.id)})</span>' for l, _, _ in ranked[1:])
+                w(f'<p style="font-size:12.5px;color:var(--ink3);margin:0">then: {rest}</p>')
+            w('<p style="font-size:12px;color:var(--ink3);margin:8px 0 0">The inputs are measured '
+              '&mdash; gate verdicts, the dependency graph, file conflicts. The <b>weighting is a '
+              'judgement</b>, written down in <code>factory/lanes.py::recommend</code> so you can '
+              'disagree with it rather than guess what it did.</p>')
+            w('</div>')
+        w('<div class="sub" style="font-size:12.5px;color:var(--ink3);margin-top:6px">'
+          '<b>waits on</b> is derived from gate dependencies &mdash; the work is not ready. '
+          '<b>conflicts with</b> is derived from the files a lane writes &mdash; the work is ready '
+          'but the seat is taken. Two different reasons not to start, and only one of them is about '
+          'the dependency graph.</div>')
+        w('</div>')
+        for lane in LANES:
+            done_n = sum(1 for gid in lane.gates if verdict.get(gid) == PASS)
+            chips = " ".join(
+                f'<span style="font-family:ui-monospace,monospace;font-size:11.5px;padding:1px 6px;'
+                f'border:1px solid var(--rule);border-radius:2px;'
+                f'color:{"var(--pass)" if verdict.get(gid) == PASS else "var(--ink3)"}">{e(gid)}</span>'
+                for gid in lane.gates)
             w('<div class="par" style="margin-top:16px">')
-            w(f'<h3>{e(first)}</h3>')
+            w(f'<h3>{e(lane.title)} <span style="font-weight:400;color:var(--ink3);font-size:13px">'
+              f'&middot; {done_n} of {len(lane.gates)} done &middot; {e(SIZE[lane.size])}</span></h3>')
+            w(f'<p style="font-size:13.5px;color:var(--ink2);margin:0 0 8px">{e(lane.why)}</p>')
             w(f'<p style="font-size:12.5px;color:var(--ink3);margin:0 0 8px">'
-              f'<code>docs/research/{e(f.name)}</code> &middot; {len(body):,} chars</p>')
-            w(f'<button type="button" data-copy="rs-{e(f.stem)}" style="font-size:12px;'
+              f'<code>{e(lane.repo)}</code> &middot; touches <code>{e(lane.touches)}</code></p>')
+            w(f'<p style="font-size:12.5px;color:var(--ink3);margin:0 0 8px">'
+              f'run this session on <b style="color:var(--ink)">{e(lane.model)}</b> &mdash; '
+              f'{e(lane.model_why)}</p>')
+            hits = lane_findings.get(lane.id) or []
+            if hits:
+                items = "".join(
+                    f'<li style="margin-bottom:3px"><b>{e(h.id)}</b> {e(h.title)}</li>' for h in hits)
+                w(f'<div style="font-size:12.5px;color:var(--ink2);margin:0 0 8px;padding:8px 10px;'
+                  f'border-left:2px solid var(--unmeas);background:var(--paper)">'
+                  f'<b>Read before starting &mdash; corrections that hit this lane:</b>'
+                  f'<ul style="margin:6px 0 0 16px;padding:0">{items}</ul></div>')
+            waits, clash = lane_waits[lane.id], lane_conflicts[lane.id]
+            if waits:
+                w(f'<p style="font-size:12.5px;color:var(--unmeas);margin:0 0 8px">'
+                  f'<b>waits on:</b> {e(", ".join(waits))}</p>')
+            else:
+                w('<p style="font-size:12.5px;color:var(--pass);margin:0 0 8px">'
+                  '<b>no unmet dependency &mdash; can start now</b></p>')
+            if clash:
+                w(f'<p style="font-size:12.5px;color:var(--fail);margin:0 0 8px">'
+                  f'<b>cannot run at the same time as:</b> {e(", ".join(clash))} '
+                  f'&mdash; shared files</p>')
+            w(f'<p style="display:flex;flex-wrap:wrap;gap:5px;margin:0 0 10px">{chips}</p>')
+            if lane.needs_paul:
+                w(f'<p style="font-size:12.5px;color:var(--unmeas);margin:0 0 8px">'
+                  f'<b>Needs Paul:</b> {e(lane.needs_paul)}</p>')
+            w(f'<button type="button" data-copy="ln-{e(lane.id)}" style="font-size:12px;'
               f'padding:5px 10px;margin-bottom:8px;cursor:pointer;border:1px solid var(--rule);'
               f'border-radius:3px;background:var(--raise);color:var(--ink);'
-              f'font-family:ui-monospace,monospace">copy full prompt</button>')
-            w(f'<pre id="rs-{e(f.stem)}" style="white-space:pre-wrap;word-break:break-word;'
+              f'font-family:ui-monospace,monospace">copy prompt</button>')
+            # pre-wrap: a <pre> of long lines would widen the page, which is a defect already fixed
+            # once today on the artifact. Do not "tidy" this to nowrap.
+            w(f'<pre id="ln-{e(lane.id)}" style="white-space:pre-wrap;word-break:break-word;'
               f'font-family:ui-monospace,monospace;font-size:11.5px;line-height:1.55;margin:0;'
-              f'padding:10px;border:1px solid var(--rule);border-radius:3px;'
-              f'background:var(--paper);color:var(--ink2);max-height:260px;overflow:auto">'
-              f'{e(body)}</pre>')
-            dest = _answer_path(f).name
-            w('<form method="POST" action="/answer" enctype="multipart/form-data" '
-              'style="margin-top:12px">')
-            w(f'<input type="hidden" name="stem" value="{e(f.stem)}">')
-            w(f'<div style="font-size:12.5px;color:var(--ink3);margin-bottom:6px">'
-              f'Saved as <code>docs/research/answers/{e(dest)}</code> &mdash; the path the gate '
-              f'reads. There is no &ldquo;notify Claude&rdquo; button because this page has no '
-              f'channel to a session; <b>the saved file is the signal</b>, and a session watching '
-              f'that directory picks it up.</div>')
-            w('<div style="margin-bottom:8px"><input type="file" name="file" '
-              'accept=".md,.txt,.markdown,text/plain,text/markdown" '
-              'style="font-size:12px;color:var(--ink2)">'
-              '<span style="font-size:12px;color:var(--ink3)"> &nbsp;upload a file, '
-              '<b>or</b> paste below &mdash; the file wins if you do both</span></div>')
-            w('<textarea name="body" rows="6" placeholder="…or paste the answer here, then save" '
-              'style="width:100%;box-sizing:border-box;font-family:ui-monospace,monospace;'
-              'font-size:11.5px;line-height:1.5;padding:10px;border:1px solid var(--rule);'
-              'border-radius:3px;background:var(--paper);color:var(--ink)"></textarea>')
-            w('<button type="submit" style="font-size:12px;padding:6px 12px;margin-top:8px;'
-              'cursor:pointer;border:1px solid var(--rule);border-radius:3px;'
-              'background:var(--raise);color:var(--ink);font-family:ui-monospace,monospace">'
-              'save answer</button>')
-            w('</form>')
+              f'padding:10px;border:1px solid var(--rule);border-radius:3px;background:var(--paper);'
+              f'color:var(--ink2);max-height:230px;overflow:auto">{e(lane.full_prompt)}</pre>')
             w('</div>')
+
+    if tab == "research":
+        # ---------------------------------------------------------------- research prompts
+        rdir = FACTORY / "docs" / "research"
+        adir = rdir / "answers"
+        pending = []
+        if rdir.is_dir():
+            for f in sorted(rdir.glob("R[0-9]*.md")):
+                # R[0-9]* not R* — the plain glob matched README.md and offered it as a research
+                # prompt. A directory scan is only as good as its pattern.
+                stem = f.name.split("-")[0]
+                answered = adir.is_dir() and any(a.name.startswith(f"{stem}-answer") or
+                                                 a.name.startswith(f"{stem}-followup-answer")
+                                                 for a in adir.glob("*.md"))
+                if not answered:
+                    pending.append(f)
+        if pending:
+            w('<div class="head" style="margin-top:44px">')
+            w('<h1>Run a research pass</h1>')
+            w(f'<div class="sub">{len(pending)} prompt(s) written and not yet answered &middot; '
+              'paste into Deep Research; the answer lands in '
+              '<code>docs/research/answers/</code></div>')
+            w('</div>')
+            for f in pending:
+                body = f.read_text(encoding="utf-8")
+                first = next((ln.lstrip("# ").strip() for ln in body.splitlines()
+                              if ln.startswith("# ")), f.stem)
+                w('<div class="par" style="margin-top:16px">')
+                w(f'<h3>{e(first)}</h3>')
+                w(f'<p style="font-size:12.5px;color:var(--ink3);margin:0 0 8px">'
+                  f'<code>docs/research/{e(f.name)}</code> &middot; {len(body):,} chars</p>')
+                w(f'<button type="button" data-copy="rs-{e(f.stem)}" style="font-size:12px;'
+                  f'padding:5px 10px;margin-bottom:8px;cursor:pointer;border:1px solid var(--rule);'
+                  f'border-radius:3px;background:var(--raise);color:var(--ink);'
+                  f'font-family:ui-monospace,monospace">copy full prompt</button>')
+                w(f'<pre id="rs-{e(f.stem)}" style="white-space:pre-wrap;word-break:break-word;'
+                  f'font-family:ui-monospace,monospace;font-size:11.5px;line-height:1.55;margin:0;'
+                  f'padding:10px;border:1px solid var(--rule);border-radius:3px;'
+                  f'background:var(--paper);color:var(--ink2);max-height:260px;overflow:auto">'
+                  f'{e(body)}</pre>')
+                dest = _answer_path(f).name
+                w('<form method="POST" action="/answer" enctype="multipart/form-data" '
+                  'style="margin-top:12px">')
+                w(f'<input type="hidden" name="stem" value="{e(f.stem)}">')
+                w(f'<div style="font-size:12.5px;color:var(--ink3);margin-bottom:6px">'
+                  f'Saved as <code>docs/research/answers/{e(dest)}</code> &mdash; the path the gate '
+                  f'reads. There is no &ldquo;notify Claude&rdquo; button because this page has no '
+                  f'channel to a session; <b>the saved file is the signal</b>, and a session watching '
+                  f'that directory picks it up.</div>')
+                w('<div style="margin-bottom:8px"><input type="file" name="file" '
+                  'accept=".md,.txt,.markdown,text/plain,text/markdown" '
+                  'style="font-size:12px;color:var(--ink2)">'
+                  '<span style="font-size:12px;color:var(--ink3)"> &nbsp;upload a file, '
+                  '<b>or</b> paste below &mdash; the file wins if you do both</span></div>')
+                w('<textarea name="body" rows="6" placeholder="…or paste the answer here, then save" '
+                  'style="width:100%;box-sizing:border-box;font-family:ui-monospace,monospace;'
+                  'font-size:11.5px;line-height:1.5;padding:10px;border:1px solid var(--rule);'
+                  'border-radius:3px;background:var(--paper);color:var(--ink)"></textarea>')
+                w('<button type="submit" style="font-size:12px;padding:6px 12px;margin-top:8px;'
+                  'cursor:pointer;border:1px solid var(--rule);border-radius:3px;'
+                  'background:var(--raise);color:var(--ink);font-family:ui-monospace,monospace">'
+                  'save answer</button>')
+                w('</form>')
+                w('</div>')
 
     w('<footer>')
     w('<p><b>UNMEASURABLE is not a pass.</b> A gate with no instrument says so rather than '
@@ -578,7 +595,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         _ANSWER_MSG = save_answer(stem, uploaded or pasted)
         print(f"  answer: {_ANSWER_MSG[1]}")
         self.send_response(303)
-        self.send_header("Location", "/")
+        self.send_header("Location", "/research")
         self.send_header("Cache-Control", "no-store")
         self.end_headers()
 
@@ -601,11 +618,13 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.end_headers()
             print(f"  hot reload: {_RELOAD_MSG[1]}")
             return
-        if self.path not in ("/", "/index.html"):
+        route = {"/": "gates", "/index.html": "gates",
+                 "/lanes": "lanes", "/research": "research"}.get(self.path.rstrip("/") or "/")
+        if route is None:
             self.send_error(404)
             return
         # Re-measure per request. Slower than serving a file, and the entire reason to serve.
-        body = render(datetime.datetime.now()).encode("utf-8")
+        body = render(datetime.datetime.now(), route).encode("utf-8")
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
@@ -629,7 +648,7 @@ def main(argv=None) -> int:
             return 2
 
     if not serve:
-        page = render(datetime.datetime.now())
+        page = render(datetime.datetime.now(), "gates")
         OUT.write_text(page, encoding="utf-8")
         url = OUT.resolve().as_uri()
         print(f"wrote {OUT}  ({len(page):,} bytes)")
