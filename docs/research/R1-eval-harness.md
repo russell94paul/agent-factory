@@ -8,6 +8,14 @@ a draft — it is built, calibrated and green. So R1 is no longer "how would we 
 **"here is exactly what we built; grade it, and tell us what we got wrong."** That is a sharper
 question and it produces a more useful answer.
 
+**Refreshed 2026-08-21 (second pass).** Three things landed after the first draft and are now in
+the prompt, because asking a researcher to design something we shipped that afternoon wastes the
+run: the corpus became hash-pinned data with provenance in every verdict (decision 7, and Q5 now
+grades it instead of proposing it), the measured cost of one evaluation is stated (median 26.4h
+for a completed run, 97.6% of the longest one held by a single uncapped restart loop), and the
+offline replay path is disclosed, because it changes the sampling and corpus economics the
+researcher would otherwise reason about from the expensive path alone.
+
 ---
 
 ```
@@ -39,6 +47,16 @@ Pipeline health, across all 14 recorded runs of an 18-stage connector-migration 
       (gate_check = None). They are a human clicking approve.
 - [M] Agent cost is recorded only on stage_completed events, so the 1,001 failures contribute
       $0.00. True spend is unknown, not small.
+- [M] ONE EVALUATION IS EXPENSIVE, and this shapes several answers below. For them, one
+      evaluation means one full connector migration scored end to end: median 11.3 hours of
+      wall-clock across all 14 recorded runs, and median 26.4 hours across the 3 that completed.
+      In the longest, a single stage held 92,817 of 95,098 seconds — 97.6% of the run — stuck in
+      a restart loop with no attempt cap. So the cost is currently dominated by a defect rather
+      than by the work.
+- [M] They CAN score offline. The contract has two probe modes: one that refuses every instrument
+      by default, and one that replays a recorded run from stored evidence. Replayed scoring takes
+      under a second. Only assertions that need live infrastructure require a real deploy. Factor
+      this into any sampling or corpus recommendation — the expensive path is not the only path.
 
 Fleet and history:
 - [R] 49 connector modules; 59% will not currently import.
@@ -89,12 +107,25 @@ Design decisions we made, each of which I want challenged:
 6. SESSION-STAMP FRESHNESS. Rows from a previous run cannot satisfy the "data landed" assertion;
    only rows stamped with this run's session id count.
 
+7. THE CORPUS IS HASH-PINNED DATA, NOT CODE. The known-good world used to be a Python module that
+   CONSTRUCTED the world at import time, which made "the corpus changed" and "the corpus computes
+   something different today" indistinguishable. It is now a JSON document with its sha256 pinned
+   in a manifest, verified on every load; a mismatch raises rather than scoring differently. Every
+   replayed verdict carries the corpus id, its hash, and when it was recorded — read BEFORE
+   scoring, so an unverifiable corpus cannot produce a verdict. Re-pinning requires a script that
+   refuses to run without a stated reason.
+   This was verified by mutating the corpus so the recorded run claimed a state it did not have —
+   the edit that would turn a red run green — and confirming the loader refused. A test suite
+   reproduces that plus single-byte edits, a missing manifest, and a listed-but-absent file.
+   KNOWN LIMIT, stated deliberately: this is tamper-EVIDENT, not tamper-PROOF. Anyone with write
+   access to both the corpus and the manifest can re-pin silently.
+
 =====================================================================
 PART C — THE QUESTIONS
 =====================================================================
 Separate ESTABLISHED PRACTICE from VENDOR CLAIM from OPEN RESEARCH throughout.
 
-1. GRADE THE DESIGN. Take decisions 1-6 above one at a time. For each: is this consistent with
+1. GRADE THE DESIGN. Take decisions 1-7 above one at a time. For each: is this consistent with
    what has actually been shown to work for evaluating multi-step, tool-using, side-effecting
    agents? Which are sound, which are folklore, which are actively counterproductive? Name
    anything important we have plainly missed.
@@ -116,11 +147,22 @@ Separate ESTABLISHED PRACTICE from VENDOR CLAIM from OPEN RESEARCH throughout.
    characterised. Is calibrating on a single success defensible at all, and if not, what is the
    minimum?
 
-5. TAMPER RESISTANCE. Our eval corpus currently lives inside the repository the agents have write
-   access to. We know this is wrong and are about to move it. Architecturally, how is an eval kept
-   outside the reach of an agent with shell access and repo write permission? What has been shown
-   to FAIL here — give real incidents, not principles. Does a separate repo suffice, or is
-   process/credential isolation required?
+5. TAMPER RESISTANCE — grade decision 7, then tell us what it is still missing.
+   We have made the corpus tamper-EVIDENT (hash-pinned data, verified on load, provenance in every
+   verdict) but not tamper-PROOF (it still lives in a repository the scored agent can write to,
+   and both the corpus and its manifest can be edited together).
+   a. Is evident-but-not-proof a recognised and defensible intermediate state in eval practice, or
+      is it self-deception? Where is the line drawn in systems that have been attacked in
+      practice?
+   b. What does full separation actually require — a separate repository, separate credentials,
+      a separate process, a signing key, an external service? Rank these by the attack each one
+      actually stops, and say which are theatre for an internal 4-person team.
+   c. What has been shown to FAIL here? Give real incidents of an optimising or self-improving
+      system reaching its own evaluator, not principles.
+   d. Threat model honestly: our "attacker" is an LLM agent with shell access and repo write
+      permission, not a motivated human adversary. Does that change the answer, and how? Is there
+      published evidence of agents actually modifying their own graders, deliberately or
+      incidentally, as opposed to it being a theoretical concern?
 
 6. NON-DETERMINISM. How do teams get a stable pass/fail from a stochastic agent when each run
    deploys real infrastructure and costs real money? Sampling strategy, pass@k versus pass^k,
@@ -157,7 +199,7 @@ CONSTRAINTS
 =====================================================================
 DELIVERABLE
 =====================================================================
-1. A graded verdict on each of design decisions 1-6: SOUND / FOLKLORE / HARMFUL, with reasoning.
+1. A graded verdict on each of design decisions 1-7: SOUND / FOLKLORE / HARMFUL, with reasoning.
 2. The list of what we have missed, ranked by how much damage the omission can do.
 3. A concrete corpus-construction method given one success and 976 mostly-unclassified failures.
 4. A tamper-resistance architecture, with the incidents that justify it.
