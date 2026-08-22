@@ -1215,12 +1215,12 @@ hr.rule{border:0; border-top:1px solid var(--rule); margin:44px 0}
   </div>
   <div class="tracker rv">
     <div class="tracker-head">
-      <h3 class="disp">3 of 23 gates pass</h3>
+      <h3 class="disp">9 of 30 gates pass</h3>
       <span class="basis m">measured on build</span>
     </div>
     <div style="padding:0 18px 18px">
-      <div style="height:6px;background:var(--rule);position:relative;margin:14px 0 10px" role="img" aria-label="3 of 23 gates pass"><span style="position:absolute;inset:0 auto 0 0;width:13%;background:var(--pass)"></span></div>
-      <p style="font-size:14px;color:var(--ink-2)">Unattended means the loop runs, its gates can refuse, and its output can be certified. Today 3 of those 23 conditions holds. The gap is the work.</p>
+      <div style="height:6px;background:var(--rule);position:relative;margin:14px 0 10px" role="img" aria-label="9 of 30 gates pass"><span style="position:absolute;inset:0 auto 0 0;width:30%;background:var(--pass)"></span></div>
+      <p style="font-size:14px;color:var(--ink-2)">Unattended means the loop runs, its gates can refuse, and its output can be certified. Today 9 of those 30 conditions holds. The gap is the work.</p>
     </div>
   </div>
   <div class="tracker rv">
@@ -1463,7 +1463,7 @@ hr.rule{border:0; border-top:1px solid var(--rule); margin:44px 0}
   <div class="tracker rv">
     <div class="tracker-head">
       <h3 class="disp">Can its output be certified?</h3>
-      <span class="basis a">3 of 8</span>
+      <span class="basis a">4 of 8</span>
     </div>
     <div style="overflow-x:auto">
       <table class="derived">
@@ -1496,13 +1496,16 @@ hr.rule{border:0; border-top:1px solid var(--rule); margin:44px 0}
             <td class="n"><span class="mono">factory/blueprint.py</span></td>
           </tr>
           <tr>
-            <td><span class="chip notrun">not run</span></td>
+            <td><span class="chip pass">pass</span></td>
             <td class="what"><b>Is the evaluator a principal the agent cannot impersonate?</b><br>
-              <span style="color:var(--ink-2)">the evaluator is not yet a separate principal</span>
+              <span style="color:var(--ink-2)">the evaluator is a separate principal (loopback deployment)</span>
               <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
-                <li>$AGENT_FACTORY_EVALUATOR: (unset)</li>
-                <li>client implementation: none</li>
-                <li>the verifier runs in-process today, with the same identity as whatever invokes it</li>
+                <li>$AGENT_FACTORY_EVALUATOR: http://127.0.0.1:8787</li>
+                <li>client implementation: evaluator.py</li>
+                <li>health check: NO ANSWER (EvaluatorUnreachable) — configured is not running</li>
+                <li>deployment: LOOPBACK — R3 rank 5, 'mostly theatre'. Same uid can write the verdict store and restart the evaluator; the design is rank 1 and the remaining gap is a managed identity the agent sandbox does not hold, which is a deployment change, not a code change</li>
+                <li>the agent supplies {artifact_uri, artifact_sha256, run_id} and nothing else; the corpus, the manifest and the assertion set are resolved by the service</li>
+                <li>known hole: the contract is parameterised by a blueprint the graded party writes. A target floor and the artefact hash narrow it; a pinned per-connector target closes it, and nobody has written one</li>
                 <li>R3's ranking: external evaluator service with its own identity is rank 1; a separate local process is rank 5 and 'mostly theatre'</li>
                 <li>'Moving only the files to another directory changes nothing; moving ownership/credentials out of the agent's capability set does'</li>
               </ul>
@@ -1513,7 +1516,7 @@ hr.rule{border:0; border-top:1px solid var(--rule); margin:44px 0}
           <tr>
             <td><span class="chip pass">pass</span></td>
             <td class="what"><b>Is the certification suite green and honest?</b><br>
-              <span style="color:var(--ink-2)">56 passed</span>
+              <span style="color:var(--ink-2)">72 passed</span>
               <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
                 <li>includes test_every_assertion_has_been_proved_able_to_fail</li>
               </ul>
@@ -1566,6 +1569,103 @@ hr.rule{border:0; border-top:1px solid var(--rule); margin:44px 0}
               <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>Unpushed work is one accident from gone.</i></div>
             </td>
             <td class="n"><span class="mono">git remote</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="tracker rv">
+    <div class="tracker-head">
+      <h3 class="disp">Is it handed over honestly?</h3>
+      <span class="basis a">5 of 7</span>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="derived">
+        <thead><tr><th style="width:96px">Verdict</th><th>Gate</th><th class="n">Measured from</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="chip pass">pass</span></td>
+            <td class="what"><b>Has R1 been asked what else depended on the misattribution?</b><br>
+              <span style="color:var(--ink-2)">dispatched: R1-followup.md</span>
+              <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
+                <li>looking for docs/research/answers/R1-followup*.md</li>
+                <li>subject: does anything else depend on the Prefect misattribution?</li>
+              </ul>
+              <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>A correction that never reaches the source leaves the rest of that answer unaudited.</i></div>
+            </td>
+            <td class="n"><span class="mono">docs/research/answers/</span></td>
+          </tr>
+          <tr>
+            <td><span class="chip pass">pass</span></td>
+            <td class="what"><b>Has R2 been asked whether to move the build plane onto Prefect?</b><br>
+              <span style="color:var(--ink-2)">dispatched: R2-followup.md</span>
+              <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
+                <li>looking for docs/research/answers/R2-followup*.md</li>
+                <li>subject: our build plane is not Prefect — move onto it, or reimplement?</li>
+              </ul>
+              <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>Its prescription assumed Prefect primitives we do not have. The highest-value unasked question.</i></div>
+            </td>
+            <td class="n"><span class="mono">docs/research/answers/</span></td>
+          </tr>
+          <tr>
+            <td><span class="chip pass">pass</span></td>
+            <td class="what"><b>Has R3 been asked the false-succeeded correction?</b><br>
+              <span style="color:var(--ink-2)">dispatched: R3-followup.md</span>
+              <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
+                <li>looking for docs/research/answers/R3-followup*.md</li>
+                <li>subject: terminal verdict from append-only history, and its negative control</li>
+              </ul>
+              <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>Its Q4 was aimed at the wrong plane.</i></div>
+            </td>
+            <td class="n"><span class="mono">docs/research/answers/</span></td>
+          </tr>
+          <tr>
+            <td><span class="chip pass">pass</span></td>
+            <td class="what"><b>Has anyone looked at the published surface and recorded it?</b><br>
+              <span style="color:var(--ink-2)">recorded: render-pass-2026-08-22.md</span>
+              <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
+                <li>a static check proves the file parses, not that a visual painted</li>
+                <li>five defects shipped into the published figure and a human found every one</li>
+              </ul>
+              <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>A static check proves the file parses, not that a visual painted.</i></div>
+            </td>
+            <td class="n"><span class="mono">docs/evidence/render-pass-*.md</span></td>
+          </tr>
+          <tr>
+            <td><span class="chip fail">fail</span></td>
+            <td class="what"><b>Is impeccable's place in the skill chain stated?</b><br>
+              <span style="color:var(--ink-2)">impeccable's place in the skill chain is unstated</span>
+              <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
+                <li>impeccable installed 2026-08-21 — 1 skill, 23 commands, 59 deterministic detector rules</li>
+                <li>its trigger overlaps artifact-design, artifact-motion and living-systems-ui</li>
+              </ul>
+              <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>Five design authorities with overlapping triggers, and precedence decided mid-build is precedence decided by accident.</i></div>
+            </td>
+            <td class="n"><span class="mono">~/.claude/skills/living-systems-ui/SKILL.md</span></td>
+          </tr>
+          <tr>
+            <td><span class="chip fail">fail</span></td>
+            <td class="what"><b>Is the landing-table grain settled?</b><br>
+              <span style="color:var(--ink-2)">the landing-table grain is still an open question</span>
+              <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
+                <li>20 rows across 18 campaigns on one date cannot be unique on (account_id, campaign_id, date) under a single account</li>
+                <li>if the real table holds one account the declared primary key is wrong, and the calibration world is built on a mistake</li>
+                <li>set grain_confirmed in the blueprint once someone has queried the table</li>
+              </ul>
+              <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>The calibration world assumes an arrangement nobody has confirmed.</i></div>
+            </td>
+            <td class="n"><span class="mono">blueprints/windsorai_gep.yaml</span></td>
+          </tr>
+          <tr>
+            <td><span class="chip pass">pass</span></td>
+            <td class="what"><b>Does this work have a ticket, or a decision that it needs none?</b><br>
+              <span style="color:var(--ink-2)">NONE-BY-DECISION</span>
+              <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
+                <li>declared in agent-factory-jira-2026-08-21.md</li>
+              </ul>
+              <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>Either is fine. Neither is an open question quietly aging in a drafts folder.</i></div>
+            </td>
+            <td class="n"><span class="mono">aldc-launchpad/boot-prompts/drafts/</span></td>
           </tr>
         </tbody>
       </table>
