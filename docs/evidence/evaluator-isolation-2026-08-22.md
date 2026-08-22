@@ -144,5 +144,13 @@ python -m factory.readiness                      # 4 of 30
 python -m pytest                                 # 72 passed
 ```
 
-`$AGENT_FACTORY_EVALUATOR` was set durably for this user via `setx` on 2026-08-22. Undo with
+`$AGENT_FACTORY_EVALUATOR` was set durably for this user on 2026-08-22 to
+`http://127.0.0.1:8787` (verified in `HKCU\Environment`: 21 characters, no quotes). Undo with
 `setx AGENT_FACTORY_EVALUATOR ""`.
+
+> ⚠ **`setx` from bash embeds the quotes.** `setx VAR "http://..."` stored the value *including*
+> the `"` characters, which parses to a hostname of nothing and would have made every fresh shell
+> fail to reach the evaluator while the gate still read PASS. Caught by reading the value back
+> rather than trusting `SUCCESS: Specified value was saved.` Set it with
+> `[Environment]::SetEnvironmentVariable('AGENT_FACTORY_EVALUATOR','http://127.0.0.1:8787','User')`
+> and read it back.
