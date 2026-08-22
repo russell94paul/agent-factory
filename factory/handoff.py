@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import datetime as _dt
 import pathlib
+import re
 import subprocess
 import sys
 from typing import Dict, List, Optional
@@ -49,8 +50,16 @@ def preflight(lane_id: str) -> List[dict]:
     out: List[dict] = []
 
     code, out_txt = _run([sys.executable, "-m", "pytest", "-q"])
-    last = out_txt.strip().splitlines()[-1] if out_txt.strip() else "(no output)"
-    out.append({"check": "the suite is green", "ok": code == 0, "detail": last[:120]})
+    # The LAST line of pytest -q is often a deprecation warning, not the summary — the first
+    # version of this reported "warnings.warn(PytestDeprecationWarning...)" as the result of the
+    # suite. Pick the line that actually counts tests.
+    # pytest colours its summary, so "84 passed" arrives wrapped in escape codes and a
+    # naive search misses it. Strip them before looking.
+    plain = re.sub(r"\[[0-9;]*m", "", out_txt)
+    summary = next((ln.strip() for ln in reversed(plain.splitlines())
+                    if re.search(r"\d+ (passed|failed|error)", ln)), None)
+    out.append({"check": "the suite is green", "ok": code == 0,
+                "detail": (summary or f"exit {code}")[:120]})
 
     for script, label in (("build_tracker.py", "the published tracker matches the gate set"),
                           ("build_plan.py", "the build plan matches the lanes")):
@@ -86,10 +95,13 @@ def lane_state(lane_id: str) -> dict:
     }
 
 
-def write_lane_handoff(lane_id: str, note: str, overrides: Optional[List[str]] = None) -> pathlib.Path:
+def write_lane_handoff(lane_id: str, note: str, overrides: Optional[List[str]] = None,
+                       checks: Optional[List[dict]] = None):
     """Write the lane's closing note. The measured half is generated; `note` is the human half."""
     st = lane_state(lane_id)
-    checks = preflight(lane_id)
+    # Accept a preflight the caller already paid for. Running it twice means two full pytest
+    # runs to close one lane, which is how a good check becomes one people route around.
+    checks = checks if checks is not None else preflight(lane_id)
     failed = [c for c in checks if not c["ok"]]
     stamp = _dt.datetime.now().strftime("%Y-%m-%d")
     BOOT.mkdir(parents=True, exist_ok=True)
@@ -129,7 +141,7 @@ def write_lane_handoff(lane_id: str, note: str, overrides: Optional[List[str]] =
               f"tracker at `:8099/lanes`. Its prompt is generated and current — do not work from",
               f"a copy pasted earlier.", ""]
     p.write_text("\n".join(lines), encoding="utf-8")
-    return p
+    return p, checks
 
 
 def session_handoff(note: str = "") -> str:

@@ -585,6 +585,24 @@ def render(when: datetime.datetime, tab: str = "gates") -> str:
                 w(f'<p style="font-size:12.5px;color:var(--fail);margin:0 0 8px">'
                   f'<b>BLOCKED</b> &mdash; {e(names)} is claimed and shares files with this lane. '
                   f'Release it, or pick one from the parallel set above.</p>')
+            if mine:
+                w(f'<form method="POST" action="/finish" style="margin:0 0 10px;padding:9px 10px;'
+                  f'border-left:2px solid var(--pass);background:var(--paper)">'
+                  f'<input type="hidden" name="lane" value="{e(lane.id)}">'
+                  f'<div style="font-size:12.5px;color:var(--ink2);margin-bottom:6px">'
+                  f'<b>Finish this lane.</b> Runs the preflight, writes a handoff to '
+                  f'boot-prompts/, releases the claim. Everything measurable is generated &mdash; '
+                  f'this box is the part no instrument can see.</div>'
+                  f'<textarea name="note" rows="2" placeholder="where it got to, and what the '
+                  f'next session must not re-derive" style="width:100%;box-sizing:border-box;'
+                  f'font-size:12px;padding:7px;border:1px solid var(--rule);border-radius:3px;'
+                  f'background:var(--surface);color:var(--ink);'
+                  f'font-family:ui-monospace,monospace"></textarea>'
+                  f'<button type="submit" style="font-size:12px;padding:4px 10px;margin-top:5px;'
+                  f'cursor:pointer;border:1px solid var(--rule);border-radius:3px;'
+                  f'background:var(--raise);color:var(--ink);'
+                  f'font-family:ui-monospace,monospace">run preflight &amp; finish</button>'
+                  f'</form>')
             w(f'<button type="button" data-copy="ln-{e(lane.id)}" style="font-size:12px;'
               f'padding:5px 10px;margin-bottom:8px;cursor:pointer;border:1px solid var(--rule);'
               f'border-radius:3px;background:var(--raise);color:var(--ink);'
@@ -803,6 +821,23 @@ class Handler(http.server.BaseHTTPRequestHandler):
     def do_POST(self):
         global _ANSWER_MSG, _CLAIM_MSG
         import urllib.parse
+        if self.path.rstrip("/") == "/finish":
+            raw = self.rfile.read(int(self.headers.get("Content-Length") or 0)).decode("utf-8", "replace")
+            f = urllib.parse.parse_qs(raw, keep_blank_values=True)
+            lane_id = (f.get("lane") or [""])[0]
+            try:
+                path, checks = ho.write_lane_handoff(lane_id, (f.get("note") or [""])[0])
+                fails = [c["check"] for c in checks if not c["ok"]]
+                claimlib.release(lane_id)
+                _CLAIM_MSG = (not fails,
+                              f"finished {lane_id} — handoff at {path.name}, claim released"
+                              + (f"; ⚠ {len(fails)} preflight check(s) failed: "
+                                 + ", ".join(fails) if fails else "; preflight all green"))
+            except Exception as exc:                                # noqa: BLE001
+                _CLAIM_MSG = (False, f"could not finish {lane_id}: {type(exc).__name__}: {exc}")
+            print(f"  finish: {_CLAIM_MSG[1]}")
+            self.send_response(303); self.send_header("Location", "/lanes"); self.end_headers()
+            return
         if self.path.rstrip("/") == "/handoff":
             global _HANDOFF_NOTE
             raw = self.rfile.read(int(self.headers.get("Content-Length") or 0)).decode("utf-8", "replace")

@@ -1225,10 +1225,10 @@ hr.rule{border:0; border-top:1px solid var(--rule); margin:44px 0}
       <span class="basis m">velocity MEASURED from git</span>
     </div>
     <div style="padding:0 18px 18px">
-      <p style="font-size:14px;color:var(--ink-2)">Over 7.1h of committed history, gates passed went <b>1 &rarr; 9</b> (1.12/h) and the gate set went <b>13 &rarr; 30</b> (2.39/h). Remaining went 12 &rarr; 21.</p>
+      <p style="font-size:14px;color:var(--ink-2)">Over 7.5h of committed history, gates passed went <b>1 &rarr; 9</b> (1.07/h) and the gate set went <b>13 &rarr; 30</b> (2.26/h). Remaining went 12 &rarr; 21.</p>
       <p style="font-size:14px;color:var(--ink-2)"><b>The backlog is growing faster than it is being burned down.</b> That is the expected shape while the system is still being measured &mdash; measuring is what reveals what is broken &mdash; but it is why there is no completion date below.</p>
       <p style="font-size:14px"><b>Completion: NOT-PROJECTABLE</b> <span class="basis a">and that is a measurement, not a shrug</span></p>
-      <p style="font-size:13px;color:var(--ink-2)">the gate set is still growing — 13 to 30 in 7.1h (2.39 gates/h). An ETA divided by a moving denominator is a flattering guess, not a projection. Will project once the total holds still for 24h of committed history.</p>
+      <p style="font-size:13px;color:var(--ink-2)">the gate set is still growing — 13 to 30 in 7.5h (2.26 gates/h). An ETA divided by a moving denominator is a flattering guess, not a projection. Will project once the total holds still for 24h of committed history.</p>
       <p style="font-size:13px;color:var(--ink-2)">Schedule: <b>NOT-SET</b> &mdash; no target date has been stated anywhere in the programme. Velocity without a target is a speed, not a verdict — pass --target YYYY-MM-DD and this becomes measurable.</p>
     </div>
   </div>
@@ -1285,6 +1285,13 @@ rubber stamp: give it the lane's gates and ask specifically whether any control 
 been WATCHED REFUSING something, whether any number you are reporting was measured or inferred,
 and what you changed that nothing tests. Fix what it finds or record why not. A lane that closes
 green without an independent read is the shape of defect this whole programme exists to stop.
+
+CHECKPOINT AS YOU GO. You are working in your own git worktree on branch lane/&lt;id&gt;, so the
+files survive a crash — but only what you COMMITTED survives losing the session. Commit at every
+meaningful step, with the gate id in the message. A crash then costs minutes, not an evening. The
+tracker shows each worktree's commits-ahead and whether it is dirty, so a lane that has not
+committed in a long time is visible as a stalled one — which is the progress marker R6 recommends
+over a heartbeat.
 
 LAST: append what you learned to agent-factory/docs/findings.md — corrected premises only — or
 write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not unlooked-at.</pre>
@@ -1343,6 +1350,13 @@ been WATCHED REFUSING something, whether any number you are reporting was measur
 and what you changed that nothing tests. Fix what it finds or record why not. A lane that closes
 green without an independent read is the shape of defect this whole programme exists to stop.
 
+CHECKPOINT AS YOU GO. You are working in your own git worktree on branch lane/&lt;id&gt;, so the
+files survive a crash — but only what you COMMITTED survives losing the session. Commit at every
+meaningful step, with the gate id in the message. A crash then costs minutes, not an evening. The
+tracker shows each worktree's commits-ahead and whether it is dirty, so a lane that has not
+committed in a long time is visible as a stalled one — which is the progress marker R6 recommends
+over a heartbeat.
+
 LAST: append what you learned to agent-factory/docs/findings.md — corrected premises only — or
 write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not unlooked-at.</pre>
     </div>
@@ -1395,6 +1409,13 @@ rubber stamp: give it the lane's gates and ask specifically whether any control 
 been WATCHED REFUSING something, whether any number you are reporting was measured or inferred,
 and what you changed that nothing tests. Fix what it finds or record why not. A lane that closes
 green without an independent read is the shape of defect this whole programme exists to stop.
+
+CHECKPOINT AS YOU GO. You are working in your own git worktree on branch lane/&lt;id&gt;, so the
+files survive a crash — but only what you COMMITTED survives losing the session. Commit at every
+meaningful step, with the gate id in the message. A crash then costs minutes, not an evening. The
+tracker shows each worktree's commits-ahead and whether it is dirty, so a lane that has not
+committed in a long time is visible as a stalled one — which is the progress marker R6 recommends
+over a heartbeat.
 
 LAST: append what you learned to agent-factory/docs/findings.md — corrected premises only — or
 write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not unlooked-at.</pre>
@@ -1450,6 +1471,13 @@ rubber stamp: give it the lane's gates and ask specifically whether any control 
 been WATCHED REFUSING something, whether any number you are reporting was measured or inferred,
 and what you changed that nothing tests. Fix what it finds or record why not. A lane that closes
 green without an independent read is the shape of defect this whole programme exists to stop.
+
+CHECKPOINT AS YOU GO. You are working in your own git worktree on branch lane/&lt;id&gt;, so the
+files survive a crash — but only what you COMMITTED survives losing the session. Commit at every
+meaningful step, with the gate id in the message. A crash then costs minutes, not an evening. The
+tracker shows each worktree's commits-ahead and whether it is dirty, so a lane that has not
+committed in a long time is visible as a stalled one — which is the progress marker R6 recommends
+over a heartbeat.
 
 LAST: append what you learned to agent-factory/docs/findings.md — corrected premises only — or
 write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not unlooked-at.</pre>
@@ -1507,6 +1535,13 @@ rubber stamp: give it the lane's gates and ask specifically whether any control 
 been WATCHED REFUSING something, whether any number you are reporting was measured or inferred,
 and what you changed that nothing tests. Fix what it finds or record why not. A lane that closes
 green without an independent read is the shape of defect this whole programme exists to stop.
+
+CHECKPOINT AS YOU GO. You are working in your own git worktree on branch lane/&lt;id&gt;, so the
+files survive a crash — but only what you COMMITTED survives losing the session. Commit at every
+meaningful step, with the gate id in the message. A crash then costs minutes, not an evening. The
+tracker shows each worktree's commits-ahead and whether it is dirty, so a lane that has not
+committed in a long time is visible as a stalled one — which is the progress marker R6 recommends
+over a heartbeat.
 
 LAST: append what you learned to agent-factory/docs/findings.md — corrected premises only — or
 write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not unlooked-at.</pre>
@@ -1849,7 +1884,7 @@ write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not
           <tr>
             <td><span class="chip pass">pass</span></td>
             <td class="what"><b>Is the certification suite green and honest?</b><br>
-              <span style="color:var(--ink-2)">80 passed</span>
+              <span style="color:var(--ink-2)">88 passed</span>
               <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
                 <li>includes test_every_assertion_has_been_proved_able_to_fail</li>
               </ul>
