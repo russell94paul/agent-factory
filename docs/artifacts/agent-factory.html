@@ -1225,10 +1225,10 @@ hr.rule{border:0; border-top:1px solid var(--rule); margin:44px 0}
       <span class="basis m">velocity MEASURED from git</span>
     </div>
     <div style="padding:0 18px 18px">
-      <p style="font-size:14px;color:var(--ink-2)">Over 6.6h of committed history, gates passed went <b>1 &rarr; 9</b> (1.21/h) and the gate set went <b>13 &rarr; 30</b> (2.58/h). Remaining went 12 &rarr; 21.</p>
+      <p style="font-size:14px;color:var(--ink-2)">Over 6.7h of committed history, gates passed went <b>1 &rarr; 9</b> (1.19/h) and the gate set went <b>13 &rarr; 30</b> (2.52/h). Remaining went 12 &rarr; 21.</p>
       <p style="font-size:14px;color:var(--ink-2)"><b>The backlog is growing faster than it is being burned down.</b> That is the expected shape while the system is still being measured &mdash; measuring is what reveals what is broken &mdash; but it is why there is no completion date below.</p>
       <p style="font-size:14px"><b>Completion: NOT-PROJECTABLE</b> <span class="basis a">and that is a measurement, not a shrug</span></p>
-      <p style="font-size:13px;color:var(--ink-2)">the gate set is still growing — 13 to 30 in 6.6h (2.58 gates/h). An ETA divided by a moving denominator is a flattering guess, not a projection. Will project once the total holds still for 24h of committed history.</p>
+      <p style="font-size:13px;color:var(--ink-2)">the gate set is still growing — 13 to 30 in 6.7h (2.52 gates/h). An ETA divided by a moving denominator is a flattering guess, not a projection. Will project once the total holds still for 24h of committed history.</p>
       <p style="font-size:13px;color:var(--ink-2)">Schedule: <b>NOT-SET</b> &mdash; no target date has been stated anywhere in the programme. Velocity without a target is a speed, not a verdict — pass --target YYYY-MM-DD and this becomes measurable.</p>
     </div>
   </div>
@@ -1242,10 +1242,10 @@ hr.rule{border:0; border-top:1px solid var(--rule); margin:44px 0}
       <p style="font-size:13px"><span class="mono">prefect-connectors</span> &middot; touches <span class="mono">orchestrator/pipelines.py</span></p>
       <p style="display:flex;flex-wrap:wrap;gap:6px;margin:10px 0"><span class="mono" style="font-size:12px;padding:2px 7px;border:1px solid var(--rule);border-radius:2px;white-space:nowrap;color:var(--ink-2)">cap</span> <span class="mono" style="font-size:12px;padding:2px 7px;border:1px solid var(--rule);border-radius:2px;white-space:nowrap;color:var(--ink-2)">reaper</span> <span class="mono" style="font-size:12px;padding:2px 7px;border:1px solid var(--rule);border-radius:2px;white-space:nowrap;color:var(--ink-2)">concurrency</span> <span class="mono" style="font-size:12px;padding:2px 7px;border:1px solid var(--rule);border-radius:2px;white-space:nowrap;color:var(--ink-2)">bounded</span> <span class="mono" style="font-size:12px;padding:2px 7px;border:1px solid var(--rule);border-radius:2px;white-space:nowrap;color:var(--ink-2)">truthful</span> <span class="mono" style="font-size:12px;padding:2px 7px;border:1px solid var(--rule);border-radius:2px;white-space:nowrap;color:var(--ink-2)">from-history</span></p>
       <button type="button" class="mono" data-copy="lane-control-plane" style="font-size:12px;padding:5px 10px;margin:6px 0;cursor:pointer;border:1px solid var(--rule);background:var(--surface);color:inherit">copy this prompt</button>
-      <pre id="lane-control-plane" class="mono" style="white-space:pre-wrap;word-break:break-word;overflow-x:auto;font-size:12px;line-height:1.55;padding:12px;border:1px solid var(--rule);background:var(--surface);margin:0">FIRST: read agent-factory/docs/findings.md — corrected premises from other
-lanes, so you do not rebuild a mistake somebody already paid for.
-LAST: append your own findings there before you close, or write
-NOTHING TO REPORT. Silence must mean checked, not unlooked-at.
+      <pre id="lane-control-plane" class="mono" style="white-space:pre-wrap;word-break:break-word;overflow-x:auto;font-size:12px;line-height:1.55;padding:12px;border:1px solid var(--rule);background:var(--surface);margin:0">FIRST: read agent-factory/docs/findings.md — corrected premises from other lanes, so
+you do not rebuild a mistake somebody already paid for. Six are seeded; one is a research answer
+that named the wrong component and was carried into a second research question before anyone
+checked it.
 
 Work the control-plane gates in the agent-factory readiness set. Read
 aldc-launchpad/boot-prompts/evaluator-isolated-next-2026-08-22.md first, then
@@ -1264,7 +1264,30 @@ times and succeeded once contributes nothing to any_failed. Do not re-derive it.
 
 Measure with `python -m factory.readiness` in agent-factory before and after.
 Every control needs a negative control: make it refuse something, and commit the
-proof. A mechanism nobody has watched refuse is not a control.</pre>
+proof. A mechanism nobody has watched refuse is not a control.
+
+SUB-AGENTS — use them, and be token-conscious about it. Match the model to the work rather than
+letting a sub-agent inherit yours:
+
+  haiku    mechanical lookup: find where X lives, count occurrences, grep a convention
+  sonnet   multi-step research, exploration, running a runbook, most code execution
+  opus     code review, security review, and stress-testing a design
+
+Do not spend opus on a grep, and do not run a whole session on opus because one step in it is
+hard. Shut a sub-agent down the moment its deliverable lands; do not let one loop.
+
+⚠ A sub-agent's report is a claim, not a measurement. Three of one session's own instruments
+returned confident false results (finding F5), every one caught only by checking the finding
+against the artefact itself. Verify before you act on it, and before you write it down.
+
+REVIEWER — before you close this lane, run a review sub-agent on opus over your diff. Not a
+rubber stamp: give it the lane's gates and ask specifically whether any control you added has
+been WATCHED REFUSING something, whether any number you are reporting was measured or inferred,
+and what you changed that nothing tests. Fix what it finds or record why not. A lane that closes
+green without an independent read is the shape of defect this whole programme exists to stop.
+
+LAST: append what you learned to agent-factory/docs/findings.md — corrected premises only — or
+write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not unlooked-at.</pre>
     </div>
   </div>
   <div class="tracker rv">
@@ -1278,10 +1301,10 @@ proof. A mechanism nobody has watched refuse is not a control.</pre>
       <p style="display:flex;flex-wrap:wrap;gap:6px;margin:10px 0"><span class="mono" style="font-size:12px;padding:2px 7px;border:1px solid var(--rule);border-radius:2px;white-space:nowrap;color:var(--ink-2)">certified</span> <span class="mono" style="font-size:12px;padding:2px 7px;border:1px solid var(--rule);border-radius:2px;white-space:nowrap;color:var(--ink-2)">breadth</span> <span class="mono" style="font-size:12px;padding:2px 7px;border:1px solid var(--rule);border-radius:2px;white-space:nowrap;color:var(--ink-2)">corpus</span></p>
       <p style="font-size:13px;color:var(--unmeas)"><b>Needs Paul:</b> explicit per-secret approval before any credential is read</p>
       <button type="button" class="mono" data-copy="lane-certify" style="font-size:12px;padding:5px 10px;margin:6px 0;cursor:pointer;border:1px solid var(--rule);background:var(--surface);color:inherit">copy this prompt</button>
-      <pre id="lane-certify" class="mono" style="white-space:pre-wrap;word-break:break-word;overflow-x:auto;font-size:12px;line-height:1.55;padding:12px;border:1px solid var(--rule);background:var(--surface);margin:0">FIRST: read agent-factory/docs/findings.md — corrected premises from other
-lanes, so you do not rebuild a mistake somebody already paid for.
-LAST: append your own findings there before you close, or write
-NOTHING TO REPORT. Silence must mean checked, not unlooked-at.
+      <pre id="lane-certify" class="mono" style="white-space:pre-wrap;word-break:break-word;overflow-x:auto;font-size:12px;line-height:1.55;padding:12px;border:1px solid var(--rule);background:var(--surface);margin:0">FIRST: read agent-factory/docs/findings.md — corrected premises from other lanes, so
+you do not rebuild a mistake somebody already paid for. Six are seeded; one is a research answer
+that named the wrong component and was carried into a second research question before anyone
+checked it.
 
 Wire a real instrument to the GreenContract in agent-factory so `certified` can
 stop reporting UNMEASURABLE. Read
@@ -1298,7 +1321,30 @@ STOP and ask Paul before touching any vault or Key Vault secret. Name the exact
 secret and source, get an explicit yes. No session has ever requested one.
 
 UNMEASURABLE must never become PASS just because a probe now exists but cannot
-reach its instrument.</pre>
+reach its instrument.
+
+SUB-AGENTS — use them, and be token-conscious about it. Match the model to the work rather than
+letting a sub-agent inherit yours:
+
+  haiku    mechanical lookup: find where X lives, count occurrences, grep a convention
+  sonnet   multi-step research, exploration, running a runbook, most code execution
+  opus     code review, security review, and stress-testing a design
+
+Do not spend opus on a grep, and do not run a whole session on opus because one step in it is
+hard. Shut a sub-agent down the moment its deliverable lands; do not let one loop.
+
+⚠ A sub-agent's report is a claim, not a measurement. Three of one session's own instruments
+returned confident false results (finding F5), every one caught only by checking the finding
+against the artefact itself. Verify before you act on it, and before you write it down.
+
+REVIEWER — before you close this lane, run a review sub-agent on opus over your diff. Not a
+rubber stamp: give it the lane's gates and ask specifically whether any control you added has
+been WATCHED REFUSING something, whether any number you are reporting was measured or inferred,
+and what you changed that nothing tests. Fix what it finds or record why not. A lane that closes
+green without an independent read is the shape of defect this whole programme exists to stop.
+
+LAST: append what you learned to agent-factory/docs/findings.md — corrected premises only — or
+write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not unlooked-at.</pre>
     </div>
   </div>
   <div class="tracker rv">
@@ -1311,10 +1357,10 @@ reach its instrument.</pre>
       <p style="font-size:13px"><span class="mono">prefect-connectors</span> &middot; touches <span class="mono">orchestrator/pipelines.py gate definitions</span></p>
       <p style="display:flex;flex-wrap:wrap;gap:6px;margin:10px 0"><span class="mono" style="font-size:12px;padding:2px 7px;border:1px solid var(--rule);border-radius:2px;white-space:nowrap;color:var(--ink-2)">refuses</span> <span class="mono" style="font-size:12px;padding:2px 7px;border:1px solid var(--rule);border-radius:2px;white-space:nowrap;color:var(--ink-2)">checks</span> <span class="mono" style="font-size:12px;padding:2px 7px;border:1px solid var(--rule);border-radius:2px;white-space:nowrap;color:var(--ink-2)">attributable</span> <span class="mono" style="font-size:12px;padding:2px 7px;border:1px solid var(--rule);border-radius:2px;white-space:nowrap;color:var(--ink-2)">honest</span> <span class="mono" style="font-size:12px;padding:2px 7px;border:1px solid var(--rule);border-radius:2px;white-space:nowrap;color:var(--ink-2)">general</span> <span class="mono" style="font-size:12px;padding:2px 7px;border:1px solid var(--rule);border-radius:2px;white-space:nowrap;color:var(--ink-2)">ceiling</span> <span class="mono" style="font-size:12px;padding:2px 7px;border:1px solid var(--rule);border-radius:2px;white-space:nowrap;color:var(--ink-2)">cost</span></p>
       <button type="button" class="mono" data-copy="lane-judgement" style="font-size:12px;padding:5px 10px;margin:6px 0;cursor:pointer;border:1px solid var(--rule);background:var(--surface);color:inherit">copy this prompt</button>
-      <pre id="lane-judgement" class="mono" style="white-space:pre-wrap;word-break:break-word;overflow-x:auto;font-size:12px;line-height:1.55;padding:12px;border:1px solid var(--rule);background:var(--surface);margin:0">FIRST: read agent-factory/docs/findings.md — corrected premises from other
-lanes, so you do not rebuild a mistake somebody already paid for.
-LAST: append your own findings there before you close, or write
-NOTHING TO REPORT. Silence must mean checked, not unlooked-at.
+      <pre id="lane-judgement" class="mono" style="white-space:pre-wrap;word-break:break-word;overflow-x:auto;font-size:12px;line-height:1.55;padding:12px;border:1px solid var(--rule);background:var(--surface);margin:0">FIRST: read agent-factory/docs/findings.md — corrected premises from other lanes, so
+you do not rebuild a mistake somebody already paid for. Six are seeded; one is a research answer
+that named the wrong component and was carried into a second research question before anyone
+checked it.
 
 Work the judgement gates in the agent-factory readiness set. Read
 aldc-launchpad/boot-prompts/evaluator-isolated-next-2026-08-22.md first.
@@ -1328,7 +1374,30 @@ agree a split first. The dependency graph allows both; the filesystem does not.
 `checks` is measured as: how many pipeline gates carry a gate_check. `refuses` is
 measured as: has any gate ever been observed refusing a run. The second is the hard
 one and it is the point — add the check, then make it refuse something on purpose
-and commit the audit record proving it did.</pre>
+and commit the audit record proving it did.
+
+SUB-AGENTS — use them, and be token-conscious about it. Match the model to the work rather than
+letting a sub-agent inherit yours:
+
+  haiku    mechanical lookup: find where X lives, count occurrences, grep a convention
+  sonnet   multi-step research, exploration, running a runbook, most code execution
+  opus     code review, security review, and stress-testing a design
+
+Do not spend opus on a grep, and do not run a whole session on opus because one step in it is
+hard. Shut a sub-agent down the moment its deliverable lands; do not let one loop.
+
+⚠ A sub-agent's report is a claim, not a measurement. Three of one session's own instruments
+returned confident false results (finding F5), every one caught only by checking the finding
+against the artefact itself. Verify before you act on it, and before you write it down.
+
+REVIEWER — before you close this lane, run a review sub-agent on opus over your diff. Not a
+rubber stamp: give it the lane's gates and ask specifically whether any control you added has
+been WATCHED REFUSING something, whether any number you are reporting was measured or inferred,
+and what you changed that nothing tests. Fix what it finds or record why not. A lane that closes
+green without an independent read is the shape of defect this whole programme exists to stop.
+
+LAST: append what you learned to agent-factory/docs/findings.md — corrected premises only — or
+write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not unlooked-at.</pre>
     </div>
   </div>
   <div class="tracker rv">
@@ -1341,10 +1410,10 @@ and commit the audit record proving it did.</pre>
       <p style="font-size:13px"><span class="mono">agent-factory</span> &middot; touches <span class="mono">docs/artifacts/agent-factory.html, ~/.claude/skills/</span></p>
       <p style="display:flex;flex-wrap:wrap;gap:6px;margin:10px 0"><span class="mono" style="font-size:12px;padding:2px 7px;border:1px solid var(--rule);border-radius:2px;white-space:nowrap;color:var(--ink-2)">chain</span></p>
       <button type="button" class="mono" data-copy="lane-artifact" style="font-size:12px;padding:5px 10px;margin:6px 0;cursor:pointer;border:1px solid var(--rule);background:var(--surface);color:inherit">copy this prompt</button>
-      <pre id="lane-artifact" class="mono" style="white-space:pre-wrap;word-break:break-word;overflow-x:auto;font-size:12px;line-height:1.55;padding:12px;border:1px solid var(--rule);background:var(--surface);margin:0">FIRST: read agent-factory/docs/findings.md — corrected premises from other
-lanes, so you do not rebuild a mistake somebody already paid for.
-LAST: append your own findings there before you close, or write
-NOTHING TO REPORT. Silence must mean checked, not unlooked-at.
+      <pre id="lane-artifact" class="mono" style="white-space:pre-wrap;word-break:break-word;overflow-x:auto;font-size:12px;line-height:1.55;padding:12px;border:1px solid var(--rule);background:var(--surface);margin:0">FIRST: read agent-factory/docs/findings.md — corrected premises from other lanes, so
+you do not rebuild a mistake somebody already paid for. Six are seeded; one is a research answer
+that named the wrong component and was carried into a second research question before anyone
+checked it.
 
 Two things, both in agent-factory, neither needing a browser or a credential.
 
@@ -1360,7 +1429,30 @@ Two things, both in agent-factory, neither needing a browser or a credential.
 
 ⚠ Do NOT run this at the same time as anyone editing the artifact — check with
 Paul first. Verify with `python scripts/render_pass.py` (needs `pip install
-playwright`) and `python -m pytest`, which now fails if the page drifts.</pre>
+playwright`) and `python -m pytest`, which now fails if the page drifts.
+
+SUB-AGENTS — use them, and be token-conscious about it. Match the model to the work rather than
+letting a sub-agent inherit yours:
+
+  haiku    mechanical lookup: find where X lives, count occurrences, grep a convention
+  sonnet   multi-step research, exploration, running a runbook, most code execution
+  opus     code review, security review, and stress-testing a design
+
+Do not spend opus on a grep, and do not run a whole session on opus because one step in it is
+hard. Shut a sub-agent down the moment its deliverable lands; do not let one loop.
+
+⚠ A sub-agent's report is a claim, not a measurement. Three of one session's own instruments
+returned confident false results (finding F5), every one caught only by checking the finding
+against the artefact itself. Verify before you act on it, and before you write it down.
+
+REVIEWER — before you close this lane, run a review sub-agent on opus over your diff. Not a
+rubber stamp: give it the lane's gates and ask specifically whether any control you added has
+been WATCHED REFUSING something, whether any number you are reporting was measured or inferred,
+and what you changed that nothing tests. Fix what it finds or record why not. A lane that closes
+green without an independent read is the shape of defect this whole programme exists to stop.
+
+LAST: append what you learned to agent-factory/docs/findings.md — corrected premises only — or
+write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not unlooked-at.</pre>
     </div>
   </div>
   <div class="tracker rv">
@@ -1374,10 +1466,10 @@ playwright`) and `python -m pytest`, which now fails if the page drifts.</pre>
       <p style="display:flex;flex-wrap:wrap;gap:6px;margin:10px 0"><span class="mono" style="font-size:12px;padding:2px 7px;border:1px solid var(--rule);border-radius:2px;white-space:nowrap;color:var(--ink-2)">grain</span></p>
       <p style="font-size:13px;color:var(--unmeas)"><b>Needs Paul:</b> Snowflake credential approval, and he may just know the answer</p>
       <button type="button" class="mono" data-copy="lane-grain" style="font-size:12px;padding:5px 10px;margin:6px 0;cursor:pointer;border:1px solid var(--rule);background:var(--surface);color:inherit">copy this prompt</button>
-      <pre id="lane-grain" class="mono" style="white-space:pre-wrap;word-break:break-word;overflow-x:auto;font-size:12px;line-height:1.55;padding:12px;border:1px solid var(--rule);background:var(--surface);margin:0">FIRST: read agent-factory/docs/findings.md — corrected premises from other
-lanes, so you do not rebuild a mistake somebody already paid for.
-LAST: append your own findings there before you close, or write
-NOTHING TO REPORT. Silence must mean checked, not unlooked-at.
+      <pre id="lane-grain" class="mono" style="white-space:pre-wrap;word-break:break-word;overflow-x:auto;font-size:12px;line-height:1.55;padding:12px;border:1px solid var(--rule);background:var(--surface);margin:0">FIRST: read agent-factory/docs/findings.md — corrected premises from other lanes, so
+you do not rebuild a mistake somebody already paid for. Six are seeded; one is a research answer
+that named the wrong component and was carried into a second research question before anyone
+checked it.
 
 Settle gate `grain` in agent-factory. One Snowflake query decides it:
 
@@ -1394,7 +1486,30 @@ targets.load_target raises on unknown keys — adding it to the blueprint breaks
 every load until the dataclass gains the field. Add it to ConnectorTarget in the
 same commit.
 
-⚠ Ask Paul before using any Snowflake credential. Name the secret and source.</pre>
+⚠ Ask Paul before using any Snowflake credential. Name the secret and source.
+
+SUB-AGENTS — use them, and be token-conscious about it. Match the model to the work rather than
+letting a sub-agent inherit yours:
+
+  haiku    mechanical lookup: find where X lives, count occurrences, grep a convention
+  sonnet   multi-step research, exploration, running a runbook, most code execution
+  opus     code review, security review, and stress-testing a design
+
+Do not spend opus on a grep, and do not run a whole session on opus because one step in it is
+hard. Shut a sub-agent down the moment its deliverable lands; do not let one loop.
+
+⚠ A sub-agent's report is a claim, not a measurement. Three of one session's own instruments
+returned confident false results (finding F5), every one caught only by checking the finding
+against the artefact itself. Verify before you act on it, and before you write it down.
+
+REVIEWER — before you close this lane, run a review sub-agent on opus over your diff. Not a
+rubber stamp: give it the lane's gates and ask specifically whether any control you added has
+been WATCHED REFUSING something, whether any number you are reporting was measured or inferred,
+and what you changed that nothing tests. Fix what it finds or record why not. A lane that closes
+green without an independent read is the shape of defect this whole programme exists to stop.
+
+LAST: append what you learned to agent-factory/docs/findings.md — corrected premises only — or
+write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not unlooked-at.</pre>
     </div>
   </div>
   <div class="tracker rv"><div class="tracker-head">
@@ -1734,7 +1849,7 @@ same commit.
           <tr>
             <td><span class="chip pass">pass</span></td>
             <td class="what"><b>Is the certification suite green and honest?</b><br>
-              <span style="color:var(--ink-2)">76 passed</span>
+              <span style="color:var(--ink-2)">80 passed</span>
               <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
                 <li>includes test_every_assertion_has_been_proved_able_to_fail</li>
               </ul>

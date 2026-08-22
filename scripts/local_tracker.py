@@ -30,6 +30,8 @@ from factory.readiness import (  # noqa: E402
     CONNECTORS, FACTORY, FAIL, NOT_RUN, PASS, PHASES, UNMEASURABLE, measure)
 from factory.board import (  # noqa: E402
     BLOCKED, DONE, READY, board, critical_path)
+from factory.lanes import LANES, SIZE, conflicts, waits_on  # noqa: E402
+from factory.findings import by_lane  # noqa: E402
 
 OUT = FACTORY / "tracker.html"
 
@@ -41,6 +43,38 @@ _HOT = ("factory.readiness", "factory.board", "factory.lanes", "factory.schedule
 _RELOADED_AT = None
 _RELOAD_MSG = None
 _SYNC_MSG = None
+_ANSWER_MSG = None
+
+
+def _answer_path(prompt: pathlib.Path) -> pathlib.Path:
+    """docs/research/R5-build-velocity.md -> docs/research/answers/R5-answer-build-velocity.md
+
+    Derived from the PROMPT filename, never from anything the browser sends, so the request
+    cannot choose where a file lands.
+    """
+    parts = prompt.stem.split("-", 1)
+    tail = parts[1] if len(parts) > 1 else "answer"
+    return prompt.parent / "answers" / f"{parts[0]}-answer-{tail}.md"
+
+
+def save_answer(stem: str, body: str):
+    """Write a pasted research answer. Returns (ok, message).
+
+    Refuses to overwrite: an answer already filed is evidence, and silently replacing it would
+    lose the first one. Same write-once rule as the verdict store.
+    """
+    rdir = FACTORY / "docs" / "research"
+    match = next((f for f in rdir.glob("R[0-9]*.md") if f.stem == stem), None)
+    if match is None:
+        return False, f"no research prompt with stem {stem!r}"
+    if not body.strip():
+        return False, "nothing pasted — an empty answer is not an answer"
+    dest = _answer_path(match)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    if dest.exists():
+        return False, f"{dest.name} already exists — refusing to overwrite a filed answer"
+    dest.write_text(body.replace("\r\n", "\n"), encoding="utf-8")
+    return True, f"saved {dest.name} ({len(body):,} chars) — the gate will see it on next measure"
 
 #: The generators that write into docs/artifacts/agent-factory.html, in the order they must run:
 #: the figure and the plan change the file, and the tracker section carries the headline that
@@ -103,6 +137,10 @@ def hot_reload():
             g[n] = getattr(r, n)
         for n in ("BLOCKED", "DONE", "READY", "board", "critical_path"):
             g[n] = getattr(b, n)
+        for n in ("LANES", "SIZE", "conflicts", "waits_on"):
+            g[n] = getattr(mods["factory.lanes"], n)
+        import importlib as _il
+        g["by_lane"] = getattr(_il.reload(_il.import_module("factory.findings")), "by_lane")
         _RELOADED_AT = datetime.datetime.now()
         return True, f"reloaded {len(_HOT)} modules, {len(r.GATES)} gates"
     except Exception as exc:                                          # noqa: BLE001
@@ -215,6 +253,9 @@ def render(when: datetime.datetime) -> str:
     if _SYNC_MSG:
         okc = 'var(--pass)' if _SYNC_MSG[0] else 'var(--fail)'
         w(f'<div class="sub" style="color:{okc};font-size:13px">{e(_SYNC_MSG[1])}</div>')
+    if _ANSWER_MSG:
+        okc = 'var(--pass)' if _ANSWER_MSG[0] else 'var(--fail)'
+        w(f'<div class="sub" style="color:{okc};font-size:13px">{e(_ANSWER_MSG[1])}</div>')
     if _RELOAD_MSG:
         okc = 'var(--pass)' if _RELOAD_MSG[0] else 'var(--fail)'
         w(f'<div class="sub" style="color:{okc};font-size:13px">{e(_RELOAD_MSG[1])}</div>')
@@ -288,6 +329,128 @@ def render(when: datetime.datetime) -> str:
       'parallelised away. Everything else can be done alongside it.</p>')
     w('</div>')
 
+    # ---------------------------------------------------------------- lanes
+    verdict = {g.id: r.verdict for g, r in results}
+    passing = {gid for gid, v in verdict.items() if v == PASS}
+    lane_waits, lane_conflicts = waits_on(passing), conflicts()
+    lane_findings = by_lane()
+    ready_lanes = [l.id for l in LANES if not lane_waits[l.id]]
+    w('<div class="head" style="margin-top:44px">')
+    w('<h1>Start a lane</h1>')
+    w(f'<div class="sub">{len(LANES)} lanes &middot; <b>{len(ready_lanes)} can start now</b> '
+      '&middot; copy a prompt into a fresh session</div>')
+    w('<div class="sub" style="font-size:12.5px;color:var(--ink3);margin-top:6px">'
+      '<b>waits on</b> is derived from gate dependencies &mdash; the work is not ready. '
+      '<b>conflicts with</b> is derived from the files a lane writes &mdash; the work is ready '
+      'but the seat is taken. Two different reasons not to start, and only one of them is about '
+      'the dependency graph.</div>')
+    w('</div>')
+    for lane in LANES:
+        done_n = sum(1 for gid in lane.gates if verdict.get(gid) == PASS)
+        chips = " ".join(
+            f'<span style="font-family:ui-monospace,monospace;font-size:11.5px;padding:1px 6px;'
+            f'border:1px solid var(--rule);border-radius:2px;'
+            f'color:{"var(--pass)" if verdict.get(gid) == PASS else "var(--ink3)"}">{e(gid)}</span>'
+            for gid in lane.gates)
+        w('<div class="par" style="margin-top:16px">')
+        w(f'<h3>{e(lane.title)} <span style="font-weight:400;color:var(--ink3);font-size:13px">'
+          f'&middot; {done_n} of {len(lane.gates)} done &middot; {e(SIZE[lane.size])}</span></h3>')
+        w(f'<p style="font-size:13.5px;color:var(--ink2);margin:0 0 8px">{e(lane.why)}</p>')
+        w(f'<p style="font-size:12.5px;color:var(--ink3);margin:0 0 8px">'
+          f'<code>{e(lane.repo)}</code> &middot; touches <code>{e(lane.touches)}</code></p>')
+        w(f'<p style="font-size:12.5px;color:var(--ink3);margin:0 0 8px">'
+          f'run this session on <b style="color:var(--ink)">{e(lane.model)}</b> &mdash; '
+          f'{e(lane.model_why)}</p>')
+        hits = lane_findings.get(lane.id) or []
+        if hits:
+            items = "".join(
+                f'<li style="margin-bottom:3px"><b>{e(h.id)}</b> {e(h.title)}</li>' for h in hits)
+            w(f'<div style="font-size:12.5px;color:var(--ink2);margin:0 0 8px;padding:8px 10px;'
+              f'border-left:2px solid var(--unmeas);background:var(--paper)">'
+              f'<b>Read before starting &mdash; corrections that hit this lane:</b>'
+              f'<ul style="margin:6px 0 0 16px;padding:0">{items}</ul></div>')
+        waits, clash = lane_waits[lane.id], lane_conflicts[lane.id]
+        if waits:
+            w(f'<p style="font-size:12.5px;color:var(--unmeas);margin:0 0 8px">'
+              f'<b>waits on:</b> {e(", ".join(waits))}</p>')
+        else:
+            w('<p style="font-size:12.5px;color:var(--pass);margin:0 0 8px">'
+              '<b>no unmet dependency &mdash; can start now</b></p>')
+        if clash:
+            w(f'<p style="font-size:12.5px;color:var(--fail);margin:0 0 8px">'
+              f'<b>cannot run at the same time as:</b> {e(", ".join(clash))} '
+              f'&mdash; shared files</p>')
+        w(f'<p style="display:flex;flex-wrap:wrap;gap:5px;margin:0 0 10px">{chips}</p>')
+        if lane.needs_paul:
+            w(f'<p style="font-size:12.5px;color:var(--unmeas);margin:0 0 8px">'
+              f'<b>Needs Paul:</b> {e(lane.needs_paul)}</p>')
+        w(f'<button type="button" data-copy="ln-{e(lane.id)}" style="font-size:12px;'
+          f'padding:5px 10px;margin-bottom:8px;cursor:pointer;border:1px solid var(--rule);'
+          f'border-radius:3px;background:var(--raise);color:var(--ink);'
+          f'font-family:ui-monospace,monospace">copy prompt</button>')
+        # pre-wrap: a <pre> of long lines would widen the page, which is a defect already fixed
+        # once today on the artifact. Do not "tidy" this to nowrap.
+        w(f'<pre id="ln-{e(lane.id)}" style="white-space:pre-wrap;word-break:break-word;'
+          f'font-family:ui-monospace,monospace;font-size:11.5px;line-height:1.55;margin:0;'
+          f'padding:10px;border:1px solid var(--rule);border-radius:3px;background:var(--paper);'
+          f'color:var(--ink2);max-height:230px;overflow:auto">{e(lane.full_prompt)}</pre>')
+        w('</div>')
+
+    # ---------------------------------------------------------------- research prompts
+    rdir = FACTORY / "docs" / "research"
+    adir = rdir / "answers"
+    pending = []
+    if rdir.is_dir():
+        for f in sorted(rdir.glob("R[0-9]*.md")):
+            # R[0-9]* not R* — the plain glob matched README.md and offered it as a research
+            # prompt. A directory scan is only as good as its pattern.
+            stem = f.name.split("-")[0]
+            answered = adir.is_dir() and any(a.name.startswith(f"{stem}-answer") or
+                                             a.name.startswith(f"{stem}-followup-answer")
+                                             for a in adir.glob("*.md"))
+            if not answered:
+                pending.append(f)
+    if pending:
+        w('<div class="head" style="margin-top:44px">')
+        w('<h1>Run a research pass</h1>')
+        w(f'<div class="sub">{len(pending)} prompt(s) written and not yet answered &middot; '
+          'paste into Deep Research; the answer lands in '
+          '<code>docs/research/answers/</code></div>')
+        w('</div>')
+        for f in pending:
+            body = f.read_text(encoding="utf-8")
+            first = next((ln.lstrip("# ").strip() for ln in body.splitlines()
+                          if ln.startswith("# ")), f.stem)
+            w('<div class="par" style="margin-top:16px">')
+            w(f'<h3>{e(first)}</h3>')
+            w(f'<p style="font-size:12.5px;color:var(--ink3);margin:0 0 8px">'
+              f'<code>docs/research/{e(f.name)}</code> &middot; {len(body):,} chars</p>')
+            w(f'<button type="button" data-copy="rs-{e(f.stem)}" style="font-size:12px;'
+              f'padding:5px 10px;margin-bottom:8px;cursor:pointer;border:1px solid var(--rule);'
+              f'border-radius:3px;background:var(--raise);color:var(--ink);'
+              f'font-family:ui-monospace,monospace">copy full prompt</button>')
+            w(f'<pre id="rs-{e(f.stem)}" style="white-space:pre-wrap;word-break:break-word;'
+              f'font-family:ui-monospace,monospace;font-size:11.5px;line-height:1.55;margin:0;'
+              f'padding:10px;border:1px solid var(--rule);border-radius:3px;'
+              f'background:var(--paper);color:var(--ink2);max-height:260px;overflow:auto">'
+              f'{e(body)}</pre>')
+            dest = _answer_path(f).name
+            w(f'<form method="POST" action="/answer" style="margin-top:12px">')
+            w(f'<input type="hidden" name="stem" value="{e(f.stem)}">')
+            w(f'<div style="font-size:12.5px;color:var(--ink3);margin-bottom:6px">'
+              f'Paste the answer here &rarr; saved as '
+              f'<code>docs/research/answers/{e(dest)}</code>, which is where the gate looks.</div>')
+            w('<textarea name="body" rows="6" placeholder="paste the Deep Research answer, then '
+              'save" style="width:100%;box-sizing:border-box;font-family:ui-monospace,monospace;'
+              'font-size:11.5px;line-height:1.5;padding:10px;border:1px solid var(--rule);'
+              'border-radius:3px;background:var(--paper);color:var(--ink)"></textarea>')
+            w('<button type="submit" style="font-size:12px;padding:6px 12px;margin-top:8px;'
+              'cursor:pointer;border:1px solid var(--rule);border-radius:3px;'
+              'background:var(--raise);color:var(--ink);font-family:ui-monospace,monospace">'
+              'save answer</button>')
+            w('</form>')
+            w('</div>')
+
     w('<footer>')
     w('<p><b>UNMEASURABLE is not a pass.</b> A gate with no instrument says so rather than '
       'waving through; that distinction is the point of the whole harness.</p>')
@@ -302,11 +465,51 @@ def render(when: datetime.datetime) -> str:
       'serve and re-measure on refresh: <code>python scripts/local_tracker.py --serve</code> '
       '&middot; check the published artifact still matches: '
       '<code>python scripts/build_tracker.py --check</code></p>')
-    w('</footer></div></body></html>')
+    w("""</footer></div>
+<script>
+document.querySelectorAll('[data-copy]').forEach(function (b) {
+  b.addEventListener('click', function () {
+    var el = document.getElementById(b.getAttribute('data-copy'));
+    if (!el) return;
+    var label = b.textContent;
+    var done = function () { b.textContent = 'copied';
+                             setTimeout(function () { b.textContent = label; }, 1200); };
+    // The textarea path is the fallback where the Clipboard API is unavailable. The text is
+    // selectable either way, so a failure is never a dead end.
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(el.textContent).then(done, function () {});
+    } else {
+      var ta = document.createElement('textarea');
+      ta.value = el.textContent; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); done(); } catch (err) {}
+      document.body.removeChild(ta);
+    }
+  });
+});
+</script></body></html>""")
     return "\n".join(o)
 
 
 class Handler(http.server.BaseHTTPRequestHandler):
+    def do_POST(self):
+        global _ANSWER_MSG
+        import urllib.parse
+        if self.path.rstrip("/") != "/answer":
+            self.send_error(404)
+            return
+        try:
+            n = int(self.headers.get("Content-Length") or 0)
+        except ValueError:
+            n = 0
+        raw = self.rfile.read(n).decode("utf-8", "replace") if n else ""
+        form = urllib.parse.parse_qs(raw, keep_blank_values=True)
+        _ANSWER_MSG = save_answer((form.get("stem") or [""])[0], (form.get("body") or [""])[0])
+        print(f"  answer: {_ANSWER_MSG[1]}")
+        self.send_response(303)
+        self.send_header("Location", "/")
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+
     def do_GET(self):
         global _RELOAD_MSG
         global _SYNC_MSG

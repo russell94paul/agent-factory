@@ -132,7 +132,7 @@ def build(target: _dt.date | None = None) -> str:
         w(f'      <pre id="lane-{e(lane.id)}" class="mono" style="white-space:pre-wrap;'
           f'word-break:break-word;overflow-x:auto;font-size:12px;line-height:1.55;'
           f'padding:12px;border:1px solid var(--rule);background:var(--surface);'
-          f'margin:0">{e(lane.prompt)}</pre>')
+          f'margin:0">{e(lane.full_prompt)}</pre>')
         w('    </div>')
         w('  </div>')
 
