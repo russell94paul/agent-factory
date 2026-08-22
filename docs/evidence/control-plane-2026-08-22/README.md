@@ -494,3 +494,22 @@ this lane — it is the logbook's regression detection, not the control plane.
 5. **`ceiling` and `cost` still FAIL** — no spend check before dispatch. They sit in the
    same phase and the same file, but they belong to the judgement lane's list, not this
    one's.
+
+6. **The cap's override cannot be used from the dashboard.** `server.py` plumbs
+   `override_reason` from the request body; `static/index.html` never sends it, so an
+   operator who hits the cap gets a toast telling them to supply a reason with no field to
+   supply it in. The routes past are curl or Delete Pipeline — and Delete Pipeline is the
+   2026-08-14 workaround that destroyed the evidence. **The design's own argument for why
+   an attempt cap is safe is currently not reachable from the UI.** One input and one
+   field in the POST body.
+
+7. **`tests/orchestrator/mutate_control_plane.py` mutates in place**, and its dirty-file
+   guard does not cover a concurrent *reader*. It cost the reviewer three spurious
+   full-suite failures when their read overlapped a run of it, and a tool timeout once
+   killed it mid-mutation so the `finally` restore never ran (the guard caught that on the
+   next invocation, but only for the next writer). `scripts/mutate_readiness_probes.py`
+   already does the right thing by copying to a scratch tree; the connectors-side harness
+   should do the same, or take a lockfile.
+
+8. **`static/index.html:1746` carries a stale comment** — it says `restart_from_stage`
+   preserves `_retry_count`, which is no longer the field the cap is measured against.
