@@ -149,6 +149,13 @@ def _launch_script(name: str, subtitle: str, prompt_file, accent: str = "38;5;75
     esc = chr(27)
     bar = "─" * 58
     body = f"""$Host.UI.RawUI.WindowTitle = '{name}'
+# The tracker is itself started from a Claude Code session, so it inherits
+# CLAUDE_CODE_CHILD_SESSION and every terminal it spawns inherits it too — which turns transcript
+# saving OFF in the lane sessions. A lane that runs for an hour and cannot be resumed, with no
+# record of what it did, is exactly the loss this programme exists to prevent. Cleared here in the
+# script rather than depending on how the server happened to be launched.
+Remove-Item Env:CLAUDE_CODE_CHILD_SESSION -ErrorAction SilentlyContinue
+$env:CLAUDE_CODE_FORCE_SESSION_PERSISTENCE = '1'
 $e = [char]27
 Write-Host ""
 Write-Host "$e[{accent}m{bar}$e[0m"
