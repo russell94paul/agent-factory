@@ -75,15 +75,11 @@ def launch_command(lane_id: str, make: bool = True):
     # checkout on disk. A dry run with side effects is just a run you did not admit to.
     cwd, note = (wt.ensure(lane.id) if make
                  else (wt.path_for(lane.id), 'would create the worktree'))
-    # ⚠ NO SEMICOLONS. wt uses ';' as its own subcommand separator, so a ';' here splits the wt
-    # invocation and it tries to launch the remainder as a program — "the system cannot find the
-    # file specified", found on the first real click. --startingDirectory sets the cwd instead.
-    inner = f"claude --model {lane.model} (Get-Content -Raw -LiteralPath '{f}')"
 
     # Prefer wt when present so the tab is titled and lands in the worktree; the cmd fallback
     # relies on Popen's cwd. Neither may contain a ';' — see the note above.
     ps1 = _launch_script(f"lane {lane.id}", f"{lane.title}  ·  {lane.model}", f,
-                         LANE_ACCENT.get(lane.id, "38;5;75"))
+                         LANE_ACCENT.get(lane.id, "38;5;75"), model=lane.model)
     w = _wt()
     if w:
         return ([w, "new-tab", "--title", f"lane {lane.id}", "--startingDirectory", str(cwd),
@@ -109,8 +105,6 @@ def start_session_from_handoff(note: str, dry: bool = False):
     f = d / f"session-{stamp}.md"
     f.write_text(ho.session_handoff(note), encoding="utf-8")
 
-    # No semicolons — see the note in launch_command. wt would split on them.
-    inner = f"claude (Get-Content -Raw -LiteralPath '{f}')"
 
     ps1 = _launch_script("handoff session", "session handoff", f, "38;5;110")
     wtexe = _wt()
@@ -136,7 +130,8 @@ LANE_ACCENT = {"control-plane": "38;5;75", "certify": "38;5;79", "judgement": "3
                "artifact": "38;5;73", "grain": "38;5;180"}
 
 
-def _launch_script(name: str, subtitle: str, prompt_file, accent: str = "38;5;75"):
+def _launch_script(name: str, subtitle: str, prompt_file, accent: str = "38;5;75",
+                   model: str = ""):
     """Write a .ps1 that titles the window, prints a banner, then runs claude.
 
     ⚠ A .ps1 rather than a -Command string ON PURPOSE. Semicolons are wt's subcommand separator,
@@ -148,6 +143,12 @@ def _launch_script(name: str, subtitle: str, prompt_file, accent: str = "38;5;75
     f = d / f"{name}.ps1"
     esc = chr(27)
     bar = "─" * 58
+    # A lane declares its model; the banner has always printed it. Until now the generated
+    # script ran a bare `claude`, so every lane actually ran on whatever the session default
+    # was — control-plane advertising opus while running sonnet, grain advertising haiku while
+    # running something dearer. A banner that names a model the process is not using is worse
+    # than no banner: it is a label that reads as verified.
+    model_flag = f" --model {model}" if model else ""
     body = f"""$Host.UI.RawUI.WindowTitle = '{name}'
 # The tracker is itself started from a Claude Code session, so it inherits
 # CLAUDE_CODE_CHILD_SESSION and every terminal it spawns inherits it too — which turns transcript
@@ -163,7 +164,7 @@ Write-Host "$e[{accent}m  AGENT FACTORY $e[0m$e[38;5;250m{subtitle}$e[0m"
 Write-Host "$e[38;5;244m  {name}$e[0m"
 Write-Host "$e[{accent}m{bar}$e[0m"
 Write-Host ""
-claude (Get-Content -Raw -Encoding UTF8 -LiteralPath '{prompt_file}')
+claude{model_flag} (Get-Content -Raw -Encoding UTF8 -LiteralPath '{prompt_file}')
 """
     # utf-8-SIG: PowerShell 5.1 reads a BOM-less .ps1 as ANSI and mangles the box rules.
     f.write_text(body, encoding="utf-8-sig")
