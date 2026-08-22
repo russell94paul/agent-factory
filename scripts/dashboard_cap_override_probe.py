@@ -25,7 +25,7 @@ yet. **Take the whole answer from the thing that answers.**
 
     python scripts/dashboard_cap_override_probe.py [--screenshot DIR]
 
-Exit 0 means all ten behaviours were watched — two at the route, eight in a browser.
+Exit 0 means all twelve behaviours were watched — two at the route, ten in a browser.
 """
 from __future__ import annotations
 
@@ -134,7 +134,31 @@ DRIVER = """
   await window.restartFrom('pipe_probe', 'trigger-run');
   const blank = { seen: seen.slice(), toasts: toasts.slice() };
 
-  return { withOverride, cancelled, blank };
+  // 4. the override is granted and the dispatch ceiling is full.
+  //
+  // The cap grant is a single-use token consumed by _build_stage_requests, and the CEILING
+  // is checked before the token is read — so the request succeeds, the grant is correctly
+  // preserved, and nothing runs. Reporting that as an unqualified success is the same
+  // defect this whole function exists to fix, one branch over. Until this scenario existed
+  // the stub always answered `dispatched: 1`, so the branch was watched by nothing.
+  seen.length = 0; toasts.length = 0;
+  const realFetch = window.fetch;
+  window.fetch = async (url, opts) => {
+    const body = opts && opts.body ? JSON.parse(opts.body) : {};
+    seen.push({ url: String(url), body });
+    if (body.override_reason) {
+      return new Response(JSON.stringify({ ok: true, dispatched: 0 }),
+                          { status: 200, headers: {'Content-Type': 'application/json'} });
+    }
+    return new Response(JSON.stringify(refusal.body),
+                        { status: refusal.status, headers: {'Content-Type': 'application/json'} });
+  };
+  window.prompt = () => 'ceiling test';
+  await window.retryStage('pipe_probe', 'trigger-run');
+  const ceilingFull = { seen: seen.slice(), toasts: toasts.slice() };
+  window.fetch = realFetch;
+
+  return { withOverride, cancelled, blank, ceilingFull };
 })
 """
 
@@ -220,6 +244,13 @@ def main() -> int:
     c = result["blank"]
     check("a whitespace-only reason is not an override", len(c["seen"]) == 1,
           f"{len(c['seen'])} request(s)")
+
+    d = result["ceilingFull"]
+    check("an override that dispatched NOTHING is not reported as success",
+          not any(t["t"] == "success" for t in d["toasts"]),
+          "; ".join(f"[{t['t']}] {t['m'][:70]}" for t in d["toasts"]))
+    check("and the operator is told the ceiling is why",
+          any("ceiling" in t["m"] for t in d["toasts"]))
 
     print()
     print("WATCHED: the dashboard refuses, and the override reaches the wire."

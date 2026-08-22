@@ -548,3 +548,45 @@ you have.
   (via `scripts/mutate_readiness_probes.py`) anyone editing a gate's control. Two rules
   follow: **re-run the harness after the last refactor, not before**, and never quote a
   load-bearing count that predates a change to the lines it anchors on.
+
+### F30 — A budget that "defers" work defers nothing unless something comes back for it
+
+- **BELIEVED** — bounding an expensive sweep is safe because the work it declines is kept on
+  the record and retried later. The skipped item's own detail said so, the constant's
+  docstring said so, and a test named `..._survive_for_the_next_sweep` asserted it.
+- **ACTUALLY** — `_terminate_external_work` had **one caller**, `reap_expired_leases`, which
+  only reads stages whose status is `dispatched` — and the reap sets the stage to `failed`
+  three lines later. Every skipped handle sat on a stage nothing would ever read again. A
+  stage with 90 accumulated handles would have killed one or two and **leaked the rest
+  permanently**, each holding a core on a shared 10-core quota. ⭐ The test could not see it:
+  it asserted the handles were still on the record, which a record nothing will ever read
+  again satisfies identically. **The promise was in the test's name, not its body.**
+- **MEASURED BY** — four sweeps with a full budget each: `['run-00']`, then `NOTHING`,
+  `NOTHING`, `NOTHING`. After adding `sweep_unterminated_handles()`: 2, 1, 1, 1 — all five.
+  `tests/orchestrator/test_cloud_reaper.py::TestSkippedHandlesAreRetried` asserts the
+  **drain**, not the storage.
+- **AFFECTS** — every lane adding a bound to anything: a ceiling, a spend check, a rate
+  limit. **The question is not "is the work kept" but "what reads it next, and would that
+  thing still find it in the state this bound leaves it in?"** The judgement lane's `cost`
+  and `ceiling` gates are the immediate case. And a corollary for tests: if a test's name
+  promises a behaviour its body cannot observe, the name is the bug.
+
+### F31 — An `except` guard that checks a clause EXISTS cannot see it made dead
+
+- **BELIEVED** — asserting that a handler contains `except ControlRefused` prevents the
+  route answering 404 for a refusal. The guard walked the AST, so it was not satisfiable by
+  a comment or an import.
+- **ACTUALLY** — Python dispatches except clauses **in order**, and `ControlRefused`
+  subclasses `ValueError`, so a broad clause first makes the refusal clause **dead code with
+  the clause still visibly present**. The guard passed over a swapped pair. Only a hardcoded
+  behavioural parametrisation of two route names caught it — and a *new* route is in no such
+  list, so a plausible `_handle_post_pipeline_release` shipped answering 404 with the whole
+  suite green.
+- **MEASURED BY** — swap the two clauses in `_handle_post_pipeline_restart`: the AST guard
+  PASSED (`2 failed, 9 passed`, and the guard was among the 9). Add the new route: `24
+  passed`, and it answered `404 | control field: None`. Both now fail: the guard compares
+  handler **indexes** inside each `ast.Try`, and the behavioural parametrisation is
+  **discovered** from the same walk instead of listed.
+- **AFFECTS** — every lane. Two rules: **a structural guard over an ordered construct must
+  assert the order**, and **derive a parametrised test's cases from the code rather than
+  listing them**, or the case that matters is the one nobody added.
