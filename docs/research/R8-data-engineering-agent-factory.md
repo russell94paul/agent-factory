@@ -82,6 +82,34 @@ it or it is decoration.
 
 ---
 
+## 1b. Our own strawman — please attack it
+
+We wrote an initial architecture *before* dispatching this, deliberately: an open question gets a
+survey back, a concrete proposal gets an argument back. It is
+`agent-factory/docs/specs/architecture-v0.md`, and its central claim is:
+
+> **An agent's isolation tier is chosen by what its task touches, not by what kind of agent it is** —
+> T0 worktree (files only, no egress, no DB verbs) · T1 container + egress allowlist + read-only
+> warehouse role · T2 container + an **ephemeral zero-copy clone schema** where full DDL is
+> permitted and thrown away.
+
+The argument for it is that our 3-lane ceiling is a *file*-conflict limit, which is a property of
+code work — two agents building two views in two clone schemas share no file and no row, so the
+cap should not generalise to data work.
+
+**We think the two most likely ways that is wrong are:**
+
+1. Snowflake zero-copy clones may be cheap to create but expensive to validate against, and a clone
+   of a *share* may not behave like the real thing. If T2 is not actually cheap the idea collapses.
+2. "Data work does not conflict" is asserted, not measured. Two agents can absolutely collide on a
+   shared dimension table or the same `REPORT_COMMON` object — the conflict graph may need
+   *different edges*, not fewer.
+
+Tell us if either is fatal, and tell us if there is a fifth option we have not seen. **We would
+rather be told the ladder is wrong now than discover it at tier 2.**
+
+---
+
 ## 2. The questions
 
 ### 2.1 Team architecture — go deep, and be concrete
