@@ -685,7 +685,127 @@ def g_evaluator_is_a_service():
 
 
 
+
+# --------------------------------------------------------------------------- handover gates
+# Things I first filed as "no probe can settle this". Most of that was a failure of imagination:
+# an unasked question is measurable by whether its answer exists, and a decision is measurable by
+# whether it was written down. A gate that says "ask a human" is a gate that stopped looking.
+
+
+def _research_answer(pattern: str):
+    d = FACTORY / "docs" / "research" / "answers"
+    if not d.is_dir():
+        raise Unmeasurable(f"no answers directory at {d}")
+    return sorted(f.name for f in d.glob(pattern))
+
+
+def _followup_gate(n: int, subject: str):
+    def probe():
+        src = "docs/research/answers/"
+        hits = _research_answer(f"R{n}-followup*.md")
+        ev = [f"looking for docs/research/answers/R{n}-followup*.md",
+              f"subject: {subject}"]
+        if hits:
+            return _pass(f"answered: {hits[0]}", ev, src)
+        return _notrun("not asked yet", ev, src)
+    return probe
+
+
+g_r1_followup = _followup_gate(1, "does anything else depend on the Prefect misattribution?")
+g_r2_followup = _followup_gate(2, "our build plane is not Prefect — move onto it, or reimplement?")
+g_r3_followup = _followup_gate(3, "terminal verdict from append-only history, and its negative control")
+
+
+def g_render_pass_recorded():
+    """Has anyone actually looked at the published surface and written down what they saw?
+
+    Not "can Claude reach a browser" — that is a capability, not a state. The state that matters
+    is whether a render pass HAPPENED and left evidence, by whoever ran it.
+    """
+    d = FACTORY / "docs" / "evidence"
+    src = "docs/evidence/render-pass-*.md"
+    hits = sorted(f.name for f in d.glob("render-pass-*.md")) if d.is_dir() else []
+    ev = ["a static check proves the file parses, not that a visual painted",
+          "five defects shipped into the published figure and a human found every one"]
+    if hits:
+        return _pass(f"recorded: {hits[-1]}", ev, src)
+    return _fail("no render pass has been recorded", ev, src)
+
+
+def g_impeccable_precedence_settled():
+    """A fifth design authority with a broad trigger needs its place stated, once, in writing."""
+    chain = pathlib.Path.home() / ".claude" / "skills" / "living-systems-ui" / "SKILL.md"
+    src = "~/.claude/skills/living-systems-ui/SKILL.md"
+    if not chain.is_file():
+        raise Unmeasurable(f"no skill chain document at {src}")
+    txt = chain.read_text(encoding="utf-8", errors="replace")
+    ev = ["impeccable installed 2026-08-21 — 1 skill, 23 commands, 59 deterministic detector rules",
+          "its trigger overlaps artifact-design, artifact-motion and living-systems-ui"]
+    if "impeccable" in txt.lower():
+        return _pass("the chain names impeccable", ev, src)
+    return _fail("impeccable's place in the skill chain is unstated", ev, src)
+
+
+def g_grain_declared():
+    """Is the landing-table grain settled, or still an open question in a comment?"""
+    bp = _blueprint()
+    src = "blueprints/windsorai_gep.yaml"
+    val = str(bp.get("grain_confirmed") or "").strip()
+    ev = ["20 rows across 18 campaigns on one date cannot be unique on "
+          "(account_id, campaign_id, date) under a single account",
+          "if the real table holds one account the declared primary key is wrong, and the "
+          "calibration world is built on a mistake",
+          "set grain_confirmed in the blueprint once someone has queried the table"]
+    if val:
+        return _pass(f"grain declared: {val}", ev, src)
+    return _fail("the landing-table grain is still an open question", ev, src)
+
+
+def g_work_has_a_ticket():
+    """Either a ticket key exists, or a decision that none is needed was written down.
+
+    Both are acceptable outcomes. What is not acceptable is neither — an open question quietly
+    aging in a drafts folder.
+    """
+    import re as _re
+    d = FACTORY.parent / "aldc-launchpad" / "boot-prompts" / "drafts"
+    src = "aldc-launchpad/boot-prompts/drafts/"
+    if not d.is_dir():
+        raise Unmeasurable(f"no drafts directory at {d}")
+    for f in d.glob("*jira*.md"):
+        txt = f.read_text(encoding="utf-8", errors="replace")
+        m = _re.search(r"^TICKET:\s*([A-Z]{2,}-\d+|NONE-BY-DECISION)\s*$", txt, _re.M)
+        if m:
+            return _pass(f"{m.group(1)}", [f"declared in {f.name}"], src)
+    return _fail("no ticket, and no recorded decision that none is needed",
+                 ["a draft comment is ready but has no key",
+                  "resolve by putting a line `TICKET: ALDC-123` or `TICKET: NONE-BY-DECISION` "
+                  "at the top of the draft"], src)
+
 GATES: List[Gate] = [
+    Gate("r1-followup", "Has R1 been asked what else depended on the misattribution?",
+         "A correction that never reaches the source leaves the rest of that answer unaudited.",
+         g_r1_followup, "handover"),
+    Gate("r2-followup", "Has R2 been asked whether to move the build plane onto Prefect?",
+         "Its prescription assumed Prefect primitives we do not have. The highest-value "
+         "unasked question.",
+         g_r2_followup, "handover"),
+    Gate("r3-followup", "Has R3 been asked the false-succeeded correction?",
+         "Its Q4 was aimed at the wrong plane.",
+         g_r3_followup, "handover"),
+    Gate("rendered", "Has anyone looked at the published surface and recorded it?",
+         "A static check proves the file parses, not that a visual painted.",
+         g_render_pass_recorded, "handover"),
+    Gate("chain", "Is impeccable's place in the skill chain stated?",
+         "Five design authorities with overlapping triggers, and precedence decided mid-build "
+         "is precedence decided by accident.",
+         g_impeccable_precedence_settled, "handover"),
+    Gate("grain", "Is the landing-table grain settled?",
+         "The calibration world assumes an arrangement nobody has confirmed.",
+         g_grain_declared, "handover"),
+    Gate("ticket", "Does this work have a ticket, or a decision that it needs none?",
+         "Either is fine. Neither is an open question quietly aging in a drafts folder.",
+         g_work_has_a_ticket, "handover"),
     Gate("cap", "Is the retry cap enforced on the path that restarts?",
          "A cap on a path nothing uses is not a cap.",
          g_attempt_cap_on_the_live_path, "bounded"),
@@ -765,6 +885,7 @@ PHASES = {
     "bounded": "Is it bounded? (build order 1-2)",
     "judgement": "Can it tell success from failure?",
     "certification": "Can its output be certified?",
+    "handover": "Is it handed over honestly?",
 }
 
 

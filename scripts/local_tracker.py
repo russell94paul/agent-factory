@@ -27,7 +27,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 from factory.readiness import (  # noqa: E402
     CONNECTORS, FACTORY, FAIL, NOT_RUN, PASS, PHASES, UNMEASURABLE, measure)
 from factory.board import (  # noqa: E402
-    BLOCKED, DECLARED, DONE, READY, TRACKS, board)
+    BLOCKED, DONE, READY, board, critical_path)
 
 OUT = FACTORY / "tracker.html"
 
@@ -145,52 +145,45 @@ def render(when: datetime.datetime) -> str:
 
     # ------------------------------------------------------------------ the work
     rows = board()
-    n_done = sum(1 for _, st, _ in rows if st == DONE)
-    ready = [t for t, st, _ in rows if st == READY]
-    CH = {DONE: ("done", "done"), READY: ("ready", "ready"),
-          BLOCKED: ("blocked", "blocked"), DECLARED: ("declared", "no probe")}
+    n_done = sum(1 for _, _, st, _ in rows if st == DONE)
+    ready = [(g, r) for g, r, st, _ in rows if st == READY]
+    blocked = [(g, r, u) for g, r, st, u in rows if st == BLOCKED]
+    CH = {DONE: ("done", "done"), READY: ("ready", "ready"), BLOCKED: ("blocked", "blocked")}
 
     w('<div class="head" style="margin-top:44px">')
     w('<h1>What is left</h1>')
-    w(f'<div class="sub">{n_done} of {len(rows)} done &middot; {len(ready)} can start right now '
-      f'&middot; status is derived from the gates above wherever a probe exists</div>')
+    w(f'<div class="sub">generated from the {len(rows)} gates above &middot; nothing typed by hand '
+      f'&middot; {n_done} done, {len(ready)} can start now, {len(blocked)} blocked</div>')
     w('</div>')
-
-    for key, (title, sub) in TRACKS.items():
-        group = [(t, st, u) for t, st, u in rows if t.track == key]
-        if not group:
-            continue
-        d = sum(1 for _, st, _ in group if st == DONE)
-        w('<section class="phase"><header>')
-        w(f'<h2>{e(title)}</h2><span class="count">{d} of {len(group)}</span>')
-        w('</header>')
-        w(f'<div class="g" style="grid-template-columns:1fr;padding-bottom:0">'
-          f'<div class="hl">{e(sub)}</div></div>')
-        for t, st, unmet in group:
-            cls, label = CH[st]
-            w('<div class="t">')
-            w(f'<div><span class="st {cls}">{label}</span></div>')
-            w(f'<div class="sz">{e(t.size)}</div>')
-            w('<div>')
-            w(f'<div class="tt">{e(t.title)}</div>')
-            if t.why:
-                w(f'<div class="tw">{e(t.why)}</div>')
-            if unmet:
-                w(f'<div class="dep">waits on: {e(", ".join(unmet))}</div>')
-            w(f'<div class="dep">done when: {e(t.done_when)}</div>')
-            if t.owner:
-                w(f'<div class="own">{e(t.owner)}</div>')
-            w('</div></div>')
-        w('</section>')
 
     if ready:
         w('<div class="par">')
         w(f'<h3>{len(ready)} can run in parallel right now</h3>')
         w('<p style="font-size:13.5px;color:var(--ink3);margin:0 0 8px">No unmet dependency '
-          'between any of these &mdash; computed from the dependency graph, not guessed.</p>')
-        w('<ul>' + "".join(f'<li><b>{e(t.track)}</b> &mdash; {e(t.title)}</li>'
-                           for t in ready) + '</ul>')
+          'between any of these. Computed from the dependency graph, not judged.</p>')
+        w('<ul>' + "".join(f'<li>{e(g.question)}</li>' for g, _ in ready) + '</ul>')
         w('</div>')
+
+    if blocked:
+        w('<section class="phase" style="margin-top:26px"><header>')
+        w(f'<h2>Blocked</h2><span class="count">{len(blocked)}</span></header>')
+        for g, r, unmet in blocked:
+            w('<div class="t">')
+            w('<div><span class="st blocked">blocked</span></div>')
+            w('<div class="sz">&mdash;</div>')
+            w(f'<div><div class="tt">{e(g.question)}</div>')
+            w(f'<div class="tw">{e(r.headline)}</div>')
+            w(f'<div class="dep">waits on: {e(", ".join(unmet))}</div></div></div>')
+        w('</section>')
+
+    cp = critical_path()
+    w('<div class="par" style="border-color:var(--rule)">')
+    w('<h3>Longest dependency chain</h3>')
+    w(f'<p style="font-family:ui-monospace,monospace;font-size:13.5px;margin:0">'
+      f'{e(" &rarr; ".join(cp))}</p>'.replace("&amp;rarr;", "&rarr;"))
+    w('<p style="font-size:13px;color:var(--ink3);margin:8px 0 0">This is the part that cannot be '
+      'parallelised away. Everything else can be done alongside it.</p>')
+    w('</div>')
 
     w('<footer>')
     w('<p><b>UNMEASURABLE is not a pass.</b> A gate with no instrument says so rather than '
@@ -198,9 +191,10 @@ def render(when: datetime.datetime) -> str:
     w('<p>Every row is measured from a file at the moment shown above and names the path it came '
       'from. Nothing here is hand-maintained, so a wrong row means a wrong repo, not a stale '
       'page. Probes live in <code>factory/readiness.py</code>.</p>')
-    w('<p>A task is <b>done</b> only when its readiness gate passes &mdash; it ticks itself and '
-      'cannot be wrong about itself. Rows marked <b>no probe</b> are the ones nothing can settle '
-      'automatically, and they say who has to.</p>')
+    w('<p><b>The work list is the gate list.</b> Every gate that is not passing is a task, and a '
+      'gate that passes stops being one. There is no second list to keep in sync, so the board '
+      'cannot describe work nobody measures or omit work somebody does. The only authored part is '
+      'which task must precede which, and a stale edge fails on import.</p>')
     w('<p>Regenerate: <code>python scripts/local_tracker.py</code> &middot; '
       'serve and re-measure on refresh: <code>python scripts/local_tracker.py --serve</code> '
       '&middot; check the published artifact still matches: '
