@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import datetime
 import html
+import json
 import http.server
 import pathlib
 import re
@@ -290,6 +291,26 @@ def _parse_multipart(raw: bytes, content_type: str) -> dict:
             continue
         out[m.group(1)] = payload.rstrip(b"\r\n").decode("utf-8", "replace")
     return out
+
+
+def _log_answer_attempt(stem, ctype, n, ok, msg):
+    """Every upload attempt, to disk.
+
+    The only diagnostic this path had was a print() to stdout, and the tracker is normally started
+    with -WindowStyle Hidden — so a refused upload was completely invisible: no file appeared, no
+    message was seen, and the honest report was "it does not persist". A failure nobody can see is
+    indistinguishable from one that did not happen.
+    """
+    try:
+        d = FACTORY / ".data"
+        d.mkdir(parents=True, exist_ok=True)
+        import datetime as _dt
+        rec = {"at": _dt.datetime.now().isoformat(timespec="seconds"),
+               "stem": stem, "content_type": ctype, "bytes": n, "ok": bool(ok), "msg": str(msg)}
+        with (d / "answer-log.jsonl").open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(rec) + chr(10))
+    except Exception:                                              # noqa: BLE001
+        pass          # logging must never be the reason an upload fails
 
 
 def save_answer(stem: str, body: str):
@@ -1038,6 +1059,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         # The file wins when both are supplied: picking a file is the more deliberate act, and
         # silently preferring a half-filled textarea over it would be the wrong surprise.
         _ANSWER_MSG = save_answer(stem, uploaded or pasted)
+        _log_answer_attempt(stem, ctype, n, _ANSWER_MSG[0], _ANSWER_MSG[1])
         print(f"  answer: {_ANSWER_MSG[1]}")
         self.send_response(303)
         self.send_header("Location", "/research")
