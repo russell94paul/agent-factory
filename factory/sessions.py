@@ -17,6 +17,7 @@ session as live and refuse every launch.
 """
 from __future__ import annotations
 
+import datetime as _dt
 import json
 import os
 import pathlib
@@ -127,6 +128,10 @@ EXITED_RESUMABLE = "EXITED-RESUMABLE"
 EXITED_GONE = "EXITED-GONE"
 #: The process table could not be read. NOT the same as "nothing is running".
 UNKNOWN = "UNKNOWN-INSTRUMENT-BLIND"
+#: A job record exists and the session registry knows nothing about it. Distinct from EXITED_GONE,
+#: which means we watched a registered session's process disappear. Here there was never a
+#: registry entry to watch — so the question is real and there is nobody to ask about it.
+NO_SESSION = "NO-SESSION"
 
 
 def _slug(cwd) -> str:
@@ -262,9 +267,94 @@ def inventory() -> List[dict]:
     return out
 
 
+def _stamp(iso) -> Optional[float]:
+    """An ISO-8601 job timestamp as a POSIX float, or None when it is absent or unparseable.
+
+    None rather than a fallback value on purpose: the caller records which instrument the age came
+    from, and an unparseable stamp silently standing in for a real one is how a basis gets lost.
+    """
+    if not iso:
+        return None
+    try:
+        return _dt.datetime.fromisoformat(str(iso).replace("Z", "+00:00")).timestamp()
+    except Exception:                                              # noqa: BLE001
+        return None
+
+
 def blocked() -> List[dict]:
-    """Sessions with a written question and nobody reading it."""
-    return [r for r in inventory() if r["needs"]]
+    """Every written question waiting on a human — read from JOBS, not from the session list.
+
+    ⭐ This used to be ``[r for r in inventory() if r["needs"]]``, and `inventory()` iterates the
+    **session registry**. So a question whose session had exited was filtered out of the one
+    surface built to display it: on 2026-08-23, five agents were blocked on written questions and
+    the Sessions tab showed two.
+
+    Note which way that bias runs. The longer a question goes unanswered, the more likely its
+    session has exited — so a session-keyed inbox **systematically hides the questions that have
+    been waiting longest**, which on that day were both credential requests. That is the alarm
+    absence this inbox exists to end, rebuilt inside the fix for it.
+
+    A question is a fact on disk and it outlives the process that wrote it. Liveness is metadata
+    about *how to answer* — attach, resume, or accept that nobody is there — never a filter on
+    whether to show. Same rule as the run ledger: `finish()` deletes the claim, so the record has
+    to survive independently of the thing that made it.
+
+    Oldest first, because the whole failure was old questions going unseen.
+    """
+    by_job: Dict[str, dict] = {}
+    for r in inventory():
+        if r.get("job_id"):
+            by_job[str(r["job_id"])] = r
+
+    out: List[dict] = []
+    if not JOBS.is_dir():
+        return [r for r in inventory() if r["needs"]]
+    for d in sorted(JOBS.glob("*")):
+        f = d / "state.json"
+        if not f.is_file():
+            continue
+        try:
+            s = json.loads(f.read_text(encoding="utf-8", errors="replace"))
+        except Exception:                                          # noqa: BLE001
+            continue
+        need = (s.get("needs") or "").strip()
+        # `state == blocked` with no text still counts: an agent that stopped and could not say
+        # why is a worse case than one that could, not a lesser one.
+        if not need and s.get("state") != "blocked":
+            continue
+        row = dict(by_job.get(d.name) or {})
+        row.setdefault("pid", None)
+        row.setdefault("session_id", "")
+        row.setdefault("cwd", "")
+        # NO_SESSION, not EXITED_GONE: the registry knows nothing about this one at all, which is
+        # a different verdict from "we watched it exit". Keeping them apart is the same discipline
+        # as ZERO vs NOT-RECORDED everywhere else in this estate.
+        row.setdefault("state", NO_SESSION)
+        for k in ("name", "status", "kind", "agent", "repo", "lane", "where", "topic", "detail"):
+            row.setdefault(k, "")
+        row.update({
+            "job_id": d.name,
+            "needs": need,
+            "job_state": s.get("state"),
+            "tempo": s.get("tempo"),
+            "tokens": s.get("tokens"),
+            "in_flight": (s.get("inFlight") or {}).get("tasks"),
+            # The agent's own `updatedAt` beats the file's mtime: mtime is a property of the
+            # filesystem and a copy, a backup or a sync rewrites it, which would silently reset
+            # the age of the very questions this list ranks by age.
+            "waiting_since": _stamp(s.get("updatedAt")) or f.stat().st_mtime,
+            "waiting_basis": "updatedAt" if _stamp(s.get("updatedAt")) else "file mtime",
+            # Some agents write the answer they are hoping for. Surfacing it turns a question
+            # into a decision the reader can make in one glance instead of reconstructing it.
+            "suggested_reply": (s.get("suggestedReply") or "").strip(),
+            "answerable": row.get("state") in (RUNNING_ATTACHED, RUNNING_ORPHANED),
+        })
+        if not row["detail"]:
+            row["detail"] = s.get("detail") or ""
+        out.append(row)
+
+    out.sort(key=lambda r: r.get("waiting_since") or 0)
+    return out
 
 
 def collisions() -> Dict[str, List[dict]]:

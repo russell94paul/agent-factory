@@ -24,15 +24,22 @@ machine" is a local fact and committing it would make every clone claim to be bu
 """
 from __future__ import annotations
 
+import contextlib
 import datetime as _dt
 import json
 import os
 import pathlib
 import re
+import time
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 
-ROOT = pathlib.Path(__file__).resolve().parent.parent / ".data" / "claims"
+from . import repo as _repo
+
+# ⚠ Shared across every worktree, so it resolves to the PRIMARY. A claim one lane takes
+# that another cannot see is not a claim — and `__file__.parent.parent` gives each
+# worktree its own private claim store. See factory/repo.py.
+ROOT = _repo.data() / "claims"
 
 #: A claim older than this is reported stale. Long enough that a real session working a large
 #: lane is not nagged; short enough that a dead one does not block a morning.
@@ -58,11 +65,67 @@ class Claim:
 
     @property
     def stale(self) -> bool:
+        """The claim is OLD. It does **not** mean the session is gone — see :func:`holder`.
+
+        These were the same thing until 2026-08-23, when three lanes claimed 29h earlier were
+        reported "STALE — release it if that session is gone" while all three sessions were
+        still running. Age is a clock reading; liveness is a measurement.
+        """
         return self.age > STALE_AFTER
 
     def human_age(self) -> str:
         m = int(self.age.total_seconds() // 60)
         return f"{m}m ago" if m < 90 else f"{m // 60}h{m % 60:02d}m ago"
+
+
+#: What actually holds a claim. Age cannot tell these apart, and the difference decides whether
+#: releasing is housekeeping or is the act that puts a second agent into an occupied worktree.
+HELD_LIVE = "HELD-LIVE"
+HELD_GONE = "HELD-GONE"
+HELD_UNVERIFIED = "HELD-UNVERIFIED"
+
+
+def holder(lane: str):
+    """(verdict, sessions) for who holds `lane` — measured against the process table.
+
+    Three verdicts, never two. ``HELD_UNVERIFIED`` is the one that matters: a process table we
+    could not read, or a session registry that is not there, is **not** evidence that nothing is
+    running. Collapsing it into ``HELD_GONE`` is how a guard silently passes — the same
+    distinction `sessions._running_pids` already draws by returning None rather than an empty set.
+
+    Imported lazily: `sessions` imports nothing from this package and must stay that way, and a
+    claim must still be readable on a machine where the process table cannot be probed at all.
+    """
+    try:
+        from . import sessions as _sessions
+        if not _sessions.REGISTRY.is_dir():
+            return HELD_UNVERIFIED, []
+        found = _sessions.live(lane)
+    except Exception:                                              # noqa: BLE001
+        return HELD_UNVERIFIED, []
+    if any(s.get("unverified") for s in found):
+        return HELD_UNVERIFIED, found
+    if not found:
+        return HELD_GONE, []
+    return HELD_LIVE, found
+
+
+def advice(lane: str) -> str:
+    """The sentence a surface prints next to a claim. Never says "release it" unless measured.
+
+    `finish()` has always consulted `sessions.live()` before releasing. This module did not, so
+    the two disagreed about the same question and the one that talked to the operator was the one
+    that had not looked.
+    """
+    verdict, found = holder(lane)
+    if verdict == HELD_LIVE:
+        who = ", ".join(f"{s['pid']}:{s.get('status') or '?'}" for s in found)
+        return (f"session {who} is STILL RUNNING — do NOT release; a relaunch would start a "
+                f"second agent in this worktree")
+    if verdict == HELD_GONE:
+        return "no live session found — safe to release"
+    return ("liveness UNVERIFIED (process table or session registry unreadable) — do not assume "
+            "the session is gone")
 
 
 def _path(lane: str) -> pathlib.Path:
@@ -103,25 +166,90 @@ def blockers(lane: str, claimed: Optional[Dict[str, Claim]] = None) -> List[Clai
     return out
 
 
+#: How long a caller will wait for the claim lock before refusing.
+_LOCK_TIMEOUT = 5.0
+#: How old a lock must be before it is presumed abandoned and stolen.
+#:
+#: ⚠ These MUST be different numbers and abandon MUST be the larger. When both were 5.0 the steal
+#: always fired first, so the wait could never expire and the refusal path was unreachable dead
+#: code — a guard that cannot refuse, which is the defect this repo names most often. `claim()`
+#: writes one small file, so a hold lasting longer than a minute is a crashed process, not a slow
+#: one.
+_LOCK_ABANDON = 60.0
+
+
+@contextlib.contextmanager
+def _exclusive():
+    """Serialise the check-then-write in `claim()`. Required since the tracker server went threaded.
+
+    WARNING: this used to be free and nobody noticed. `claim()` reads `blockers()` and then writes,
+    with nothing in between. That was atomic only because `socketserver.TCPServer` handled one
+    request at a time -- an accident of the transport, not a property of the code. Threading the
+    server on 2026-08-23 removed it, and `/start/<lane>` is a GET, so a double-click or a browser
+    prefetch was enough for two requests to pass the same check and both write. That is F73 (two
+    agents, one worktree, one branch) re-opened at the HTTP layer.
+
+    `O_CREAT|O_EXCL` is atomic on Windows and POSIX alike, so the lock file's own creation is the
+    mutual exclusion. A lock older than the timeout is presumed abandoned and stolen -- a crashed
+    holder must not wedge the board permanently, which would turn a race into a deadlock.
+    """
+    ROOT.mkdir(parents=True, exist_ok=True)
+    lock = ROOT / ".claim.lock"
+    deadline = time.monotonic() + _LOCK_TIMEOUT
+    while True:
+        try:
+            os.close(os.open(str(lock), os.O_CREAT | os.O_EXCL | os.O_WRONLY))
+            break
+        # ⚠ PermissionError, not just FileExistsError. On Windows, O_CREAT|O_EXCL against a file
+        # that another thread is concurrently deleting raises EACCES rather than EEXIST — so
+        # catching only FileExistsError let a losing thread escape the retry loop entirely and
+        # crash. Twenty racing threads reproduce it every time; two rarely do.
+        except (FileExistsError, PermissionError):
+            try:
+                if time.time() - lock.stat().st_mtime > _LOCK_ABANDON:
+                    lock.unlink()                       # abandoned by a crashed holder
+                    continue
+            except OSError:
+                pass                                    # it vanished under us; just retry
+            if time.monotonic() > deadline:
+                raise ClaimError(
+                    "could not acquire the claim lock -- another request is holding it. "
+                    "If nothing is running, delete .data/claims/.claim.lock")
+            time.sleep(0.02)
+    try:
+        yield
+    finally:
+        try:
+            lock.unlink()
+        except OSError:
+            pass
+
+
 def claim(lane: str, who: str = "", note: str = "", force: bool = False) -> Claim:
     """Record that `lane` is being worked. Refuses if a conflicting lane is claimed."""
     from .lanes import LANES
     if lane not in {l.id for l in LANES}:
         raise ClaimError(f"no lane {lane!r}")
-    found = blockers(lane)
-    if found and not force:
-        parts = []
-        for c in found:
-            what = "already claimed" if c.lane == lane else f"conflicts with {c.lane}"
-            parts.append(f"{what} ({c.human_age()}"
-                         + (", STALE — release it if that session is gone" if c.stale else "")
-                         + ")")
-        raise ClaimError(f"cannot start {lane}: " + "; ".join(parts))
-    ROOT.mkdir(parents=True, exist_ok=True)
-    now = _dt.datetime.now(_dt.timezone.utc)
-    payload = {"since": now.isoformat(), "who": who or os.environ.get("USERNAME", "unknown"),
-               "note": note, "forced": bool(found and force)}
-    _path(lane).write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    # The check and the write must be one indivisible step, or two callers both see "free".
+    with _exclusive():
+        found = blockers(lane)
+        if found and not force:
+            parts = []
+            for c in found:
+                what = "already claimed" if c.lane == lane else f"conflicts with {c.lane}"
+                # The advice is measured against the process table, not read off the clock. The old
+                # text said "STALE — release it if that session is gone" purely because the claim was
+                # older than four hours, which on 2026-08-23 told the operator to release three claims
+                # whose sessions were all still running.
+                parts.append(f"{what} ({c.human_age()}"
+                             + (f", {'STALE' if c.stale else 'held'}: {advice(c.lane)}")
+                             + ")")
+            raise ClaimError(f"cannot start {lane}: " + "; ".join(parts))
+        ROOT.mkdir(parents=True, exist_ok=True)
+        now = _dt.datetime.now(_dt.timezone.utc)
+        payload = {"since": now.isoformat(), "who": who or os.environ.get("USERNAME", "unknown"),
+                   "note": note, "forced": bool(found and force)}
+        _path(lane).write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     return Claim(lane, now, payload["who"], note)
 
 
