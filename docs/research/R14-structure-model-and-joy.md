@@ -47,7 +47,7 @@ instead of the source, and both times we only found out afterwards.
 | **R8** | data-engineering factory, sandboxes, the isolation ladder | **The 3-lane cap is an artefact of file conflicts.** A container + its own DB clone per agent makes the ceiling resource-bound. Smallest step: containerise on ONE machine first |
 | **R11** | which concepts other factories make first-class | ANSWERED. Do not re-survey vendor taxonomies |
 | **R12** | should we adopt an existing session manager | ANSWERED, with caveats; its own evidence undercut it |
-| **R13** | the option space — stacks, latency, approval, provenance | **The platform is a VS Code extension**, not a desktop app: the operator already lives in VS Code, and Monaco, LSP, Git and diffs come free. Electron is out on weight. **Do not re-litigate this** |
+| **R13** | the option space — stacks, latency, approval, provenance | **The platform is a VS Code extension**, not a desktop app: the operator already lives in VS Code, and Monaco, LSP, Git and diffs come free. Electron is out on weight. **Do not re-litigate this.** ⚠ A **run 2 is in flight** repairing its migration section — it owns the question *"does an approval surface for a non-engineer fit inside a VS Code extension, given a non-engineer does not have VS Code open?"* **Leave that one to it.** |
 | **R15** | read the field's source, repo by repo | ANSWERED. Its desktop-app recommendation **lost to R13's** |
 
 ⭐ **Two things are closed and must not be re-opened.** First, **topology**: R13 surveyed seven
