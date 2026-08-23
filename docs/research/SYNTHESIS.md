@@ -1,4 +1,4 @@
-# Synthesis — what twelve research passes concluded, and what changes
+# Synthesis — what thirteen research passes concluded, and what changes
 
 **2026-08-21, extended 2026-08-22.** Eight documents: R1 eval harness, R2 topology, R3 control
 plane, R4 agnostic optimiser (twice), **R5 build velocity**, **R6 automation and alerting**, and —
@@ -872,3 +872,137 @@ switchboard's attach behaviour as UNKNOWN and do not let either answer carry a d
 - **R15:** anything about design craft — no type scale, no colour system, no hierarchy, no motion,
   and no mention of `UNMEASURABLE`, which is the colour problem no standard palette solves. That is
   R14's job and R14 has not run.
+
+
+---
+
+## 14. R13 — the platform question, settled; and three passes now agree on the first move (added 2026-08-23)
+
+R13 landed after §13. Only R14 remains unsent.
+
+### 14.1 ⭐ R13 and R8 bracket the concurrency question from opposite sides — and agree
+
+They read as a contradiction and are not one:
+
+> **R13 §1:** *"None of these patterns magically breaches a 3-lane cap… orchestration patterns
+> address reliability and fault modes; **raising the concurrency ceiling depends on task structure,
+> not the orchestration style.**"*
+>
+> **R8 §4:** change the task structure — a container and its own DB clone per agent — and the
+> ceiling becomes resource-bound, *"potentially 10+"*.
+
+R13 surveyed seven orchestration patterns and found **none** of them raises the cap: not
+orchestrator–worker, not hierarchical, not blackboard, not actor/supervisor, not contract-net, not
+stigmergic, not generator–critic. Then it names the mechanism that would — task structure — which
+is precisely what R8 recommends changing.
+
+⭐ **Two independent passes, from opposite directions, converge on the same answer: reorganising
+the agents buys nothing; re-scoping what they touch buys everything.** That is the strongest
+result in this document, and it retires the idea that a cleverer topology is worth pursuing.
+
+### 14.2 The platform question is settled, and it settles against R15
+
+| | Recommends | Argument |
+|---|---|---|
+| **R15** | a **Rust/Tauri desktop app** | lean binary, fast start |
+| **R13** | a **VS Code extension** | the operator is already in VS Code, so cold start is *nothing*; Monaco, LSP, Git, diffs and file-watching come free; *"the line past which we rebuild an IDE is reached as soon as we start re-implementing code editing, syntax highlighting, search, diffing, branching"* |
+
+**R13's argument is stronger and it is also the cheaper one**, which matters because the operator's
+stated constraint on 2026-08-23 was that a desktop app is unaffordable in time. R13 puts Electron
+out on weight (100–200 MB for a hello-world; Slack and Discord over 500 MB), keeps Tauri/Wails as
+the runner-up, and notes a TUI as a last-resort fallback.
+
+**Take R13's platform answer over R15's.** Note it also resolves the repo-integration ask directly:
+opening files, diffs, staging and committing are things VS Code already does, and building them
+again is the definition of rebuilding an IDE.
+
+⚠ **But R13 was arguing partly blind.** Its §8 says: *"We must build on top of the existing four
+interfaces (and one dead one). **Without detail on those, we assume multiple UIs (CLI, web panel,
+maybe Slack bot)**."* It never read `ui-surface-inventory.md`, which describes those four surfaces
+precisely and was its named attachment. So its **migration section is guesswork and should be
+discounted**, while its platform, latency and approval sections — which did not need the inventory —
+stand.
+
+### 14.3 Three independent sources now name the same first move
+
+R13's executive summary picks **urgent human notification** as the first change to make, *"since
+the measured backlog shows humans are the bottleneck (agents queue for days)."*
+
+That is the third independent arrival at the same conclusion:
+
+| Source | Basis |
+|---|---|
+| Measurement, 2026-08-23 | two PRs green and waiting **6 and 9 days**; four agents blocked on written questions nobody read |
+| R12 §4.2 | *alarm absence*, not alarm fatigue — action-required notifications must interrupt |
+| R13 §6 | *"Our failure is not over-alerting (fatigue) but under-alerting"* |
+
+R13 adds the evidence tier honestly: there are **no studies on AI-agent prompts specifically**, so
+it borrows from incident management — passive channels (email) take hours, SMS/phone/vibration get
+under five minutes. `REPORTED`, and labelled as such.
+
+**When three passes and one measurement agree, stop asking and build it.**
+
+### 14.4 The non-engineer approval question — answered, and the answer is "nobody has"
+
+R13 surveyed GitHub Agentic Workflows, Copilot Workspace, Graphite, Factory.ai Droid and Cursor
+Cloud Agents. The state of the art is **pull-request gating with AI assistance**: work arrives as a
+diff, with evidence in the PR body, and a human approves. Copilot Workspace makes *every step*
+subject to approval; Cursor found that gating every step causes fatigue and now classifies by risk.
+
+> **"We found no off-the-shelf tool targeting business users reviewing code changes."**
+
+So the APPROVE-plane surface for a non-engineer is genuinely unbuilt, and R13 names what it would
+have to show: **context** (why, in plain language), **proof** (tests, logs), **cost** (tokens,
+time), and **provenance** (which agent, which config).
+
+### 14.5 Provenance — a small, adoptable answer for the 0-of-15 hash
+
+R13 recommends aligning to the **OpenTelemetry GenAI semantic conventions** (`gen_ai.*` — agent
+identity, model version, token counts) and emitting a **simple JSON provenance record per commit**,
+SLSA/in-toto in shape but not in ceremony. Explicitly **skip** cryptographic signing, TEEs and full
+attestation as over-engineering at our size, and skip data-lineage tooling because our inputs are
+code and git already records ancestry.
+
+That is directly actionable against the config hash covering **0 of 15 dimensions**: the dimensions
+it names — model ID, prompt version, tool versions, commit hash, agent ID — are the hash.
+
+### 14.6 ⛔ Three passes have now avoided the terminal question rather than answering it
+
+- **R7** restated our own position back to us.
+- **R15** answered it with a **fabricated user study** (§13.5).
+- **R13 §9** says: *"The operator has indicated the terminal should remain an escape hatch only.
+  Therefore, we will not build the UI around an embedded shell."*
+
+That third one is deference, not argument. R13 §6 asked it to argue the question **on the merits**
+and to give both branches; it took our position as a premise instead.
+
+**The practical consequence is small and the methodological one is not.** Practically, every pass
+now points the same way and the operator's own position is that terminal mode should exit — so the
+decision is not in doubt. Methodologically, **we have paid four times for an answer to a question
+none of them answered**, and the reason is the same each time: we stated our position inside the
+question. A question you cannot ask neutrally should be settled as a decision and removed from the
+brief, not carried into a fifth pass.
+
+**Action: write it as a decision, and stop asking.**
+
+### 14.7 What changes — additions to §13.7
+
+1. **Platform: a VS Code extension**, not a desktop app (§14.2). Cheapest, and it inherits the
+   editor, Git and diffs rather than rebuilding them.
+2. **Build the notification channel first** (§14.3). Three passes and one measurement agree.
+3. **Stop surveying orchestration topologies** (§14.1). Seven were checked and none moves the cap.
+4. **Config hash: adopt the OTel GenAI field set** (§14.5) — it is a list of the dimensions we are
+   missing, already written down.
+5. **Discount R13's migration section** (§14.2) — it guessed our surfaces.
+6. **Settle the terminal question as a decision and delete it from every prompt** (§14.6).
+
+### 14.8 What R13 could not settle
+
+- **Our conflict graph specifically.** It reasons about a 3-lane cap in the abstract and never
+  opens `lanes.py`, so "which topology suits *our* graph" is unanswered — though §14.1 makes that
+  moot.
+- **Whether a VS Code extension can host the approval surface well.** It recommends the platform
+  and the surface separately and never checks that the second fits inside the first.
+- **Anything measured about our latency.** Its budget (first paint <100 ms, interaction <50–100 ms,
+  full re-measure <500 ms) is from user-perception guidelines, `INFERRED` — not from profiling the
+  9.3 s we measured.
