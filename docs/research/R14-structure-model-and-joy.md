@@ -1,6 +1,6 @@
 # R14 — Attack our structure, name the right objects, and design something people are glad to open
 
-**Status: DISPATCHED 2026-08-23.** Written 2026-08-23. Paste the whole file. Attach
+**Status: NOT DISPATCHED.** Written 2026-08-23. Paste the whole file. Attach
 `docs/research/ui-surface-inventory.md` **and the repo** — this pass is worth little without the
 code, and §2 explains exactly what to read.
 The answer is filed at `docs/research/answers/R14-answer-structure-model-and-joy.md`.
@@ -10,7 +10,8 @@ The answer is filed at `docs/research/answers/R14-answer-structure-model-and-joy
 
 | Run | Dispatched | Outcome |
 |---|---|---|
-| 1 | 2026-08-23 | **Dispatched — no answer yet.** |
+| 1 | 2026-08-23 | ⚠ **Recorded as dispatched, but it never ran.** Corrected 2026-08-23 on Paul's word. The row is kept rather than deleted: a send that did not happen is exactly what this table exists to catch, and erasing it would leave the same blind spot that made "which did I upload?" unanswerable. |
+| 2 | pending | Dispatch with `R14-evidence-pack.md` attached (372 KB, rebuild with `scripts/build_r14_pack.py`). |
 
 > Kept because `factory.dispatch` reads a status line and the presence of an answer file, and by its own account cannot see whether a prompt was ever actually pasted anywhere. Without this table "which did I send, and when?" is not answerable from disk. **Add a row every time this prompt is dispatched.**
 
