@@ -27,7 +27,13 @@ import subprocess
 import sys
 from typing import Dict, List, Optional
 
-REPO = pathlib.Path(__file__).resolve().parent.parent
+from . import repo as _repo
+
+# ⚠ PRIMARY. Lanes run inside worktrees, and this is where a lane writes its closing note —
+# the human half nothing can reconstruct. From a worktree the old expression made BOOT
+# `<primary>/.worktrees/aldc-launchpad/boot-prompts`, which mkdir(parents=True) then created
+# SILENTLY, inside the directory that gets deleted when the worktree is removed.
+REPO = _repo.primary()
 #: Boot prompts are cross-repo session memory and live in aldc-launchpad by long-standing
 #: convention. Writing them here instead would create the fifth artefact home CLAUDE.md warns of.
 BOOT = REPO.parent / "aldc-launchpad" / "boot-prompts"

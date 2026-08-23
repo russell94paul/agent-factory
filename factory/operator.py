@@ -16,10 +16,15 @@ from __future__ import annotations
 import datetime as _dt
 import json
 import pathlib
+
+from . import repo as _repo
 import re
 from typing import Dict, Optional
 
-ROOT = pathlib.Path(__file__).resolve().parent.parent / ".data" / "operator"
+# ⚠ PRIMARY. Paul answers a lane's blocking question from the tracker in the primary
+# checkout; the lane reads it from inside its worktree. Split those and the answer is
+# written where the asker cannot see it. See factory/repo.py.
+ROOT = _repo.data() / "operator"
 _SAFE = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
 
 #: An answer longer than this is a conversation, not a decision, and belongs in the lane prompt.

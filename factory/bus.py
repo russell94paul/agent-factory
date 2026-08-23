@@ -29,10 +29,15 @@ import datetime as _dt
 import json
 import os
 import pathlib
+
+from . import repo as _repo
 import re
 from typing import Dict, List, Optional
 
-ROOT = pathlib.Path(__file__).resolve().parent.parent / ".data" / "bus"
+# ⚠ PRIMARY, not this checkout. A per-worktree bus is not a bus: lanes run INSIDE worktrees,
+# so events published there were invisible to everyone else. That is the recorded reason a
+# finished lane left no trace and the estate held one event. See factory/repo.py.
+ROOT = _repo.data() / "bus"
 _SAFE = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
 
 #: Longer than this is a document, and a document belongs in findings.d or evidence.

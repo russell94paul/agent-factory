@@ -96,3 +96,89 @@ def test_existing_finds_the_worktrees_git_reports():
 def test_in_worktree_agrees_with_where_the_primary_points():
     """A direct way to ask 'am I somewhere that used to break things?'"""
     assert repo.in_worktree() == (repo.primary().resolve() != repo.HERE.resolve())
+
+
+# --------------------------------------------------------------------------- the whole class
+
+
+def _computes_data_root_from_file(line: str) -> bool:
+    """True for a line that builds a `.data/` path out of this file's own location.
+
+    Deliberately a substring test rather than a regex: the thing being detected is three literal
+    tokens on one line, and a regex here would be harder to read than the rule it encodes.
+    """
+    s = line.lstrip()
+    if s.startswith("#"):
+        return False
+    return "__file__" in s and ".parent.parent" in s and ".data" in s
+
+
+def test_no_module_computes_a_shared_data_root_from_its_own_file():
+    """A STRUCTURAL guard, because fixing instances did not work.
+
+    This bug appeared five times — claims, worktrees, handoff, bus, operator — each found
+    separately, each fixed separately, and every fix left the pattern available for the next
+    module. `runs.py` even had the correct resolver and kept it private, which is precisely what
+    let the others stay wrong.
+
+    So the rule is enforced rather than remembered: **anything under `.data/` is estate-wide state
+    and must resolve through `factory.repo`.** Git-tracked content may legitimately be
+    checkout-relative — that is the real distinction, and it is why this targets `.data/` instead
+    of banning the expression outright.
+    """
+    factory = repo.primary() / "factory"
+    bad = []
+    for f in sorted(factory.glob("*.py")):
+        if f.name == "repo.py":
+            continue
+        for i, line in enumerate(f.read_text(encoding="utf-8").splitlines(), 1):
+            if _computes_data_root_from_file(line):
+                bad.append(f"{f.name}:{i}  {line.strip()}")
+    assert not bad, (
+        "these build a .data/ path from __file__ instead of factory.repo, so the state is "
+        "private to whichever worktree happens to run them:\n  " + "\n  ".join(bad))
+
+
+def test_the_structural_guard_can_actually_fail():
+    """Proof the check above is not vacuous — the rule this repo holds every gate to.
+
+    Uses the exact line that shipped in bus.py, so if the detector is ever loosened past the real
+    defect this fails rather than quietly passing everything.
+    """
+    shipped = 'ROOT = pathlib.Path(__file__).resolve().parent.parent / ".data" / "bus"'
+    assert _computes_data_root_from_file(shipped), (
+        "the guard would not have caught the bug that actually shipped")
+    assert not _computes_data_root_from_file('ROOT = _repo.data() / "bus"'), (
+        "the guard flags the corrected form, so it would block the fix")
+    assert not _computes_data_root_from_file(
+        '    # ROOT = pathlib.Path(__file__).resolve().parent.parent / ".data" / "bus"'), (
+        "a commented-out line is documentation, not a defect")
+
+
+def test_boot_prompts_resolve_to_the_real_cross_repo_home():
+    """A lane's closing note is the human half that nothing can reconstruct.
+
+    From inside a worktree this used to resolve to
+    `<primary>/.worktrees/aldc-launchpad/boot-prompts`, which `mkdir(parents=True, exist_ok=True)`
+    then created SILENTLY — writing the note into the directory that gets deleted when the
+    worktree is removed. No error, no warning, and the one irreplaceable part of the handoff gone.
+    """
+    from factory import handoff
+    assert handoff.BOOT.name == "boot-prompts"
+    assert handoff.BOOT.parent.name == "aldc-launchpad"
+    assert ".worktrees" not in handoff.BOOT.parts, (
+        f"boot prompts would be written to {handoff.BOOT}, inside a worktree")
+
+
+def test_the_event_bus_is_shared_across_the_estate():
+    """A per-worktree bus is not a bus. Lanes run inside worktrees, which is where it mattered."""
+    from factory import bus
+    assert ".worktrees" not in bus.ROOT.parts, f"the bus at {bus.ROOT} is private to one worktree"
+    assert bus.ROOT.parent.parent == repo.primary()
+
+
+def test_operator_answers_are_visible_to_the_lane_that_asked():
+    """Paul answers from the tracker in the primary; the lane reads from inside its worktree."""
+    from factory import operator
+    assert ".worktrees" not in operator.ROOT.parts
+    assert operator.ROOT.parent.parent == repo.primary()
