@@ -17,9 +17,25 @@ a check that cannot fail is not a check.
 """
 from __future__ import annotations
 
+import os
+
 import pytest
 
 from factory import runs
+
+# ---------------------------------------------------------------------------------------------
+# ⛔ Mark the whole run as being INSIDE the suite, before any test imports a measuring surface.
+#
+# The `suite` readiness gate shells out to `python -m pytest`. So the moment a test renders a tab
+# that measures, it re-enters that gate, spawns the entire suite again, and the child does the
+# same — unbounded fan-out. The first test to render the roadmap tab produced 14 nested pytest
+# processes before it was killed.
+#
+# `readiness.g_contract_suite_green` reads this flag and reports NOT-RUN instead of recursing,
+# which is also the honest verdict: a suite cannot measure itself while it is still running. Set
+# here rather than in each test for the same reason the ledger redirect is autouse — a test added
+# later cannot forget it.
+os.environ["AGENT_FACTORY_IN_SUITE"] = "1"
 
 
 @pytest.fixture()

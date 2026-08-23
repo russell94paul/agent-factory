@@ -20,10 +20,12 @@ import ast
 import collections
 import re
 import glob
+import hashlib
 import json
 import os
 import pathlib
 import subprocess
+import time
 from dataclasses import dataclass, field
 from typing import Callable, List, Optional
 
@@ -350,13 +352,142 @@ def g_qa_gate_is_general():
     return _pass("QA verification targets the connector's own deployment", [], src)
 
 
+#: Where the suite verdict is remembered between renders. Under .data/, which is gitignored.
+_SUITE_CACHE = FACTORY / ".data" / "suite-cache.json"
+
+#: The negative control — "every assertion has been proved able to fail" — is the one claim this
+#: project rests on, and replaying it from JSON forever would mean nobody ever re-earns it. So the
+#: cache expires on a clock as well as on content. 12h costs ~9 s a day and buys a daily re-proof.
+_SUITE_TTL_SEC = 12 * 3600
+
+#: Environment the suite's verdict actually depends on. `CONNECTORS` resolves from
+#: $PREFECT_CONNECTORS, and `test_measurement_window.py:105` asserts that path appears in gate
+#: evidence — so the same bytes measured under a different checkout are a DIFFERENT verdict.
+#: Leaving this out reintroduced F72 ("this board reads 9 or 10 at the SAME COMMIT depending only
+#: on the cwd") through the cache door.
+_SUITE_ENV = ("PREFECT_CONNECTORS", "AGENT_FACTORY_EVALUATOR", "AGENT_FACTORY_EVALS")
+
+
+def _suite_inputs():
+    """Every path whose bytes can change the suite's verdict. Enumerated, not assumed.
+
+    ⚠ `scripts/` belongs here even though it is not a package: `tests/test_tracker_routes.py` and
+    `tests/test_roadmap.py` both `from scripts import local_tracker`, so the 1,900-line UI is a
+    suite input. Omitting it made the tracker the one file you could edit without invalidating the
+    cache — while editing it was the whole activity. `docs/artifacts/agent-factory.html` is here
+    for the same reason: `test_tracker_is_current.py` reads it.
+    """
+    for base in ("tests", "factory", "scripts"):
+        d = FACTORY / base
+        if d.is_dir():
+            for f in sorted(d.rglob("*.py")):
+                if "__pycache__" not in f.parts:
+                    yield f
+    for name in ("pyproject.toml", "docs/artifacts/agent-factory.html"):
+        f = FACTORY / name
+        if f.is_file():
+            yield f
+
+
+def _suite_fingerprint() -> str:
+    """A content hash of everything that could change the suite's verdict.
+
+    NOT a git SHA. A commit SHA is stable across uncommitted edits, which is precisely the state
+    you are in while iterating — so a SHA-keyed cache would serve a stale green over code you had
+    just broken. Hashing the bytes cannot do that.
+
+    The environment is hashed alongside the bytes because the suite reads it. A fingerprint that
+    covers only files is a claim that files are the only input, and here that claim is false.
+    """
+    h = hashlib.sha256()
+    for f in _suite_inputs():
+        h.update(str(f.relative_to(FACTORY)).encode())
+        h.update(f.read_bytes())
+    for k in _SUITE_ENV:
+        h.update(f"{k}={os.environ.get(k, '')}".encode())
+    h.update(f"CONNECTORS={CONNECTORS}".encode())
+    return h.hexdigest()
+
+
+def _age(seconds: float) -> str:
+    """Render an age the way a person reads one. Never rounds up to hide staleness.
+
+    Clamps at zero: a backward clock correction must not render "-3m ago", which reads as a
+    glitch and invites the reader to ignore the age altogether.
+    """
+    s = max(0, int(seconds))
+    if s < 60:
+        return f"{s}s ago"
+    if s < 3600:
+        return f"{s // 60}m ago"
+    if s < 86400:
+        return f"{s // 3600}h {(s % 3600) // 60}m ago"
+    return f"{s // 86400}d {(s % 86400) // 3600}h ago"
+
+
+def _cache_write(payload: dict) -> None:
+    """Atomically, or not at all.
+
+    The server is threaded, so two cold viewers can reach this together. `write_text` interleaved
+    yields invalid JSON, which the reader swallows and turns into a re-run — a cache miss becoming
+    a thundering herd of pytest subprocesses, in an estate whose signature incident is ten
+    containers taking the whole core quota.
+    """
+    try:
+        _SUITE_CACHE.parent.mkdir(parents=True, exist_ok=True)
+        tmp = _SUITE_CACHE.with_suffix(f".{os.getpid()}.tmp")
+        tmp.write_text(json.dumps(payload), encoding="utf-8")
+        os.replace(tmp, _SUITE_CACHE)
+    except Exception:                                            # noqa: BLE001
+        pass       # a cache that cannot be written must not fail the measurement it was speeding
+
+
 def g_contract_suite_green():
+    # The suite is 97.6% of a full measure() and every tab pays it. Cache it against the CONTENT
+    # of tests/ and factory/ so an unchanged tree is not re-proved on every page refresh.
+    #
+    # ⚠ The cached verdict carries its age IN THE HEADLINE, never beside it. A number that has
+    # been sitting in a cache is a different claim from one measured just now, and this whole
+    # project exists because those two got rendered identically somewhere else.
+    # ⛔ RECURSION GUARD, and it is load-bearing. This gate shells out to `python -m pytest`. Any
+    # test that renders a measuring surface therefore re-enters here, spawns the whole suite again,
+    # and that child does the same — an unbounded fan-out that ate 14 processes the first time a
+    # test rendered the roadmap tab. A suite cannot measure itself from inside itself anyway: the
+    # verdict would be "the run that is still running". So the child reports NOT-RUN and says why.
+    if os.environ.get("AGENT_FACTORY_IN_SUITE") == "1":
+        return _notrun("suite not re-run from inside itself",
+                       ["AGENT_FACTORY_IN_SUITE=1 — this measurement is happening inside a pytest "
+                        "run, so shelling out to pytest again would recurse without bound",
+                        "the parent run's verdict is the real one"], "tests/")
+    fp = _suite_fingerprint()
+    try:
+        cached = json.loads(_SUITE_CACHE.read_text(encoding="utf-8"))
+    except Exception:                                            # noqa: BLE001
+        cached = None
+    fresh = (cached and cached.get("fingerprint") == fp
+             and 0 <= (time.time() - cached["at"]) < _SUITE_TTL_SEC
+             # ⚠ Only a PASS is ever served from cache. A cached FAIL is the F20/F21 shape: fix a
+             # missing dependency — an environment change, not a byte change — and the board would
+             # keep showing red for a suite that now passes. A gate that cannot pass is exactly as
+             # broken as one that cannot refuse, so a red verdict is always re-earned.
+             and cached.get("verdict") == PASS)
+    if fresh:
+        age = _age(time.time() - cached["at"])
+        return Result(cached["verdict"],
+                      f"{cached['headline']} (cached, last run {age})",
+                      list(cached.get("evidence", []))
+                      + [f"tests/, factory/, scripts/ and the environment are unchanged since "
+                         f"that run (sha256 {fp[:12]})",
+                         f"cache expires after {_SUITE_TTL_SEC // 3600}h so the negative control "
+                         f"is re-earned on a clock, not replayed forever"],
+                      cached.get("source", "tests/"))
     try:
         # No -q here: pyproject addopts already sets it, and -qq suppresses the
         # summary line this gate parses. The instrument was blind to its own config.
+        env = dict(os.environ, AGENT_FACTORY_IN_SUITE="1")
         r = subprocess.run(["python", "-m", "pytest", "--no-header", "--tb=no",
                             "-p", "no:cacheprovider"],
-                           cwd=FACTORY, capture_output=True, text=True, timeout=300)
+                           cwd=FACTORY, capture_output=True, text=True, timeout=300, env=env)
     except Exception as exc:
         raise Unmeasurable(f"could not run the suite: {exc}")
     clean = re.sub("\x1b?\\[[0-9;]*m", "", r.stdout + "\n" + r.stderr)
@@ -366,9 +497,13 @@ def g_contract_suite_green():
     line = re.sub(r" in [0-9.]+s", "", hits[-1].strip()) if hits         else "(pytest printed no summary line)"
     src = "tests/"
     if r.returncode == 0:
-        return _pass(line.strip(), ["includes test_every_assertion_has_been_proved_"
-                                    "able_to_fail"], src)
-    return _fail(line.strip(), [], src)
+        res = _pass(line.strip(), ["includes test_every_assertion_has_been_proved_"
+                                   "able_to_fail"], src)
+    else:
+        res = _fail(line.strip(), [], src)
+    _cache_write({"fingerprint": fp, "at": time.time(), "verdict": res.verdict,
+                  "headline": res.headline, "evidence": res.evidence, "source": res.source})
+    return res
 
 
 def g_output_is_certified():
