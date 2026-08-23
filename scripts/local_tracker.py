@@ -1416,9 +1416,16 @@ def render(when: datetime.datetime, tab: str = "gates", team: str = "") -> str:
             w(f'<p style="font-size:12.5px;color:var(--ink3);margin:0 0 10px">'
               f'{e(band["why"])}</p>')
             for g in band["gates"]:
-                unl = (f' &middot; unlocks <code>{e(", ".join(g["unlocks"]))}</code>'
+                # ⚠ The connective words carry their OWN font-size. Placed bare after the phase
+                # span they inherited the div default and rendered noticeably larger than every
+                # word around them — invisible to a render-to-string test, obvious on sight, and
+                # caught only by the first real render pass on 2026-08-23.
+                _sm = 'font-size:11.5px;color:var(--ink3)'
+                unl = (f'<span style="{_sm}"> &middot; unlocks </span>'
+                       f'<code style="font-size:11.5px">{e(", ".join(g["unlocks"]))}</code>'
                        if g["unlocks"] else "")
-                wait = (f' &middot; waits on <code style="color:var(--fail)">'
+                wait = (f'<span style="{_sm}"> &middot; waits on </span>'
+                        f'<code style="font-size:11.5px;color:var(--fail)">'
                         f'{e(", ".join(g["unmet"]))}</code>' if g["unmet"] else "")
                 w(f'<div style="padding:7px 0;border-top:1px solid var(--rule)">'
                   f'<code style="font-size:13px;color:{col}"><b>{e(g["id"])}</b></code>'
