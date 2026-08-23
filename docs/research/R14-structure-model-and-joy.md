@@ -11,7 +11,7 @@ The answer is filed at `docs/research/answers/R14-answer-structure-model-and-joy
 | Run | Dispatched | Outcome |
 |---|---|---|
 | 1 | 2026-08-23 | ⚠ **Recorded as dispatched, but it never ran.** Corrected 2026-08-23 on Paul's word. The row is kept rather than deleted: a send that did not happen is exactly what this table exists to catch, and erasing it would leave the same blind spot that made "which did I upload?" unanswerable. |
-| 2 | pending | Dispatch with `R14-evidence-pack.md` attached (372 KB, rebuild with `scripts/build_r14_pack.py`). |
+| 2 | pending | Dispatch with `R14-evidence-pack.md` attached (456 KB — includes the AMT proposal as §A2; rebuild with `scripts/build_r14_pack.py`). Prompt refreshed 2026-08-23 after R8, R13 and R15 all landed: the platform and topology questions are now closed and the terminal question is settled, so this pass is design-only. |
 
 > Kept because `factory.dispatch` reads a status line and the presence of an answer file, and by its own account cannot see whether a prompt was ever actually pasted anywhere. Without this table "which did I send, and when?" is not answerable from disk. **Add a row every time this prompt is dispatched.**
 
@@ -40,16 +40,26 @@ instead of the source, and both times we only found out afterwards.
 
 ## 0. What this pass is NOT — three neighbours, so you do not re-answer them
 
-| Pass | Asked | State |
-|---|---|---|
-| **R11** | what concepts do other agent factories make first-class that we have no name for | **ANSWERED** — read `answers/R11-answer-factory-concept-diff.md`. Do not re-survey vendors |
-| **R12** | should we adopt an existing session manager | **ANSWERED** — adopt-with-caveats; its own evidence undercut it |
-| **R13** | survey every architecture, stack and tool that could build this; make "fast" a number | **in flight, dispatched the same day as this** |
+**You are the last pass. Every other prompt has answered, and their conclusions are settled.**
 
-**R13 looks outward at the option space. R14 looks inward at what we built and forward at what it
-should feel like.** If you find yourself recommending a UI stack or benchmarking Electron against
-Tauri, stop — that is R13's. If you find yourself listing what CrewAI calls a Crew, stop — that is
-R11's, and it is answered.
+| Pass | Asked | Settled conclusion you must NOT re-open |
+|---|---|---|
+| **R8** | data-engineering factory, sandboxes, the isolation ladder | **The 3-lane cap is an artefact of file conflicts.** A container + its own DB clone per agent makes the ceiling resource-bound. Smallest step: containerise on ONE machine first |
+| **R11** | which concepts other factories make first-class | ANSWERED. Do not re-survey vendor taxonomies |
+| **R12** | should we adopt an existing session manager | ANSWERED, with caveats; its own evidence undercut it |
+| **R13** | the option space — stacks, latency, approval, provenance | **The platform is a VS Code extension**, not a desktop app: the operator already lives in VS Code, and Monaco, LSP, Git and diffs come free. Electron is out on weight. **Do not re-litigate this** |
+| **R15** | read the field's source, repo by repo | ANSWERED. Its desktop-app recommendation **lost to R13's** |
+
+⭐ **Two things are closed and must not be re-opened.** First, **topology**: R13 surveyed seven
+orchestration patterns — orchestrator–worker, hierarchical, blackboard, actor/supervisor,
+contract-net, stigmergic, generator–critic — and **none raises the concurrency cap**. Second, the
+**platform**: it is a VS Code extension. If your answer proposes a new orchestration pattern or a
+different UI stack, it is answering a question that is already closed.
+
+**So what is left is exactly your two jobs, and nothing else:** is our decomposition right, and
+what should this feel like to use. R13 gave screens and a latency budget; it gave **no design** —
+zero mentions of type scale, colour system, hierarchy, empty states or contrast. That gap is why
+you exist.
 
 **What is left, and what we want from you:** is our decomposition right, are our objects the right
 objects, and what would make this a joy to use.
@@ -80,10 +90,16 @@ Snowflake, Prefect 3 as the *run* plane; the build plane is bespoke and does not
 ## 2. The codebase, measured 2026-08-23 — read these first
 
 ```
-factory/ + scripts/ + evaluator_service/     8,772 lines of Python
-tests/                                       1,654 lines  (19%)
+factory/ + scripts/ + evaluator_service/     9,342 lines of Python
+tests/                                       1,804 lines  (19%) — 143 tests, all passing
 docs/                                        71 files, 8.6 MB
+readiness                                    10 of 30 gates
 ```
+
+⚠ **One instrument caveat, because you will see the number and we would rather you distrust it
+properly:** the readiness figure read 10, then 9, then 10 within twenty minutes on 2026-08-23, with
+the headline agreeing with the PASS count *inside* each run. We have not found the cause. Treat
+`10 of 30` as approximate and do not build an argument on its exact value.
 
 **Read in this order:** `contract.py` (what "done" and "I could not tell" mean — everything depends
 on it) → `readiness.py` → `lanes.py` → `claims.py` → `worktrees.py` → `finish.py` → `runs.py` →
@@ -100,7 +116,7 @@ The full module map, largest first:
  217  schedule.py     how fast is this going
  204  handoff.py      closing a lane and handing the session on
  203  evaluator.py    the agent's only route to a verdict — a separate principal
- 193  dispatch.py     which research prompts are waiting, and which are lying about it
+ 270  dispatch.py     which prompts are waiting, which are lying, and what to do next
  185  findings.py     the corrections ledger, as data
  159  finish.py       assert -> push -> announce -> release. Never merges
  158  board.py        tasks GENERATED from gates, so a list cannot drift from what is measured
@@ -183,6 +199,22 @@ research prompts, blueprints, contracts.** That list grew by accretion; nobody d
   instrument globs it and a test fails if the record drifts. **Documentation that code depends on**:
   right, or a smell?
 
+## 4b. ⭐ One document in the pack is not ours, and not evidence
+
+Section A2 of the evidence pack is **`amt-agent-management-terminal.md`** — a 62 KB proposal for an
+"Agent-Management Terminal", found unfiled on 2026-08-23 and dated the day before. **No prompt of
+ours produced it**, three later passes covered its ground without ever being shown it, and nothing
+in it is measured against this repo or carries an evidence tier.
+
+It proposes an Interrupt Inbox, an Agent Radar, Collision Detection, a Terminal Genome and
+Resurrection Capsules — respectively the blocked-question channel, a global state view, our
+two-agents-in-one-worktree defect, the config hash, and crash recovery.
+
+**Treat it as a vision to argue with, not a finding.** We want to know which of its ideas survive
+contact with the code in §2 — and which are the kind of feature that sounds excellent in a document
+and dies on first use. Saying "most of this is decoration and here are the two that are not" is a
+more useful answer than adopting the list.
+
 ## 5. ⭐ The interface — and this is the part we care most about
 
 **We want this to be a joy to open.** Not "clean", not "modern" — a tool an operator is *glad* to
@@ -238,11 +270,14 @@ Windows-first · small team, no platform team to operate anything · three concu
 per-secret human approval is a hard rule · **no unlabelled stale numbers** · the existing instrument
 panel is added to, never removed.
 
-⚠ **One question is genuinely open and must not be answered by accident.** We have a standing rule
-that **no terminal is embedded in a page**. It has never been tested — one pass restated our
-position back to us, another was never told it existed. The operator's current position is that
-*terminal mode should exit*: the terminal is an escape hatch, not the interface. **If your design
-depends on that, say which branch you took and design the other one too.**
+**The terminal is an escape hatch, not the interface. This is settled — do not re-argue it.**
+
+We asked four passes to argue it on the merits and got no argument back: one restated our own
+position, one invented a user study to support it, one deferred to the operator. The lesson was
+ours — we kept stating our position inside the question — so we have stopped asking. **Design for
+no embedded terminal. A terminal may be launched on demand as an escape hatch and is never the
+primary surface.** If you think that is wrong, say so in one paragraph at the end and move on; do
+not build your answer around overturning it.
 
 ## 8. Tier every claim
 
