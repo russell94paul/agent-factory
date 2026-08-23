@@ -47,6 +47,7 @@ from factory import roadmap as roadlib  # noqa: E402
 from factory import schedule as schedlib  # noqa: E402
 from factory import sessions as sesslib  # noqa: E402
 from factory import dispatch as disp  # noqa: E402
+from factory import launch as launchlib  # noqa: E402
 
 OUT = FACTORY / "tracker.html"
 
@@ -441,6 +442,7 @@ def hot_reload():
         g["opans"] = _il.reload(_il.import_module("factory.operator"))
         g["wt"] = _il.reload(_il.import_module("factory.worktrees"))
         g["ho"] = _il.reload(_il.import_module("factory.handoff"))
+        g["launchlib"] = _il.reload(_il.import_module("factory.launch"))
         _RELOADED_AT = datetime.datetime.now()
         return True, f"reloaded {len(_HOT)} modules, {len(r.GATES)} gates"
     except Exception as exc:                                          # noqa: BLE001
@@ -585,6 +587,69 @@ def render(when: datetime.datetime, tab: str = "gates") -> str:
           'sync rewrites the local <code>docs/artifacts/agent-factory.html</code>. '
           'Publishing to claude.ai is a separate step &mdash; the published page only moves when '
           'someone republishes it.</div>')
+        # ---------------------------------------------------------- launch readiness
+        # ABOVE the score deliberately. The score answers "how many gates pass"; an operator
+        # standing here is asking "may I press start", and those have different answers today —
+        # RUN is yes while LEAVE and TRUST are no. A single percentage cannot say that, so a
+        # reader takes 30% to mean "not yet" and does not start the supervised run that is both
+        # safe and the only way `finishes` and `succeeds` can stop being UNMEASURABLE.
+        #
+        # `results` is reused rather than re-measured: same render, same instant. See
+        # launch._verdicts — reuse is the caller's promise, and this is the only caller that
+        # can make it.
+        lvls = launchlib.levels(results)
+        LCHIP = {launchlib.SUPERVISED: "pass", launchlib.SUPERVISED_BLOCKED: "fail",
+                 launchlib.UNATTENDED: "pass", launchlib.UNATTENDED_BLOCKED: "fail",
+                 launchlib.TRUSTED: "pass", launchlib.TRUST_BLOCKED: "fail",
+                 launchlib.UNGATED: "notrun"}
+        w('<div class="par" style="border-color:var(--ink);margin:20px 0 0">')
+        w('<h3 style="margin-bottom:4px">Three questions, not one number</h3>')
+        w('<p style="font-size:13px;color:var(--ink3);margin:0 0 4px">Read down until the answer '
+          'stops being yes. Each level is strictly harder than the one above it, and they are '
+          'independent &mdash; a run can finish cleanly and still produce something nothing can '
+          'check. Measured on the same pass as the gates below.</p>')
+        for lv in lvls:
+            cls = LCHIP.get(lv["state"], "notrun")
+            w('<div style="display:grid;grid-template-columns:170px 1fr;gap:14px;'
+              'padding:13px 0 0;margin-top:11px;border-top:1px solid var(--rule)">')
+            w(f'<div><span class="chip {cls}">{e(lv["state"])}</span></div>')
+            w('<div>')
+            w(f'<div class="q">{e(lv["question"])}</div>')
+            w(f'<div class="hl" style="font-size:13.5px">{e(lv["means"])}</div>')
+            # The RUN level is answered by facts about this machine, not by gates — no gate
+            # measures whether a human can see the run — so it shows its checks, pass or fail.
+            for c in lv.get("checks") or []:
+                col = "var(--pass)" if c["ok"] else "var(--fail)"
+                w(f'<div style="font-family:ui-monospace,monospace;font-size:11.5px;margin-top:4px">'
+                  f'<span style="color:{col}">{"OK" if c["ok"] else "NO"}</span> '
+                  f'<span style="color:var(--ink2)">{e(c["what"])}</span> '
+                  f'<span style="color:var(--ink3)">&mdash; {e(c["detail"])}</span></div>')
+            if lv["blockers"]:
+                names = " &middot; ".join(e(b["gate"]) for b in lv["blockers"])
+                w(f'<div class="dep">blocked by: {names}</div>')
+                w('<ul>' + "".join(
+                    f'<li><b>{e(b["gate"])}</b> <span style="color:var(--fail)">'
+                    f'{e(b["verdict"])}</span> &mdash; {e(b["headline"])}</li>'
+                    for b in lv["blockers"]) + '</ul>')
+            w(f'<div class="why">{e(lv["not_means"])}</div>')
+            w('</div></div>')
+        # UNGATED is not 0%. A team with no contract has nothing to measure, and rendering it as
+        # a percentage would invent progress — the same distinction the board draws between a
+        # gate that FAILED and one that was never run.
+        w('<div style="padding:13px 0 0;margin-top:11px;border-top:1px solid var(--rule)">')
+        for t in launchlib.teams(results):
+            head = (f'{t["passing"]} of {t["of"]}' if t["passing"] is not None else "no contract")
+            tc = LCHIP.get(t["state"], "notrun")
+            w(f'<div style="font-size:13px;margin:0 0 5px">'
+              f'<span class="chip {tc}">{e(t["state"])}</span> '
+              f'<b>{e(t["team"])}</b> '
+              f'<span style="color:var(--ink3);font-family:ui-monospace,monospace;'
+              f'font-size:11.5px">{e(head)}</span>'
+              + (f'<div style="color:var(--ink3);font-size:12px;margin:1px 0 0 2px">'
+                 f'{e(t["note"])}</div>' if t["note"] else '') + '</div>')
+        w('</div>')
+        w('</div>')
+
         w(f'<div class="score"><b>{n}</b><span>of {total} gates pass</span></div>')
         w(f'<div class="bar"><i style="width:{pct}%"></i></div>')
         w(f'<div class="sub">factory {e(FACTORY)}<br>connectors {e(CONNECTORS)}</div>')
@@ -916,6 +981,7 @@ def render(when: datetime.datetime, tab: str = "gates") -> str:
         inv = sesslib.inventory()
         blocked = [r for r in inv if r["needs"]]
         collisions = sesslib.collisions()
+        contended = [r for r in sesslib.contended_repos() if r["contended"]]
         running = [r for r in inv if r["state"].startswith("RUNNING")]
         w('<div class="head" style="margin-top:44px">')
         w('<h1>Sessions</h1>')
@@ -923,6 +989,40 @@ def render(when: datetime.datetime, tab: str = "gates") -> str:
           f'<b style="color:{"var(--fail)" if blocked else "var(--ink3)"}">{len(blocked)} waiting '
           f'on you</b> &middot; {len(inv)} known to the registry</div>')
         w('</div>')
+
+        # Contended repos, above everything except a blocked session. A repo with uncommitted work
+        # and several sessions alive is the shape that produced fc71b6a — one session ran `git add`
+        # across a directory another was mid-edit in, swept up a half-finished file, and shipped a
+        # HEAD that did not import.
+        #
+        # ⛔ This panel names a CONDITION, never a culprit. Nothing records which session touched
+        # which file, so `attribution` is NOT-MEASURABLE and the wording must stay that way — a row
+        # that guessed would be believed.
+        if contended:
+            w('<div class="par" style="margin-top:14px;border-color:var(--unmeas)">')
+            w(f'<h3 style="margin-top:0;color:var(--unmeas)">&#9888; {len(contended)} repo(s) hold '
+              f'uncommitted work while more than one session is alive</h3>')
+            for r in contended:
+                here = r["sessions_with_this_cwd"]
+                cwd_note = (f'{here} session(s) started here'
+                            if here else
+                            '<b>no session has this as its working directory</b> &mdash; which is '
+                            'why the cwd-based check says nothing about it')
+                w(f'<div style="margin:8px 0 0;padding:8px 0 0;border-top:1px solid var(--rule)">'
+                  f'<div style="font-size:13.5px"><b>{e(r["name"])}</b> '
+                  f'<span style="color:var(--ink3);font-size:11.5px">'
+                  f'{e(r["dirty"])} uncommitted file(s) &middot; {cwd_note}</span></div>'
+                  f'<div style="font-size:11.5px;color:var(--ink3);margin-top:2px">'
+                  f'{e(r["path"])}</div></div>')
+            w('<p style="font-size:12px;color:var(--ink3);margin:10px 0 0">'
+              '<b>Attribution is NOT-MEASURABLE.</b> Nothing records which session wrote which '
+              'file, so this reports a hazard and not a culprit. Before staging here: '
+              '<code>git fetch</code>, stage <b>explicit paths</b>, and never '
+              '<code>git add -A</code>. The pre-commit hook '
+              '(<code>scripts/hooks/pre-commit-imports.py</code>) catches the consequence &mdash; '
+              'a committed tree that does not import &mdash; but it cannot catch a clobber that '
+              'still compiles.</p>')
+            w('</div>')
 
         # Blocked first, always. A blocked agent is the only kind a human can unblock, and these
         # questions were sitting unread in a file nothing opened.

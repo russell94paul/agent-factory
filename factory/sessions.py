@@ -362,9 +362,89 @@ def collisions() -> Dict[str, List[dict]]:
 
     Broader than `duplicates()`, which only sees lane worktrees. This catches any shared cwd,
     including the case that actually happened: three sessions in one control-plane worktree.
+
+    ⚠ **Keys on `cwd`, and that is a real limit — see `contended_repos()`.** A session's cwd is
+    not the repo it is editing. On 2026-08-23 four sessions shared `aldc-launchpad` while the
+    clobber happened in `agent-factory`; this flagged the right sessions for the wrong reason,
+    and would have missed them entirely had their cwds differed.
     """
     by_cwd: Dict[str, List[dict]] = {}
     for r in inventory():
         if r["state"] in (RUNNING_ATTACHED, RUNNING_ORPHANED):
             by_cwd.setdefault(r["cwd"], []).append(r)
     return {k: v for k, v in by_cwd.items() if len(v) > 1}
+
+
+def _dirty_count(path) -> Optional[int]:
+    """How many files a repo has uncommitted, or None if the question cannot be answered."""
+    try:
+        r = subprocess.run(["git", "-C", str(path), "status", "--porcelain"],
+                           capture_output=True, text=True, timeout=30)
+        if r.returncode != 0:
+            return None
+        return sum(1 for line in (r.stdout or "").splitlines() if line.strip())
+    except Exception:                                              # noqa: BLE001
+        return None
+
+
+def contended_repos() -> List[dict]:
+    """Repos holding uncommitted work while more than one session is alive to have written it.
+
+    ⭐ **This exists for the failure `collisions()` structurally cannot see.** A session's cwd
+    says where it started, not what it writes to. On 2026-08-23 a session with cwd
+    `aldc-launchpad` ran `git add` across `agent-factory`, swept up another session's
+    half-finished file and shipped a HEAD that did not import. `collisions()` keys on cwd, so
+    nothing in its output named `agent-factory` at all.
+
+    ⛔ **Attribution is NOT MEASURABLE and this does not pretend otherwise.** Nothing records
+    which session touched which file. What IS measurable is the hazard: this repo has
+    uncommitted work, and more than one session is alive that could be its author. So every row
+    carries `attribution: NOT-MEASURABLE` and describes a *condition*, never an accusation. A row
+    that guessed would be worse than no row, because it would be believed.
+
+    The candidate set is every live session's cwd plus the primary worktree — cheap, and exactly
+    the set that was wrong today. A repo with no session in it and which is not the primary is
+    never examined; `basis` says `NOT-VISIBLE` when git could not answer.
+    """
+    from . import repo as _repo
+    live = [r for r in inventory() if r["state"] in (RUNNING_ATTACHED, RUNNING_ORPHANED)]
+
+    candidates: Dict[str, int] = {}
+    for r in live:
+        if r.get("cwd"):
+            try:
+                candidates.setdefault(str(pathlib.Path(r["cwd"]).resolve()), 0)
+            except OSError:
+                continue
+    try:
+        candidates.setdefault(str(_repo.primary().resolve()), 0)
+    except Exception:                                              # noqa: BLE001
+        pass
+    for r in live:
+        if not r.get("cwd"):
+            continue
+        try:
+            key = str(pathlib.Path(r["cwd"]).resolve())
+        except OSError:
+            continue
+        if key in candidates:
+            candidates[key] += 1
+
+    out = []
+    for path, here in sorted(candidates.items()):
+        n = _dirty_count(path)
+        out.append({
+            "path": path,
+            "name": pathlib.Path(path).name,
+            "dirty": n,
+            "sessions_with_this_cwd": here,
+            "sessions_alive": len(live),
+            # Contended = uncommitted work AND more than one session could be holding it. NOT
+            # merely two sessions sharing a cwd, which is what collisions() already reports.
+            "contended": bool(n) and len(live) > 1,
+            "basis": "MEASURED" if n is not None else "NOT-VISIBLE",
+            "attribution": "NOT-MEASURABLE",
+        })
+    # Contended first — it is the only row anyone needs to act on.
+    out.sort(key=lambda r: (not r["contended"], -(r["dirty"] or 0), r["name"]))
+    return out
