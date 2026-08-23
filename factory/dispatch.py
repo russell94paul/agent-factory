@@ -259,10 +259,20 @@ def order(research=None, answers=None, syn_unreconciled=None) -> List[Dict[str, 
 
     rows = []
     for rid, st in state(research, answers).items():
+        # ⚠ A prompt can be ANSWERED and still be waiting on Paul: R13 was answered once, then
+        # rewritten for a run 2 that has not been sent. None of the five states expresses that —
+        # they describe a prompt, and this is a fact about its NEXT run — so the run log is asked.
+        # Without this the board says "nothing to do" while a rewritten prompt sits unsent.
+        pending = any((r.get("dispatched") or "").strip().lower() in ("pending", "tbd", "")
+                      for r in run_log(prompts(research).get(rid, pathlib.Path("/nonexistent"))))
         if rid in syn_unreconciled:
             rank, action, why = 1, "reconcile it into SYNTHESIS", (
                 "answered, and filed after the synthesis was last written — the answer is paid for "
                 "and not yet banked")
+        elif pending and st == ANSWERED:
+            rank, action, why = 2, "send the next run", (
+                "answered once, and a further run is written and waiting on you — the run log says "
+                "pending")
         else:
             rank, action, why = _ACTION.get(st, (6, "?", ""))
         rows.append({"id": rid, "state": st, "rank": rank, "action": action, "why": why,

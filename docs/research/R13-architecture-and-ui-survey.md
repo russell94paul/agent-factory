@@ -1,276 +1,175 @@
-# R13 — Survey every architecture and tool that could build this, before we build any of it
+# R13 — Architecture and UI survey · RUN 2: four questions run 1 left open
 
-**Status: ANSWERED 2026-08-23.** Written 2026-08-23. Paste the whole file. Attach
-`docs/research/ui-surface-inventory.md` — it is our own frozen position and this prompt assumes you
-have read it. The answer is filed at `docs/research/answers/R13-answer-architecture-and-ui-survey.md`.
-
+**Status: ANSWERED 2026-08-23 (run 1). Run 2 rewritten and pending — see the run log.** Rewritten 2026-08-23 for run 2. Paste the whole file and attach
+`docs/research/R13-evidence-pack.md`. The answer is filed at
+`docs/research/answers/R13-answer-architecture-and-ui-survey-run2.md`.
 
 ## Run log
 
 | Run | Dispatched | Outcome |
 |---|---|---|
-| 2 | pending | Run 2 — repair §8, ground the latency budget, resolve the approval/platform fit. |
-| 1 | 2026-08-23 | Answer filed 2026-08-23. Strong on the stack decision, the latency budget and the approval survey. ⚠ It did **not** read `ui-surface-inventory.md` — section 8 says *"without detail on those, we assume multiple UIs (CLI, web panel, maybe Slack bot)"* and guessed our surfaces. And it **deferred** on the terminal question rather than arguing it. |
+| 2 | pending | Rewritten as a narrow repair. Four questions only; the survey is not to be redone. |
+| 1 | 2026-08-23 | Answer filed and **reconciled into `SYNTHESIS.md` §14 — most of it was adopted.** Strong on the stack decision, the approval survey and provenance. ⚠ It never read `ui-surface-inventory.md`, its own named attachment, so §8 was guesswork and was discounted. It also deferred on the terminal question rather than arguing it. |
 
-> Kept because `factory.dispatch` reads a status line and the presence of an answer file, and by its own account cannot see whether a prompt was ever actually pasted anywhere. Without this table "which did I send, and when?" is not answerable from disk. **Add a row every time this prompt is dispatched.**
-
----
-
-## ⚠ Read this first — you are RUN 2, and run 1 already answered most of this well
-
-Run 1 landed on 2026-08-23 and is **filed and reconciled** into `SYNTHESIS.md` §14. **This is not a
-redo.** Most of it was adopted. Your job is one repair and two depths.
-
-**What run 1 got right, and what is now SETTLED — do not re-litigate it:**
-
-- **The platform: a VS Code extension**, not a desktop app. Because the operator already lives in
-  VS Code, so cold start is nothing, and Monaco, LSP, Git and diffs come free. Electron out on
-  weight. This *beat* a competing pass that wanted a Rust/Tauri app, and it is now the decision.
-- **Topology is closed.** Seven orchestration patterns, none raises the 3-lane cap. Your line —
-  *"raising the concurrency ceiling depends on task structure, not the orchestration style"* — turned
-  out to bracket another pass that changed the task structure and got a resource-bound ceiling. That
-  question is finished; do not survey topologies again.
-- **Notification first.** Adopted. Three independent sources agreed.
-- **Provenance: the OTel GenAI field set** as the config-hash dimensions. Adopted.
-- **The terminal is settled** as an escape hatch, never the primary surface. Not a question any more.
-
-**⛔ The one thing run 1 got wrong, and the only reason you are running again.** Your §8 said:
-
-> *"We must build on top of the existing four interfaces (and one dead one). **Without detail on
-> those, we assume multiple UIs (CLI, web panel, maybe Slack bot)**."*
-
-`ui-surface-inventory.md` was your named attachment and it describes those four surfaces precisely.
-You did not read it, so **the entire migration section was guesswork and has been discounted.**
-
-**It is in §A of the attached evidence pack. Read it before you write anything about migration.**
-The four surfaces are named there with sizes and dates, along with a fifth that is dead — and the
-dead one is the most instructive, because it is a platform half of a monorepo that stopped moving
-while the ops half carried every ticket.
-
-**Where run 2 should go deeper than run 1:**
-
-1. **The migration, done properly this time** (§4.8) — against the four real surfaces, not assumed
-   ones. What is retired, what runs in parallel, what must not be built yet.
-2. **The latency budget, grounded** (§4.3) — run 1 gave targets from user-perception guidelines and
-   named no mechanism. We have since **measured** the real thing: `measure()` runs 30 gates
-   **serially in 9.3 s**, the loop is `for g in GATES: g.probe()` over independent I/O-bound probes,
-   and the server is `socketserver.TCPServer` so two concurrent requests return empty. Tell us what
-   each technique buys **in milliseconds against that**, not against a guideline.
-3. **Whether the approval surface fits inside the platform you chose.** Run 1 recommended a VS Code
-   extension and, separately, an approval surface for a non-engineer — and never checked that the
-   second fits inside the first. A non-engineer does not have VS Code open. **Does that break the
-   platform recommendation, or does the approval surface live somewhere else?** This is the sharpest
-   open question your run 1 left.
+> `dispatch` reads a status line and whether an answer file exists; by its own account it cannot see
+> whether a prompt was ever pasted anywhere. **Add a row when the paste is confirmed, not when it is
+> announced.**
 
 ---
 
 ## Who we need you to be
 
-**You are a principal-level agentic systems architect who has re-architected live codebases, not
-greenfield ones.** The work you are known for is taking a system that already runs, already has
-users, and already carries a decade of decisions, and moving it to a better shape *without a
-rewrite and without a freeze* — strangler-fig migrations, incremental cutovers, parallel-run
-verification, and the judgement to say which parts must not be touched at all.
+**Someone who has been handed a good report and asked to finish it, not to write it again.**
 
-You are equally at home in two rooms most people only occupy one of:
+Run 1 of this brief was strong and is already adopted. You are not being asked to survey the field —
+that is done. You are being asked for **depth on four specific things**, three of which run 1 got
+wrong or skipped, and one it answered without noticing it had contradicted itself.
 
-- **The systems room.** Process supervision, PTYs and job control, filesystem watching, IPC,
-  crash-safe local state, concurrency and conflict graphs, sandbox and isolation boundaries,
-  credential handling. You know why a thing is slow, at the syscall level, not the framework level.
-- **The interface room.** You build developer tools that feel *instant* — sub-frame input latency,
-  virtualised lists over tens of thousands of rows, optimistic rendering, incremental
-  re-measurement instead of full recomputation. You have opinions about why Linear, Warp, Figma and
-  Sublime feel the way they do, and you can name the specific techniques rather than the vibe.
-
-**What we are not asking for.** Not a taxonomy, not a feature list, and not enthusiasm. We want the
-survey a sceptical architect would run *before* committing, including the options that would
-embarrass us and the option of building nothing.
-
-**The discipline we hold ourselves to, and will hold you to.** Every claim carries its basis (§7).
-A vendor claim you have not seen the source or docs for is not evidence. If you cannot see
-something, say `NOT-SUPPLIED` and name it — a gap you name is worth more to us than a gap you fill.
-**We have been burned twice by research answering a question we did not ask**, and both times the
-cause was a constraint we failed to state. §6 states them; if one of them makes a whole branch of
-your answer impossible, say so loudly rather than routing around it.
+⚠ **A long answer is a failed answer here.** Run 1 was roughly 5,000 words of survey. If run 2 is
+that length, you have re-surveyed instead of repaired. We would rather have 1,500 words that settle
+four questions than 5,000 that restate a conclusion we already hold.
 
 ---
 
-## 1. What this system is, in one line — and why it decides everything
+## 0. What is CLOSED — re-opening any of it is a wasted run
 
-> **A team of agents did the work, and we can prove it — or we can prove we could not tell.**
+Run 1 settled these and other passes have since corroborated them. They are decisions now.
 
-That is the founding claim of the repo, and it means **this is an evidence product, not a process
-product.** It exists because two earlier mechanisms in this estate acted without anything measuring
-whether the action helped: one produced *233 diagnoses, 234 escalations and 0 fixes over 81 days*;
-another ran *965 times, recorded its own 1.6% success rate, and never adjusted*. Both were capable.
-Neither was measurable.
+| Closed | Established by |
+|---|---|
+| **Platform: a VS Code extension**, not a desktop app — the operator already lives in VS Code, so cold start is nothing, and Monaco, LSP, Git and diffs come free. Electron out on weight | **your own run 1 §2**, and it beat a competing pass that wanted Rust/Tauri |
+| **Topology is closed** — you surveyed seven orchestration patterns and none raises the 3-lane cap | your run 1 §1 |
+| **The ceiling is a *file-conflict* artefact** — a container plus its own DB clone per agent makes it resource-bound | another pass, which your own line about "task structure" predicted |
+| **Notification is the first thing to build** | your run 1 executive summary, plus two independent sources |
+| **Provenance: the OTel GenAI field set** as the config-hash dimensions | your run 1 §5 |
 
-⭐ **Hold that against the market.** Every agent session manager we know of manages *processes*.
-None answers *who did this work, under what configuration, and what proves it was correct.* If your
-answer recommends something that is excellent at rendering terminals and silent on provenance, it
-has optimised the wrong axis and we will say so.
+⛔ **Do not re-argue the embedded terminal.** It is settled: escape hatch, never the primary
+surface. Four passes were asked to argue it on the merits and none did — one restated our position,
+one supported it with a fabricated user study, and run 1 of this brief deferred to the operator. The
+fault was ours for stating our position inside the question. It is now a constraint. **Design
+accordingly and do not spend a paragraph on it.**
 
-## 2. The architecture as it stands
+---
 
-Four planes, with a hard boundary between RUN and PROVE — the thing being measured must not be the
-thing doing the measuring:
+## 1. ⛔ The defect that caused this run — and the rule that fixes it
+
+Run 1 §8 said, verbatim:
+
+> *"We must build on top of the existing four interfaces (and one dead one). **Without detail on
+> those, we assume multiple UIs (CLI, web panel, maybe Slack bot).**"*
+
+`ui-surface-inventory.md` was the attachment named in run 1's own header, and it describes those
+surfaces precisely. It was not read. **The entire migration section was therefore invented and has
+been struck from our record.**
+
+**The rule for run 2, and it is not negotiable:**
+
+1. **The evidence pack is attached and it is the only admissible source for facts about us.**
+   Everything below is a handoff, and in this estate a handoff is a hypothesis.
+2. **Where the pack and this prompt disagree, the pack wins**, and the disagreement is a finding we
+   want reported.
+3. **If something you need is not in the pack, write `NOT-SUPPLIED` and name it.** Do not infer it,
+   and do not fall back on a plausible assumption. **The last assumption cost a whole section.**
+
+---
+
+## 2. The four questions
+
+### 2.1 The migration — against the real surfaces this time
+
+Five interfaces exist. They are described in §A of the pack. **Read that before writing a word of
+this section.**
+
+For each: keep, absorb, or retire — and in what order. What runs in parallel with what. What must
+**not** be built yet.
+
+⭐ **The dead one is the most instructive, and run 1 never saw it.** `platform/master` was the
+platform half of a monorepo; it stopped moving in June 2026 while the operations half carried every
+ticket. **Tell us what that failure predicts about the thing you are recommending we build**, and
+what would have to be true for the VS Code extension not to end the same way. This is the question
+we most want answered, and you are best placed to answer it, having chosen the platform.
+
+### 2.2 The latency budget — grounded, not from guidelines
+
+Run 1 gave targets from user-perception guidelines and named no mechanism. We have since measured
+the real thing:
 
 ```
-APPROVE   humans only. merge · per-secret grant · promote to prod   ← never automated
-PROVE     readiness gates · a contract with a four-valued verdict · findings ledger · run audits
-RUN       isolation ladder — T0 git worktree · T1 container · T2 container + ephemeral DB clone
-DECIDE    conflict graph · claims · scheduling · caps · budgets · a bespoke build plane at :8765
+factory.readiness.measure()   30 gates, 9.3 SECONDS, serial
+                              the loop is: for g in GATES: g.probe()
+                              probes are independent and I/O-bound
+the server                    socketserver.TCPServer — single-threaded,
+                              so two concurrent requests return EMPTY
+an 8-wide pool                would put a page near 1.2 s
 ```
 
-Stack: Python. Windows-first on the operator's machine. Azure (Container Instances, Container Apps,
-Key Vault). Snowflake is the warehouse. Prefect 3 is the *run* plane; **the build plane at `:8765`
-is bespoke and does not import Prefect**, so none of Prefect's retry or concurrency primitives are
-available to it.
+The hard constraint that makes this interesting: **we forbid a silently cached figure.** A surface
+that can quietly show yesterday's state is the drift this project exists to remove, so every number
+must be able to say how old it is.
 
-**Agents are Claude Code CLI sessions.** They write JSONL transcripts to
-`~/.claude/projects/<slug>/<session>.jsonl` (which carry a `usage` block per message, so cost is
-measurable retroactively), register themselves in `~/.claude/sessions/<pid>.json`, and background
-agents publish state — including a `needs` question in plain English — to
-`~/.claude/jobs/<id>/state.json`. Each agent works in its own git worktree on its own branch.
+**So: what buys what, in milliseconds, against those numbers?** Dependency-tracked invalidation,
+event-sourcing, virtualisation, optimistic rendering, push — run 1 listed them all and costed none.
+Give us the order to apply them in and the effect to expect from each. **If the honest answer is
+"parallelise the probes and stop, the rest is premature", say that** — it is a more useful answer
+than an architecture.
 
-## 3. The measured state, 2026-08-23 — not estimates
+### 2.3 ⭐ The contradiction run 1 did not notice
 
-```
-readiness       10 of 30 gates pass
-lanes           5 defined · max 3 concurrent, DERIVED from a file-conflict graph
-                2 of the 5 have never been launched
-autonomy        3 of 14 recorded runs finished with no human
-gate refusals   0 of 22 gate events were ever a refusal
-agent versioning  the config hash covers 0 of 15 dimensions — we cannot say which agent produced what
-cost per lane   1.23M output tokens / 322M cache-read / 22.8h / opus / 25 commits   (one lane)
-                 227k output / 55M cache-read / 19.4h / sonnet / 5 commits          (another)
-sessions        12 running on one workstation · 5 shared a single name · 6 shared one directory
-delivery        2 pull requests fully green, waiting 6 and 9 DAYS for a human to merge
-UI latency      a tracker page load re-measures everything and takes 10–19 SECONDS
-                two concurrent requests return empty — the server is single-threaded
-```
+Run 1 recommended **a VS Code extension** as the platform. Run 1 also recommended **an approval
+surface a non-engineer could use** — a PM or an auditor reviewing agent-produced work.
 
-⭐ **Read the last three together.** Our agents are not slow. Our *humans* are the queue: green work
-waits days, and one agent sat on a written question nobody read. Any architecture that makes agents
-more visible without making decisions faster has optimised the wrong end.
+**A non-engineer does not have VS Code open.** Those two recommendations do not obviously fit
+together, and run 1 never checked.
 
-## 4. What to survey — go wide, this is the point of the pass
+So: does the approval surface live inside the extension, somewhere else entirely, or does its
+existence break the platform decision? If it lives elsewhere, what is it, and what does maintaining
+two surfaces cost a small team? Run 1 also reported that **no off-the-shelf tool targets business
+users reviewing code changes** — so this is unbuilt ground, and we would rather know that sharply
+than approximately.
 
-We want the **whole option space**, current as of your knowledge cutoff, with real names and links.
+### 2.4 A source-read that settles a live contradiction
 
-### 4.1 Agent orchestration and supervision architectures
+Two of our passes read the same repository and reported opposite things, both claiming to have read
+the source:
 
-Orchestrator–worker, hierarchical, blackboard, actor/supervisor trees (Erlang `one_for_one` and
-friends), contract-net/auction, stigmergic, generator–critic pairs. For each: what it assumes about
-task decomposability, its failure mode under partial failure, and **which real production system
-uses it.** Then: given a conflict graph that caps us at three concurrent lanes, which of these
-raises the ceiling and which merely rearranges the same three agents?
+| | Claim |
+|---|---|
+| One pass | `doctly/switchboard` **never attaches** to a process it did not spawn; a session running outside it is treated as not running, and it **spawns a second process against the same session id** |
+| The other | *"ATTACH: Yes — it can attach to any running session… not just those it spawned"* |
 
-### 4.2 The desktop/local-tool architecture decision
+**Read `doctly/switchboard`'s `open-terminal` handler and settle it.** Specifically: when
+`activeSessions` does not contain the requested session id, does it attach to the existing process,
+or spawn a new one with `--resume`? **Quote the code.**
 
-This is a local-first tool on Windows that must watch the filesystem, supervise processes and stay
-instant. Survey **Electron, Tauri, Wails, native (WinUI/Qt), a local web server + browser, a TUI,
-and a VS Code extension** — the last is genuinely open: our operator lives in VS Code already.
-For each: cold start, memory, IPC cost, filesystem-watch fidelity on Windows, PTY support,
-packaging and update story, and what it costs a small team to maintain.
+This matters beyond the tool. A terminal dying while its agent kept working is a failure we actually
+had, and "spawns a duplicate against a live session id" is that failure by design. If neither answer
+is right, say so — a third reading is the most valuable outcome available here.
 
-### 4.3 Make "fast and smooth" a number, not an adjective
+---
 
-Our page takes 10–19 seconds because it re-measures thirty probes serially on every request, and we
-have a standing rule that **it may never cache silently** — a surface that can quietly show
-yesterday's state is the drift this project exists to remove.
+## 3. Constraints
 
-So: **what is the architecture that is both always-current and instant?** Incremental
-re-measurement, dependency-tracked invalidation, event-sourced projections, CRDTs, local SQLite
-with change feeds, virtualised rendering, optimistic UI with reconciliation. Give us a **latency
-budget** — first paint, interaction-to-response, full re-measure — and say what each technique
-actually buys in milliseconds. Name the tools and libraries you would use.
+Windows-first · small team, no platform team to operate anything · three concurrent lanes today ·
+per-secret human approval is a hard rule · **no unlabelled stale numbers** · the existing instrument
+panel is added to, never removed · the terminal is an escape hatch, and that is settled.
 
-### 4.4 The approval surface — the one nobody builds
+## 4. Deliverable
 
-Our APPROVE plane has **no interface at all**, and it is where delivery is measurably stuck. What
-is the state of the art for **reviewing and approving work an agent produced** — the diff, the
-evidence, the cost, the provenance, and a decision? Who ships this (GitHub/GitLab agent flows,
-Graphite, Devin, Factory.ai, Cursor, Copilot Workspace, others)? What did they learn?
+1. **The migration** (§2.1), against the five real surfaces, with what the dead one predicts.
+2. **The latency budget** (§2.2), in milliseconds, ordered, with the honest "stop here" line.
+3. **The approval-surface fit** (§2.3) — inside the extension, elsewhere, or fatal to the platform.
+4. **The switchboard reading** (§2.4), with the code quoted.
+5. **What you would refuse to build**, and what we should delete.
 
-And the harder half: **could a non-engineer safely approve agent work**, and what would they need
-to see? Has anyone tried it?
+**Nothing else.** No orchestration survey, no stack comparison, no terminal discussion. If you find
+yourself writing one, you are answering run 1's brief instead of this one.
 
-### 4.5 Provenance, lineage and the config hash
+## 5. Tier every claim
 
-We want every artefact traceable to the agent, model, prompt, tool set and contract version that
-produced it — and our hash currently covers **0 of 15 dimensions**. What standards or tools exist
-(OpenTelemetry GenAI semantic conventions, SLSA/in-toto, ML model cards, data-lineage tools)? What
-would you actually adopt, and what is over-engineering at our size?
+`OBSERVED` — you read the source or ran it · `REPORTED` — a credible postmortem or paper ·
+`MARKETED` — a vendor says so and nobody independent confirmed it · `INFERRED` — your reasoning.
 
-### 4.6 Getting an agent's question to a human in minutes, not days
-
-Our measured latency is **days**. Survey the mechanisms — interrupt, modal, OS notification, a
-merged inbox, escalation, on-call routing — and the human-factors evidence on which of these are
-answered promptly versus ignored. Our failure is **alarm absence**, not alarm fatigue: the signal
-exists and no surface shows it. Say what changes when two agents ask at once.
-
-### 4.7 Repo integration from the interface
-
-Opening, reading and editing the files an agent is touching, showing diffs, staging and committing,
-and driving worktrees — from inside the tool. What are the real options (LSP, tree-sitter, embedded
-editors like Monaco/CodeMirror, libgit2/isomorphic-git, delegating to VS Code)? Where is the line
-past which we are rebuilding an IDE badly?
-
-### 4.8 Migration, because we are not starting clean
-
-**Four interfaces already exist** and a fifth is dead. Whatever you recommend, sequence the
-migration: what is the smallest change with the largest effect, what runs in parallel with what
-exists, what must be retired, and **what must not be built yet**.
-
-## 5. Deliverable shape
-
-1. **Executive answer** — the single architecture you would commit to, and the first change to make.
-2. Orchestration architectures compared, then a recommendation for a 3-lane conflict graph.
-3. The desktop/local-tool decision, argued, with the runner-up and why it lost.
-4. The performance architecture, with a latency budget in milliseconds.
-5. The approval surface, including the non-engineer question.
-6. Provenance and the config hash — what to adopt, what to skip.
-7. The question-to-human channel.
-8. Repo integration, and where the IDE line is.
-9. A sequenced migration from four existing surfaces.
-10. **What you would refuse to build, and why.**
-
-## 6. Constraints — a recommendation that breaks one of these is not usable
-
-- **Windows-first** on the operator's machine. WSL is available; say exactly what changes.
-- **Small team.** Anything needing a platform team to operate is wrong regardless of merit.
-- **Three concurrent lanes today.** A design assuming ten agents answers a question we do not have.
-- **Per-secret human approval is a hard rule.** No batch-approval of credentials, ever, however
-  elegant. Batch-approving *file reads* is a separate question and is open.
-- **No unlabelled stale numbers.** A cached figure must carry its age in the same string as the
-  figure, or not be shown.
-- **The existing instrument panel is added to, never removed.**
-- **Evidence-gated deploys are a hard rule**: prove the target object, validate at the layer the
-  consumer reads, prove no regression, capture a rollback, then deploy.
-
-### ⚠ The one constraint that is genuinely open — do not answer it by accident
-
-We have had a standing rule that **no terminal is embedded in a page**. It has never been tested.
-One pass restated our position back to us instead of challenging it; a second was never told the
-rule existed and recommended adopting an Electron app built entirely around embedded terminals.
-
-The operator's current position is that **terminal mode should exit** — that the terminal is an
-escape hatch, not the interface. That points at retiring the rule, but it is not yet a decision.
-
-**So treat it as an explicit question, not a background assumption:** *should a live terminal be
-visible in this tool at all — never, as an escape hatch, or as the primary surface?* Argue it on
-the merits. If your recommended architecture depends on the answer, give us both branches. **Do not
-quietly assume either one.**
-
-## 7. Tier every claim
-
-`OBSERVED` — you read the source, the docs, or ran it · `REPORTED` — a credible postmortem, paper
-or production write-up · `MARKETED` — the vendor says so and nobody independent has confirmed it ·
-`INFERRED` — your reasoning from the above.
-
-**A `MARKETED` claim may not be used as a design premise.** We have been burned specifically by
-this: a gate that reported PASS while measuring nothing, a detector that silently degraded to
-reporting 1 finding where the real engine reports 313, and a launcher that announced the model it
-was running on while running a different one. **Assume any capability you cannot see the source or
-documentation of is absent until proven otherwise.**
+**A `MARKETED` claim may not be a design premise.** And one specific warning, because it has already
+happened here: **do not cite evidence about us that you have not been given.** A previous pass
+supported a recommendation with *"in our user studies we found…"* — there were no user studies. If
+you want to claim something about our operators, ask for it, or mark it `NOT-SUPPLIED`.
