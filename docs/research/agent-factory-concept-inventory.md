@@ -76,7 +76,7 @@ answers "when will this be done" by declining to produce a date it cannot suppor
 
 ### Measured state of the gate suite
 **`30` readiness gates registered** in `readiness.GATES` — by phase: certification 8, judgement 8,
-handover 7, bounded 4, loop 3. `15` test modules.
+handover 7, bounded 4, loop 3. `16` test modules.
 
 ⚠ An earlier draft of this file said 27, from counting `def g_` functions rather than the registry.
 Three gates use check functions that do not carry the prefix. Corrected 2026-08-22 — and recorded
@@ -124,6 +124,13 @@ pre-empt them — R8 in particular owns the data-engineering framing and would c
 ---
 
 ## 4. Where the survey should actually look
+
+> **Scoped as R11 on 2026-08-23.** Five of the seven axes below became
+> `R11-factory-concept-diff.md`. Two were handed to siblings after checking for collisions rather
+> than assuming: **compensation/rollback → R8 §2.3**, which already asks about zero-copy clones,
+> shadow schemas and transactional rollback; **post-run learning → R10**, whose whole question is
+> whether a self-extending knowledge base compounds or corrupts. R8 was also confirmed to have *no*
+> coverage of tracing/telemetry and *no* mention of MCP or A2A, which is why those two stayed.
 
 Given §2 and §3, most single concepts a generic survey would return are already `PRESENT` or
 `DEFERRED`. These are the axes where I can find **no pass that has looked at all** — the
