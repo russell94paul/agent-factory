@@ -150,3 +150,84 @@ because nothing else blocks it.
 - The corpus reaching ~29 stratified cases → the optimizer stops being theatre.
 - A fourth research pass failing for a reason *other* than requirement quality → weakens §3's
   claim that requirement quality is the dominant failure mode. Three is a pattern, not a law.
+
+---
+
+# Second batch — proposed 2026-08-23, later the same day
+
+⚠ **Ideas, not roadmap.** Paul's words. Recorded so they can be argued with; none is scheduled and
+none has a gate.
+
+## 6. Interactive project flow — clickable steps that explain themselves
+
+**The idea:** one diagram of the whole sequence, each step clickable to reveal what it does.
+
+**The case for:** the sequence exists but is scattered across four places — `board.DEPENDS` (gate
+order), `goals.GOALS` (what we are building toward), `SYNTHESIS` §12.8/§13.7/§14.7 (eighteen
+decisions), and the five `PHASES`. Nobody can see it whole, which is why the same questions get
+re-asked.
+
+⛔ **The trap, and it is the one that would ruin it:** a flow diagram of steps that exist only in
+the diagram is decoration — it would look identical if the project were different. **The steps must
+be derived from the existing graphs, or declared in one authored map validated on import the way
+`board.DEPENDS` and `dispatch.DEPENDS` already are.** A hand-drawn sequence is a picture of an
+intention, and this repo has a rule about those.
+
+**Unlocks:** now, if derived. Never, if drawn.
+
+## 7. Task / plan page — a prompt box that refines requirements and picks the agent
+
+**The idea:** type what you want, refine it in an embedded session, and have it select the agent or
+team best suited.
+
+⭐ **This is §3's brief compiler, arrived at independently — and the valuable half is not the half
+it sounds like.** Agent *selection* is the interesting part and the cheap part: there are five
+lanes and one supported team shape, so selection is nearly a lookup. **The part that would have
+prevented every failure of 2026-08-23 is the refusal** — a brief whose named attachments do not
+exist must not dispatch.
+
+R8 run 1, R13 run 1 and R15 all failed with a competent model, a clear question and an incomplete
+brief. **None of them would have been saved by picking a different agent.** All three would have
+been stopped by a file-existence check.
+
+So build the page, and build the refusal first: assemble the pack, verify every named attachment
+resolves, state the pack-wins rule, and refuse otherwise. Selection can be a dropdown until there
+is more than one team.
+
+**Unlocks:** now.
+
+## 8. "Run simulations until it completes" — ⛔ the instinct to skip this is right, for a stronger reason than time
+
+Paul's own note is *"we won't have time for this"*. Time is not the binding reason.
+
+**Running until success against an eval that cannot fail is the 965-run loop.** The corpus is 1
+case with 0 strata; R1 puts the threshold for detecting a 10%-prevalence blind spot at 29. A
+simulation that "completes successfully" against that corpus has demonstrated that it can satisfy
+an instrument incapable of refusing it — which is what the retired 965-run mechanism did 965 times
+while recording its own 1.6% success rate.
+
+**A detailed boot prompt in the UI is the correct substitute**, and not a consolation: it is the
+same evidence-with-the-question pattern that repaired R8, and it works today.
+
+**Unlocks when:** the corpus can fail. Same threshold as §2.
+
+## 9. A Power BI agent — ⛔ blocked on a contract, not on an agent
+
+**The idea:** an agent that designs three data models against the Snowflake warehouse.
+
+**What is missing is not capability.** `factory/connector_contract.py` is A1–A12 and is
+connector-shaped. **There is no Power BI contract**, so there is no definition of done for a
+data-model change — and this repo's ordering is explicit: contract, then evals, then tasks, then
+deploy.
+
+⚠ **And the oracle is harder here than for connectors.** The estate's own standing rule is that a
+query-layer check is not a render check: a repoint once passed DAX parity while every visual showed
+*"Error loading data"*. So "done" for a PBI model means **rendered**, which an agent cannot
+currently verify. Any A1–A12 equivalent has to say how that is established, or the contract will
+certify something nobody has looked at.
+
+**The unblocking move is an hour of writing, not an agent:** what are the twelve assertions that
+make a data-model change correct, and which of them can be checked without a human opening the
+report?
+
+**Unlocks when:** a PBI contract exists and its negative control passes — i.e. it can fail.
