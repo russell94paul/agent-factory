@@ -24,6 +24,7 @@ import pathlib
 import re
 import socketserver
 import sys
+import urllib.parse
 import webbrowser
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
@@ -49,6 +50,7 @@ from factory import sessions as sesslib  # noqa: E402
 from factory import dispatch as disp  # noqa: E402
 from factory import launch as launchlib  # noqa: E402
 from factory import research_run as rrun  # noqa: E402
+from factory import teamplan as tplan  # noqa: E402
 
 OUT = FACTORY / "tracker.html"
 
@@ -167,15 +169,15 @@ def start_session_from_handoff(note: str, dry: bool = False):
 
 
 def start_research_pass(rid: str, dry: bool = False):
-    """Prepare a research pass, and open a session for it when it is one that runs HERE.
+    """Prepare a research pass and open a session that runs it here.
 
-    ⛔ The split is the point. `rrun.start()` prepares and records for every runner; only a
-    CLAUDE_CODE pass gets a terminal, and the returned message says which happened. A single
-    "started" string covering both would be the label-that-reads-as-verified defect this repo
-    keeps logging — and the operator would not know whether to go and paste something.
+    ⛔ An earlier version of this split passes into "launchable" and "you go and paste it". That was
+    wrong -- the deep-research skill replaces the paste loop and states that the default is a pass
+    runs here. Every pass launches now, and the run log records that it ran LOCALLY, because that
+    is what tells the next reader how much independence the answer had.
 
-    Preparation happens BEFORE the spawn, so a failed spawn still leaves the prompt on disk and
-    the dispatch recorded, rather than losing both with the click.
+    Preparation happens BEFORE the spawn, so a failed spawn still leaves the prompt on disk and the
+    dispatch recorded, rather than losing both with the click.
     """
     import subprocess as _sp
     try:
@@ -185,16 +187,19 @@ def start_research_pass(rid: str, dry: bool = False):
     except Exception as exc:                                       # noqa: BLE001
         return False, f"{rid}: {type(exc).__name__}: {exc}"
 
-    if not res["launchable"]:
-        return True, (f"{res['note']} — this one runs on {res['plan']['where']}, "
-                      f"so nothing was started here. Paste it.")
-    if dry:
-        return True, f"DRY RUN — {res['note']}; would open a session"
+    # The session is told to invoke the skill; it is NOT handed a paraphrase of the brief.
+    d = FACTORY / ".data" / "research-prompts"
+    launch_file = d / f"{rid.upper()}-session.txt"
+    launch_file.write_text(res["session_prompt"], encoding="utf-8")
 
-    ps1 = _launch_script(f"research {rid}", f"{rid} · internal audit", res["prompt_path"],
-                         "38;5;140", session_name=f"{rid} · research")
+    if dry:
+        return True, f"DRY RUN -- {res['note']}; would open a session running {launch_file.name}"
+
+    pt = res["plan"]["pass_type"]
+    ps1 = _launch_script(f"research {rid}", f"{rid} · {pt}", launch_file,
+                         "38;5;140", session_name=f"{rid} · {pt}")
     wtexe = _wt()
-    cmd = ([wtexe, "new-tab", "--title", f"{rid} · research", "--startingDirectory", str(FACTORY),
+    cmd = ([wtexe, "new-tab", "--title", f"{rid} · {pt}", "--startingDirectory", str(FACTORY),
             "--colorScheme", WT_SCHEME,
             "powershell", "-NoExit", "-ExecutionPolicy", "Bypass", "-File", str(ps1)]
            if wtexe else
@@ -203,9 +208,9 @@ def start_research_pass(rid: str, dry: bool = False):
     try:
         _sp.Popen(cmd, cwd=str(FACTORY), close_fds=True)
     except Exception as exc:                                       # noqa: BLE001
-        return False, (f"{res['note']} — but no terminal opened "
+        return False, (f"{res['note']} -- but no terminal opened "
                        f"({type(exc).__name__}: {exc}). The prompt is on disk.")
-    return True, f"{res['note']} — session opened for {rid}"
+    return True, f"{res['note']} -- session opened, running {rid} as {pt}"
 
 
 #: One frame for every session (system identity); the banner accent varies per lane (instance
@@ -487,6 +492,7 @@ def hot_reload():
         g["ho"] = _il.reload(_il.import_module("factory.handoff"))
         g["launchlib"] = _il.reload(_il.import_module("factory.launch"))
         g["rrun"] = _il.reload(_il.import_module("factory.research_run"))
+        g["tplan"] = _il.reload(_il.import_module("factory.teamplan"))
         _RELOADED_AT = datetime.datetime.now()
         return True, f"reloaded {len(_HOT)} modules, {len(r.GATES)} gates"
     except Exception as exc:                                          # noqa: BLE001
@@ -575,7 +581,7 @@ def _tok(n) -> str:
     return str(n)
 
 
-def render(when: datetime.datetime, tab: str = "gates") -> str:
+def render(when: datetime.datetime, tab: str = "gates", team: str = "") -> str:
     # Research needs no measurement, and a full measure is ~10s of probes. Paying that to read a
     # prompt was the main reason this page felt slow.
     results = measure() if tab != "research" else []
@@ -772,6 +778,88 @@ def render(when: datetime.datetime, tab: str = "gates") -> str:
         lane_waits, lane_conflicts = waits_on(passing), conflicts()
         lane_findings = by_lane()
         ready_lanes = [l.id for l in LANES if not lane_waits[l.id]]
+        # ------------------------------------------------------- team filter, in sequence
+        # ⛔ NOT a membership filter. A team's declared gates are not self-contained -- the
+        # pipeline team declares 7 and needs 10, because `finishes` needs `from-history`,
+        # `succeeds` needs `general` and `ceiling` needs `cost`. Show only the declared 7 and the
+        # operator reaches step 2 and is blocked by a step this page hid from them. teamplan takes
+        # the closure and MARKS what it pulled in.
+        w('<div class="head" style="margin-top:44px">')
+        w('<h1>Follow one team in sequence</h1>')
+        w('<div class="sub">steps are dependency layers &mdash; everything in a step can be done '
+          'in parallel, and a step cannot start until the one above it is done</div>')
+        w('<div style="margin-top:12px;display:flex;gap:7px;flex-wrap:wrap">')
+        for nm in [""] + tplan.teams():
+            on = (nm == team)
+            href = "/lanes" + (f"?team={urllib.parse.quote(nm)}" if nm else "")
+            w(f'<a href="{href}" style="display:inline-block;padding:6px 12px;font-size:12.5px;'
+              f'text-decoration:none;border:1px solid var(--rule);border-radius:3px;'
+              f'background:{"var(--ink)" if on else "var(--raise)"};'
+              f'color:{"var(--paper)" if on else "var(--ink2)"}">{e(nm or "all lanes")}</a>')
+        w('</div>')
+        w('</div>')
+
+        if team:
+            try:
+                tp = tplan.plan(team, rows=board())
+            except KeyError:
+                tp = None
+                w(f'<div class="par" style="border-color:var(--fail)">'
+                  f'<h3 style="margin-top:0">No team called {e(team)}</h3></div>')
+            if tp and tp["state"] == tplan.UNGATED:
+                # ⭐ An empty list here would read as "nothing to do". It is not zero steps, it is
+                # zero MEASURABLE steps -- the same distinction launch.py protects with UNGATED.
+                w('<div class="par" style="border-color:var(--notrun)">')
+                w(f'<h3 style="margin-top:0"><span class="chip notrun">UNGATED</span> '
+                  f'{e(tp["team"])}</h3>')
+                w(f'<p style="font-size:13.5px;color:var(--ink2);margin:0 0 8px">'
+                  f'{e(tp["note"])}</p>')
+                w('<p style="font-size:12.5px;color:var(--ink3);margin:0"><b>This is not 0%.</b> '
+                  'There is nothing to sequence because nothing can be measured yet &mdash; the '
+                  'first step is to write the contract, which is not itself a gate.</p>')
+                w('</div>')
+            elif tp:
+                pulled = sum(1 for st in tp["steps"] for i in st["items"] if not i["declared"])
+                w('<div class="par">')
+                w(f'<h3 style="margin-top:0">{tp["total"]} steps in {len(tp["steps"])} '
+                  f'&middot; {tp["done"]} done, {tp["ready"]} ready, {tp["blocked"]} blocked</h3>')
+                w(f'<p style="font-size:13px;color:var(--ink3);margin:0">'
+                  f'{tp["declared"]} declared by the team'
+                  + (f' &middot; <b>{pulled} pulled in as prerequisites</b> it did not declare '
+                     f'but cannot finish without' if pulled else '')
+                  + f' &middot; lanes involved: {e(", ".join(tp["lanes"])) or "none"}</p>')
+                if tp["unowned"]:
+                    # These are not oversights. finishes/succeeds are UNMEASURABLE because nothing
+                    # has RUN -- no edit moves them. Saying "no lane" without saying why would send
+                    # somebody looking for a file to change.
+                    w(f'<p style="font-size:12.5px;color:var(--unmeas);margin:8px 0 0">'
+                      f'&#9888; <b>{len(tp["unowned"])} step(s) no lane claims</b>: '
+                      f'<code>{e(", ".join(tp["unowned"]))}</code> &mdash; check whether these are '
+                      f'unassigned work or steps that need a <b>run</b> rather than an edit.</p>')
+                w('</div>')
+                for st in tp["steps"]:
+                    w('<section class="phase" style="margin-top:18px"><header>')
+                    w(f'<h2>Step {st["n"]}</h2><span class="count">{len(st["items"])} '
+                      f'gate(s), parallel</span></header>')
+                    for i in st["items"]:
+                        cls = {"done": "done", "ready": "ready"}.get(i["status"], "blocked")
+                        w('<div class="t">')
+                        w(f'<div><span class="st {cls}">{e(i["status"])}</span></div>')
+                        w(f'<div class="sz">{"&#9679;" if i["declared"] else "&#9675;"}</div>')
+                        w(f'<div><div class="tt">{e(i["question"])}</div>')
+                        w(f'<div class="tw">{e(i["headline"])}</div>')
+                        lane = (f'lane: {e(i["lane"])}' if i["lane"] else
+                                '<b style="color:var(--unmeas)">no lane claims this step</b>')
+                        extra = ('' if i["declared"] else
+                                 ' &middot; prerequisite, not declared by this team')
+                        w(f'<div class="dep"><code>{e(i["gate"])}</code> &middot; {lane}{extra}'
+                          f'</div></div></div>')
+                    w('</section>')
+                w('<p style="font-size:12px;color:var(--ink3);margin:10px 0 0">'
+                  '&#9679; declared by the team &nbsp; &#9675; pulled in as a prerequisite. '
+                  'Order is a topological layering of the dependency graph, not an authored plan.'
+                  '</p>')
+
         w('<div class="head" style="margin-top:44px">')
         w('<h1>Start a lane</h1>')
         w(f'<div class="sub">{len(LANES)} lanes &middot; <b>{len(ready_lanes)} can start now</b> '
@@ -1687,21 +1775,29 @@ def render(when: datetime.datetime, tab: str = "gates") -> str:
                           f'border:1px solid var(--rule);border-radius:3px;background:var(--raise);'
                           f'color:var(--ink3);font-family:ui-monospace,monospace">'
                           f'{e(pl["action"] or "no action")}</button>')
-                    w(f'<span style="font-size:12px;color:var(--ink3)">runs on '
-                      f'<b>{e(pl["where"])}</b>'
+                    risk = pl.get("risk") or ""
+                    rc = ("var(--fail)" if risk in ("SEVERE", "HIGH")
+                          else "var(--unmeas)" if risk == "MEDIUM" else "var(--ink3)")
+                    w(f'<span style="font-size:12px;color:var(--ink3)">'
+                      f'<b>{e(pl.get("pass_type", ""))}</b> &middot; {e(pl.get("shape", ""))}'
+                      + (f' &middot; independence risk <b style="color:{rc}">{e(risk)}</b>'
+                         if risk else '')
                       + (f' &middot; pack <code>{e(pl["pack"])}</code>' if pl["pack"] else '')
                       + '</span>')
                     w('</div>')
                     if not ok:
                         w(f'<div class="dep" style="margin:-4px 0 10px">'
                           f'{e(pl["eligible"])} &mdash; {e(pl["why"])}</div>')
-                    elif not pl["launchable"]:
-                        # Say what the button does NOT do, on the button's own row. Discovering
-                        # it after the click is how a control stops being believed.
-                        w('<div class="dep" style="margin:-4px 0 10px">this cannot start a run '
-                          'from here &mdash; it writes the prompt to <code>.data/'
-                          'research-prompts/</code>, rebuilds the pack if there is one, and marks '
-                          'the prompt DISPATCHED. <b>The paste is yours.</b></div>')
+                    else:
+                        # Say what the click actually spends, before it is spent.
+                        w('<div class="dep" style="margin:-4px 0 10px">opens a session here that '
+                          'invokes the <code>deep-research</code> skill against this brief, and '
+                          'marks the prompt DISPATCHED. The answer is written straight to '
+                          '<code>docs/research/answers/</code> &mdash; <b>no paste, no upload</b>.'
+                          + ('  ⛔ BLIND-FIRST: this pass reads our own material, so it forms a '
+                             'view from the primary source before reading our conclusions.'
+                             if pl.get("risk") in ("HIGH", "SEVERE") else '')
+                          + '</div>')
                 w(f'<button type="button" data-copy="rs-{e(f.stem)}" style="font-size:12px;'
                   f'padding:5px 10px;margin-bottom:8px;cursor:pointer;border:1px solid var(--rule);'
                   f'border-radius:3px;background:var(--raise);color:var(--ink);'
@@ -2023,15 +2119,19 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.end_headers()
             print(f"  hot reload: {_RELOAD_MSG[1]}")
             return
+        # ⛔ This used `self.path` raw, so ANY query string 404'd -- `/lanes?team=X` was
+        # unreachable and the failure looked like a broken link rather than a parsing bug.
+        parsed = urllib.parse.urlparse(self.path)
         route = {"/": "gates", "/index.html": "gates", "/flow": "flow",
                  "/goals": "goals", "/roadmap": "roadmap",
                  "/lanes": "lanes", "/sessions": "sessions", "/research": "research",
-                 "/handoff": "handoff"}.get(self.path.rstrip("/") or "/")
+                 "/handoff": "handoff"}.get(parsed.path.rstrip("/") or "/")
         if route is None:
             self.send_error(404)
             return
+        sel = (urllib.parse.parse_qs(parsed.query or "").get("team") or [""])[0]
         # Re-measure per request. Slower than serving a file, and the entire reason to serve.
-        body = render(datetime.datetime.now(), route).encode("utf-8")
+        body = render(datetime.datetime.now(), route, team=sel).encode("utf-8")
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))

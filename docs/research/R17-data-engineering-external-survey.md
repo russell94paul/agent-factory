@@ -4,11 +4,18 @@
 answer lands beside it as
 `docs/research/answers/R17-answer-data-engineering-external-survey.md`.
 
-**Runs on:** CLAUDE_RESEARCH
+**Pass type:** EXTERNAL_SURVEY
 **Depends on:** none
 
-_Those two lines are read by `factory.research_run`, which draws this pass's button on the readiness
-board. They are DECLARED, never inferred — a prompt that does not say gets no button._
+_Read by `factory.research_run`, which draws this pass's button on the readiness board. DECLARED,
+never inferred — a prompt that does not say gets no button. `EXTERNAL_SURVEY` is what tells the
+runner to open 3-5 parallel lanes on **different search modalities**; independence risk is LOW
+because the web is genuinely outside._
+
+⚠ **This runs HERE, via the `deep-research` skill — not pasted into claude.ai.** An earlier draft of
+this file said otherwise. The skill sweeps the open web first and reaches the same internet; what
+the paste loop had was *distance*, and the skill buys that back deliberately. What it never had was
+the repo, the wiki, the ledger or a verifier.
 
 ## Run log
 

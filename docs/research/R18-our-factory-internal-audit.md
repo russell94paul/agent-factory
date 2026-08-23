@@ -2,7 +2,7 @@
 
 **Status: NOT DISPATCHED.** Written 2026-08-23.
 
-**Runs on:** CLAUDE_CODE
+**Pass type:** STRUCTURE_CRITIQUE
 **Depends on:** R17
 
 ⚠ **The researcher for this pass is not a web tool.** It is a **Claude Code session running in the
@@ -10,10 +10,14 @@
 do twice is cite a file and a line, and an agent sitting in the repo can. The answer lands beside it
 as `docs/research/answers/R18-answer-our-factory-internal-audit.md`.
 
-⭐ **This is the only pass on the board the readiness UI can genuinely START**, because it is the
-only one that runs here. R16 and R17 are pasted into somebody else's product, so their button
-prepares and records and says so. `**Depends on:** R17` keeps this one's button disabled until R17
-is answered — running it first does not fail, it quietly produces a worse answer.
+⚠ **Every pass on the board runs here now, this one included** — an earlier draft claimed this was
+the only launchable one, which was wrong: the `deep-research` skill replaces the paste loop for all
+of them. `**Depends on:** R17` keeps this button disabled until R17 is answered; running it first
+does not fail, it quietly produces a worse answer.
+
+⛔ **`STRUCTURE_CRITIQUE` means independence risk HIGH, and the run is BLIND-FIRST.** This pass reads
+our own code, so it is pulled toward agreeing with us. Form a view from the primary source before
+reading what we concluded about it — and take the mandatory web lane, or this is a bubble.
 
 ## Run log
 
