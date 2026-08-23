@@ -23,10 +23,10 @@ say so:
 |---|---|---|
 | **R7** — session manager | what should *run* sessions: PTYs, supervision, leases, multiplexing, failure recovery | **answered** — read `answers/R7-answer-session-manager.md` in the pack |
 | **R8 §2.6** — agent terminal | state of the art for supervising N agents; human factors, attention, alarm fatigue | split out into R9 at R8's own invitation |
-| **R9** — game-styled supervision UI | does a game HUD *skin* help or hurt | dispatched 2026-08-23, alongside this |
+| ~~**R9** — game-styled supervision UI~~ | ~~does a game HUD *skin* help or hurt~~ | **WITHDRAWN 2026-08-23** — the strand was dropped as not useful. If an R9 answer reaches us it is discarded. R12 is now the only live prompt on this surface. |
 
-R7 asked what runs a session. R9 asks what it should look like. **R12 asks what the layer between
-them must know to be honest** — how a session is discovered, named, addressed, resumed, costed, and
+R7 asked what runs a session. R9 asked what it should look like and has since been withdrawn.
+**R12 asks what the layer between them must know to be honest** — how a session is discovered, named, addressed, resumed, costed, and
 how the operator learns that one of them is blocked on a question.
 
 A good answer may conclude **"adopt switchboard and delete your plans"**, and that would be a
