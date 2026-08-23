@@ -1,4 +1,36 @@
-# R13 — The manufacturing step, the platform, and the UI that has to make delivery move
+# DRAFT (unnumbered) — the manufacturing step, the platform, and the UI
+
+⛔ **DO NOT DISPATCH. This was written as "R13" and that number is already taken** by
+`R13-architecture-and-ui-survey.md`, which is **answered and reconciled into `SYNTHESIS.md` §14** —
+work that lives only on the operator's machine and has not been pushed, so this session could not
+see it and duplicated the number.
+
+⚠ **Renamed out of the `R[0-9]*` glob deliberately, and it is not cosmetic.**
+`factory.dispatch.prompts()` keys by R-number over a *sorted* glob and uses `setdefault`, so with
+both files present `R13` resolves to `R13-architecture-and-ui-survey.md` and this file is **dropped
+silently** — no status, no answer, never listed as unsent. Measured:
+
+```
+files present : ['R13-architecture-and-ui-survey.md', 'R13-platform-and-manufacturing.md']
+dispatch sees : {'R13': 'R13-architecture-and-ui-survey.md'}
+DROPPED       : ['R13-platform-and-manufacturing.md']
+```
+
+⭐ **That is exactly the failure `dispatch.py` was written to catch — a prompt written and never
+sent — occurring inside the instrument built to catch it.** Outside the glob it is inert and
+visible; inside it, it is invisible.
+
+**Before any of this is reused:** diff it against `R13-architecture-and-ui-survey.md` and its filed
+answer. Most of Part 5 (E1–E8) is UI territory that run 1 already answered, and the estate's own
+rule is that two passes answering the same question costs a run and then costs a reconciliation.
+The manufacturing questions (D1–D5) may survive; nobody has checked, because the run-1 answer is
+not reachable from here. Renumber only after checking which ids are free — R14 and R15 are taken.
+
+---
+
+## Original heading
+
+# The manufacturing step, the platform, and the UI that has to make delivery move
 
 **Status: READY TO DISPATCH.** Written 2026-08-23, rewritten the same day after three review passes.
 File the answer at `docs/research/answers/R13-answer-platform-and-manufacturing.md` and nowhere else.
