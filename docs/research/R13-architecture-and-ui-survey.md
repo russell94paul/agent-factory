@@ -9,9 +9,58 @@ have read it. The answer is filed at `docs/research/answers/R13-answer-architect
 
 | Run | Dispatched | Outcome |
 |---|---|---|
+| 2 | pending | Run 2 — repair §8, ground the latency budget, resolve the approval/platform fit. |
 | 1 | 2026-08-23 | Answer filed 2026-08-23. Strong on the stack decision, the latency budget and the approval survey. ⚠ It did **not** read `ui-surface-inventory.md` — section 8 says *"without detail on those, we assume multiple UIs (CLI, web panel, maybe Slack bot)"* and guessed our surfaces. And it **deferred** on the terminal question rather than arguing it. |
 
 > Kept because `factory.dispatch` reads a status line and the presence of an answer file, and by its own account cannot see whether a prompt was ever actually pasted anywhere. Without this table "which did I send, and when?" is not answerable from disk. **Add a row every time this prompt is dispatched.**
+
+---
+
+## ⚠ Read this first — you are RUN 2, and run 1 already answered most of this well
+
+Run 1 landed on 2026-08-23 and is **filed and reconciled** into `SYNTHESIS.md` §14. **This is not a
+redo.** Most of it was adopted. Your job is one repair and two depths.
+
+**What run 1 got right, and what is now SETTLED — do not re-litigate it:**
+
+- **The platform: a VS Code extension**, not a desktop app. Because the operator already lives in
+  VS Code, so cold start is nothing, and Monaco, LSP, Git and diffs come free. Electron out on
+  weight. This *beat* a competing pass that wanted a Rust/Tauri app, and it is now the decision.
+- **Topology is closed.** Seven orchestration patterns, none raises the 3-lane cap. Your line —
+  *"raising the concurrency ceiling depends on task structure, not the orchestration style"* — turned
+  out to bracket another pass that changed the task structure and got a resource-bound ceiling. That
+  question is finished; do not survey topologies again.
+- **Notification first.** Adopted. Three independent sources agreed.
+- **Provenance: the OTel GenAI field set** as the config-hash dimensions. Adopted.
+- **The terminal is settled** as an escape hatch, never the primary surface. Not a question any more.
+
+**⛔ The one thing run 1 got wrong, and the only reason you are running again.** Your §8 said:
+
+> *"We must build on top of the existing four interfaces (and one dead one). **Without detail on
+> those, we assume multiple UIs (CLI, web panel, maybe Slack bot)**."*
+
+`ui-surface-inventory.md` was your named attachment and it describes those four surfaces precisely.
+You did not read it, so **the entire migration section was guesswork and has been discounted.**
+
+**It is in §A of the attached evidence pack. Read it before you write anything about migration.**
+The four surfaces are named there with sizes and dates, along with a fifth that is dead — and the
+dead one is the most instructive, because it is a platform half of a monorepo that stopped moving
+while the ops half carried every ticket.
+
+**Where run 2 should go deeper than run 1:**
+
+1. **The migration, done properly this time** (§4.8) — against the four real surfaces, not assumed
+   ones. What is retired, what runs in parallel, what must not be built yet.
+2. **The latency budget, grounded** (§4.3) — run 1 gave targets from user-perception guidelines and
+   named no mechanism. We have since **measured** the real thing: `measure()` runs 30 gates
+   **serially in 9.3 s**, the loop is `for g in GATES: g.probe()` over independent I/O-bound probes,
+   and the server is `socketserver.TCPServer` so two concurrent requests return empty. Tell us what
+   each technique buys **in milliseconds against that**, not against a guideline.
+3. **Whether the approval surface fits inside the platform you chose.** Run 1 recommended a VS Code
+   extension and, separately, an approval surface for a non-engineer — and never checked that the
+   second fits inside the first. A non-engineer does not have VS Code open. **Does that break the
+   platform recommendation, or does the approval surface live somewhere else?** This is the sharpest
+   open question your run 1 left.
 
 ---
 
