@@ -16,3 +16,7 @@ living-systems-ui.zip
 # live in this repo, so committing it would ship a copy that is stale on the next edit.
 # Rebuild with scripts/build_r8_pack.py.
 docs/research/R8-evidence-pack.md
+
+# Same rule as the R8 pack: a generated concatenation of files that already live here.
+# Rebuild with scripts/build_r13_pack.py.
+docs/research/R13-evidence-pack.md
