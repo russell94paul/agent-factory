@@ -44,6 +44,30 @@ docs/research/answers/R4-answer.md
 Then tell Claude which have landed. Do not paraphrase them into a summary first — the raw answer
 is the artefact, and the disagreements between the three are the most useful part.
 
+## ⚠ Every R-series file lives in THIS repo — regardless of which repo the question is about
+
+Prompt and answer both, always `agent-factory/docs/research/`. Not launchpad, not the repo the
+question happens to concern. This is not tidiness — it is the only place the instrument can see:
+
+```python
+# factory/synthesis.py
+RESEARCH = <agent-factory>/docs/research
+ANSWERS  = RESEARCH / "answers"
+filed()  = glob ANSWERS/"R[0-9]*.md"
+```
+
+`filed()` globs exactly one directory. An answer filed anywhere else can never appear in
+`unsynthesised()`, so `tests/test_synthesis_current.py` can never go red for it — the pass gets a
+permanent free ride from the currency gate, and a research record that silently omits a landed
+answer is the failure this programme exists to prevent.
+
+**Proven, not hypothetical:** R10 was written into `aldc-launchpad/docs/research/` on 2026-08-22
+and moved here on 08-23. Its own header told the reader to file the answer at the *relative* path
+`docs/research/answers/…`, a directory that does not exist in launchpad — so following the prompt's
+own instruction would have put the answer somewhere no instrument reads.
+
+R8 asks about `prefect-connectors`; R10 asks about the `wiki`. Both live here anyway.
+
 ## What is in them that was not in the 2026-08-20 draft
 
 The original prompts (`agent-factory-research-prompts.md`, kept for its Part 0 reasoning) were
