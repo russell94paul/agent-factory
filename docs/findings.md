@@ -628,6 +628,14 @@ produces that count.**
   never protected the RUN.** And with no ordering, a stuck handle at the head of the store
   ate the whole budget every sweep: over 20 sweeps the one killable handle was attempted
   **0** times, the stuck one 21.
+
+  ⚠ **Condition on that last pair, corrected by the fourth read.** `0 / 21` holds only with
+  **no cap AND no ordering**. With the cap present and the ordering removed — the state this
+  paragraph's wording implies — the killable handle is attempted **once, on sweep 11**: the
+  cap rescues it eventually by retiring the stuck handles into `needs_human`. As written the
+  sentence credits the missing ordering with an effect that needs the missing cap too. `21`
+  is also DERIVED (1 reap + 20 sweeps). The clean figure is **sweep 2**; do not read the
+  gap as 0-to-11.
 - **MEASURED BY** — drive `reap_expired_leases()` + `sweep_unterminated_handles()` with the
   real terminator, seams faked, `_owned_by_us → False`. Fixed by
   `MAX_TERMINATION_ATTEMPTS = 4` plus least-recently-attempted-first ordering.
