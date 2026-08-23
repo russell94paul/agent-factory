@@ -1137,3 +1137,65 @@ anything*. Both produced confident output. Both were quoted onward.
 ⭐ **A number nobody can make move is not a measurement — it is a constant with a citation.** Before
 trusting any figure this estate publishes, ask what would have to change for it to read differently,
 and whether that is even reachable.
+
+### 15.5 The outside-evidence lane — and it attacks the action three passes agreed on
+
+Read 2026-08-23, after §15 was first written. It searched the open web on five sequencing
+questions, then read our positions. **Its target turned out to be a14 — "build the notification
+channel first" — which §14.3 calls the first move and attributes to three independent sources.**
+
+⛔ **1. The "three independent sources" is one measurement read three times.** R13's stated basis is
+*"the measured backlog shows humans are the bottleneck"*; R12's is *"we saw four agents stuck with
+unanswered questions"* (`R12-answer-session-manager-ui.md:58`). **Both reason from the same
+2026-08-23 measurement, which §14.3 then lists as the third leg of the tripod.** R13 says so itself:
+*"there are no studies on AI-agent prompts specifically."* **Nobody has published a build-order
+claim that the notification channel comes first.** The convergence we treated as the control was an
+echo.
+
+⭐ **2. Oversight has a capacity, and safety is an inverted-U in escalation rate.** *Oversight Has a
+Capacity — Calibrating Agent Guards to a Subjective, Fatiguing Human*, Emre Turan,
+`arXiv:2606.08919`. Under a paranoid policy escalating **88% of routine actions, attack success
+reaches ~80%**, and is already **40% at just 50 filler actions**. The paper's conclusion:
+*"escalating everything is strictly worse than the optimum."*
+
+⚠ **Basis `DERIVED`, and the author says so** — *"the inverted-U is simulated, not measured."*
+⚠ **Citation verified here**: the paper exists, title and author are exact. **The lane dated it
+11 Aug 2026; v1 was submitted 8 Jun 2026.** Substance held, precision did not — the second time in
+two passes (cf. §15.1's line numbers), which is why the check is not optional.
+
+**a14 as written names a channel and no routing policy. A channel with no policy is precisely the
+design that paper places on the bad side of the curve.**
+
+**3. a16 is a much smaller answer than §14.5 claims.** Read from the raw
+`model/gen-ai/registry.yaml` (72 attributes), the OTel GenAI set covers **5 of our 15** dimensions —
+`prompt.version`, `request.model`, `request.reasoning.level`, `tool.definitions`, `data_source.id` —
+and **misses every one §14.5 says bites**: `contract_version`, `permissions`, `sandbox_image`,
+`harness_version`, `max_turns`, `budget_usd`, `model_routing`, `context_policy`,
+`tool_implementation`, `side_effect_replay`. **There is no commit-hash attribute at all**, which
+§14.5 explicitly lists as one it names. `OBSERVED`.
+
+⚠ **4. And its maturity is worse than "experimental".** Every attribute is `stability: development`;
+the `gen_ai.*` attributes were **deprecated out of the main semconv registry** into a separate repo;
+that repo has **zero releases**; and its README's Schema URL section reads, in full, `TODO`.
+**You cannot version-pin what you emit against it.** `OBSERVED` — the lane read the YAML, the README
+and the releases page.
+
+**5. a8's gate binding is vacuous** — found independently, without seeing the audit lane's §2.1.
+⭐ **Two lanes that could not see each other converged on the same defect.** That is what the
+control was for, and it is the strongest signal either produced.
+
+**6. The cap the outside names and we do not — human review throughput.** Our concurrency answer
+(§14.1, a15) is about writers and files. Practitioners name a second ceiling: *"with each agent you
+have more code to review"* — and our own measurement (two green PRs at 6 and 9 days) **is** that
+ceiling. We filed it under notification. ⭐ **The estate's binding limit last month was not 3 lanes,
+it was 1 reviewer** — and a notification channel does not add review capacity. It makes the queue
+arrive faster at the thing item 2 says degrades under load.
+
+### 15.6 What this does to the build order
+
+**Do not treat a14 as settled.** It is the action with the most apparent agreement and the least
+external support, and two of the six findings above argue it is aimed at the wrong constraint.
+
+If the binding limit is reviewer throughput, the useful first move is something that **raises review
+capacity or lowers what needs reviewing** — not something that delivers the queue sooner. That is a
+different action, and nobody has written it down yet.

@@ -136,7 +136,17 @@ ACTIONS: List[Action] = [
     # ---- §14.7 (R13) -------------------------------------------------------------------------
     Action("a13", "Platform: a VS Code extension, not a desktop app.", "§14.7.1", state=DECIDED),
     Action("a14", "Build the notification channel first — three passes and one measurement agree.",
-           "§14.7.2", state=DECIDED),
+           "§14.7.2", state=DECIDED,
+           note="⛔ CONTESTED 2026-08-23 by R16's outside-evidence lane (SYNTHESIS §15.5). The "
+                "'three independent sources' is ONE MEASUREMENT READ THREE TIMES — R13 and R12 both "
+                "reason from the same 2026-08-23 backlog measurement, which §14.3 then counts as "
+                "the third leg. Nobody has published a build-order claim that notification comes "
+                "first. ⭐ Worse, arXiv 2606.08919 (Turan, verified) finds safety is an inverted-U "
+                "in escalation rate — a paranoid policy escalating 88% of routine actions reaches "
+                "~80% attack success — and this action names a CHANNEL with NO ROUTING POLICY, "
+                "which is the bad side of that curve. And if the binding limit is reviewer "
+                "throughput (2 green PRs at 6 and 9 days), a channel does not add review capacity; "
+                "it delivers the queue faster to the thing that degrades under load."),
     Action("a15", "Stop surveying orchestration topologies — seven checked, none moves the cap.",
            "§14.7.3", state=SHIPPED),
     Action("a16", "Config hash: adopt the OTel GenAI field set.", "§14.7.4", state=DECIDED,
@@ -147,7 +157,14 @@ ACTIONS: List[Action] = [
                 "(`rf\"\x08{d}\x08\"` where `rf\"\b{d}\b\"` was meant), invisible in "
                 "every editor. Fixed the same day. It reported 0 of 15 for as long as it existed; "
                 "the true figure is 6 of 15, so the job is NINE dimensions, not fifteen — a number "
-                "that had travelled into SYNTHESIS §14.5, R13 run 2, R14 and ui-surface-inventory."),
+                "that had travelled into SYNTHESIS §14.5, R13 run 2, R14 and ui-surface-inventory. "
+                "⛔ AND THE ACTION IS MUCH SMALLER THAN §14.5 CLAIMS (§15.5): the OTel GenAI set "
+                "covers 5 of our 15 dimensions and misses EVERY ONE §14.5 says bites — no "
+                "contract_version, no permissions, no sandbox_image, no harness_version, and no "
+                "commit-hash attribute at all. Its maturity is worse than experimental: every "
+                "attribute is stability:development, the gen_ai.* set was deprecated out of the "
+                "main semconv registry into a repo with ZERO releases whose README Schema URL "
+                "section reads 'TODO'. You cannot version-pin against it."),
     Action("a17", "Discount R13's migration section — it guessed our surfaces.", "§14.7.5",
            state=SHIPPED),
     Action("a18", "Settle the terminal question as a decision and delete it from every prompt.",
