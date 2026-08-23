@@ -272,8 +272,15 @@ def main() -> int:
     check("an override that dispatched NOTHING is not reported as success",
           not any(t["t"] == "success" for t in d["toasts"]),
           "; ".join(f"[{t['t']}] {t['m'][:70]}" for t in d["toasts"]))
-    check("and the operator is told the ceiling is why",
-          any("ceiling" in t["m"] for t in d["toasts"]))
+    # ⛔ This used to assert the FALSE half — that the operator is told the ceiling is why.
+    # A zero dispatch on the restart path can equally be an earlier failed dependency, and
+    # that stage will never restart on its own. The probe was locking in the wrong claim.
+    check("the operator is told BOTH possible causes, not a made-up one",
+          any("earlier stage" in t["m"] for t in d["toasts"])
+          and any("ceiling" in t["m"] for t in d["toasts"]),
+          "; ".join(x["m"][:80] for x in d["toasts"] if x["t"] == "info"))
+    check("and is warned that one of them will not recover by itself",
+          any("NOT restart on its own" in t["m"] for t in d["toasts"]))
 
     print()
     print("WATCHED: the dashboard refuses, and the override reaches the wire."

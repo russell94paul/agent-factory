@@ -211,6 +211,30 @@ instrument.
 `prefect-connectors/tests/orchestrator/mutate_control_plane.py`. Disables each control and
 requires the matching tests to fail. **7 of 7 load-bearing.**
 
+> ⛔ **Do not regenerate this file with `> docs/evidence/.../mutations.txt`.** On 2026-08-23
+> a run somewhere in this estate did exactly that and truncated this committed artefact to
+> **0 bytes** for the ~25 minutes the harness took; it was restored from git. `>` truncates
+> at launch and fills at exit, so the damage window is invisible unless someone happens to
+> look. An earlier version of this section documented that command, which is how the trap
+> got laid — by me.
+>
+> Regenerate to a scratch path and copy in only when it is complete and you have read it:
+>
+> ```
+> python tests/orchestrator/mutate_control_plane.py > "$SCRATCH/mutations.txt" 2>&1
+> #   read it, confirm the count, THEN:
+> cp "$SCRATCH/mutations.txt" docs/evidence/control-plane-2026-08-22/mutations.txt
+> ```
+>
+> ⚠ The attribution was never settled. A process table shows *what* ran, not *who* ran it —
+> both the harness and its pytest children use relative paths, so a correctly-isolated run
+> in a scratch copy is character-for-character identical in the process table to one
+> writing into a worktree. **Only the parent PID or the cwd distinguishes them, and killing
+> the process destroys both.** I killed it, so the question cannot now be answered; I had
+> already told a subagent it was responsible, on that inference, and had to withdraw it.
+> If this recurs: capture `Get-CimInstance Win32_Process -Filter "ProcessId=<pid>"` and its
+> `ParentProcessId` **before** stopping anything.
+
 ```
 cap                       10 failed   both cap checks removed
 concurrency                4 failed   ceiling branch removed
