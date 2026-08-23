@@ -40,8 +40,17 @@ DEPENDS: Dict[str, List[str]] = {
     "truthful": ["from-history"],
     # An assertion cannot measure a live run until the evaluator is a principal of its own.
     "certified": ["isolated"],
-    # Re-confirming the declared tenant list against a live pull needs a live instrument.
-    "tenancy": ["certified"],
+    # `tenancy` as it is actually implemented has NO dependency: reading allowed_tenants out of the
+    # blueprint needs no live instrument. The edge here was written for a different question —
+    # "is the declared list still CORRECT?" — which does need one, and which no gate asks.
+    # Removed 2026-08-23. A PASS pointing at a NOT_RUN dependency is how the roadmap came to
+    # sequence work that could already have started.
+    #
+    # ⚠ The missing gate is real, not a tidy-up: `tenancy-verified`, depending on `certified`,
+    # confirming the six ids against a live pull. Its absence is why nothing on the board notices
+    # that the declared list was last checked on 2026-05-29, ~12 weeks before the blueprint that
+    # carries it. Adding it changes len(GATES) and the pinned artifact
+    # tests/test_tracker_is_current.py asserts against, so it is its own job.
     # The corpus is scored by the contract; isolate the grader before growing what it grades.
     "breadth": ["isolated"],
     # A run only "finishes" meaningfully once it is bounded and its verdict is honest.

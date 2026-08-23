@@ -647,6 +647,12 @@ def g_work_is_attributable():
     return _fail(f"{len(runs) - len(real)} runs cannot be tied to a Jira ticket", ev, src)
 
 
+#: Fewest pipelines `truthful` must actually compare before a green means anything. Not tuned —
+#: chosen as "more than the one it was silently passing on". Raise it when the population grows;
+#: the number matters far less than the fact that zero-or-one can no longer read as agreement.
+_TRUTHFUL_FLOOR = 3
+
+
 def g_status_matches_reality():
     """Does a pipeline's recorded status agree with its own event log?
 
@@ -675,13 +681,37 @@ def g_status_matches_reality():
             drift.append((pl["id"], claimed, last.get("event_type"),
                           last.get("stage_name")))
     src = "orchestrator/data/pipelines.json vs audits"
-    ev = [f"{len(listed)} pipelines listed, {len(by_id)} with an event log"]
+    # How many pipelines this gate was ACTUALLY able to compare. Everything above `continue`s past
+    # a pipeline with no event log, so `listed` is the population offered and this is the
+    # population measured. They are not the same number and the gate used to report only the first.
+    compared = [pl for pl in listed
+                if by_id.get(pl.get("id")) and by_id[pl["id"]]["events"]]
+    ev = [f"{len(listed)} pipelines listed, {len(by_id)} with an event log, "
+          f"{len(compared)} actually compared",
+          f"{len(by_id) - len(compared)} event log(s) never examined — this gate iterates "
+          f"pipelines.json, not the audits, so a run with a log but no entry is invisible to it"]
     for pid, claimed, ev_type, stage in drift:
         ev.append(f"{pid} recorded '{claimed}' but its log ends {ev_type} at {stage}")
     if drift:
         return _fail(f"{len(drift)} pipeline(s) claim a state their log contradicts",
                      ev, src)
-    return _pass("recorded status agrees with the event log", ev, src)
+    # ⭐ comparable != 0 BEFORE looking at the score. On 2026-08-23 this gate reported
+    # "recorded status agrees with the event log" having compared exactly ONE pipeline, while 13
+    # event logs went unexamined — and `from-history`, the FAIL it declares a dependency on, was
+    # simultaneously naming three runs "recorded succeeded over 115, 21 and 15 failures". Those
+    # are precisely the records this gate exists to catch, and they sat in the 13.
+    #
+    # A run where nothing could be compared has no recorded disagreements and therefore scores
+    # perfect. That is the false-certification shape the parity gate already closed structurally
+    # in the connector pipeline; the lesson was learned there and not carried here.
+    if len(compared) < _TRUTHFUL_FLOOR:
+        raise Unmeasurable(
+            f"only {len(compared)} pipeline(s) could be compared (floor is {_TRUTHFUL_FLOOR}) — "
+            f"a green over a population this small is not evidence that records agree with their "
+            f"logs, it is evidence that almost nothing was looked at. Widen the population to the "
+            f"{len(by_id)} runs that HAVE logs before this can pass.")
+    return _pass(f"recorded status agrees with the event log, over {len(compared)} compared",
+                 ev, src)
 
 
 # --------------------------------------------------------------------------- build-order gates
@@ -1100,8 +1130,14 @@ GATES: List[Gate] = [
     Gate("certified", "Is the output actually certified?",
          "The contract must measure a live run, not a replayed one.",
          g_output_is_certified, "certification"),
-    Gate("tenancy", "Is blast radius certifiable?",
-         "Certifying a pull whose scope is unknown certifies nothing.",
+    # Retitled 2026-08-23. It read "Is blast radius certifiable?" and passed on a non-empty
+    # `allowed_tenants` list — so a PASS announced that blast radius was certifiable while meaning
+    # "somebody wrote six account ids down". The blueprint says those were verified 2026-05-29,
+    # ~12 weeks before it was written, and carries "Confirm against a live pull before activation".
+    # Declared and verified are different claims and only one of them is measured here.
+    Gate("tenancy", "Is a tenant scope DECLARED? (declared, not verified)",
+         "Certifying a pull whose scope is unknown certifies nothing — but a declared list is "
+         "not a confirmed one, and this gate cannot tell you the ids are still right.",
          g_tenancy_declared, "certification"),
     Gate("corpus", "Is the grader tamper-evident and separable?",
          "An agent that can edit its own grader is not graded — and a silent edit is "

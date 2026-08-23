@@ -1582,12 +1582,12 @@ write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not
   </div>
   <div class="tracker rv">
     <div class="tracker-head">
-      <h3 class="disp">10 of 30 gates pass</h3>
+      <h3 class="disp">8 of 30 gates pass</h3>
       <span class="basis m">measured on build</span>
     </div>
     <div style="padding:0 18px 18px">
-      <div style="height:6px;background:var(--rule);position:relative;margin:14px 0 10px" role="img" aria-label="10 of 30 gates pass"><span style="position:absolute;inset:0 auto 0 0;width:33%;background:var(--pass)"></span></div>
-      <p style="font-size:14px;color:var(--ink-2)">Unattended means the loop runs, its gates can refuse, and its output can be certified. Today 10 of those 30 conditions holds. The gap is the work.</p>
+      <div style="height:6px;background:var(--rule);position:relative;margin:14px 0 10px" role="img" aria-label="8 of 30 gates pass"><span style="position:absolute;inset:0 auto 0 0;width:27%;background:var(--pass)"></span></div>
+      <p style="font-size:14px;color:var(--ink-2)">Unattended means the loop runs, its gates can refuse, and its output can be certified. Today 8 of those 30 conditions holds. The gap is the work.</p>
     </div>
   </div>
   <div class="tracker rv">
@@ -1707,7 +1707,7 @@ write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not
   <div class="tracker rv">
     <div class="tracker-head">
       <h3 class="disp">Can it tell success from failure?</h3>
-      <span class="basis a">1 of 8</span>
+      <span class="basis a">0 of 8</span>
     </div>
     <div style="overflow-x:auto">
       <table class="derived">
@@ -1772,15 +1772,15 @@ write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not
             <td class="n"><span class="mono">.sessions/pipe_&lt;TICKET&gt;_&lt;runid&gt;</span></td>
           </tr>
           <tr>
-            <td><span class="chip pass">pass</span></td>
+            <td><span class="chip unmeas">unmeasurable</span></td>
             <td class="what"><b>Does a recorded status match its own event log?</b><br>
-              <span style="color:var(--ink-2)">recorded status agrees with the event log</span>
+              <span style="color:var(--ink-2)">only 1 pipeline(s) could be compared (floor is 3)</span>
               <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
-                <li>2 pipelines listed, 14 with an event log</li>
+                <li>only 1 pipeline(s) could be compared (floor is 3) — a green over a population this small is not evidence that records agree with their logs, it is evidence that almost nothing was looked at. Widen the population to the 14 runs that HAVE logs before this can pass.</li>
               </ul>
               <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>A record that contradicts its log is the success-over-failures defect one level up.</i></div>
             </td>
-            <td class="n"><span class="mono">orchestrator/data/pipelines.json vs audits</span></td>
+            <td class="n"><span class="mono">&mdash;</span></td>
           </tr>
           <tr>
             <td><span class="chip fail">fail</span></td>
@@ -1828,7 +1828,7 @@ write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not
   <div class="tracker rv">
     <div class="tracker-head">
       <h3 class="disp">Can its output be certified?</h3>
-      <span class="basis a">3 of 8</span>
+      <span class="basis a">2 of 8</span>
     </div>
     <div style="overflow-x:auto">
       <table class="derived">
@@ -1877,12 +1877,9 @@ write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not
             <td class="n"><span class="mono">$AGENT_FACTORY_EVALUATOR + factory/</span></td>
           </tr>
           <tr>
-            <td><span class="chip pass">pass</span></td>
+            <td><span class="chip fail">fail</span></td>
             <td class="what"><b>Is the certification suite green and honest?</b><br>
-              <span style="color:var(--ink-2)">147 passed</span>
-              <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
-                <li>includes test_every_assertion_has_been_proved_able_to_fail</li>
-              </ul>
+              <span style="color:var(--ink-2)">1 failed, 202 passed</span>
               <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>Green is worthless unless every assertion has been shown able to fail.</i></div>
             </td>
             <td class="n"><span class="mono">tests/</span></td>
@@ -1901,12 +1898,12 @@ write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not
           </tr>
           <tr>
             <td><span class="chip pass">pass</span></td>
-            <td class="what"><b>Is blast radius certifiable?</b><br>
+            <td class="what"><b>Is a tenant scope DECLARED? (declared, not verified)</b><br>
               <span style="color:var(--ink-2)">6 tenant(s) declared</span>
               <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
                 <li>['389-957-4788', '842-825-0313', '126-436-3882', '524-661-7349', '703-152-5903', '232-341-9629']</li>
               </ul>
-              <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>Certifying a pull whose scope is unknown certifies nothing.</i></div>
+              <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>Certifying a pull whose scope is unknown certifies nothing — but a declared list is not a confirmed one, and this gate cannot tell you the ids are still right.</i></div>
             </td>
             <td class="n"><span class="mono">blueprints/windsorai_gep.yaml</span></td>
           </tr>
