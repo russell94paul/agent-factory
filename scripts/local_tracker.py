@@ -40,11 +40,13 @@ from factory import operator as opans  # noqa: E402
 from factory import worktrees as wt  # noqa: E402
 from factory import handoff as ho  # noqa: E402
 from factory import runs as runlib  # noqa: E402
+from factory import sessions as sesslib  # noqa: E402
 
 OUT = FACTORY / "tracker.html"
 
 #: (key, href, label). The key is what render() switches on.
 TABS = [("gates", "/", "Gates"), ("lanes", "/lanes", "Lanes"),
+        ("sessions", "/sessions", "Sessions"),
         ("research", "/research", "Research"), ("handoff", "/handoff", "Handoff")]
 
 #: Modules whose source can change while the server is running, newest-dependency-last: board and
@@ -868,6 +870,108 @@ def render(when: datetime.datetime, tab: str = "gates") -> str:
               f'color:var(--ink2);max-height:230px;overflow:auto">{e(lane.full_prompt)}</pre>')
             w('</div>')
 
+    if tab == "sessions":
+        # ------------------------------------------------------------------ sessions
+        # The question this answers is "which of these twelve terminals is which, and which are
+        # waiting on me" — which nothing answered before, because the three sources that know are
+        # never joined: the session registry (written by the session), jobs/<id>/state.json
+        # (written by the agent, and carrying a `needs` question in English) and the process table
+        # (the only one that knows whether anything is still running).
+        inv = sesslib.inventory()
+        blocked = [r for r in inv if r["needs"]]
+        collisions = sesslib.collisions()
+        running = [r for r in inv if r["state"].startswith("RUNNING")]
+        w('<div class="head" style="margin-top:44px">')
+        w('<h1>Sessions</h1>')
+        w(f'<div class="sub">{len(running)} running &middot; '
+          f'<b style="color:{"var(--fail)" if blocked else "var(--ink3)"}">{len(blocked)} waiting '
+          f'on you</b> &middot; {len(inv)} known to the registry</div>')
+        w('</div>')
+
+        # Blocked first, always. A blocked agent is the only kind a human can unblock, and these
+        # questions were sitting unread in a file nothing opened.
+        if blocked:
+            w('<div class="par" style="margin-top:14px;border-color:var(--fail)">')
+            w(f'<h3 style="margin-top:0;color:var(--fail)">'
+              f'&#9888; {len(blocked)} session(s) are asking you a question</h3>')
+            for r in blocked:
+                w('<div style="margin:10px 0 0;padding:8px 0 0;border-top:1px solid var(--rule)">')
+                w(f'<div style="font-size:13.5px"><b>{e(r["lane"] or r["repo"] or "?")}</b> '
+                  f'<span style="color:var(--ink3);font-size:11.5px">pid {e(r["pid"])} &middot; '
+                  f'{e(r["state"])} &middot; {e(r["where"])}</span></div>')
+                w(f'<div style="font-size:13.5px;color:var(--ink);margin-top:4px">'
+                  f'&ldquo;{e(r["needs"])}&rdquo;</div>')
+                if r["topic"]:
+                    w(f'<div style="font-size:12px;color:var(--ink3);margin-top:3px">'
+                      f'opened with: {e(r["topic"])}</div>')
+                w('</div>')
+            w('</div>')
+
+        if collisions:
+            w('<div class="par" style="margin-top:12px;border-color:var(--unmeas)">')
+            w(f'<h3 style="margin-top:0">{len(collisions)} directory(ies) hold more than one '
+              f'running session</h3>')
+            for cwd, rs in collisions.items():
+                w(f'<div style="font-size:12.5px;margin-top:4px"><code>{e(cwd)}</code> &mdash; '
+                  f'{len(rs)} sessions (pids {e(", ".join(str(x["pid"]) for x in rs))})</div>')
+            w('<p style="font-size:12px;color:var(--ink3);margin:8px 0 0">Two agents in one '
+              'directory is the arrangement the lane model exists to avoid &mdash; and on '
+              '2026-08-22 it happened for real, three sessions on one branch. Nothing collided, '
+              'which was luck rather than a control (F73: a claim is not a process).</p>')
+            w('</div>')
+
+        w('<div class="par" style="margin-top:12px">')
+        w('<h3 style="margin-top:0">Every session</h3>')
+        colour = {sesslib.RUNNING_ATTACHED: "var(--pass)",
+                  sesslib.RUNNING_ORPHANED: "var(--unmeas)",
+                  sesslib.EXITED_RESUMABLE: "var(--ink3)",
+                  sesslib.EXITED_GONE: "var(--ink3)",
+                  sesslib.UNKNOWN: "var(--fail)"}
+        for r in inv:
+            w('<div style="margin:9px 0 0;padding:7px 0 0;border-top:1px solid var(--rule)">')
+            bits = [f'pid {e(r["pid"])}']
+            if r["status"]:
+                bits.append(e(r["status"]))
+            if r["tokens"]:
+                bits.append(f'{_tok(r["tokens"])} tok')
+            if r["in_flight"]:
+                bits.append(f'{e(r["in_flight"])} in flight')
+            w(f'<div style="font-size:13.5px"><b>{e(r["lane"] or r["repo"] or "?")}</b> '
+              f'<span style="color:var(--ink3);font-size:12px">{e(r["where"])}</span> '
+              f'<b style="color:{colour.get(r["state"], "var(--ink3)")};'
+              f'font-family:ui-monospace,monospace;font-size:11px">{e(r["state"])}</b>'
+              f'<span style="color:var(--ink3);font-size:11.5px"> &middot; '
+              f'{" &middot; ".join(bits)}</span></div>')
+            # The opening prompt, NOT the registry name — five live sessions shared one name.
+            if r["topic"]:
+                w(f'<div style="font-size:12.5px;color:var(--ink2);margin-top:3px">'
+                  f'{e(r["topic"])}</div>')
+            elif r["name"]:
+                w(f'<div style="font-size:12.5px;color:var(--ink3);margin-top:3px">'
+                  f'label: {e(r["name"])} <i>(no transcript &mdash; label is not unique)</i></div>')
+            if r["detail"] and not r["needs"]:
+                w(f'<div style="font-size:12px;color:var(--ink3);margin-top:2px">'
+                  f'{e(r["detail"][:160])}</div>')
+            if r["state"] == sesslib.RUNNING_ORPHANED:
+                w('<div style="font-size:12px;color:var(--unmeas);margin-top:3px">'
+                  'no terminal of its own &mdash; reach it with <code>claude agents</code>. '
+                  '<code>--resume</code> will refuse, and forcing it starts a SECOND process on '
+                  'one session id.</div>')
+            elif r["state"] == sesslib.EXITED_RESUMABLE:
+                w(f'<div style="font-size:12px;color:var(--ink3);margin-top:3px">'
+                  f'<code>claude --resume {e(r["session_id"][:8])}…</code> from '
+                  f'<code>{e(r["where"])}</code></div>')
+            w('</div>')
+        w('<p style="font-size:12px;color:var(--ink3);margin:10px 0 0">'
+          'Identity is the <b>opening prompt</b>, not the session name: on 2026-08-23 five live '
+          'sessions were all called <code>boot pre-flight verification</code>, inherited from the '
+          'boot prompt that spawned them. Names cannot be changed after startup, so this reads '
+          'what each session was actually asked. <b>RUNNING-ATTACHED</b> owns a terminal; '
+          '<b>RUNNING-ORPHANED</b> is alive with none; <b>EXITED-RESUMABLE</b> has a transcript to '
+          'come back to; <b>EXITED-GONE</b> does not. If the process table cannot be read every '
+          'row says <b>UNKNOWN</b> rather than pretending nothing is running.</p>')
+        w('</div>')
+
     if tab == "research":
         # ---------------------------------------------------------------- research prompts
         rdir = FACTORY / "docs" / "research"
@@ -1246,7 +1350,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             print(f"  hot reload: {_RELOAD_MSG[1]}")
             return
         route = {"/": "gates", "/index.html": "gates",
-                 "/lanes": "lanes", "/research": "research",
+                 "/lanes": "lanes", "/sessions": "sessions", "/research": "research",
                  "/handoff": "handoff"}.get(self.path.rstrip("/") or "/")
         if route is None:
             self.send_error(404)
