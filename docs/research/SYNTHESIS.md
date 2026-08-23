@@ -1,8 +1,8 @@
 # Synthesis — what four research passes concluded, and what changes
 
-**2026-08-21, extended 2026-08-22.** Seven documents: R1 eval harness, R2 topology, R3 control
-plane, R4 agnostic optimiser (twice), and — added 08-22 — **R5 build velocity** and **R6 automation
-and alerting**. This is the decision record. Where the answers disagree, or where they contradict
+**2026-08-21, extended 2026-08-22.** Eight documents: R1 eval harness, R2 topology, R3 control
+plane, R4 agnostic optimiser (twice), **R5 build velocity**, **R6 automation and alerting**, and —
+added 08-22 — **R7 session manager** (§11, and graded weaker than the rest). This is the decision record. Where the answers disagree, or where they contradict
 something already built or already said in this session, that is recorded rather than smoothed.
 
 ⚠ **R1–R4 asked about the product. R5–R6 asked about the process that builds it.** They are not
@@ -424,3 +424,139 @@ The efficiency claim is plausible and unmeasured. R5's question 2 asked what par
 sessions actually save and at what coordination cost; the honest position is that we now have the
 apparatus to find out and no measurement yet.
 
+---
+
+## 11. R7 — the session-manager pass (added 2026-08-22)
+
+The eighth answer, filed 10:05 on 2026-08-22. It asked what should *run* the sessions, extending R5
+(what parallel sessions cost) and R6 (what should watch them).
+
+⚠ **Grade the instrument first, because that is the house rule.** R7's answer is ~16 KB against
+50–70 KB for R1–R4, and self-labels most of its substance *Extrapolated*. Two of its five sections
+(UI, optimisation) are general dashboard and CI advice rather than findings, and it did not answer
+the one question the prompt flagged as the interesting one (§11.1). **Treat R7 as weaker evidence
+than R1–R6.** Where it touches a conclusion that has measurement behind it, the measurement wins.
+
+### 11.1 Switchboard — and the argument that was not supplied
+
+Observed, from reading the source rather than the showcase, as the prompt demanded:
+
+| Property | What Switchboard does |
+|---|---|
+| Session processes | Real PTYs via `node-pty` |
+| Isolation | Worktrees **optional** — `--worktree` flag; **default reuses the project directory** |
+| Persistence | Claude JSONL session history + a SQLite metadata cache; watches `~/.claude/projects` |
+| Edit capture | Built-in MCP bridge |
+| Interface | **Embeds a full terminal per session, rendered in cards** in an Electron app |
+
+**Verdict: inspiration, not adoption.** Adopting it wholesale trades Windows Terminal tabs for an
+Electron app and violates the no-in-page-terminal constraint. Worth cherry-picking: session
+scanning, the MCP bridge, session-transition logic.
+
+⛔ **But the prompt asked a specific question and did not get an answer.** It said: *if Switchboard
+does embed terminals, the interesting question is what it gains that outweighs this — we want the
+argument, not the feature.* R7 restated our constraint and concluded "without clear gains". That is
+our own position handed back to us. So the no-in-page-terminal decision now stands **unchallenged,
+which is not the same as tested** — and this programme does not treat those as equivalent anywhere
+else. Record it as UNTESTED and ask it as a follow-up (§9, new item 4).
+
+### 11.2 Most of R7's Item 3 describes what is already built
+
+The "shared task list" pattern R7 recommends — claim semantics with atomic locks, one worktree per
+agent, prerequisites to prevent unsafe parallelism, capped retries, blocked tasks staying visible —
+is `claims.py`, `tasks.py`, `lanes.py` and `worktrees.py`. It is corroboration, not new direction,
+and it is worth having: an independent pass reaching the built design is the control.
+
+### 11.3 The genuinely new contribution — autonomy as a designed surface
+
+R7's Item 4 is the first pass to treat **bounded autonomy as something you design rather than
+something that emerges**. Five candidate auto-actions, each with its preconditions and its failure
+mode:
+
+| Auto-action | Safe if | Cannot catch | Guard |
+|---|---|---|---|
+| Start the next lane | Lanes independent, claims and worktrees free | — | Semaphore; require the finished lane genuinely met its pass conditions; log every launch; an override pause |
+| Merge the lane | All policy checks truly satisfied (the GitLab merge-when-checks-pass model) | Logic errors, missing approvals | Explicit sign-off or a merge-when-green label; refuse if a new comment or commit lands during the wait |
+| Answer a known blocker | Deterministic match on an archived case | A changed context wearing the same question | Any variation at all → human |
+| Retry a failure | The failure is non-deterministic | A persistent failure — retrying is futile | Counter, small cap, then "needs attention" |
+| Split a large lane | — | Agents do not know logical boundaries | **Flag, never an action** |
+
+The governing principle matches this estate's doctrine exactly: *engineer each to refuse — no-op —
+unless the preconditions are crystal clear*, and log every decision so an operator can audit why it
+did or did not fire.
+
+One tension to name: `finish.py` **deliberately never merges**. R7's auto-merge is compatible only
+in its guarded form, and the guard is the whole feature. Keep `finish()` non-merging; if auto-merge
+is ever built it is a separate, separately-gated mechanism.
+
+### 11.4 Where R7 disagrees with what is built — recorded, not smoothed
+
+**1. ⛔ R7 proposes readiness gates as the cheap fitness proxy. Reject it.**
+
+R7: *"The cheapest proxy fitness function is likely self-consistency: did the team meet some
+readiness gates (e.g. all tests pass)?"* — and then, in its own next sentence, *"even that could be
+gamed."*
+
+This is precisely the never-optimise list in §6. Gate thresholds and evaluator thresholds are
+**safety specification, not hyperparameters**, and optimising against the candidate's own score
+*"changes the ruler rather than the system."* This estate has shipped that error twice — the
+233-diagnoses agent and the 965-run loop. An optimiser pointed at the readiness gates would learn
+to pass gates, and the gates are the only thing standing between us and not knowing.
+
+**Do not adopt.** The rest of Item 2 — heuristic routing by task shape, retrieval of what worked on
+similar tickets, defer real search until there is an outcome signal — is consistent with R3 and R4
+and can stand.
+
+**2. Stale claims: R7 says revert, we say still-block.**
+
+R7: *"If an agent crashes mid-task, its task should revert to pending after a timeout."*
+`claims.py` deliberately does the opposite — stale claims still block, because *"hiding them would
+make a blocked lane look free."*
+
+**Keep ours.** R7's version requires distinguishing *crashed* from *thinking*, and R7's own prompt
+records that "alive" is not knowable from outside — a session that is thinking, finished, or dead
+look identical. Auto-reverting on a timer therefore reclassifies an unknown as a free lane, which
+is the four-verdict error in another costume. **The condition that would change this:** a real
+liveness signal that separates crashed from working. Until one exists, a stale claim is
+`UNMEASURABLE`, not `available`.
+
+### 11.5 R7's build order does not supersede §5
+
+R7 orders: TeamSpec → work queue → autonomy guards → optimisation aids → UI.
+
+⚠ **That is the session-manager layer only.** R7 was not asked about spend ceilings, orphan
+reaping, cancellation, or the terminal verdict, and is silent on all four. **Silence is not
+disagreement** — but a reader who takes R7's five steps as the plan skips §5 steps 1–4, which R3
+called non-negotiable. §5 stands unchanged. R7 slots in *after* it.
+
+Where R7 does amend §8: it puts **executing the TeamSpec** ahead of the interface, and it lands on
+a measured fact worth its own row — `blueprint.py` has `TeamSpec` and `AgentSpec` with a version
+hash covering composition, and **nothing executes them**. `grep` finds one caller, a test. The data
+model exists; the runtime does not. That is the cheapest high-value thing R7 surfaces.
+
+### 11.6 One finding that matters beyond this repo
+
+R7 could not find a standard for composable team specification. Prior art is thin — CrewAI's
+role/goal/backstory personas, and a minor JSON `TeamSpec` in a small project — and R7 labels our own
+schema *Extrapolated* because **no standard exists**.
+
+So a composable-team configuration surface is an **industry-wide gap, not just ours**. Two
+consequences: a product survey will not find one to copy, and the design is ours to get right rather
+than to adopt. It also raises the value of §11.5's row — the thing nobody has a standard for is the
+thing we already have a data model for and have never run.
+
+### 11.7 Additions to §8
+
+| # | Change | State |
+|---:|---|---|
+| 13 | **Execute the `TeamSpec`** — data model exists in `blueprint.py`, one caller, and it is a test | not started — cheapest high-value item R7 surfaces |
+| 14 | **Bounded-autonomy surface** — the five auto-actions, each refuse-by-default, each logged | not started |
+| 15 | Gate the session orchestrator itself (§10.7 flagged it; R7 assumes it) | not started |
+
+### 11.8 Addition to §9 — follow-ups
+
+4. **R7 thread** — you concluded Switchboard's embedded terminals bring "no clear gains", which is
+   the position the prompt asked you to challenge rather than restate. Ignoring our objection for a
+   moment: *what does rendering a live terminal per session actually buy an operator that progress
+   markers, transcripts and a task queue do not?* If the answer is "nothing", say so on the merits —
+   that is a stronger result than agreement.
