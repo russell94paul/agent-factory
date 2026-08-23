@@ -11,3 +11,8 @@ tracker.html
 # Skill installer artifact. Kept on disk on purpose: it carries 7 files the installed
 # copy at ~/.claude/skills/living-systems-ui does not have. Not deleted, not committed.
 living-systems-ui.zip
+
+# Generated evidence bundle for a research dispatch: a concatenation of files that already
+# live in this repo, so committing it would ship a copy that is stale on the next edit.
+# Rebuild with scripts/build_r8_pack.py.
+docs/research/R8-evidence-pack.md

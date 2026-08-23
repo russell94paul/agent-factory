@@ -1,10 +1,41 @@
 # R8 — An agent factory for data engineering: team architecture, sandboxes, and what we should have built
 
-**Status: NOT DISPATCHED.** Written 2026-08-22. Paste the whole file. The answer lands beside it as
+**Status: NOT DISPATCHED.** Written 2026-08-22. Paste the whole file **and attach
+`R8-evidence-pack.md`**. The answer lands beside it as
 `docs/research/answers/R8-answer-data-engineering-agent-factory.md`.
 
-Read `R2-topology.md`, `R3-control-plane-and-optimizer.md`, `R5-build-velocity.md` and
-`R7-session-manager.md` first if you have them. R2 asked what shape the build plane should be, R3
+## Run log
+
+| Run | Date | Outcome |
+|---|---|---|
+| 1 | 2026-08-22 | **Rejected, not filed.** Web access but **no repository access** — it could not read one internal source, so internal facts were asserted more confidently than the evidence allowed. Its own verdict: the external survey is salvageable, *"the comparison against your actual factory is not yet sufficiently grounded."* No answer file was ever written. |
+| 2 | pending | Re-dispatch with `R8-evidence-pack.md` attached. |
+
+⚠ **The status line above reads `NOT DISPATCHED`, and that is not the whole truth** — run 1 was
+sent. `factory/dispatch.py` has five states and none of them is *dispatched, answered, answer
+rejected*; filing the bad answer would read `ANSWERED`, and not filing it reads `UNDISPATCHED`.
+Both are wrong. The state is real and the instrument cannot represent it. Recorded here rather
+than papered over; see the note at the end of this header.
+
+## ⚠ What went wrong in run 1, and the rule that fixes it
+
+The line below used to say *"read R2, R3, R5 and R7 first **if you have them**"* — and it named the
+**prompt** files, not the answers. The researcher had neither. An instruction conditional on access
+the researcher does not have is not an instruction; it is a hope.
+
+So, for run 2:
+
+1. **`R8-evidence-pack.md` is attached and is the only admissible source for internal facts.**
+   Every claim about our factory must cite a file and a line **from the pack**.
+2. **The tables in §1 and §1b below are a handoff, and in this estate a handoff is a hypothesis.**
+   They are included so you know what we believe. Check each against the pack. **Where the pack and
+   this prompt disagree, the pack wins and the disagreement is a finding we want reported.**
+3. **Anything you need that is not in the pack: answer `NOT-SUPPLIED` and name the file.** Do not
+   infer it from the prose here. A named gap is worth more to us than a filled one.
+
+The pack contains the completed answers to R1, R2, R3, R5, R6 and R7 (not their prompts),
+`architecture-v0.md`, `terminal-configuration.md`, the seven `factory/*.py` modules that implement
+what §1 claims, and the full corrections ledger from all four worktrees. R2 asked what shape the build plane should be, R3
 what controls it needs, R5 measured what parallel agent sessions actually cost us, R7 asked what
 should *run* the sessions. **This one asks what the factory should be when the work is data
 engineering rather than software engineering** — a domain where "the tests pass" is not evidence
