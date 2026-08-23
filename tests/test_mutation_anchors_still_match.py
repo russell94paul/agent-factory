@@ -74,6 +74,30 @@ def _rows():
 ROWS = _rows()
 
 
+#: Both harnesses must be found, not just one. With $PREFECT_CONNECTORS pointed at an empty
+#: directory this file reported **1 passed, 12 skipped, 0 failed** — the connectors harness's
+#: 18 rows simply vanished from ROWS, and the guard against "seeing nothing" counted rows
+#: LOADED rather than rows CHECKED. A green run over half the population is the shape this
+#: whole test exists to catch, one level up.
+_EXPECTED_HARNESSES = 2
+
+
+def test_both_harnesses_were_found():
+    names = {h for h, _, _, _ in ROWS}
+    assert len(names) == _EXPECTED_HARNESSES, (
+        f"loaded {sorted(names)} — expected {_EXPECTED_HARNESSES} harnesses. A missing one "
+        f"takes its rows out of ROWS entirely, so every anchor in it goes unchecked while "
+        f"this file still reports green.")
+
+
+def test_no_row_was_skipped_for_a_missing_target():
+    missing = sorted({t for _, _, t, _ in ROWS if not (CONNECTORS / t).is_file()})
+    assert not missing, (
+        f"{missing} do not exist at {CONNECTORS}, so every mutation targeting them is "
+        f"SKIPPED and unchecked. Point $PREFECT_CONNECTORS at a real checkout — a skip here "
+        f"is indistinguishable from a pass.")
+
+
 def test_there_are_mutations_to_check():
     """A zero from an instrument that cannot see is not a measurement."""
     assert ROWS, (
@@ -88,8 +112,10 @@ def test_there_are_mutations_to_check():
 )
 def test_every_anchor_appears_exactly_once_in_its_target(harness, label, target, edits):
     path = CONNECTORS / target
-    if not path.is_file():
-        pytest.skip(f"{target} not present at {CONNECTORS}")
+    assert path.is_file(), (
+        f"{target} does not exist at {CONNECTORS}, so this mutation is unchecked. This was "
+        f"a pytest.skip, which reads as green — and with $PREFECT_CONNECTORS pointed "
+        f"somewhere empty the whole file reported 1 passed, 12 skipped, 0 failed.")
     src = path.read_text(encoding="utf-8")
     for anchor, _replacement in edits:
         n = src.count(anchor)

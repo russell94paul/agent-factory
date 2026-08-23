@@ -882,6 +882,61 @@ def g_orphans_are_reaped():
     killed_handles = list(reached)
     term = (r["stages"][0].get("_termination") or [{}])[0]
 
+    # ⛔ The retry path. Gutting `_retry_unterminated` left this gate reading PASS — over
+    # exactly the system F30 describes, where every handle the budget skipped sits on a
+    # `failed` stage that no sweep reads again while the record promises otherwise. The
+    # tests caught that removal; the GATE did not, so the gate was not measuring the fix.
+    #
+    # Driven with a terminator that refuses first and settles second, which is the shape a
+    # transient Azure outage has. If nothing comes back for the handle, `retried_ok` stays
+    # False and the gate refuses.
+    retried_ok = capped_ok = False
+    sweep = getattr(engine, "sweep_unterminated_handles", None)
+    if sweep is not None:
+        seen_retry = []
+
+        def _flaky(hid, name):
+            seen_retry.append(hid)
+            return ({"verdict": "KILLED"} if len(seen_retry) > 1
+                    else {"verdict": "FAILED", "detail": "transient"})
+
+        engine.clear_terminators()
+        reg("prefect_flow_run", _flaky)
+        t = _scratch_pipeline(engine, "pipe_retry",
+                              [_scratch_stage("trigger-run", status="dispatched",
+                                              type="script", lease_expires_at=_iso(-120))])
+        rec("pipe_retry", "trigger-run", "prefect_flow_run", HANDLE)
+        reap()
+        sweep()
+        retried_ok = seen_retry == [HANDLE, HANDLE]
+
+        # and the cap, because a retry loop with no cap is how a colleague's flow run was
+        # sent CANCELLING 288 times in 24 hours
+        engine.clear_terminators()
+        stubborn = []
+        reg("prefect_flow_run", lambda h, n: stubborn.append(h) or {"verdict": "FAILED"})
+        u = _scratch_pipeline(engine, "pipe_capped",
+                              [_scratch_stage("trigger-run", status="dispatched",
+                                              type="script", lease_expires_at=_iso(-120))])
+        rec("pipe_capped", "trigger-run", "prefect_flow_run", HANDLE)
+        reap()
+        for _ in range(30):
+            sweep()
+        cap = getattr(engine, "MAX_TERMINATION_ATTEMPTS", None)
+        capped_ok = bool(cap) and len(stubborn) == cap
+        ev.append(f"a handle that refuses once is retried and settles: "
+                  f"{'yes' if retried_ok else 'NO — nothing comes back for it, so the '
+                     'budget abandons work rather than deferring it'}")
+        ev.append(f"a handle that never settles is given up on after {cap} attempts: "
+                  f"{'yes' if capped_ok else f'NO — {len(stubborn)} attempts and counting, '
+                     'each one a CANCELLING sent to work we then refuse to delete'}")
+    else:
+        ev.append("no retry pass exists: a handle the termination budget skips sits on a "
+                  "`failed` stage that no sweep reads again, and leaks permanently")
+
+    engine.clear_terminators()
+    reg("prefect_flow_run", lambda hid, name: (reached.append(hid), {"verdict": "KILLED"})[1])
+
     # and the honest-unknown branch: a stage dispatched before handles existed
     s = _scratch_pipeline(engine, "pipe_reap_nohandle",
                           [_scratch_stage("old", status="dispatched", type="script",
@@ -958,7 +1013,7 @@ def g_orphans_are_reaped():
     cloud_ok = (killed_handles == [HANDLE] and term.get("verdict") == "KILLED"
                 and unknown == "NOT_RECORDED"
                 and launches and reports == launches
-                and reported is True
+                and reported is True and retried_ok and capped_ok
                 and bound and registered)
 
     if killed and after == "failed" and "stage_failed" in log and not spared and cloud_ok:

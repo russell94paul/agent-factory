@@ -25,7 +25,7 @@ yet. **Take the whole answer from the thing that answers.**
 
     python scripts/dashboard_cap_override_probe.py [--screenshot DIR]
 
-Exit 0 means all twelve behaviours were watched — two at the route, ten in a browser.
+Exit 0 means all fourteen behaviours were watched — two at the route, twelve in a browser.
 """
 from __future__ import annotations
 
@@ -158,7 +158,24 @@ DRIVER = """
   const ceilingFull = { seen: seen.slice(), toasts: toasts.slice() };
   window.fetch = realFetch;
 
-  return { withOverride, cancelled, blank, ceilingFull };
+  // 5. the ORDINARY path with a full ceiling — no refusal anywhere in sight.
+  //
+  // The ceiling being full needs no cap refusal to happen, and both ordinary paths raised a
+  // green "0 dispatched" success. Scenario 4 could not see it: it sets window.prompt and so
+  // only ever drives the override branch.
+  seen.length = 0; toasts.length = 0;
+  window.fetch = async (url, opts) => {
+    seen.push({ url: String(url), body: opts && opts.body ? JSON.parse(opts.body) : {} });
+    return new Response(JSON.stringify({ ok: true, dispatched: 0 }),
+                        { status: 200, headers: {'Content-Type': 'application/json'} });
+  };
+  await window.retryStage('pipe_probe', 'trigger-run');
+  const plainRetry = { toasts: toasts.slice() };
+  toasts.length = 0;
+  await window.restartFrom('pipe_probe', 'trigger-run');
+  const plainRestart = { toasts: toasts.slice() };
+
+  return { withOverride, cancelled, blank, ceilingFull, plainRetry, plainRestart };
 })
 """
 
@@ -244,6 +261,12 @@ def main() -> int:
     c = result["blank"]
     check("a whitespace-only reason is not an override", len(c["seen"]) == 1,
           f"{len(c['seen'])} request(s)")
+
+    for label, key in (("retry", "plainRetry"), ("fresh restart", "plainRestart")):
+        t = result[key]["toasts"]
+        check(f"a plain {label} that dispatched NOTHING is not reported as success",
+              not any(x["t"] == "success" for x in t),
+              "; ".join(f"[{x['t']}] {x['m'][:60]}" for x in t))
 
     d = result["ceilingFull"]
     check("an override that dispatched NOTHING is not reported as success",

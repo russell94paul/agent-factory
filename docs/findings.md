@@ -600,3 +600,62 @@ write-back in a scratch copy: `[2, 1, 1, 1]` calls — *the same total the old a
 checked* — with only 2 of 5 handles ever touched. Now asserts the distinct set, and the
 deletion is a mutation in the harness. **When a fix is verified by counting, ask what else
 produces that count.**
+
+### F32 — A retry loop with no attempt cap, in the lane whose founding control is an attempt cap
+
+- **BELIEVED** — retrying work a budget could not finish is obviously safe: the worst case
+  is that it takes a few more sweeps.
+- **ACTUALLY** — `terminate_prefect_flow_run` sends Prefect **CANCELLING before** the
+  ownership check, so every retry of a handle whose ownership cannot be proven is another
+  cancel sent to **a colleague's flow run**. With no cap and no fairness, measured over 24h
+  of sweeps at `REAPER_INTERVAL_SEC=300`:
+
+  | | before the retry pass | with the retry pass, uncapped | capped at 4 |
+  |---|---|---|---|
+  | CANCELLING sent to a colleague's run | 1 | **288** | 4 |
+  | audit growth (one stuck handle) | — | **229 KB/day** | 6 KB |
+  | deletes attempted | 0 | 0 | 0 |
+
+  The ownership refusal held throughout — **the safety argument protected the CONTAINER and
+  never protected the RUN.** And with no ordering, a stuck handle at the head of the store
+  ate the whole budget every sweep: over 20 sweeps the one killable handle was attempted
+  **0** times, the stuck one 21.
+- **MEASURED BY** — drive `reap_expired_leases()` + `sweep_unterminated_handles()` with the
+  real terminator, seams faked, `_owned_by_us → False`. Fixed by
+  `MAX_TERMINATION_ATTEMPTS = 4` plus least-recently-attempted-first ordering.
+- **AFFECTS** — every lane. Two rules. **A retry is a dispatch, and every dispatch in this
+  engine needs a cap** — the lane that built the attempt cap wrote a retry loop without one.
+  And **check what a retry re-does, not just what it re-attempts**: the expensive, harmful
+  half here happened *before* the guard that was supposed to make it safe.
+
+### F33 — Structural discovery must be a fixed point, or one helper defeats it
+
+- **BELIEVED** — a guard that discovers routes by AST rather than a hardcoded list cannot be
+  outrun by someone adding a route.
+- **ACTUALLY** — it matched only functions calling the engine entry point **directly**. A
+  handler reaching it through a one-line helper was in neither the structural guard nor the
+  derived parametrisation, and shipped answering **404** for a control refusal with the
+  suite at its *identical* pass count. Indirection is not exotic; it is what anyone writing
+  a second route does.
+- **MEASURED BY** — add a `_restart_helper` and a `_handle_post_pipeline_rerun` that calls
+  it: before, `12 passed` and the whole suite unchanged at `1 failed, 705 passed`; after
+  making discovery a fixed point over the call graph, **4 failures** naming the new route.
+- **AFFECTS** — every lane writing a structural guard. **Taint propagates through callers;
+  a one-hop match is a list with extra steps.** Corollary already paid for twice: a guard
+  over an *ordered* construct must assert the order (F31), and a guard over a *reachable*
+  one must close over the call graph.
+
+### F34 — A skip reads as a pass, so an instrument pointed at nothing reports green
+
+- **BELIEVED** — `tests/test_mutation_anchors_still_match.py` (F29's fix) checks every
+  mutation anchor.
+- **ACTUALLY** — it `pytest.skip`ped when a target file was absent, and its
+  "did-we-see-anything" guard counted rows **loaded** rather than rows **checked**. Pointed
+  at an empty directory it reported **1 passed, 12 skipped, 0 failed** — with one whole
+  harness's 18 rows silently absent from the population.
+- **MEASURED BY** — `PREFECT_CONNECTORS=<empty dir> python -m pytest
+  tests/test_mutation_anchors_still_match.py` → `1 passed, 12 skipped`; now `16 failed`.
+- **AFFECTS** — every lane. **A skip is not a measurement, and pytest colours it green.**
+  Where a skip means "I could not look", make it a failure and say so — the same distinction
+  between ZERO and NOT-MEASURED the contract's four verdicts exist to protect, arriving as a
+  test-runner default.

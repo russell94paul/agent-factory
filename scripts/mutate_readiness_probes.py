@@ -127,6 +127,19 @@ MUTATIONS = [
        "        pass")],
      "the BODY of _report_run — every launch site still calls it and it records nothing",
      "orchestrator/stage_scripts/prefect_ops.py"),
+
+    # The retry pass and its cap. The gate read PASS with the first of these gutted —
+    # over exactly the system F30 describes — so the tests were measuring the fix and the
+    # gate was not.
+    ("reaper",
+     [("def _retry_unterminated(deadline: Optional[float]) -> List[Dict[str, Any]]:",
+       "def _retry_unterminated(deadline: Optional[float]) -> List[Dict[str, Any]]:\n    return []")],
+     "the retry pass — every handle the budget skips leaks permanently"),
+
+    ("reaper",
+     [("MAX_TERMINATION_ATTEMPTS = 4", "MAX_TERMINATION_ATTEMPTS = 10 ** 9")],
+     "the termination attempt cap — a handle that can never settle is retried forever, "
+     "sending CANCELLING to a colleague's run every sweep"),
 ]
 
 
