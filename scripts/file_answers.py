@@ -55,8 +55,13 @@ PROMPTS = {
     # inventing one would risk renaming a correctly-filed answer. Unclassifiable is the safe
     # verdict here: the script changes nothing and says so.
     8: ("data-engineering-agent-factory", [
-        (3, r"zero[- ]copy|clone schema"), (3, r"isolation (tier|ladder)"),
-        (2, r"blast radius"), (2, r"data engineering"), (1, r"dbt|--defer"),
+        # `isolation tier|ladder` and `data engineering` were guessed from the PROMPT's vocabulary.
+        # The answer uses neither, so R8 scored 6 against R2's 8 and the filer correctly refused to
+        # guess. These are words the ANSWER actually uses. Only `zero-copy` is unique to R8 — R3
+        # covers the same sandbox literature — so the WEIGHT does the separating, not the marker.
+        (3, r"zero[- ]copy|clone schema"), (3, r"firecracker"), (2, r"gvisor"),
+        (2, r"microvm"), (2, r"blast radius"), (1, r"kata"), (1, r"seccomp"),
+        (1, r"dbt|--defer"),
     ]),
     10: ("hierarchical-wiki-agent-training", [
         (3, r"hierarchical wiki"), (3, r"\bRAG\b"), (2, r"knowledge base"),
