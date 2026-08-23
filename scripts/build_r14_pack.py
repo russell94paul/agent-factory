@@ -40,6 +40,14 @@ SECTIONS = [
         ("docs/specs/terminal-configuration.md",
          "The pane layout, the latency budget, and the model-per-lane table."),
     ]),
+    ("A2. An unfiled proposal that predates three of our passes — extend it or refute it", [
+        ("docs/research/sources/amt-agent-management-terminal.md",
+         "⭐ Found unfiled on 2026-08-23, dated 08-22. Proposes an Agent-Management Terminal: "
+         "Interrupt Inbox, Agent Radar, Collision Detection, Terminal Genome, Resurrection "
+         "Capsules. It covers R12/R13/R15's ground and none of them was given it. It is a VISION "
+         "with no evidence tier and nothing measured against this repo — treat it as a proposal to "
+         "argue with, not a finding. Say which parts survive contact with the code in section B."),
+    ]),
     ("B. The code, in R14 section 2's read order — judge the bones", [
         ("factory/contract.py",
          "READ FIRST. What 'done' and 'I could not tell' mean. Everything depends on it."),
