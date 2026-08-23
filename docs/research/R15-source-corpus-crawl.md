@@ -1,6 +1,6 @@
 # R15 — Read the field's source, not its README: a repository corpus, then the architecture and UI we should build in
 
-**Status: NOT DISPATCHED.** Written 2026-08-23. Paste the whole file. Attach
+**Status: ANSWERED 2026-08-23.** Written 2026-08-23. Paste the whole file. Attach
 `docs/research/ui-surface-inventory.md`, `docs/specs/architecture-v0.md` and
 `docs/specs/control-room.md` — or, to send one file, `docs/research/R13-evidence-pack.md`, which
 already contains all three. The answer is filed at
@@ -10,7 +10,7 @@ already contains all three. The answer is filed at
 
 | Run | Dispatched | Outcome |
 |---|---|---|
-| — | — | not yet dispatched |
+| 1 | 2026-08-23 | Answer filed 2026-08-23. **See SYNTHESIS for what it got wrong** — it contradicts R12 on switchboard's attach behaviour without flagging it, cites a user study that does not exist, and omits section 5.0 entirely. |
 
 > Kept because `factory.dispatch` reads a status line and the presence of an answer file, and by its
 > own account cannot see whether a prompt was ever actually pasted anywhere. **Add a row every time

@@ -79,6 +79,13 @@ PROMPTS = {
         (3, r"doctly"), (3, r"tmux|zellij"), (2, r"reattach"),
         (2, r"full[- ]text search"), (2, r"cost track"), (1, r"session registry"),
     ]),
+    # R15 reads repositories and reports a comparable schema, so its distinctive vocabulary is the
+    # METHOD (inclusion rule, corpus, claim-vs-code) rather than any subject matter — every topic it
+    # covers is shared with some neighbour.
+    15: ("source-corpus-crawl", [
+        (3, r"claim vs\.? code"), (3, r"inclusion rule"), (3, r"extraction table"),
+        (2, r"corpus method"), (2, r"exclusion"), (1, r"source[- ]read"),
+    ]),
 }
 
 CANONICAL = {n: f"R{n}-answer-{slug}.md" for n, (slug, _) in PROMPTS.items()}
