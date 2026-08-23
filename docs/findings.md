@@ -616,6 +616,14 @@ produces that count.**
   | audit growth (one stuck handle) | — | **229 KB/day** | 6 KB |
   | deletes attempted | 0 | 0 | 0 |
 
+  ⚠ **Basis, corrected by the fourth read.** `288` is **DERIVED** — 24h ÷ `REAPER_INTERVAL_SEC
+  = 300`, driven in a loop, not observed over a real day. The audit sizes are
+  **SIMULATION-DERIVED and payload-sensitive**: they move with the `steps`/`cancel` fields
+  the real terminator returns, and an independent reconstruction measured 179 KB / 5 KB —
+  same order, different constant. The shape of the finding is unaffected; the constants
+  should not be quoted as production observations. `deletes = 0` and the `21 vs 0`
+  starvation pair reproduce exactly.
+
   The ownership refusal held throughout — **the safety argument protected the CONTAINER and
   never protected the RUN.** And with no ordering, a stuck handle at the head of the store
   ate the whole budget every sweep: over 20 sweeps the one killable handle was attempted
