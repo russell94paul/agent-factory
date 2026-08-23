@@ -1582,12 +1582,12 @@ write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not
   </div>
   <div class="tracker rv">
     <div class="tracker-head">
-      <h3 class="disp">9 of 30 gates pass</h3>
+      <h3 class="disp">10 of 30 gates pass</h3>
       <span class="basis m">measured on build</span>
     </div>
     <div style="padding:0 18px 18px">
-      <div style="height:6px;background:var(--rule);position:relative;margin:14px 0 10px" role="img" aria-label="9 of 30 gates pass"><span style="position:absolute;inset:0 auto 0 0;width:30%;background:var(--pass)"></span></div>
-      <p style="font-size:14px;color:var(--ink-2)">Unattended means the loop runs, its gates can refuse, and its output can be certified. Today 9 of those 30 conditions holds. The gap is the work.</p>
+      <div style="height:6px;background:var(--rule);position:relative;margin:14px 0 10px" role="img" aria-label="10 of 30 gates pass"><span style="position:absolute;inset:0 auto 0 0;width:33%;background:var(--pass)"></span></div>
+      <p style="font-size:14px;color:var(--ink-2)">Unattended means the loop runs, its gates can refuse, and its output can be certified. Today 10 of those 30 conditions holds. The gap is the work.</p>
     </div>
   </div>
   <div class="tracker rv">
@@ -1600,28 +1600,26 @@ write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not
         <thead><tr><th style="width:96px">Verdict</th><th>Gate</th><th class="n">Measured from</th></tr></thead>
         <tbody>
           <tr>
-            <td><span class="chip fail">fail</span></td>
+            <td><span class="chip unmeas">unmeasurable</span></td>
             <td class="what"><b>Does a run finish without a human?</b><br>
-              <span style="color:var(--ink-2)">3/14 runs finished</span>
+              <span style="color:var(--ink-2)">no run started since 2026-08-22, when the controls landed</span>
               <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
-                <li>3 of 14 recorded runs reached pipeline_completed</li>
-                <li>4 sit at stage_started with no terminal event: pipe_5546c123, pipe_66d2326d, pipe_7274e774, pipe_c34bfbe5</li>
+                <li>no run started since 2026-08-22, when the controls landed — 14 older run(s) on record, 4 of them finished. Run the loop.</li>
               </ul>
               <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>Unattended means the pipeline reaches its terminal stage on its own.</i></div>
             </td>
-            <td class="n"><span class="mono">orchestrator/data/audits/*.json</span></td>
+            <td class="n"><span class="mono">&mdash;</span></td>
           </tr>
           <tr>
-            <td><span class="chip fail">fail</span></td>
+            <td><span class="chip unmeas">unmeasurable</span></td>
             <td class="what"><b>Do stages succeed more often than they fail?</b><br>
-              <span style="color:var(--ink-2)">a stage attempt fails 6.1x more than it succeeds</span>
+              <span style="color:var(--ink-2)">no run started since 2026-08-22, when the controls landed</span>
               <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
-                <li>1001 stage_failed against 165 stage_completed</li>
-                <li>1004 restarts recorded</li>
+                <li>no run started since 2026-08-22, when the controls landed — the all-time ratio describes the uncontrolled system, not this one. Run the loop.</li>
               </ul>
               <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>A loop that mostly fails cannot be left alone, however good its gates.</i></div>
             </td>
-            <td class="n"><span class="mono">orchestrator/data/audits/*.json</span></td>
+            <td class="n"><span class="mono">&mdash;</span></td>
           </tr>
           <tr>
             <td><span class="chip fail">fail</span></td>
@@ -1709,7 +1707,7 @@ write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not
   <div class="tracker rv">
     <div class="tracker-head">
       <h3 class="disp">Can it tell success from failure?</h3>
-      <span class="basis a">0 of 8</span>
+      <span class="basis a">1 of 8</span>
     </div>
     <div style="overflow-x:auto">
       <table class="derived">
@@ -1774,12 +1772,11 @@ write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not
             <td class="n"><span class="mono">.sessions/pipe_&lt;TICKET&gt;_&lt;runid&gt;</span></td>
           </tr>
           <tr>
-            <td><span class="chip fail">fail</span></td>
+            <td><span class="chip pass">pass</span></td>
             <td class="what"><b>Does a recorded status match its own event log?</b><br>
-              <span style="color:var(--ink-2)">1 pipeline(s) claim a state their log contradicts</span>
+              <span style="color:var(--ink-2)">recorded status agrees with the event log</span>
               <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
                 <li>2 pipelines listed, 14 with an event log</li>
-                <li>pipe_29b8edf6 recorded 'running' but its log ends stage_failed at git-commit-and-pr</li>
               </ul>
               <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>A record that contradicts its log is the success-over-failures defect one level up.</i></div>
             </td>
@@ -1790,7 +1787,8 @@ write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not
             <td class="what"><b>Does a completed run mean the work was correct?</b><br>
               <span style="color:var(--ink-2)">a run reports success over failures it could not see</span>
               <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
-                <li>3 completed run(s) carried recorded failures</li>
+                <li>4 completed run(s) carried recorded failures</li>
+                <li>pipe_29b8edf6 reported completed after 1 stage_failed events</li>
                 <li>pipe_4ba17e16 reported completed after 115 stage_failed events</li>
                 <li>pipe_4d518245 reported completed after 21 stage_failed events</li>
                 <li>pipe_a146ee06 reported completed after 15 stage_failed events</li>
@@ -1830,7 +1828,7 @@ write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not
   <div class="tracker rv">
     <div class="tracker-head">
       <h3 class="disp">Can its output be certified?</h3>
-      <span class="basis a">4 of 8</span>
+      <span class="basis a">3 of 8</span>
     </div>
     <div style="overflow-x:auto">
       <table class="derived">
@@ -1863,15 +1861,12 @@ write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not
             <td class="n"><span class="mono">factory/blueprint.py</span></td>
           </tr>
           <tr>
-            <td><span class="chip pass">pass</span></td>
+            <td><span class="chip notrun">not run</span></td>
             <td class="what"><b>Is the evaluator a principal the agent cannot impersonate?</b><br>
-              <span style="color:var(--ink-2)">the evaluator is a separate principal (loopback deployment)</span>
+              <span style="color:var(--ink-2)">the evaluator is not yet a separate principal</span>
               <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
-                <li>$AGENT_FACTORY_EVALUATOR: http://127.0.0.1:8787</li>
+                <li>$AGENT_FACTORY_EVALUATOR: (unset)</li>
                 <li>client implementation: evaluator.py</li>
-                <li>health check: answered as local-process, bundle 41caa5d8326b, corpus windsorai-2026-08-20, 4 verdict(s) recorded</li>
-                <li>the submission vocabulary it accepts: ['artifact_uri', 'artifact_sha256', 'run_id'] — no corpus, no manifest, no evaluator</li>
-                <li>deployment: LOOPBACK — R3 rank 5, 'mostly theatre'. Same uid can write the verdict store and restart the evaluator; the design is rank 1 and the remaining gap is a managed identity the agent sandbox does not hold, which is a deployment change, not a code change</li>
                 <li>the agent supplies {artifact_uri, artifact_sha256, run_id} and nothing else; the corpus, the manifest and the assertion set are resolved by the service</li>
                 <li>known hole: the contract is parameterised by a blueprint the graded party writes. A target floor and the artefact hash narrow it; a pinned per-connector target closes it, and nobody has written one</li>
                 <li>R3's ranking: external evaluator service with its own identity is rank 1; a separate local process is rank 5 and 'mostly theatre'</li>
@@ -1884,7 +1879,7 @@ write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not
           <tr>
             <td><span class="chip pass">pass</span></td>
             <td class="what"><b>Is the certification suite green and honest?</b><br>
-              <span style="color:var(--ink-2)">88 passed</span>
+              <span style="color:var(--ink-2)">147 passed</span>
               <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
                 <li>includes test_every_assertion_has_been_proved_able_to_fail</li>
               </ul>
@@ -1945,7 +1940,7 @@ write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not
   <div class="tracker rv">
     <div class="tracker-head">
       <h3 class="disp">Is it handed over honestly?</h3>
-      <span class="basis a">5 of 7</span>
+      <span class="basis a">6 of 7</span>
     </div>
     <div style="overflow-x:auto">
       <table class="derived">
@@ -2000,9 +1995,9 @@ write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not
             <td class="n"><span class="mono">docs/evidence/render-pass-*.md</span></td>
           </tr>
           <tr>
-            <td><span class="chip fail">fail</span></td>
+            <td><span class="chip pass">pass</span></td>
             <td class="what"><b>Is impeccable's place in the skill chain stated?</b><br>
-              <span style="color:var(--ink-2)">impeccable's place in the skill chain is unstated</span>
+              <span style="color:var(--ink-2)">the chain names impeccable</span>
               <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
                 <li>impeccable installed 2026-08-21 — 1 skill, 23 commands, 59 deterministic detector rules</li>
                 <li>its trigger overlaps artifact-design, artifact-motion and living-systems-ui</li>
@@ -2038,19 +2033,6 @@ write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not
         </tbody>
       </table>
     </div>
-  </div>
-  <div class="tracker rv">
-    <div class="tracker-head">
-      <h3 class="disp">Needs a person, not a probe</h3>
-      <span class="basis a">three open questions</span>
-    </div>
-    <div style="overflow-x:auto">
-      <table class="derived"><tbody>
-        <tr><td class="what"><b>Which Navira account ids are in scope?</b><br><span style="color:var(--ink-3)">Blocks A12, and therefore blocks certification. One ALDC Windsor key returns every client&rsquo;s accounts.</span></td></tr>
-        <tr><td class="what"><b>Is the landing table one account or two?</b><br><span style="color:var(--ink-3)">20 rows across 18 campaigns on one date cannot be unique on <span class="mono">(account_id, campaign_id, date)</span>. If it is one account, the declared primary key is wrong.</span></td></tr>
-      </tbody></table>
-    </div>
-    <div class="ro-note">These three are not tick boxes and there is nothing to tick. Answer one and it stops appearing here, because the row above it starts measuring true.</div>
   </div>
   <div class="col">
     <div class="callout rv">

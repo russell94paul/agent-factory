@@ -32,19 +32,6 @@ ART = (pathlib.Path(__file__).resolve().parent.parent
 CHIP = {PASS: ("pass", "pass"), FAIL: ("fail", "fail"),
         UNMEASURABLE: ("unmeas", "unmeasurable"), NOT_RUN: ("notrun", "not run")}
 
-# The only rows a probe cannot settle. Kept deliberately short: if something can
-# be measured it belongs above, not here.
-NEEDS_A_PERSON = [
-    ("Which Navira account ids are in scope?",
-     "Blocks A12, and therefore blocks certification. One ALDC Windsor key returns "
-     "every client&rsquo;s accounts."),
-    ("Is the landing table one account or two?",
-     "20 rows across 18 campaigns on one date cannot be unique on "
-     "<span class=\"mono\">(account_id, campaign_id, date)</span>. If it is one "
-     "account, the declared primary key is wrong."),
-]
-
-
 def e(t) -> str:
     return html.escape(str(t), quote=False)
 
@@ -123,24 +110,6 @@ def build() -> str:
         w('      </table>')
         w('    </div>')
         w('  </div>')
-
-    # ---------------------------------------------------------------- human layer
-    w('  <div class="tracker rv">')
-    w('    <div class="tracker-head">')
-    w('      <h3 class="disp">Needs a person, not a probe</h3>')
-    w('      <span class="basis a">three open questions</span>')
-    w('    </div>')
-    w('    <div style="overflow-x:auto">')
-    w('      <table class="derived"><tbody>')
-    for q, why in NEEDS_A_PERSON:
-        w(f'        <tr><td class="what"><b>{e(q)}</b><br>'
-          f'<span style="color:var(--ink-3)">{why}</span></td></tr>')
-    w('      </tbody></table>')
-    w('    </div>')
-    w('    <div class="ro-note">These three are not tick boxes and there is nothing to '
-      'tick. Answer one and it stops appearing here, because the row above it starts '
-      'measuring true.</div>')
-    w('  </div>')
 
     w('  <div class="col">')
     w('    <div class="callout rv">')
