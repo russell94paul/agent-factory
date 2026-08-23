@@ -38,17 +38,20 @@ from factory import claims as claimlib  # noqa: E402
 from factory import operator as opans  # noqa: E402
 from factory import worktrees as wt  # noqa: E402
 from factory import handoff as ho  # noqa: E402
+from factory import sessions as se  # noqa: E402
 
 OUT = FACTORY / "tracker.html"
 
 #: (key, href, label). The key is what render() switches on.
 TABS = [("gates", "/", "Gates"), ("lanes", "/lanes", "Lanes"),
+        ("sessions", "/sessions", "Sessions"),
         ("research", "/research", "Research"), ("handoff", "/handoff", "Handoff")]
 
 #: Modules whose source can change while the server is running, newest-dependency-last: board and
 #: lanes both import from readiness, so readiness must be reloaded before them or they keep
 #: references to the old Gate objects.
-_HOT = ("factory.readiness", "factory.board", "factory.lanes", "factory.schedule")
+_HOT = ("factory.readiness", "factory.board", "factory.lanes", "factory.schedule",
+        "factory.sessions")
 
 _RELOADED_AT = None
 _RELOAD_MSG = None
@@ -56,6 +59,7 @@ _SYNC_MSG = None
 _ANSWER_MSG = None
 _CLAIM_MSG = None
 _HANDOFF_NOTE = ""
+_CARD_MSG = None
 
 
 def launch_command(lane_id: str, make: bool = True):
@@ -870,6 +874,83 @@ def render(when: datetime.datetime, tab: str = "gates") -> str:
                   f'{a.stat().st_size:,} bytes</p>')
                 w('</div>')
 
+    if tab == "sessions":
+        w('<div class="head" style="margin-top:34px">')
+        w('<h1>Sessions</h1>')
+        w('<div class="sub">Every session carries a <b>title</b> and a <b>description</b> so '
+          'you can tell what one is about without opening it. Order, blockers and collisions '
+          'are all <b>derived</b> &mdash; nothing on this page is a hand-maintained list.</div>')
+        w('</div>')
+
+        try:
+            order = se.running_order()
+            aft = se.after()
+            sess = se.sessions()
+        except Exception as exc:                                   # noqa: BLE001
+            w(f'<div class="card" style="border-color:var(--fail)">'
+              f'<b>The session graph will not build:</b> {e(exc)}</div>')
+            order, aft, sess = [], {}, []
+
+        if sess and not any(aft.values()):
+            w('<div class="card" style="border-color:var(--fail);margin-top:14px">'
+              '<b>&#9940; No ordering constraints exist between sessions.</b><br>'
+              'Every edge in <code>board.DEPENDS</code> is either inside one session or points '
+              'at a gate no session owns, so the cards below are in name order and that order '
+              '<b>means nothing</b>. This is measured, not a gap &mdash; do not read it as a '
+              'sequence.</div>')
+        elif order:
+            w('<div style="margin-top:14px;font-size:12.5px;color:var(--ink2)">'
+              + " &rarr; ".join("wave %d: %s" % (i, ", ".join(x)) for i, x in enumerate(order))
+              + '</div>')
+
+        for s in sess:
+            w('<div class="card" data-card="session" style="margin-top:14px;'
+              'border-left:3px solid var(--rule);padding-left:12px">')
+            w(f'<div style="font-size:15px;font-weight:600">{e(s.title)}</div>')
+            w(f'<div style="font-size:12px;color:var(--ink2);font-family:ui-monospace,monospace">'
+              f'{e(s.id)} &middot; {e(s.repo)} &middot; wave {s.wave}</div>')
+            w(f'<div style="margin:8px 0;font-size:13px">{e(s.description)}</div>')
+            w(f'<div style="font-size:12px;color:var(--ink2)">gates: '
+              f'<code>{e(", ".join(s.gates))}</code></div>')
+            w('<div style="font-size:12px;margin-top:6px">after: '
+              + (f'<code>{e(", ".join(s.after))}</code>' if s.after
+                 else '<span style="color:var(--ink2)">nothing</span>') + '</div>')
+            if s.blocked_by_gate:
+                w(f'<div style="font-size:12px;margin-top:6px;color:var(--fail)">'
+                  f'&#9940; blocked by gates <b>no session owns</b>: '
+                  f'<code>{e(", ".join(s.blocked_by_gate))}</code> &mdash; no running order '
+                  f'fixes this, because nobody is scheduled to do it.</div>')
+            for other, paths in sorted(s.conflicts.items()):
+                w(f'<div style="font-size:12px;margin-top:6px">&#9888; cannot run <b>beside</b> '
+                  f'<code>{e(other)}</code> &mdash; both edit <code>{e(", ".join(paths))}</code>. '
+                  f'That is mutual exclusion, <b>not</b> ordering: either order is fine.</div>')
+            if s.needs_paul:
+                w(f'<div style="font-size:12px;margin-top:6px">needs Paul: {e(s.needs_paul)}</div>')
+            posted = se.cards(session=s.id)
+            if posted:
+                w(f'<div style="font-size:12px;margin-top:8px;color:var(--ink2)">'
+                  f'{len(posted)} handoff card(s), latest {e(posted[0].created[:16])}</div>')
+            w('</div>')
+
+        orphan = se.unowned_gates()
+        if orphan:
+            w(f'<div class="card" style="margin-top:14px;border-color:var(--fail)">'
+              f'<b>{len(orphan)} gate(s) belong to no session:</b> '
+              f'<code>{e(", ".join(orphan))}</code><br>Nothing schedules them, so running every '
+              f'lane on this page still leaves them undone.</div>')
+
+        for c in se.cards():
+            w('<div class="card" data-card="handoff" style="margin-top:14px;'
+              'border-left:3px solid var(--pass);padding-left:12px">')
+            w(f'<div style="font-size:12px;color:var(--ink2)">posted {e(c.created[:16])} '
+              f'&middot; {e(c.kind)}{" &middot; " + e(c.session) if c.session else ""}</div>')
+            w(f'<div style="font-size:14px;font-weight:600;margin-top:2px">{e(c.title)}</div>')
+            w(f'<div style="margin:6px 0;font-size:13px">{e(c.description)}</div>')
+            w(f'<details><summary style="cursor:pointer;font-size:12px">handoff</summary>'
+              f'<pre style="white-space:pre-wrap;word-break:break-word;font-size:11.5px">'
+              f'{e(c.body)}</pre></details>')
+            w('</div>')
+
     if tab == "handoff":
         w('<div class="head" style="margin-top:34px">')
         w('<h1>Hand this session on</h1>')
@@ -896,6 +977,23 @@ def render(when: datetime.datetime, tab: str = "gates") -> str:
           'color:var(--paper);font-family:ui-monospace,monospace">'
           '&#9654; open a new session with this handoff</button>')
         w('</form>')
+        w('<form method="POST" action="/post-card" style="display:inline">')
+        w(f'<input type="hidden" name="note" value="{e(_HANDOFF_NOTE)}">')
+        w('<input name="title" placeholder="card title — what is this session called?" '
+          'style="font-size:12.5px;padding:6px 8px;margin:14px 6px 8px 0;width:340px;'
+          'border:1px solid var(--rule);border-radius:3px;background:var(--paper);'
+          'color:var(--ink);font-family:ui-monospace,monospace">')
+        w('<input name="description" placeholder="description — what is it about?" '
+          'style="font-size:12.5px;padding:6px 8px;margin:14px 6px 8px 0;width:340px;'
+          'border:1px solid var(--rule);border-radius:3px;background:var(--paper);'
+          'color:var(--ink);font-family:ui-monospace,monospace">')
+        w('<button type="submit" style="font-size:12.5px;padding:6px 14px;margin:14px 6px 8px 0;'
+          'cursor:pointer;border:1px solid var(--rule);border-radius:3px;background:var(--raise);'
+          'color:var(--ink);font-family:ui-monospace,monospace">'
+          'post this handoff as a card</button>')
+        w('</form>')
+        if _CARD_MSG:
+            w(f'<div style="font-size:12.5px;margin:4px 0 8px">{e(_CARD_MSG)}</div>')
         w('<button type="button" data-copy="handoff-text" style="font-size:12.5px;'
           'padding:6px 14px;margin:14px 0 8px;cursor:pointer;border:1px solid var(--rule);'
           'border-radius:3px;background:var(--raise);color:var(--ink);'
@@ -949,7 +1047,7 @@ document.querySelectorAll('[data-copy]').forEach(function (b) {
 
 class Handler(http.server.BaseHTTPRequestHandler):
     def do_POST(self):
-        global _ANSWER_MSG, _CLAIM_MSG, _HANDOFF_NOTE
+        global _ANSWER_MSG, _CLAIM_MSG, _HANDOFF_NOTE, _CARD_MSG
         import urllib.parse
         if self.path.rstrip("/") == "/finish":
             raw = self.rfile.read(int(self.headers.get("Content-Length") or 0)).decode("utf-8", "replace")
@@ -980,6 +1078,26 @@ class Handler(http.server.BaseHTTPRequestHandler):
         if self.path.rstrip("/") == "/handoff":
             raw = self.rfile.read(int(self.headers.get("Content-Length") or 0)).decode("utf-8", "replace")
             _HANDOFF_NOTE = (urllib.parse.parse_qs(raw, keep_blank_values=True).get("note") or [""])[0]
+            self.send_response(303); self.send_header("Location", "/handoff"); self.end_headers()
+            return
+        if self.path.rstrip("/") == "/post-card":
+            raw = self.rfile.read(int(self.headers.get("Content-Length") or 0)).decode("utf-8", "replace")
+            f = urllib.parse.parse_qs(raw, keep_blank_values=True)
+            _HANDOFF_NOTE = (f.get("note") or [""])[0]
+            try:
+                # The title and description are NOT defaulted from anything here. A session
+                # card spans lanes, so nothing can infer what it was about — se.post refuses a
+                # blank one rather than posting a card whose only content is a timestamp.
+                c = se.post("session", body=ho.session_handoff(_HANDOFF_NOTE),
+                            title=(f.get("title") or [""])[0],
+                            description=(f.get("description") or [""])[0],
+                            author="tracker")
+                _CARD_MSG = f"posted card {c.id} — {c.title}. See the Sessions tab."
+            except se.CardError as exc:
+                _CARD_MSG = f"refused: {exc}"
+            except Exception as exc:                                # noqa: BLE001
+                _CARD_MSG = f"could not post: {type(exc).__name__}: {exc}"
+            print(f"  post-card: {_CARD_MSG}")
             self.send_response(303); self.send_header("Location", "/handoff"); self.end_headers()
             return
         if self.path.rstrip("/") == "/answer-blocker":
@@ -1129,6 +1247,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             return
         route = {"/": "gates", "/index.html": "gates",
                  "/lanes": "lanes", "/research": "research",
+                 "/sessions": "sessions",
                  "/handoff": "handoff"}.get(self.path.rstrip("/") or "/")
         if route is None:
             self.send_error(404)
