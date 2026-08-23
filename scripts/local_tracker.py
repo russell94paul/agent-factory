@@ -42,6 +42,8 @@ from factory import handoff as ho  # noqa: E402
 from factory import runs as runlib  # noqa: E402
 from factory import dispatch as dispatchlib  # noqa: E402
 from factory import flow as flowlib  # noqa: E402
+from factory import goals as goalslib  # noqa: E402
+from factory import schedule as schedlib  # noqa: E402
 from factory import sessions as sesslib  # noqa: E402
 from factory import dispatch as disp  # noqa: E402
 
@@ -76,8 +78,9 @@ def _ago(ts: float) -> str:
     return "%dd ago" % round(secs / 86400)
 
 #: (key, href, label). The key is what render() switches on.
-TABS = [("gates", "/", "Gates"), ("flow", "/flow", "Flow"),
-        ("lanes", "/lanes", "Lanes"), ("sessions", "/sessions", "Sessions"),
+TABS = [("gates", "/", "Gates"), ("goals", "/goals", "Goals"),
+        ("flow", "/flow", "Flow"), ("lanes", "/lanes", "Lanes"),
+        ("sessions", "/sessions", "Sessions"),
         ("research", "/research", "Research"), ("handoff", "/handoff", "Handoff")]
 
 #: Modules whose source can change while the server is running, newest-dependency-last: board and
@@ -1003,6 +1006,75 @@ def render(when: datetime.datetime, tab: str = "gates") -> str:
           'row says <b>UNKNOWN</b> rather than pretending nothing is running.</p>')
         w('</div>')
 
+    if tab == "goals":
+        # ------------------------------------------------------------------ goals
+        # The 30 gates answer one question — can a team run a migration unattended. The operator
+        # has three, and they cut across phases, so `factory/goals.py` groups gates by goal.
+        # ⚠ The GROUPING is a judgement and is printed in full below rather than hidden behind a
+        # percentage: a progress bar over the wrong set is a confident-looking lie.
+        gp = goalslib.progress()
+        cov = goalslib.coverage()
+        w('<div class="head" style="margin-top:44px">')
+        w('<h1>Goals</h1>')
+        w(f'<div class="sub">three things we are building &middot; '
+          f'{sum(g["passing"] for g in gp)} of {sum(g["total"] for g in gp)} of their gates '
+          f'passing &middot; re-measured just now</div>')
+        w('</div>')
+
+        for g in gp:
+            frac = g["passing"] / g["total"] if g["total"] else 0
+            col = "var(--pass)" if frac == 1 else ("var(--unmeas)" if frac else "var(--fail)")
+            w('<div class="par" style="margin-top:14px">')
+            w(f'<h3 style="margin-top:0">{e(g["goal"])} '
+              f'<span style="font-weight:400;color:{col};font-family:ui-monospace,monospace;'
+              f'font-size:13px">{g["passing"]} of {g["total"]}</span></h3>')
+            # The bar IS passing/total. Change the number and the picture changes.
+            w(f'<div style="height:7px;background:var(--rule);border-radius:3px;margin:6px 0 8px">'
+              f'<div style="height:7px;width:{frac*100:.1f}%;background:{col};border-radius:3px">'
+              f'</div></div>')
+            w(f'<p style="font-size:13px;color:var(--ink2);margin:0">{e(g["why"])}</p>')
+            chips = " ".join(
+                f'<span style="font-family:ui-monospace,monospace;font-size:11.5px;padding:1px 6px;'
+                f'border:1px solid var(--rule);border-radius:2px;color:'
+                f'{"var(--pass)" if x["verdict"] == "PASS" else "var(--ink3)"}">{e(x["id"])}</span>'
+                for x in g["gates"])
+            w(f'<div style="margin-top:8px">{chips}</div>')
+            if g["basis"] != "MEASURED":
+                w('<p style="font-size:12px;color:var(--unmeas);margin:8px 0 0">'
+                  '<b>NOT-MEASURED</b> — every gate here is UNMEASURABLE or NOT_RUN. That is a fact '
+                  'about the instrument, not about the work, and it is not the same as 0%.</p>')
+            w('</div>')
+
+        # Velocity, in its own words. It refuses to project and says why — that refusal is the
+        # most useful line on the page and paraphrasing it would soften it.
+        w('<div class="par" style="margin-top:14px">')
+        w('<h3 style="margin-top:0">How fast, and when</h3>')
+        try:
+            rep = schedlib.report()
+        except Exception as exc:                                   # noqa: BLE001
+            rep = f"schedule unavailable: {type(exc).__name__}: {exc}"
+        w(f'<pre style="font-size:12px;color:var(--ink2);white-space:pre-wrap;margin:0;'
+          f'font-family:ui-monospace,monospace">{e(rep)}</pre>')
+        w('</div>')
+
+        w('<div class="par" style="margin-top:12px;border-color:var(--unmeas)">')
+        w('<h3 style="margin-top:0">&#9888; What this page does not cover</h3>')
+        w(f'<p style="font-size:13px;color:var(--ink2);margin:0">These three goals span '
+          f'<b>{cov["covered"]} of {cov["total"]}</b> gates. '
+          f'<b>{len(cov["uncovered"])} are in no goal at all</b>: '
+          f'<code>{e(", ".join(cov["uncovered"]))}</code></p>')
+        w('<p style="font-size:12px;color:var(--ink3);margin:8px 0 0">'
+          'Shown because a goals page implies the goals are the whole picture, and here they are '
+          'not. A gate in no goal is a gate nobody is counting toward anything &mdash; which is how '
+          'the <code>version</code> gate went unowned long enough to report a figure that could '
+          'never have been anything else.</p>')
+        w('<p style="font-size:12px;color:var(--ink3);margin:8px 0 0">'
+          '<b>The grouping is the one authored judgement here.</b> Every number is measured; which '
+          'gates constitute a goal is a decision, and it lives in <code>factory/goals.py::GOALS</code> '
+          'so it can be argued with. It is validated on import &mdash; a goal naming a deleted gate '
+          'breaks the build rather than quietly shrinking.</p>')
+        w('</div>')
+
     if tab == "flow":
         # ------------------------------------------------------------------ flow
         # The readiness graph, laid out from the gate list and the dependency map rather than
@@ -1541,6 +1613,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             print(f"  hot reload: {_RELOAD_MSG[1]}")
             return
         route = {"/": "gates", "/index.html": "gates", "/flow": "flow",
+                 "/goals": "goals",
                  "/lanes": "lanes", "/sessions": "sessions", "/research": "research",
                  "/handoff": "handoff"}.get(self.path.rstrip("/") or "/")
         if route is None:
