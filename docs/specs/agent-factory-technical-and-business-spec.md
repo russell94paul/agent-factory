@@ -561,14 +561,23 @@ challenge corpus across 15 mechanisms.
 
 **A research pass cannot respect a rule it was not given, and cannot decide a question we own.**
 
-### 16.1 Is the in-page terminal retired, or is it permitted?
+### 16.1 The in-page terminal — SETTLED 2026-08-23: asked, not asserted
 
-This is **load-bearing** and it has now cost two passes. R7 handed our own position back rather than
-challenging it; R12 was never told the constraint and recommended an Electron app whose entire model
-is an embedded terminal per session. Paul's position on 2026-08-23 was *"terminal mode needs to
-exit"*, which points at **retiring** it. **Until this is written down as a decision, no answer about
-UI substrate can be graded** — it is the single fact that decides whether an Electron terminal grid
-is admissible at all.
+**Decision: it goes to the research pass as an open question (R13 `E8`), not as a constraint.**
+
+It has now cost two passes in opposite directions. R7 was handed our position and returned it with
+citations, teaching us nothing. R12 was never told the constraint existed and recommended an
+Electron app whose whole model is an embedded terminal per session — so its "adopt" is not a
+refutation of R7, it is an answer to a different question.
+
+⭐ **Both failure modes have the same cause: we controlled the answer instead of asking the
+question.** Asserting `RETIRED` would buy back our own position a third time. So R13 states neither,
+names both prior failures inside the prompt, and tells the pass to take a side and defend it.
+Paul's own position — *"terminal mode needs to exit"* — is deliberately withheld from the fence so
+what comes back is evidence rather than an echo.
+
+⚠ **`E8` gates `E1` and `E7`.** Grade it first. If a third pass ducks it, the question is not
+answerable from the literature and we settle it with the week-long experiment `E8(e)` asks for.
 
 ### 16.2 The five remaining owner questions
 

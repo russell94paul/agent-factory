@@ -3,8 +3,10 @@
 **Status: READY TO DISPATCH.** Written 2026-08-23. File the answer at
 `docs/research/answers/R13-answer-platform-and-manufacturing.md` and nowhere else.
 
-⛔ **Settle the §0 decision below before pasting.** R7 and R12 were both answered without it and
-both answers are ungradeable as a result. This is the third attempt at the same question.
+**§0 settled 2026-08-23: the in-page terminal is put to the pass as an open question**, on the
+explicit record that two prior attempts failed on it. R7 restated our own position back to us; R12
+was never told the constraint existed. This time it is neither asserted nor omitted — it is asked,
+with both prior failures named so the pass cannot repeat either.
 
 ## How to run this
 
@@ -19,19 +21,28 @@ but the fence must stand alone without it.
 
 ---
 
-## §0 — The decision to make before dispatch
+## §0 — The in-page terminal, and why it is asked rather than asserted
 
-One line in the fence is marked `<<< PAUL: DECIDE >>>`. Replace it with **one** of:
+**Decision, 2026-08-23: put it to the pass as an open question.** The fence carries it as `E8`.
 
-- `RETIRED — no terminal is embedded in any page we build. Terminal mode is exiting.`
-- `PERMITTED — an embedded terminal per session is admissible.`
+This is the third time this question has been in front of a researcher and the first time it has
+been *asked*. R7 restated our own position instead of challenging it, so we learned nothing. R12 was
+never given the constraint at all and duly recommended adopting an Electron app whose entire model
+is an embedded terminal per session — **an answer cannot respect a rule it was not given**, so its
+"adopt" is not a refutation of R7, it is an answer to a different question.
 
-**Why this is not optional.** R7 restated our own position instead of challenging it. R12 was never
-told the constraint at all and recommended adopting an Electron app whose entire model is an
-embedded terminal per session. **An answer cannot respect a rule it was not given**, so both passes
-answered a different question than the one we have. Paul's stated position on 2026-08-23 was
-*"terminal mode needs to exit"* — but a position is not a decision until it is written down, and
-this prompt is where it gets written down.
+⚠ **Both failure modes are now named inside the fence**, which is the point: a pass told only
+*"we do not embed terminals"* returns our own position with citations, and a pass told nothing
+returns a terminal grid. Asking it explicitly, with both prior failures on the record, is the only
+form that can come back gradeable.
+
+⭐ **The consequence of leaving it open is that E8 gates E1 and E7.** Nothing downstream about UI
+substrate is decidable until it is answered, so grade E8 first when the answer lands — and if the
+pass ducks it or hands our position back a third time, that section is void and the rest of the UI
+answer is read with it discounted.
+
+Paul's own position on 2026-08-23 was *"terminal mode needs to exit"*. It is **deliberately not
+stated in the fence**, so the answer is evidence rather than an echo.
 
 ---
 
@@ -265,8 +276,8 @@ THE TWO REQUIREMENTS AS BUDGETS:
   Monitoring — our measured failure is ALARM ABSENCE, not alarm fatigue. The signal existed and was
     never surfaced. Whatever surfaces a blocked agent's question must INTERRUPT, not badge.
 
-STANDING CONSTRAINT ON THE ANSWER:
-  In-page terminal: <<< PAUL: DECIDE >>>
+ONE CONSTRAINT WE ARE DELIBERATELY NOT GIVING YOU — see E8. Every other constraint in Part H is
+binding; the in-page terminal is the one we want argued rather than obeyed.
 
 ASK:
 E1. Given that this is an EVIDENCE product, what is the right PRIMARY OBJECT of the UI: the
@@ -282,6 +293,34 @@ E5. How do teams present PROVENANCE and COST-PER-OUTCOME without it becoming a v
 E6. How do the fastest agent-observability UIs stay honest and fast simultaneously — what is the
     real architecture behind sub-second pages over live state, and what do they give up?
 E7. Given four surfaces exist and a fifth died: WHAT SHOULD WE REFUSE TO BUILD?
+E8. THE ONE WE KEEP FAILING TO GET ANSWERED — and we want it argued, not agreed with. Should a
+    live terminal be embedded in the supervision UI at all, or is a terminal an ESCAPE HATCH you
+    leave the page to reach?
+
+    Read this part carefully, because two prior passes broke on it in opposite directions. One was
+    handed our position and returned it to us with citations, which taught us nothing. The other
+    was never told the question existed and recommended an Electron app whose entire model is an
+    embedded terminal per session. WE ARE THEREFORE NOT TELLING YOU WHAT WE THINK. Take a side and
+    defend it.
+
+    What we can tell you is what we measured, and it cuts both ways:
+      - a terminal DIED and its agent kept working, invisibly, for minutes. Alive, visible and
+        attachable turned out to be three different properties and nothing distinguished them;
+      - four agents sat blocked on questions written in plain English in a file nothing read, for
+        days. A terminal would have shown those questions to anyone watching — and nobody was;
+      - our operators DO drop to a terminal, routinely, and the work is fundamentally
+        text-and-git-shaped;
+      - the one substrate we evaluated has NO ATTACH: it re-uses only PTYs it spawned itself, and
+        spawns a SECOND process against a live session id it did not launch. That is precisely the
+        incident above, reproduced by design.
+
+    Specifically: (a) in shipped supervision UIs for long-running agents, is a terminal a
+    first-class pane, an escape hatch, or absent — with citations to real products, not launch
+    posts; (b) what does an embedded terminal buy that a status list plus the transcript does not;
+    (c) what does embedding one COST in practice — attach semantics, duplicate processes, state
+    divergence, security surface; (d) if terminals are an escape hatch, what carries the load in
+    the primary UI instead; (e) what evidence would settle this, that we could gather ourselves in
+    under a week?
 
 ====================================================================
 PART F — QUESTION 3: FOUR ABSENCES WE HAVE NAMED BUT NOT DESIGNED
@@ -368,7 +407,7 @@ Omitting one of these has already cost us two research passes.
   - NO UNLABELLED STALE NUMBERS. A cached figure carries its age in the same string.
   - THE EXISTING INSTRUMENT PANEL IS NEVER REMOVED, only added to.
   - MERGING STAYS HUMAN.
-  - In-page terminal: as decided in Part E.
+  - In-page terminal: NOT a constraint — it is question E8. Argue it.
 
 ====================================================================
 PART I — WHAT TO RETURN
@@ -384,7 +423,8 @@ ARE GUARDING AGAINST IS A GENERIC AGENT-FRAMEWORK LISTICLE.
      DEFERRED      it is on our deferral list above, with an unlock condition
      ABSENT        genuinely missing and not deferred
      NOT-SEARCHED  no evidence exists either way — say so rather than guessing
-2. DIRECT ANSWERS to D1-D5, E1-E7, F1-F4. Where the evidence is thin, SAY THE EVIDENCE IS THIN.
+2. DIRECT ANSWERS to D1-D5, E1-E8, F1-F4. ANSWER E8 EXPLICITLY AND TAKE A SIDE;
+   a section that restates our constraints back to us is a failed section. Where the evidence is thin, SAY THE EVIDENCE IS THIN.
 3. A RANKED BUILD ORDER for the manufacturing step and the UI, with what each unlocks and what it
    costs. Cost in engineering time, not adjectives — "significant engineering effort" is not a
    figure and a previous pass gave us nothing but that.
@@ -411,6 +451,11 @@ right each time.
    private and unreachable. Check for this first; it is the cheapest tell.
 4. **Every `DEFERRED` item it reports as a gap** is a sign the deferral list was not read, and
    downgrades the whole pass.
+5. ⭐ **Grade E8 first.** If the pass ducked the in-page-terminal question, hedged it, or handed our
+   own position back a third time, that section is void — record it as void rather than reading a
+   preference into it, and discount the rest of the UI answer accordingly. Three passes failing the
+   same question would itself be the finding: it would mean the question is not answerable from the
+   literature and we have to settle it with the week-long experiment E8(e) asks for.
 5. File at `docs/research/answers/R13-answer-platform-and-manufacturing.md`, then fold into
    `SYNTHESIS.md` **before acting on it**, recording disagreements rather than smoothing them.
    `factory/synthesis.py` globs exactly one directory — an answer filed anywhere else can never
