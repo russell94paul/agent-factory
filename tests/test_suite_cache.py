@@ -185,3 +185,39 @@ def test_a_write_failure_never_breaks_the_measurement(monkeypatch, tmp_path):
                         lambda *a, **k: (_ for _ in ()).throw(OSError("disk full")))
     R._cache_write({"fingerprint": "x", "at": time.time(), "verdict": R.PASS,
                     "headline": "h", "evidence": [], "source": "tests/"})   # must not raise
+
+
+# --------------------------------------------------------------------------- the page's own claim
+
+
+def test_no_surface_claims_it_caches_nothing():
+    """⛔ The page must not assert a freshness property it does not have.
+
+    R13 called this *"the only defect that makes every other number on the page unreliable"*, and
+    it was live for part of 2026-08-23: the suite gate was cached the same day that four strings
+    still told the reader nothing on the page was.
+
+    A reader who catches one such claim being false has no way to know which of the other numbers
+    to trust — which is worse than the cache itself ever was. So the absolute phrasings are banned
+    and the honest one names the exception.
+    """
+    import pathlib
+    banned = ("nothing on this page is cached", "never caches", "nothing here is cached",
+              "no caching", "nothing is cached")
+    offenders = []
+    for f in sorted((R.FACTORY / "scripts").glob("*.py")) + \
+             sorted((R.FACTORY / "factory").glob("*.py")):
+        for i, line in enumerate(f.read_text(encoding="utf-8").splitlines(), 1):
+            low = line.lower()
+            for phrase in banned:
+                if phrase in low:
+                    offenders.append(f"{f.name}:{i}  {line.strip()[:90]}")
+    assert not offenders, (
+        "these assert the surface caches nothing, which is false — the suite gate is cached:\n  "
+        + "\n  ".join(offenders))
+
+
+def test_the_ban_can_actually_fail():
+    """Proof the guard above is not vacuous."""
+    probe = 'w("Nothing on this page is cached; it re-ran when you loaded it.")'
+    assert "nothing on this page is cached" in probe.lower()

@@ -7,9 +7,16 @@
     python scripts/local_tracker.py --serve --port 8099
 
 The published artifact only changes when someone republishes it. This does not: in --serve mode
-each request re-runs every probe against the repositories as they are at that moment, so the
+each request re-runs the probes against the repositories as they are at that moment, so the
 timestamp in the header is the measurement time, not the build time. A tracker that can quietly
 show yesterday's state is the drift this whole project exists to remove.
+
+⚠ ONE EXCEPTION, and it is stated here because an unstated one would be exactly that drift. The
+`suite` gate shells out to a full pytest run and was 97.6% of every page load, so it is cached
+against a content hash of tests/, factory/, scripts/ and the environment, with a 12h ceiling and
+PASS-only. **Its headline carries its own age in the same string as its number** — "147 passed
+(cached, last run 4m ago)" — which is the rule that makes a cache admissible here. Every other
+figure on every page re-ran when you loaded it.
 
 Self-contained: no network, no fonts, no dependencies. Written to tracker.html, which is
 gitignored — the page is a view, the probes in factory/readiness.py are the source of truth.
@@ -1566,7 +1573,10 @@ def render(when: datetime.datetime, tab: str = "gates", team: str = "") -> str:
         w('<p style="font-size:12px;color:var(--ink3);margin:8px 0 0">'
           'Every figure here is <b>MEASURED</b> &mdash; the bar under each phase is '
           'passing&divide;total from the same <code>measure()</code> call that drew the nodes, not '
-          'a chosen width. Nothing on this page is cached; it re-ran when you loaded it.</p>')
+          'a chosen width. Every figure here re-ran when you loaded it &mdash; with one stated '
+          'exception, the <code>suite</code> gate, which is cached and says so in its own '
+          'headline. A page that claimed to cache nothing while caching something would make '
+          'every other number on it unreliable.</p>')
         w('</div>')
 
         # The shape worth noticing, computed rather than asserted.
