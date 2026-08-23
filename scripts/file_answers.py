@@ -49,6 +49,31 @@ PROMPTS = {
         (2, r"OpenEvolve|AlphaEvolve|autoresearch"), (2, r"devcontainer|SWE-bench"),
         (1, r"changepoint|degradation detection"),
     ]),
+    # ---- added 2026-08-23, when R10/R11/R12 landed together and nothing could file them.
+    # R5-R7 are deliberately ABSENT. R7's answer already discusses switchboard, PTYs, Electron
+    # and SQLite — the whole of R12's subject — so no marker set separates them by content, and
+    # inventing one would risk renaming a correctly-filed answer. Unclassifiable is the safe
+    # verdict here: the script changes nothing and says so.
+    8: ("data-engineering-agent-factory", [
+        (3, r"zero[- ]copy|clone schema"), (3, r"isolation (tier|ladder)"),
+        (2, r"blast radius"), (2, r"data engineering"), (1, r"dbt|--defer"),
+    ]),
+    10: ("hierarchical-wiki-agent-training", [
+        (3, r"hierarchical wiki"), (3, r"\bRAG\b"), (2, r"knowledge base"),
+        (2, r"context window"), (1, r"auto[- ]?research"),
+    ]),
+    11: ("factory-concept-diff", [
+        # `first-class` and `vocabular` were the obvious markers and are useless: R1, R2 and R3
+        # all use them, and R11 tied 8-8 with R2. These are named products the concept survey
+        # reports on and no other answer mentions at all.
+        (3, r"factory\.ai|sierra"), (3, r"ADK"), (3, r"26 concepts|our 26"),
+        (2, r"guardrail"), (2, r"make first[- ]class"), (2, r"packaged"), (1, r"cursor"),
+    ]),
+    # Every R12 marker is chosen to be ABSENT from R7's answer — see the note above.
+    12: ("session-manager-ui", [
+        (3, r"doctly"), (3, r"tmux|zellij"), (2, r"reattach"),
+        (2, r"full[- ]text search"), (2, r"cost track"), (1, r"session registry"),
+    ]),
 }
 
 CANONICAL = {n: f"R{n}-answer-{slug}.md" for n, (slug, _) in PROMPTS.items()}
@@ -100,6 +125,15 @@ def main(argv=None) -> int:
 
     planned, problems = {}, []
     for p in files:
+        # `R2-followup.md` is a correctly-named follow-up exchange, not an answer to a prompt.
+        # It scores on whatever it DISCUSSES, and R2's follow-up discusses the control plane —
+        # so without this guard --apply renames it to `R3-answer-control-plane-run2.md` and a
+        # follow-up is silently reclassified as a second run of someone else's prompt. Latent
+        # since the follow-ups were written; caught 2026-08-23 by reading a dry run instead of
+        # trusting it.
+        if re.fullmatch(r"R\d+-followup\.md", p.name):
+            print(f"  = {p.name:<34} follow-up, not an answer — left alone")
+            continue
         n, s = classify(p)
         detail = " ".join(f"R{k}={v}" for k, v in sorted(s.items()))
         if n is None:
