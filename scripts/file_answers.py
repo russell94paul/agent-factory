@@ -71,7 +71,7 @@ PROMPTS = {
         # `first-class` and `vocabular` were the obvious markers and are useless: R1, R2 and R3
         # all use them, and R11 tied 8-8 with R2. These are named products the concept survey
         # reports on and no other answer mentions at all.
-        (3, r"factory\.ai|sierra"), (3, r"ADK"), (3, r"26 concepts|our 26"),
+        (3, r"factory\.ai|sierra"), (3, r"\bADK\b"), (3, r"26 concepts|our 26"),
         (2, r"guardrail"), (2, r"make first[- ]class"), (2, r"packaged"), (1, r"cursor"),
     ]),
     # Every R12 marker is chosen to be ABSENT from R7's answer — see the note above.

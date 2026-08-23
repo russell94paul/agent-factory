@@ -109,12 +109,33 @@ def test_the_validator_refuses_a_changed_action_count(monkeypatch):
 
 
 def test_a_gated_action_takes_its_state_from_the_gate_not_the_author():
-    """The asymmetry the module is built on: a measurement outranks a person's claim."""
-    gated = [a for a in rm.actions() if a["gate"]]
-    assert gated, "no action is linked to a gate — the override path is untested"
-    for a in gated:
-        assert a["basis"] == rm.MEASURED
-        assert a["state"] == (rm.SHIPPED if a["verdict"] == "PASS" else rm.DECIDED)
+    """The asymmetry the module is built on: a measurement outranks a person's claim.
+
+    ⚠ This used to assert that at least one real action was gated. As of 2026-08-23 **none is** —
+    R16 §2.1 showed all three edges were wrong and they were removed, so the honest count is
+    0 MEASURED / 18 AUTHORED. Asserting "at least one" would now force someone to re-add a bad
+    edge to get the suite green, which is the worst thing a test can do.
+
+    So the OVERRIDE LOGIC is proved against a constructed action instead. The path stays tested
+    whether or not the real map happens to use it.
+    """
+    for a in rm.actions():
+        if a["gate"]:
+            assert a["basis"] == rm.MEASURED
+            assert a["state"] == (rm.SHIPPED if a["verdict"] == "PASS" else rm.DECIDED)
+
+    # `suite` is a live gate, so this exercises the real measure() path rather than a stub.
+    probe = rm.Action("zz-probe", "probe", "§x", state=rm.SUPERSEDED, gate="suite",
+                      why_gate="test-only probe of the override path")
+    rm.ACTIONS.append(probe)
+    try:
+        row = next(a for a in rm.actions() if a["id"] == "zz-probe")
+        assert row["basis"] == rm.MEASURED, "a gated action must not report AUTHORED"
+        assert row["state"] != rm.SUPERSEDED, (
+            "the authored state survived a gate edge — the gate must win, always")
+        assert row["state"] == (rm.SHIPPED if row["verdict"] == "PASS" else rm.DECIDED)
+    finally:
+        rm.ACTIONS.remove(probe)
 
 
 def test_an_ungated_action_is_never_labelled_measured():
@@ -187,3 +208,44 @@ def test_the_tab_shows_every_one_of_the_eighteen_actions(page):
     for a in rm.ACTIONS:
         assert a.source.replace("§", "&sect;") in page or a.source in page, (
             f"action {a.id} ({a.source}) is not on the page")
+
+
+# --------------------------------------------------------------------------- the R16 §2.1 defect
+
+
+def test_a_gate_edge_must_carry_a_stated_reason():
+    """Three edges were authored without one and all three were wrong.
+
+    `_validate()` can only prove a gate EXISTS. Nothing can automatically check that the gate's
+    QUESTION matches the action's SUBJECT — so the control is that a human had to write the
+    sentence. Weak, but it makes the mismatch get considered instead of assumed.
+    """
+    for a in rm.ACTIONS:
+        if a.gate:
+            assert a.why_gate.strip(), (
+                f"{a.id} links gate {a.gate!r} with no why_gate — the exact shape of the three "
+                "edges R16 2.1 found wrong")
+
+
+def test_the_why_gate_guard_can_fail():
+    """Proof the check above is not vacuous — the rule this repo holds every gate to."""
+    rm.ACTIONS.append(rm.Action("zz-probe", "probe", "§x", gate="suite"))
+    try:
+        with pytest.raises(ValueError, match="why_gate"):
+            rm._validate()
+    finally:
+        rm.ACTIONS.pop()
+    rm._validate()          # and the map is valid again once the probe is removed
+
+
+def test_no_action_claims_measured_without_a_gate_behind_it():
+    """The asymmetry the module rests on, restated as an assertion.
+
+    As of 2026-08-23 the honest count is 0 MEASURED / 18 AUTHORED. That is allowed. What is not
+    allowed is an action rendering MEASURED on an edge nobody justified.
+    """
+    for a in rm.actions():
+        if a["basis"] == rm.MEASURED:
+            src = next(x for x in rm.ACTIONS if x.id == a["id"])
+            assert src.gate and src.why_gate.strip(), (
+                f"{a['id']} renders MEASURED without a justified gate edge")

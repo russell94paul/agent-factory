@@ -867,7 +867,7 @@ VERSION_DIMENSIONS = [
 def g_version_hash_is_complete():
     src = "factory/blueprint.py"
     body = (FACTORY / "blueprint.py").read_text(encoding="utf-8")         if (FACTORY / "blueprint.py").is_file() else         (FACTORY / "factory" / "blueprint.py").read_text(encoding="utf-8")
-    have = [d for d in VERSION_DIMENSIONS if re.search(rf"{d}", body)]
+    have = [d for d in VERSION_DIMENSIONS if re.search(rf"\b{d}\b", body)]
     missing = [d for d in VERSION_DIMENSIONS if d not in have]
     ev = [f"{len(have)} of {len(VERSION_DIMENSIONS)} dimensions in the hashed config",
           "missing: " + ", ".join(missing)]

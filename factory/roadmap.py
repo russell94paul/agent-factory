@@ -20,6 +20,28 @@ with the map; the arithmetic is not the part that can be wrong.
 see keeps an authored status, and those render as `AUTHORED` — deliberately weaker-looking than
 `MEASURED`, because they are. That asymmetry is the whole design: it makes the hand-maintained part
 visibly hand-maintained instead of letting it borrow the credibility of the measured part.
+
+⛔ **And as of 2026-08-23 the honest count is 0 MEASURED, 18 AUTHORED. No gate currently decides any
+of the eighteen decisions.** That is the finding, not an omission.
+
+Three edges existed and R16 §2.1 showed all three were wrong — verified here before removal:
+
+    a8   "containerise AGENT EXECUTION"  ->  `isolated`, which is g_evaluator_is_a_service and
+                                             asks about EVALUATOR isolation. Setting one env var
+                                             and adding a class would have rendered it SHIPPED
+                                             with zero agents in containers.
+    a10  "restate the goal as 30-45 min"  ->  `finishes`, which has NO duration term at all, and
+                                             which this action is a proposal to CHANGE. Circular.
+    a16  "adopt the OTel field set"       ->  `version`, which cannot see WHERE a declared set came
+                                             from — and which could never pass at all until the
+                                             same day, its regex holding two literal U+0008
+                                             backspaces that no editor renders.
+
+**The half of this module presented as MEASURED was the least reliable half** — the exact inverse of
+the intent above, and by this repo's own standing rule worse than an admitted gap. `_validate()` can
+only prove a gate *exists*; nothing could check that its QUESTION matches the action's SUBJECT, and
+the author (me) did not. A `gate` now requires a `why_gate` sentence, which is a weak control but
+forces the subject match to be thought about at all.
 """
 from __future__ import annotations
 
@@ -36,12 +58,19 @@ DECIDED, SHIPPED, SUPERSEDED = "DECIDED", "SHIPPED", "SUPERSEDED"
 
 
 class Action:
-    """One of the eighteen decisions. `gate` is the only thing that can override `state`."""
+    """One of the eighteen decisions. `gate` is the only thing that can override `state`.
+
+    ⛔ **A `gate` REQUIRES a `why_gate` naming what that gate actually asserts and why it decides
+    THIS action.** Three edges were authored on 2026-08-23 without that check and all three were
+    wrong (see the module docstring). `_validate()` can only prove a gate *exists*; a sentence a
+    human had to write is the cheapest control that makes the subject match get considered at all.
+    """
 
     def __init__(self, id: str, text: str, source: str, state: str = DECIDED,
-                 gate: Optional[str] = None, note: str = ""):
+                 gate: Optional[str] = None, note: str = "", why_gate: str = ""):
         self.id, self.text, self.source = id, text, source
         self.state, self.gate, self.note = state, gate, note
+        self.why_gate = why_gate
 
 
 # ---------------------------------------------------------------------------------------------
@@ -78,11 +107,20 @@ ACTIONS: List[Action] = [
                 "content hash of tests/+factory/ — measured 27.3 s cold to 0.84 s warm. The stale "
                 "figure survived into a decided action; that is the drift R16 is meant to catch."),
     Action("a8", "Containerise agent execution on one machine before any cloud step.", "§13.7.2",
-           state=DECIDED, gate="isolated"),
+           state=DECIDED,
+           note="⚠ Gate edge REMOVED 2026-08-23 (R16 §2.1, verified). It pointed at `isolated`, "
+                "which is `g_evaluator_is_a_service` — it asks whether $AGENT_FACTORY_EVALUATOR is "
+                "set and some module other than readiness.py defines `class EvaluatorClient`. That "
+                "is EVALUATOR isolation, not containerised AGENT EXECUTION. Setting one env var and "
+                "adding a class would have rendered this SHIPPED with zero agents in containers."),
     Action("a9", "Adopt the mandatory-clone rule — enforceable in code, no new discipline.",
            "§13.7.3", state=DECIDED),
     Action("a10", "Restate the unattended goal as a 30-45 minute unbroken run, in the readiness "
-                  "set.", "§13.7.4", state=DECIDED, gate="finishes"),
+                  "set.", "§13.7.4", state=DECIDED,
+           note="⚠ Gate edge REMOVED 2026-08-23 (R16 §2.1, verified). It pointed at `finishes`, "
+                "which counts runs reaching pipeline_completed and contains NO DURATION TERM at "
+                "all — grep confirms it. Worse, it was circular: this action is a proposal to "
+                "CHANGE that gate, gated on the unchanged gate."),
     Action("a11", "Read switchboard's `open-terminal` handler and settle the attach contradiction.",
            "§13.7.5", state=SHIPPED,
            note="✅ SETTLED 2026-08-23. main.js @ 4c5a6da: activeSessions is an in-process Map "
@@ -101,8 +139,15 @@ ACTIONS: List[Action] = [
            "§14.7.2", state=DECIDED),
     Action("a15", "Stop surveying orchestration topologies — seven checked, none moves the cap.",
            "§14.7.3", state=SHIPPED),
-    Action("a16", "Config hash: adopt the OTel GenAI field set.", "§14.7.4",
-           state=DECIDED, gate="version"),
+    Action("a16", "Config hash: adopt the OTel GenAI field set.", "§14.7.4", state=DECIDED,
+           note="⚠ Gate edge REMOVED 2026-08-23. `version` measures whether the ALREADY-DECLARED "
+                "dimensions appear in blueprint.py; it cannot see whether the set we declared came "
+                "from OTel, which is what this action is about. ⭐ Separately, R16 §1.1 found that "
+                "gate could never pass: its regex held two literal U+0008 BACKSPACE characters "
+                "(`rf\"\x08{d}\x08\"` where `rf\"\b{d}\b\"` was meant), invisible in "
+                "every editor. Fixed the same day. It reported 0 of 15 for as long as it existed; "
+                "the true figure is 6 of 15, so the job is NINE dimensions, not fifteen — a number "
+                "that had travelled into SYNTHESIS §14.5, R13 run 2, R14 and ui-surface-inventory."),
     Action("a17", "Discount R13's migration section — it guessed our surfaces.", "§14.7.5",
            state=SHIPPED),
     Action("a18", "Settle the terminal question as a decision and delete it from every prompt.",
@@ -157,6 +202,13 @@ def _validate() -> None:
         seen.add(a.id)
         if a.gate and a.gate not in ids:
             bad.append(f"ACTIONS[{a.id}] names gate {a.gate!r}, which does not exist")
+        # A gate edge without a stated reason is how all three original edges got authored wrong.
+        # This cannot verify the subject match — nothing can, automatically — but it refuses an
+        # edge nobody had to justify in writing.
+        if a.gate and not a.why_gate.strip():
+            bad.append(f"ACTIONS[{a.id}] links gate {a.gate!r} with no why_gate. State what that "
+                       f"gate ASSERTS and why it decides this action's SUBJECT — three edges were "
+                       f"authored without that check and all three were wrong (R16 2.1).")
     if len(ACTIONS) != 18:
         bad.append(f"ACTIONS holds {len(ACTIONS)}, but the record says eighteen decided actions. "
                    f"If the count really changed, change this check and say where.")
