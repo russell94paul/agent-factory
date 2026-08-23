@@ -43,6 +43,7 @@ from factory import runs as runlib  # noqa: E402
 from factory import dispatch as dispatchlib  # noqa: E402
 from factory import flow as flowlib  # noqa: E402
 from factory import goals as goalslib  # noqa: E402
+from factory import roadmap as roadlib  # noqa: E402
 from factory import schedule as schedlib  # noqa: E402
 from factory import sessions as sesslib  # noqa: E402
 from factory import dispatch as disp  # noqa: E402
@@ -79,6 +80,7 @@ def _ago(ts: float) -> str:
 
 #: (key, href, label). The key is what render() switches on.
 TABS = [("gates", "/", "Gates"), ("goals", "/goals", "Goals"),
+        ("roadmap", "/roadmap", "Roadmap"),
         ("flow", "/flow", "Flow"), ("lanes", "/lanes", "Lanes"),
         ("sessions", "/sessions", "Sessions"),
         ("research", "/research", "Research"), ("handoff", "/handoff", "Handoff")]
@@ -86,7 +88,7 @@ TABS = [("gates", "/", "Gates"), ("goals", "/goals", "Goals"),
 #: Modules whose source can change while the server is running, newest-dependency-last: board and
 #: lanes both import from readiness, so readiness must be reloaded before them or they keep
 #: references to the old Gate objects.
-_HOT = ("factory.readiness", "factory.board", "factory.lanes", "factory.schedule")
+_HOT = ("factory.readiness", "factory.board", "factory.lanes", "factory.schedule", "factory.goals", "factory.roadmap")
 
 _RELOADED_AT = None
 _RELOAD_MSG = None
@@ -1075,6 +1077,216 @@ def render(when: datetime.datetime, tab: str = "gates") -> str:
           'breaks the build rather than quietly shrinking.</p>')
         w('</div>')
 
+    if tab == "roadmap":
+        # ------------------------------------------------------------------ roadmap
+        # Everything here is a JOIN over board(), not a task list. `board()` already computes
+        # DONE/READY/BLOCKED per gate and its own docstring states the rule this tab renders:
+        # everything READY is parallelisable BY DEFINITION. So the sequence is not drawn, and a
+        # roadmap whose steps were typed by hand would look identical if the project changed —
+        # which is this repo's test for a figure that is only decoration.
+        wv = roadlib.waves()
+        ch = roadlib.chain()
+        tm = roadlib.teams()
+        acts = roadlib.actions()
+        contras = roadlib.contradictions()
+        up = roadlib.unplaced()
+        done_n = len(wv[0]["gates"])
+        ready_n = len(wv[1]["gates"])
+        blocked_n = len(wv[2]["gates"])
+        tot = done_n + ready_n + blocked_n
+
+        w('<div class="head" style="margin-top:44px">')
+        w('<h1>Roadmap</h1>')
+        w(f'<div class="sub">{done_n} of {tot} gates done &middot; '
+          f'<b>{ready_n} can start right now, in parallel</b> &middot; {blocked_n} blocked '
+          f'&middot; re-measured just now</div>')
+        w('</div>')
+
+        # ---- the headline claim, and it is computed ------------------------------------------
+        w('<div class="par" style="margin-top:14px">')
+        w('<h3 style="margin-top:0">How much of this is parallel</h3>')
+        w(f'<p style="font-size:13px;color:var(--ink2);margin:0"><b>{ready_n} of the '
+          f'{ready_n + blocked_n} remaining gates have every dependency already satisfied.</b> '
+          f'They are parallelisable by definition &mdash; not by a scheduling judgement someone '
+          f'made, but because READY <i>means</i> nothing is left to wait for. The only thing '
+          f'capping how many run at once is people and machines, not the dependency graph.</p>')
+        w(f'<p style="font-size:12.5px;color:var(--ink3);margin:8px 0 0">Derived from '
+          f'<code>factory/board.py::board()</code> on this request. Add a gate and it appears '
+          f'here; make one pass and it leaves. There is no list to maintain.</p>')
+        w('</div>')
+
+        # ---- the critical path ---------------------------------------------------------------
+        if ch:
+            w('<div class="par" style="margin-top:12px;border-color:var(--fail)">')
+            w('<h3 style="margin-top:0">The chain parallelism cannot remove</h3>')
+            hops = []
+            for i, h in enumerate(ch):
+                col = {"DONE": "var(--pass)", "READY": "var(--ink)",
+                       "BLOCKED": "var(--ink3)"}.get(h["status"], "var(--ink3)")
+                arrow = ('<span style="color:var(--ink3);margin:0 8px">&rarr;</span>'
+                         if i else "")
+                hops.append(
+                    f'{arrow}<span style="font-family:ui-monospace,monospace;font-size:13px;'
+                    f'padding:3px 9px;border:1px solid {col};border-radius:3px;color:{col}">'
+                    f'{e(h["id"])}<span style="font-size:10.5px;opacity:.75"> '
+                    f'{e(h["status"] or "?")}</span></span>')
+            w(f'<div style="margin:4px 0 8px">{"".join(hops)}</div>')
+            w('<p style="font-size:12.5px;color:var(--ink3);margin:0">The longest chain of unmet '
+              'dependencies. Every other gate can be worked around it; this one is strictly '
+              'sequential, so it sets the floor on how fast the whole board can finish no matter '
+              'how many run in parallel.</p>')
+            w('</div>')
+
+        # ---- ⭐ computed contradictions --------------------------------------------------------
+        # A gate DONE while a gate it declares a dependency on has not passed. Exactly one of two
+        # things is true and both matter. This panel appears only when the condition holds.
+        if contras:
+            w('<div class="par" style="margin-top:12px;border-color:var(--fail)">')
+            w(f'<h3 style="margin-top:0">&#9888; {len(contras)} gate(s) pass while a dependency '
+              f'they declare does not</h3>')
+            for c in contras:
+                pairs = ", ".join(f"<code>{e(k)}</code> is {e(str(v))}"
+                                  for k, v in c["unmet_verdicts"].items())
+                w(f'<p style="font-size:13px;color:var(--ink2);margin:0 0 6px">'
+                  f'<code><b>{e(c["id"])}</b></code> is <b style="color:var(--pass)">PASS</b>, '
+                  f'but it depends on {pairs}.</p>')
+            w('<p style="font-size:12.5px;color:var(--ink3);margin:8px 0 0">'
+              '<b>Exactly one of these is true, and neither is harmless.</b> Either the edge is '
+              'wrong &mdash; we asserted a prerequisite that is not really one, and the roadmap '
+              'is sequencing work that could already have started &mdash; or <b>the pass is '
+              'vacuous</b>: the gate is green over the thing it is named for. This estate has been '
+              'bitten by the second before, when three gates passed over an intact control-plane '
+              'defect and the readiness count did not move. <b>A check that would still pass with '
+              'the function body deleted is not measuring the function</b>, and a check that does '
+              'not need its own prerequisite earns the same suspicion.</p>')
+            w('<p style="font-size:12px;color:var(--ink3);margin:8px 0 0">Computed on every load '
+              'from <code>roadmap.contradictions()</code>. This panel disappears by itself when '
+              'the condition stops holding &mdash; it is not a note somebody left.</p>')
+            w('</div>')
+
+        # ---- the waves -------------------------------------------------------------------------
+        for band in wv:
+            if not band["gates"]:
+                continue
+            col = {"DONE": "var(--pass)", "READY": "var(--ink)",
+                   "BLOCKED": "var(--ink3)"}[band["key"]]
+            w('<section class="phase" style="margin-top:14px"><header>')
+            w(f'<h2 style="color:{col}">{e(band["title"])}</h2>'
+              f'<span class="count">{len(band["gates"])}</span>')
+            w('</header>')
+            w(f'<p style="font-size:12.5px;color:var(--ink3);margin:0 0 10px">'
+              f'{e(band["why"])}</p>')
+            for g in band["gates"]:
+                unl = (f' &middot; unlocks <code>{e(", ".join(g["unlocks"]))}</code>'
+                       if g["unlocks"] else "")
+                wait = (f' &middot; waits on <code style="color:var(--fail)">'
+                        f'{e(", ".join(g["unmet"]))}</code>' if g["unmet"] else "")
+                w(f'<div style="padding:7px 0;border-top:1px solid var(--rule)">'
+                  f'<code style="font-size:13px;color:{col}"><b>{e(g["id"])}</b></code>'
+                  f'<span style="font-size:11.5px;color:var(--ink3);margin-left:8px">'
+                  f'{e(g["phase"])}</span>{unl}{wait}'
+                  f'<div style="font-size:12.5px;color:var(--ink2);margin-top:3px">'
+                  f'{e(g["headline"])}</div></div>')
+            w('</section>')
+
+        # ---- the two named teams ---------------------------------------------------------------
+        w('<div class="head" style="margin-top:36px"><h1>The two agent teams</h1>')
+        w('<div class="sub">the end states someone named out loud &mdash; '
+          '<b>AUTHORED</b>, because no probe can infer a goal</div></div>')
+        for t_ in tm:
+            if t_["basis"] == "UNGATED":
+                w('<div class="par" style="margin-top:12px;border-color:var(--unmeas)">')
+                w(f'<h3 style="margin-top:0">{e(t_["team"])} '
+                  f'<span style="font-weight:400;color:var(--unmeas);'
+                  f'font-family:ui-monospace,monospace;font-size:13px">UNGATED</span></h3>')
+                w(f'<p style="font-size:13px;color:var(--ink2);margin:0">{e(t_["intent"])}</p>')
+                w(f'<p style="font-size:12.5px;color:var(--unmeas);margin:8px 0 0">'
+                  f'{e(t_["unblock"])}</p>')
+                w('<p style="font-size:12px;color:var(--ink3);margin:8px 0 0">'
+                  'Shown as <b>UNGATED</b>, deliberately not as 0%. "Nothing is measuring this" '
+                  'and "this is measured at zero" are different claims and only one of them is '
+                  'about the work.</p>')
+                w('</div>')
+                continue
+            frac = t_["passing"] / t_["total"] if t_["total"] else 0
+            col = "var(--pass)" if frac == 1 else ("var(--unmeas)" if frac else "var(--fail)")
+            w('<div class="par" style="margin-top:12px">')
+            w(f'<h3 style="margin-top:0">{e(t_["team"])} '
+              f'<span style="font-weight:400;color:{col};font-family:ui-monospace,monospace;'
+              f'font-size:13px">{t_["passing"]} of {t_["total"]}</span></h3>')
+            w(f'<div style="height:7px;background:var(--rule);border-radius:3px;margin:6px 0 8px">'
+              f'<div style="height:7px;width:{frac*100:.1f}%;background:{col};border-radius:3px">'
+              f'</div></div>')
+            w(f'<p style="font-size:13px;color:var(--ink2);margin:0">{e(t_["intent"])}</p>')
+            chips = " ".join(
+                f'<span style="font-family:ui-monospace,monospace;font-size:11.5px;padding:1px 6px;'
+                f'border:1px solid var(--rule);border-radius:2px;color:'
+                f'{"var(--pass)" if x["verdict"] == "PASS" else ("var(--ink)" if x["status"] == "READY" else "var(--ink3)")}">'
+                f'{e(x["id"])}</span>' for x in t_["gates"])
+            w(f'<div style="margin-top:8px">{chips}</div>')
+            if t_["ready_now"]:
+                w(f'<p style="font-size:12.5px;color:var(--ink2);margin:8px 0 0">'
+                  f'<b>Startable today:</b> <code>{e(", ".join(t_["ready_now"]))}</code> '
+                  f'&mdash; nothing upstream is holding them.</p>')
+            if t_["blocked_on"]:
+                w(f'<p style="font-size:12.5px;color:var(--ink3);margin:6px 0 0">'
+                  f'Named blocker: <code>{e(t_["blocked_on"])}</code>.</p>')
+            w('</div>')
+
+        # ---- the eighteen decided actions -------------------------------------------------------
+        gated = sum(1 for a in acts if a["basis"] == "MEASURED")
+        w('<div class="head" style="margin-top:36px"><h1>The eighteen decided actions</h1>')
+        w(f'<div class="sub">from SYNTHESIS &sect;12.8, &sect;13.7 and &sect;14.7 &middot; '
+          f'{gated} of {len(acts)} have a gate that can check them</div></div>')
+        w('<div class="par" style="margin-top:12px;border-color:var(--unmeas)">')
+        w('<p style="font-size:12.5px;color:var(--ink2);margin:0"><b>Each was written the day its '
+          'own pass landed, and none knew what the others would say.</b> Nobody has checked that '
+          'they are consistent with each other or that the order is right &mdash; that is R16\'s '
+          'job and R16 is correctly held until R13 run 2 and R14 land. Treat the set as decided, '
+          'not as verified.</p>')
+        w(f'<p style="font-size:12px;color:var(--ink3);margin:8px 0 0">Where an action has a '
+          f'<b>gate</b>, its state comes from the gate and is labelled <b>MEASURED</b>. The other '
+          f'{len(acts) - gated} carry an <b>AUTHORED</b> state, which is a person\'s claim and is '
+          f'styled to look weaker because it is.</p>')
+        w('</div>')
+        _ASTATE = {"SHIPPED": "var(--pass)", "DECIDED": "var(--ink2)",
+                   "SUPERSEDED": "var(--ink3)"}
+        for a in acts:
+            col = _ASTATE.get(a["state"], "var(--ink3)")
+            bas = ('<span style="font-size:10.5px;padding:1px 5px;border-radius:2px;'
+                   'background:var(--ink);color:var(--paper)">MEASURED</span>'
+                   if a["basis"] == "MEASURED" else
+                   '<span style="font-size:10.5px;padding:1px 5px;border:1px solid var(--rule);'
+                   'border-radius:2px;color:var(--ink3)">AUTHORED</span>')
+            gtxt = (f' &middot; gate <code>{e(a["gate"])}</code> is {e(str(a["verdict"]))}'
+                    if a["gate"] else "")
+            w(f'<div style="padding:9px 0;border-top:1px solid var(--rule)">'
+              f'<span style="font-family:ui-monospace,monospace;font-size:11.5px;color:{col};'
+              f'font-weight:600">{e(a["state"])}</span> {bas} '
+              f'<span style="font-size:11.5px;color:var(--ink3)">{e(a["source"])}</span>{gtxt}'
+              f'<div style="font-size:13px;color:var(--ink2);margin-top:3px">'
+              f'{e(a["text"])}</div>')
+            if a["note"]:
+                w(f'<div style="font-size:12px;color:var(--ink3);margin-top:5px;'
+                  f'padding-left:10px;border-left:2px solid var(--rule)">'
+                  f'{e(a["note"])}</div>')
+            w('</div>')
+
+        # ---- the honest denominator ------------------------------------------------------------
+        w('<div class="par" style="margin-top:16px;border-color:var(--unmeas)">')
+        w('<h3 style="margin-top:0">&#9888; What this roadmap does not account for</h3>')
+        w(f'<p style="font-size:13px;color:var(--ink2);margin:0">The three goals and the two teams '
+          f'together span <b>{up["placed"]} of {up["total"]}</b> gates. '
+          f'<b>{len(up["unplaced"])} belong to no goal and no team</b>: '
+          f'<code>{e(", ".join(up["unplaced"]))}</code></p>')
+        w('<p style="font-size:12px;color:var(--ink3);margin:8px 0 0">'
+          'Stated because <b>a roadmap implies completeness and this one does not have it.</b> '
+          'A gate on no roadmap is work nobody is counting toward anything &mdash; and several of '
+          'these are load-bearing: <code>cost</code> blocks <code>ceiling</code>, '
+          '<code>from-history</code> blocks <code>finishes</code>, and <code>checks</code> blocks '
+          '<code>refuses</code>. They are not offcuts; they are unplaced.</p>')
+        w('</div>')
+
     if tab == "flow":
         # ------------------------------------------------------------------ flow
         # The readiness graph, laid out from the gate list and the dependency map rather than
@@ -1613,7 +1825,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             print(f"  hot reload: {_RELOAD_MSG[1]}")
             return
         route = {"/": "gates", "/index.html": "gates", "/flow": "flow",
-                 "/goals": "goals",
+                 "/goals": "goals", "/roadmap": "roadmap",
                  "/lanes": "lanes", "/sessions": "sessions", "/research": "research",
                  "/handoff": "handoff"}.get(self.path.rstrip("/") or "/")
         if route is None:
@@ -1655,8 +1867,16 @@ def main(argv=None) -> int:
             webbrowser.open(url)
         return 0
 
-    socketserver.TCPServer.allow_reuse_address = True
-    with socketserver.TCPServer(("127.0.0.1", port), Handler) as httpd:
+    # THREADED, deliberately. A plain TCPServer serialises every request, so a browser's
+    # favicon fetch — or a second person looking at the same page — queues behind a render that
+    # takes tens of seconds, and the tab shows nothing but a spinner the whole time. The page is
+    # for watching several sessions at once; a server that can only answer one viewer at a time
+    # is the wrong shape for that.
+    class _Threaded(socketserver.ThreadingTCPServer):
+        daemon_threads = True        # ctrl-c must not hang on an in-flight render
+        allow_reuse_address = True
+
+    with _Threaded(("127.0.0.1", port), Handler) as httpd:
         url = f"http://127.0.0.1:{port}/"
         print(f"readiness tracker on {url}")
         print("every refresh re-runs all probes against the repos as they are now")
