@@ -95,13 +95,19 @@ Run 1 gave targets from user-perception guidelines and named no mechanism. We ha
 the real thing:
 
 ```
-factory.readiness.measure()   30 gates, 9.3 SECONDS, serial
-                              the loop is: for g in GATES: g.probe()
-                              probes are independent and I/O-bound
+factory.readiness.measure()   30 gates, 9.39 SECONDS, serial
+  suite                       9.16 s  = 97.6%  <-- shells out to `python -m pytest`
+  the other 29 gates          0.23 s  =  2.4%
 the server                    socketserver.TCPServer — single-threaded,
                               so two concurrent requests return EMPTY
-an 8-wide pool                would put a page near 1.2 s
 ```
+
+⚠ **We had this wrong and are telling you so, because the wrong version is the obvious one.** We
+first reasoned "30 independent I/O-bound probes, an 8-wide pool, 9.3/8 = 1.2 s". **That is wrong by
+about eight times.** One gate shells out to a full pytest subprocess; it is a single indivisible
+task, and **parallel speedup floors at the slowest task, not at total÷width.** A pool takes this
+from 9.39 s to 9.16 s. **Do not recommend concurrency here** — it is the intuitive answer and it is
+worth almost nothing.
 
 The hard constraint that makes this interesting: **we forbid a silently cached figure.** A surface
 that can quietly show yesterday's state is the drift this project exists to remove, so every number
@@ -109,9 +115,15 @@ must be able to say how old it is.
 
 **So: what buys what, in milliseconds, against those numbers?** Dependency-tracked invalidation,
 event-sourcing, virtualisation, optimistic rendering, push — run 1 listed them all and costed none.
-Give us the order to apply them in and the effect to expect from each. **If the honest answer is
-"parallelise the probes and stop, the rest is premature", say that** — it is a more useful answer
-than an architecture.
+
+⭐ **The real question, given the shape above, is what to do about one 9-second task that cannot be
+subdivided.** Take it out of the request path and cache it against the git SHA of the code it tests?
+Run it on a schedule and render it with its age attached — which our own *"a cached figure carries
+its age in the same string"* rule permits? Something else? **That single decision is worth more than
+every other technique on the list combined, and we want it costed and argued.**
+
+If the honest answer is "cache the suite result and stop, the rest is premature", say that — it is
+more useful than an architecture.
 
 ### 2.3 ⭐ The contradiction run 1 did not notice
 

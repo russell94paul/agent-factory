@@ -828,10 +828,18 @@ Three defects, recorded here so they do not harden into fact:
 
 ⚠ **Its desktop-app recommendation should not be acted on**, and not because it is wrong in
 principle: it is unaffordable in time, and the page it would replace is slow for a reason that is
-now measured. `measure()` runs 30 gates **serially in 9.3 s**; the loop is `for g in GATES:
-g.probe()` over independent I/O-bound probes, and the server is `socketserver.TCPServer`. An 8-wide
-pool puts a page near **1.2 s**. That is ~30 lines against the surface we already have, and
-`terminal-configuration.md` §2 already specifies it.
+now measured. `measure()` runs 30 gates **serially in 9.39 s** and the server is `socketserver.TCPServer`.
+
+⚠ **A correction to what this section first said, and it was mine.** It claimed *"an 8-wide pool
+puts a page near 1.2 s… ~30 lines"*. **Wrong by about eight times.** The probes are not 30 uniform
+I/O-bound tasks: gate `suite` shells out to a full `python -m pytest` subprocess and takes **9.16 s
+— 97.6% of the total**, with the other 29 gates summing to 0.23 s. **Parallel speedup floors at the
+slowest single task, not at total÷width**, so a pool of any size takes this from 9.39 s to 9.16 s.
+
+The fix is architectural, not concurrency: **take the suite out of the request path**, cache it
+against the git SHA of `tests/` and `factory/`, and render it with its age attached — which the
+no-silent-cache rule permits, because the age travels with the figure. Recorded as F77 by the
+session that caught it; confirmed independently here at 97.6%.
 
 ### 13.6 ⛔ R12 and R15 contradict each other on the load-bearing fact — unresolved
 
