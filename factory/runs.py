@@ -36,6 +36,8 @@ import pathlib
 import subprocess
 from typing import List, Optional
 
+from . import repo as _repo
+
 FINISHED, REFUSED, ABANDONED = "FINISHED", "REFUSED", "ABANDONED"
 RECORDED, RECONSTRUCTED, NOT_RECORDED = "RECORDED", "RECONSTRUCTED", "NOT-RECORDED"
 MEASURED = "MEASURED"
@@ -44,21 +46,13 @@ TRANSCRIPTS = pathlib.Path.home() / ".claude" / "projects"
 
 
 def _primary() -> pathlib.Path:
-    """The primary worktree — the one shared root every lane can agree on.
+    """The primary worktree. Kept as a name because callers and tests use it.
 
-    Falls back to this file's repo root when git cannot answer, which is the right failure: a
-    ledger in the wrong place is recoverable, a crash on import is not.
+    The implementation moved to `factory.repo` — this was the ONLY correct copy of this logic in
+    the repo, while `claims` and `worktrees` each had a broken one. Leaving it private here is
+    what let those two stay wrong.
     """
-    here = pathlib.Path(__file__).resolve().parent.parent
-    try:
-        p = subprocess.run(["git", "-C", str(here), "worktree", "list", "--porcelain"],
-                           capture_output=True, text=True, timeout=30)
-        for line in (p.stdout or "").splitlines():
-            if line.startswith("worktree "):
-                return pathlib.Path(line[len("worktree "):].strip())
-    except Exception:                                              # noqa: BLE001
-        pass
-    return here
+    return _repo.primary()
 
 
 def path() -> pathlib.Path:

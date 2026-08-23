@@ -28,7 +28,13 @@ import re
 import subprocess
 from typing import Dict, List, Optional, Tuple
 
-REPO = pathlib.Path(__file__).resolve().parent.parent
+from . import repo as _repo
+
+# ⚠ The PRIMARY worktree, never `__file__.parent.parent`. Run from inside a lane worktree the
+# latter resolves to that worktree, so ROOT becomes `<primary>/.worktrees/<lane>/.worktrees`,
+# `existing()` matches nothing, and `is_dirty()` reports a dirty tree as clean — a gate that
+# cannot refuse, feeding `finish.checks()`. Reproduced 2026-08-23; see factory/repo.py.
+REPO = _repo.primary()
 ROOT = REPO / ".worktrees"
 BRANCH_PREFIX = "lane/"
 _SAFE = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
