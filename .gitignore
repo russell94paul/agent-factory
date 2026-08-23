@@ -23,3 +23,6 @@ docs/research/R13-evidence-pack.md
 
 # Generated evidence bundle for R14. Rebuild with scripts/build_r14_pack.py.
 docs/research/R14-evidence-pack.md
+
+# Generated evidence bundle for R16. Rebuild with scripts/build_r16_pack.py.
+docs/research/R16-evidence-pack.md

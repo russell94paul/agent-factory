@@ -263,12 +263,25 @@ def order(research=None, answers=None, syn_unreconciled=None) -> List[Dict[str, 
         # rewritten for a run 2 that has not been sent. None of the five states expresses that —
         # they describe a prompt, and this is a fact about its NEXT run — so the run log is asked.
         # Without this the board says "nothing to do" while a rewritten prompt sits unsent.
+        # NOT `rows` — that is the accumulator two lines up, and shadowing it made every
+        # iteration replace the result list with this prompt's run log, then append a verdict to
+        # it. The sort then hit a run-log dict with no "rank". Caught immediately; naming it.
+        log_rows = run_log(prompts(research).get(rid, pathlib.Path("/nonexistent")))
         pending = any((r.get("dispatched") or "").strip().lower() in ("pending", "tbd", "")
-                      for r in run_log(prompts(research).get(rid, pathlib.Path("/nonexistent"))))
+                      for r in log_rows)
+        # A prompt can be written, unsent, and deliberately NOT ready to send — R16 reviews the
+        # decision record and must wait until the last two answers are reconciled, or it reviews a
+        # record about to change twice. Without this the board says "send it" about the one prompt
+        # whose own header says do not.
+        held = any("blocked" in (r.get("dispatched") or "").strip().lower() for r in log_rows)
         if rid in syn_unreconciled:
             rank, action, why = 1, "reconcile it into SYNTHESIS", (
                 "answered, and filed after the synthesis was last written — the answer is paid for "
                 "and not yet banked")
+        elif held:
+            rank, action, why = 5, "hold — not ready to send", (
+                "written, and its own run log says blocked: sending it now would review a record "
+                "that is about to change")
         elif pending and st == ANSWERED:
             rank, action, why = 2, "send the next run", (
                 "answered once, and a further run is written and waiting on you — the run log says "
@@ -276,5 +289,5 @@ def order(research=None, answers=None, syn_unreconciled=None) -> List[Dict[str, 
         else:
             rank, action, why = _ACTION.get(st, (6, "?", ""))
         rows.append({"id": rid, "state": st, "rank": rank, "action": action, "why": why,
-                     "runs": len(run_log(prompts(research).get(rid, pathlib.Path("/nonexistent"))))})
+                     "runs": len(log_rows)})
     return sorted(rows, key=lambda r: (r["rank"], int(r["id"][1:])))
