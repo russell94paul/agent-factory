@@ -73,9 +73,15 @@ def test_the_research_tab_offers_only_unanswered_prompts(research_page):
     being advertised, with no list to maintain by hand.
     """
     import pathlib
+
+    from factory.dispatch import prompts
+
     rdir = pathlib.Path(lt.FACTORY) / "docs" / "research"
     adir = rdir / "answers"
-    for f in rdir.glob("R[0-9]*.md"):
+    # Ask the canonical function which files are prompts rather than re-globbing. This test used
+    # its own `R[0-9]*.md` and so counted a generated evidence pack as a prompt and demanded the
+    # tab advertise it. Three places encoded "what is a prompt"; now one does.
+    for f in prompts(rdir).values():
         stem = f.name.split("-")[0]
         answered = any(a.name.startswith(f"{stem}-answer") for a in adir.glob("*.md"))
         offered = f'data-copy="rs-{f.stem}"' in research_page

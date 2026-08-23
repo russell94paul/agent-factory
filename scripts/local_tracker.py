@@ -978,7 +978,11 @@ def render(when: datetime.datetime, tab: str = "gates") -> str:
         adir = rdir / "answers"
         pending = []
         if rdir.is_dir():
-            for f in sorted(rdir.glob("R[0-9]*.md")):
+            # Skip generated evidence packs: they match this glob, are hundreds of KB, and
+            # embed this file's own source — which is how the tab-leak guard went red on a string
+            # from local_tracker.py rather than from any lane content.
+            for f in sorted(x for x in rdir.glob("R[0-9]*.md")
+                            if not x.stem.upper().endswith("-EVIDENCE-PACK")):
                 # R[0-9]* not R* — the plain glob matched README.md and offered it as a research
                 # prompt. A directory scan is only as good as its pattern.
                 stem = f.name.split("-")[0]

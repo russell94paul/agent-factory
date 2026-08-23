@@ -78,6 +78,11 @@ def prompts(research: pathlib.Path | None = None) -> Dict[str, pathlib.Path]:
     for f in sorted(root.glob("R[0-9]*.md")):
         if "SUPERSEDED" in f.stem.upper():
             continue
+        # A generated evidence pack sits in this directory and matches this glob. Today the real
+        # prompt wins only because `R13-architecture-…` sorts before `R13-evidence-pack` and this
+        # loop uses setdefault — rename either file and the pack becomes the prompt, silently.
+        if f.stem.upper().endswith("-EVIDENCE-PACK"):
+            continue
         m = _PROMPT.match(f.name)
         if m:
             out.setdefault(m.group(1).upper(), f)
