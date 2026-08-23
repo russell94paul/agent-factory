@@ -1,7 +1,14 @@
-"""Session cards — a handoff somebody can pick up, and the order sessions must run in.
+"""Work-session cards — a handoff somebody can pick up, and the order sessions must run in.
 
-    python -m factory.sessions          # the running order, and why it is what it is
-    python -m factory.sessions --cards  # what has been handed off so far
+⚠ **A "session" here is a unit of WORK, not a running process.** `factory.sessions` is a
+different module about live Claude Code CLI sessions — pids, liveness, transcripts. Both
+were written independently on separate lanes and both were called `sessions`; git reported
+the collision only as an add/add conflict, which is the weakest possible warning for two
+features quietly claiming one name. This one was renamed because the substrate already owns
+the word: ~/.claude/sessions/<pid>.json is not ours to redefine.
+
+    python -m factory.workplan          # the running order, and why it is what it is
+    python -m factory.workplan --cards  # what has been handed off so far
 
 A handoff that lives only in a terminal has not been handed anywhere. `factory.handoff`
 already *generates* one from measured state; this posts it as a **card** that outlives the

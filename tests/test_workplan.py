@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import pytest
 
-from factory import sessions as S
+from factory import workplan as S
 from factory.board import DEPENDS
 from factory.lanes import LANES
 
@@ -35,7 +35,7 @@ def test_ordering_is_derived_not_declared():
     src = (S.__file__ and open(S.__file__, encoding="utf-8").read())
     for lane in LANES:
         assert f'"{lane.id}": [' not in src, (
-            f"{lane.id!r} appears as a literal edge list in sessions.py — the ordering is "
+            f"{lane.id!r} appears as a literal edge list in workplan.py — the ordering is "
             f"supposed to be derived from board.DEPENDS, not restated here")
 
 

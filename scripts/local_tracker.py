@@ -38,20 +38,20 @@ from factory import claims as claimlib  # noqa: E402
 from factory import operator as opans  # noqa: E402
 from factory import worktrees as wt  # noqa: E402
 from factory import handoff as ho  # noqa: E402
-from factory import sessions as se  # noqa: E402
+from factory import workplan as wp  # noqa: E402
 
 OUT = FACTORY / "tracker.html"
 
 #: (key, href, label). The key is what render() switches on.
 TABS = [("gates", "/", "Gates"), ("lanes", "/lanes", "Lanes"),
-        ("sessions", "/sessions", "Sessions"),
+        ("plan", "/plan", "Plan"),
         ("research", "/research", "Research"), ("handoff", "/handoff", "Handoff")]
 
 #: Modules whose source can change while the server is running, newest-dependency-last: board and
 #: lanes both import from readiness, so readiness must be reloaded before them or they keep
 #: references to the old Gate objects.
 _HOT = ("factory.readiness", "factory.board", "factory.lanes", "factory.schedule",
-        "factory.sessions")
+        "factory.workplan")
 
 _RELOADED_AT = None
 _RELOAD_MSG = None
@@ -874,18 +874,18 @@ def render(when: datetime.datetime, tab: str = "gates") -> str:
                   f'{a.stat().st_size:,} bytes</p>')
                 w('</div>')
 
-    if tab == "sessions":
+    if tab == "plan":
         w('<div class="head" style="margin-top:34px">')
-        w('<h1>Sessions</h1>')
+        w('<h1>Plan</h1>')
         w('<div class="sub">Every session carries a <b>title</b> and a <b>description</b> so '
           'you can tell what one is about without opening it. Order, blockers and collisions '
           'are all <b>derived</b> &mdash; nothing on this page is a hand-maintained list.</div>')
         w('</div>')
 
         try:
-            order = se.running_order()
-            aft = se.after()
-            sess = se.sessions()
+            order = wp.running_order()
+            aft = wp.after()
+            sess = wp.sessions()
         except Exception as exc:                                   # noqa: BLE001
             w(f'<div class="card" style="border-color:var(--fail)">'
               f'<b>The session graph will not build:</b> {e(exc)}</div>')
@@ -926,20 +926,20 @@ def render(when: datetime.datetime, tab: str = "gates") -> str:
                   f'That is mutual exclusion, <b>not</b> ordering: either order is fine.</div>')
             if s.needs_paul:
                 w(f'<div style="font-size:12px;margin-top:6px">needs Paul: {e(s.needs_paul)}</div>')
-            posted = se.cards(session=s.id)
+            posted = wp.cards(session=s.id)
             if posted:
                 w(f'<div style="font-size:12px;margin-top:8px;color:var(--ink2)">'
                   f'{len(posted)} handoff card(s), latest {e(posted[0].created[:16])}</div>')
             w('</div>')
 
-        orphan = se.unowned_gates()
+        orphan = wp.unowned_gates()
         if orphan:
             w(f'<div class="card" style="margin-top:14px;border-color:var(--fail)">'
               f'<b>{len(orphan)} gate(s) belong to no session:</b> '
               f'<code>{e(", ".join(orphan))}</code><br>Nothing schedules them, so running every '
               f'lane on this page still leaves them undone.</div>')
 
-        for c in se.cards():
+        for c in wp.cards():
             w('<div class="card" data-card="handoff" style="margin-top:14px;'
               'border-left:3px solid var(--pass);padding-left:12px">')
             w(f'<div style="font-size:12px;color:var(--ink2)">posted {e(c.created[:16])} '
@@ -1086,14 +1086,14 @@ class Handler(http.server.BaseHTTPRequestHandler):
             _HANDOFF_NOTE = (f.get("note") or [""])[0]
             try:
                 # The title and description are NOT defaulted from anything here. A session
-                # card spans lanes, so nothing can infer what it was about — se.post refuses a
+                # card spans lanes, so nothing can infer what it was about — wp.post refuses a
                 # blank one rather than posting a card whose only content is a timestamp.
-                c = se.post("session", body=ho.session_handoff(_HANDOFF_NOTE),
+                c = wp.post("session", body=ho.session_handoff(_HANDOFF_NOTE),
                             title=(f.get("title") or [""])[0],
                             description=(f.get("description") or [""])[0],
                             author="tracker")
                 _CARD_MSG = f"posted card {c.id} — {c.title}. See the Sessions tab."
-            except se.CardError as exc:
+            except wp.CardError as exc:
                 _CARD_MSG = f"refused: {exc}"
             except Exception as exc:                                # noqa: BLE001
                 _CARD_MSG = f"could not post: {type(exc).__name__}: {exc}"
@@ -1247,7 +1247,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             return
         route = {"/": "gates", "/index.html": "gates",
                  "/lanes": "lanes", "/research": "research",
-                 "/sessions": "sessions",
+                 "/plan": "plan",
                  "/handoff": "handoff"}.get(self.path.rstrip("/") or "/")
         if route is None:
             self.send_error(404)
