@@ -1,8 +1,9 @@
-# Synthesis — what four research passes concluded, and what changes
+# Synthesis — what ten research passes concluded, and what changes
 
 **2026-08-21, extended 2026-08-22.** Eight documents: R1 eval harness, R2 topology, R3 control
 plane, R4 agnostic optimiser (twice), **R5 build velocity**, **R6 automation and alerting**, and —
-added 08-22 — **R7 session manager** (§11, and graded weaker than the rest). This is the decision record. Where the answers disagree, or where they contradict
+added 08-22 — **R7 session manager** (§11, graded weaker than the rest); and — added 08-23 — **R10 wiki
+training**, **R11 concept diff** and **R12 session-manager substrate** (§12). This is the decision record. Where the answers disagree, or where they contradict
 something already built or already said in this session, that is recorded rather than smoothed.
 
 ⚠ **R1–R4 asked about the product. R5–R6 asked about the process that builds it.** They are not
@@ -560,3 +561,178 @@ thing we already have a data model for and have never run.
    moment: *what does rendering a live terminal per session actually buy an operator that progress
    markers, transcripts and a task queue do not?* If the answer is "nothing", say so on the merits —
    that is a stronger result than agreement.
+
+
+---
+
+## 12. R10, R11 and R12 — the passes that all said *stop building* (added 2026-08-23)
+
+Three answers landed together. R8 is still outstanding. R9 was dispatched and **withdrawn** the
+same morning as not useful, so no R9 answer will be filed — if one arrives it is discarded.
+
+### 12.1 The convergence, and it is unanimous
+
+Independently, on three unrelated questions, all three said the same thing: **do not build new
+substrate; fix and use what exists.**
+
+| Pass | Asked | Answered |
+|---|---|---|
+| R10 | should we build a hierarchical wiki + auto-researcher | **No.** "Don't build a fancy hierarchical auto-updating wiki before we fix the basics." |
+| R11 | what do other factories make first-class that we lack | Seven absent concepts, **every one costed as significant engineering**; none recommended now |
+| R12 | build a session manager or adopt one | **Adopt** `doctly/switchboard`, "rather than building a new system" |
+
+That is the same instruction R1–R7 gave about the control plane, arriving from three new
+directions. Treat it as the strongest signal in the document.
+
+### 12.2 ⛔ R12 was answered under a MISSING constraint — the F7 pattern again, and mine again
+
+**§11.1 recorded that the no-in-page-terminal decision stood UNTESTED**, because R7 restated our
+own position instead of challenging it, and §9 item 4 exists to ask it properly.
+
+R12's constraints section listed Windows-first, the three-lane ceiling, small team, per-secret
+human approval, no unlabelled stale numbers, and never removing the instrument panel. **It did not
+carry the no-in-page-terminal constraint at all.** R12 then recommended adopting an Electron app
+whose entire model is an embedded terminal per session rendered in cards.
+
+So R12's "adopt" is **not a refutation of §11.1's "inspiration, not adoption" verdict — it is an
+answer to a different question.** The constraint was never put to it, and an answer cannot respect
+a rule it was not given.
+
+⭐ **This is F7 again, and again it is mine.** F7 was a *false* constraint written into R6's prompt.
+This is a *real* constraint left out of R12's. Same class, opposite sign, same consequence: the
+pass optimised against a world I described rather than the one we have. **Before "adopt
+switchboard" becomes a decision, either the constraint is retired deliberately and in writing, or
+R12 is re-asked with it stated.** Deciding on this answer as it stands would be adopting a
+recommendation that was never told the main objection.
+
+### 12.3 R12's own source-reading contradicts its executive summary — the reading is stronger
+
+R12 did what R7 did not: it read the code and tiered its claims. Its executive summary says
+switchboard "already implements most of the needed features (session discovery, attach/resume,
+notifications, cost tracking)". Its own §2, marked OBSERVED, says otherwise:
+
+| Exec summary claims | What §2 OBSERVED actually found |
+|---|---|
+| attach/resume | **There is no attach.** It only re-uses PTYs *it itself spawned*. A session running outside it is treated as not running, and it **spawns a second process against the same session id** |
+| notifications | Derived by decoding **OSC 9 bells out of the terminal stream**. It never reads `~/.claude/sessions/*.json` — no `kind:bg`, no `jobId`, no `needs` |
+| session discovery | True, but transcript-scan only; **no process-table check**, so liveness is inferred from whether a file is growing |
+| Windows support | **INFERRED, not OBSERVED** — "should run… not empirically verified by us" |
+| extension surface | **No plugin API** (INFERRED, "no plugin code found"). Extending means patching or a custom build |
+
+**Where an answer's evidence contradicts its own summary, the evidence wins.** Two consequences
+follow and neither is in the executive summary:
+
+1. **Adopting switchboard reproduces, by design, the incident that prompted the question.** On
+   2026-08-23 a terminal died, the agent survived it, and a second `--resume` would have created a
+   divergent duplicate. Switchboard *does that on purpose* for any session it did not launch.
+2. **It cannot close the gap R12 itself calls the sharpest.** Four agents were blocked on questions
+   written in plain English in `jobs/<id>/state.json`. Switchboard never reads that file. No amount
+   of adopting fixes a blindness to the field the questions are in.
+
+Where R12 and R7 **agree**, both from source, take it as corroborated: `node-pty` PTYs, transcript
+scanning plus a SQLite cache, Electron, a terminal embedded per session. Two independent passes
+reaching the same reading is the control.
+
+### 12.4 What R12 contributes that is right regardless of adopt-or-build
+
+None of this depends on the switchboard decision:
+
+- **Liveness is four states, not two** — `RUNNING-ATTACHED`, `RUNNING-ORPHANED`,
+  `EXITED-RESUMABLE`, `EXITED-GONE`. `sessions.py` currently distinguishes live from not-live and
+  cannot express an orphan. Build this.
+- **Our failure is alarm *absence*, not alarm fatigue.** The signal exists and is never surfaced.
+  R12's cited basis (NNGroup, REPORTED) is that action-required notifications must interrupt;
+  passive badges are missed. Whatever surfaces `needs`, it must not be a badge nobody looks at.
+- **Cost is meaningless without an outcome to anchor it** — R12 reaches this independently, and it
+  is exactly `factory/metrics.py`'s rule that an activity metric with no paired outcome metric is
+  *refused*. An outside pass reproducing a rule we already enforce is the strongest kind of
+  corroboration available.
+- It **refuses batch-approval of secrets** unprompted, matching our hard rule.
+
+### 12.5 R11 — the concepts we have no name for
+
+Surveyed Anthropic, OpenAI, Google, Microsoft, LangChain, CrewAI, Factory.ai, Sierra, Cursor.
+**ABSENT** from us: structured traces (OTEL GenAI spans), guardrails, a workflow engine, persisted
+memory, a connector registry, task packaging. **DEFERRED:** multi-agent teams.
+
+⭐ **The sharpest is guardrails, because it is a category we do not have at all.** Our readiness
+gates evaluate *finished output*; a guardrail blocks a bad action *before it happens*. That is not
+a stronger gate, it is a different layer — and the control-plane lane has already shipped a defect
+of exactly the shape a guardrail catches: `terminate_prefect_flow_run` sent Prefect CANCELLING
+**before** the ownership check, so the refusal protected the container and never protected the run.
+A post-hoc gate cannot catch that class. **File as a real absence.**
+
+Second: **task packaging** (METR Task Standard — task + environment + scoring as one reproducible
+unit). That is the same question R8 is out asking about isolation tiers, arriving from the
+benchmark side. Read them together when R8 lands.
+
+⚠ **One R11 claim is already overtaken.** It says *"our `deploy.py` just writes an opaque transcript
+log"* and files observability as wholly ABSENT. As of 2026-08-23 the transcript is a **measured
+instrument** — `factory/runs.py` derives per-session tokens, cache traffic, model and wall-clock
+from it. The absence is narrower than R11 states: we lack *structured spans*, not all telemetry.
+
+### 12.6 R10 — the hierarchical wiki, refused, but one mechanism is worth taking
+
+**Verdict: do not build it.** Two reasons, both with evidence:
+
+- **Context degradation.** Accuracy fell ~24% from adding 30k *irrelevant* tokens even with the
+  relevant content present. Our wiki is ~1M tokens — roughly forty times the ~25k threshold where
+  this starts. Pasting it is not a strategy.
+- **Memory laundering.** An unsupervised write-back loop launders hallucinated content into
+  innocuous-sounding prose that still misleads later reasoning. R10's position is that the wiki
+  *will* be corrupted eventually unless every write is verified — and that with verification strong
+  enough to be safe, the loop gains little.
+
+| Mechanism | Verdict |
+|---|---|
+| A — fine-tune on the wiki | **No.** RAG beats unsupervised fine-tuning on new facts (Ovadia et al.); catastrophic-forgetting risk |
+| B — RAG | Partly. Log every retrieved passage; add a hallucination check |
+| C — structured context assembly | **Beneficial, and the strongest number in the answer**: revisions 3.8 → 2.0, first-draft acceptance 32% → 55% |
+| D — memory with write-back | Works only two-tier: **confirmed** (human-verified) vs **proposed** (auto). Never auto-absorb |
+| E — **procedure synthesis into skills** | **Strongly encouraged — the highest-leverage of the five** |
+
+⭐ **The actionable conclusion is E, and it is not the one the question was about.** The leverage is
+in distilling the wiki into *invocable skills*, not in growing a better corpus. That is a direct
+instruction about the estate's existing `~/.claude/skills/` tree.
+
+⚠ **Basis caveat.** R10 attributes its two strongest figures to "Swift et al. 2026" (context
+assembly) and "SkillX" (skill distillation). Neither is linked in the answer, and neither was
+verified here. Treat both as **REPORTED-unverified** until someone reads the source — this
+programme does not let a number travel without its basis, including a number that agrees with us.
+
+### 12.7 What these three could not settle
+
+- **R12:** whether switchboard runs on Windows (INFERRED); whether it can be extended at all
+  (INFERRED — "no plugin code found"); and whether the in-page-terminal constraint should stand,
+  which it was never asked.
+- **R11:** any cost in numbers. "Significant engineering effort" appears repeatedly and is not a
+  figure. Nothing here can be scheduled from the answer alone.
+- **R10:** anything about *our* corpus. Every figure is from published work on other corpora; its
+  own two-week decisive experiment is proposed and has not been run.
+
+### 12.8 What changes in this repo — additions to §8
+
+1. **Do not adopt switchboard on this evidence.** Either retire the no-in-page-terminal constraint
+   deliberately and in writing, or re-ask R12 with it stated (§12.2). The recommendation is not
+   wrong; it is unqualified.
+2. **Build the four liveness states into `factory/sessions.py`** (§12.4). Independent of the
+   decision, and it is what would have made this morning's crash legible.
+3. **Surface `needs` ourselves.** No external tool will: switchboard provably cannot see the field.
+   And make it interrupt rather than badge.
+4. **Record the guardrail gap as a real absence** (§12.5) — a pre-action layer, distinct from the
+   readiness gates, with the CANCELLING-before-ownership-check defect as its worked example.
+5. **Skills over corpus** (§12.6) — the wiki's leverage is procedure synthesis, not retrieval.
+6. **`factory/runs.py` already implements R12's cost-paired-with-outcome direction**, and R11's
+   "observability wholly ABSENT" is narrowed accordingly.
+
+### 12.9 Additions to §9 — follow-ups to ask
+
+5. **R12 thread, and it must be asked before anything is adopted:** *"Our estate has a standing
+   constraint that no terminal is embedded in a page — it was omitted from your brief by mistake.
+   Switchboard renders a live terminal per session. Does your adopt recommendation survive that
+   constraint, and if so what does the embedded terminal buy that a status list and the transcript
+   do not?"* This is §9 item 4 re-aimed, and it is now the load-bearing open question.
+6. **R12 thread:** *"Your §2 says there is no attach and that a session running outside switchboard
+   gets a second process against the same id. That is the failure that prompted this brief. How
+   does 'adopt' survive it?"*
+7. **R10 thread:** *"Give the sources for 'Swift et al. 2026' and SkillX."*
