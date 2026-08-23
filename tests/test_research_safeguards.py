@@ -142,3 +142,66 @@ def test_order_covers_every_prompt_exactly_once(tmp_path):
     ids = [r["id"] for r in dispatch.order(research, answers, syn_unreconciled=set())]
     assert sorted(ids) == ["R1", "R2", "R3"]
     assert len(ids) == len(set(ids))
+
+
+# --------------------------------------------------------------------------- dependencies
+
+
+def test_the_dependency_map_refuses_a_dangling_edge(tmp_path, monkeypatch):
+    """`_validate()` is the whole point: an edge naming a prompt that does not exist is a silent
+    lie about ordering, and it must break the import rather than be quietly skipped."""
+    research = tmp_path / "research"
+    research.mkdir()
+    (research / "R1-x.md").write_text("**Status: NOT DISPATCHED.**\n", encoding="utf-8")
+    monkeypatch.setitem(dispatch.DEPENDS, "R1", ["R99"])
+    with pytest.raises(ValueError, match="not a prompt"):
+        dispatch._validate(research)
+
+
+def test_the_real_dependency_map_is_not_stale():
+    """Live gate. Every edge in DEPENDS names a prompt that exists right now."""
+    dispatch._validate()
+
+
+def test_a_dependency_answered_once_but_owing_a_run_is_NOT_satisfied(tmp_path):
+    """The flaw the graph caught in its own first version.
+
+    R13 was ANSWERED from run 1 while run 2 was rewritten and pending, and the first `blocked_by`
+    cleared R16 on the strength of the stale run. A dep is met only when it is answered AND owes
+    no further run.
+    """
+    research = tmp_path / "research"
+    answers = research / "answers"
+    answers.mkdir(parents=True)
+    (research / "R1-dep.md").write_text(
+        "**Status: ANSWERED.**\n\n## Run log\n\n| Run | Dispatched | Outcome |\n|---|---|---|\n"
+        "| 2 | pending | rewritten |\n| 1 | 2026-08-23 | filed |\n", encoding="utf-8")
+    (answers / "R1-answer-dep.md").write_text("a", encoding="utf-8")
+    (research / "R2-waiter.md").write_text("**Status: NOT DISPATCHED.**\n", encoding="utf-8")
+
+    import factory.dispatch as D
+    D.DEPENDS["R2"] = ["R1"]
+    try:
+        assert D.state(research, answers)["R1"] == D.ANSWERED, "R1 is answered..."
+        assert D.blocked_by("R2", research, answers) == ["R1"], (
+            "...and still owes run 2, so it does NOT satisfy the dependency")
+    finally:
+        D.DEPENDS.pop("R2", None)
+
+
+def test_a_fully_settled_dependency_is_satisfied(tmp_path):
+    research = tmp_path / "research"
+    answers = research / "answers"
+    answers.mkdir(parents=True)
+    (research / "R1-dep.md").write_text(
+        "**Status: ANSWERED.**\n\n## Run log\n\n| Run | Dispatched | Outcome |\n|---|---|---|\n"
+        "| 1 | 2026-08-23 | filed |\n", encoding="utf-8")
+    (answers / "R1-answer-dep.md").write_text("a", encoding="utf-8")
+    (research / "R2-waiter.md").write_text("**Status: NOT DISPATCHED.**\n", encoding="utf-8")
+
+    import factory.dispatch as D
+    D.DEPENDS["R2"] = ["R1"]
+    try:
+        assert D.blocked_by("R2", research, answers) == []
+    finally:
+        D.DEPENDS.pop("R2", None)

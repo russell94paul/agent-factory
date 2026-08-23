@@ -242,6 +242,72 @@ _ACTION = {
 }
 
 
+# ---------------------------------------------------------------------------------------------
+# Which prompts must not be sent before which others.
+#
+# Prompts have depended on each other since R2 and the dependency has only ever lived in prose,
+# inside the prompt, where nothing reads it. That cost real money: R16 sat on the board reading
+# "send it" while its own header said do not, and the first fix for that sniffed the word
+# "blocked" out of a run-log cell — a string match standing in for a graph.
+#
+# `board.py` already solved this for gates: an authored map, validated on import, so a renamed
+# gate breaks the build instead of leaving a dangling edge. Same pattern, same reason.
+#
+# ⚠ **This is a BLOCKING order, not an ownership split.** That two prompts must not answer each
+# other's questions is a different relation, it lives in each prompt's neighbours table, and no
+# edge here expresses it. Do not encode overlap as a dependency — a pass that merely must not
+# duplicate another is free to run at the same time, and serialising it would cost days for a
+# coupling better handled with a sentence.
+DEPENDS: Dict[str, List[str]] = {
+    # R3 asks how to search a configuration space; R2 decides what that space contains, so R3
+    # written before R2 landed would have searched the wrong thing. Both answered; kept as the
+    # record of why the ordering existed.
+    "R3": ["R2"],
+    # R16 reviews the decisions the whole programme produced. Sent before the last two answers are
+    # in, it reviews a record that is about to change twice.
+    "R16": ["R13", "R14"],
+}
+
+
+def _validate(research: pathlib.Path | None = None) -> None:
+    """Every edge must name a prompt that exists. A dangling edge is a silent lie about ordering."""
+    ids = set(prompts(research))
+    bad = []
+    for k, vs in DEPENDS.items():
+        if k not in ids:
+            bad.append(f"DEPENDS key {k!r} is not a prompt")
+        for v in vs:
+            if v not in ids:
+                bad.append(f"DEPENDS[{k!r}] names {v!r}, which is not a prompt")
+    if bad:
+        raise ValueError(
+            "the research dependency map has gone stale:\n  " + "\n  ".join(bad) +
+            "\nEvery edge must name a live prompt. Fix the map or restore the prompt.")
+
+
+def blocked_by(rid: str, research=None, answers=None) -> List[str]:
+    """Which of `rid`'s dependencies still owe an answer. Empty means it is free to send.
+
+    ⚠ **A dependency is not satisfied merely by having AN answer.** R13 was ANSWERED from run 1
+    while run 2 was rewritten and still pending — and the first version of this function cleared
+    R16 to go on the strength of that stale run. R16 reviews a decision record; released early it
+    would review one that R13 run 2 is about to change, which is the exact failure the edge exists
+    to prevent.
+
+    So a dep counts as met only when it is ANSWERED **and has no pending row in its run log.**
+    """
+    st = state(research, answers)
+    out = []
+    for d in DEPENDS.get(rid, []):
+        if st.get(d) != ANSWERED:
+            out.append(d)
+            continue
+        rows = run_log(prompts(research).get(d, pathlib.Path("/nonexistent")))
+        if any((r.get("dispatched") or "").strip().lower() in ("pending", "tbd", "") for r in rows):
+            out.append(d)          # answered once, and a further run is still owed
+    return out
+
+
 def order(research=None, answers=None, syn_unreconciled=None) -> List[Dict[str, str]]:
     """What to do next, ranked, each with the reason — highest priority first.
 
@@ -269,19 +335,18 @@ def order(research=None, answers=None, syn_unreconciled=None) -> List[Dict[str, 
         log_rows = run_log(prompts(research).get(rid, pathlib.Path("/nonexistent")))
         pending = any((r.get("dispatched") or "").strip().lower() in ("pending", "tbd", "")
                       for r in log_rows)
-        # A prompt can be written, unsent, and deliberately NOT ready to send — R16 reviews the
-        # decision record and must wait until the last two answers are reconciled, or it reviews a
-        # record about to change twice. Without this the board says "send it" about the one prompt
-        # whose own header says do not.
-        held = any("blocked" in (r.get("dispatched") or "").strip().lower() for r in log_rows)
+        # Ask the dependency graph, not a run-log string. The first version of this sniffed the
+        # word "blocked" out of a cell a human types, which would have been defeated by a typo and
+        # said nothing about WHY.
+        unmet_deps = blocked_by(rid, research, answers)
         if rid in syn_unreconciled:
             rank, action, why = 1, "reconcile it into SYNTHESIS", (
                 "answered, and filed after the synthesis was last written — the answer is paid for "
                 "and not yet banked")
-        elif held:
-            rank, action, why = 5, "hold — not ready to send", (
-                "written, and its own run log says blocked: sending it now would review a record "
-                "that is about to change")
+        elif unmet_deps and st != ANSWERED:
+            rank, action, why = 5, "hold — waiting on " + ", ".join(unmet_deps), (
+                "depends on %s, which %s not answered yet" % (
+                    " and ".join(unmet_deps), "has" if len(unmet_deps) == 1 else "have"))
         elif pending and st == ANSWERED:
             rank, action, why = 2, "send the next run", (
                 "answered once, and a further run is written and waiting on you — the run log says "
@@ -289,5 +354,9 @@ def order(research=None, answers=None, syn_unreconciled=None) -> List[Dict[str, 
         else:
             rank, action, why = _ACTION.get(st, (6, "?", ""))
         rows.append({"id": rid, "state": st, "rank": rank, "action": action, "why": why,
+                     "blocked_by": unmet_deps,
                      "runs": len(log_rows)})
     return sorted(rows, key=lambda r: (r["rank"], int(r["id"][1:])))
+
+
+_validate()
