@@ -40,9 +40,39 @@ from factory import operator as opans  # noqa: E402
 from factory import worktrees as wt  # noqa: E402
 from factory import handoff as ho  # noqa: E402
 from factory import runs as runlib  # noqa: E402
+from factory import dispatch as dispatchlib  # noqa: E402
 from factory import sessions as sesslib  # noqa: E402
+from factory import dispatch as disp  # noqa: E402
 
 OUT = FACTORY / "tracker.html"
+
+#: dispatch state -> (chip class, label). Five states, five appearances — collapsing NOT SENT into
+#: IN FLIGHT is the exact confusion the dispatch module was written to end, so the UI keeps them
+#: apart too.
+_RCHIP = {
+    disp.ANSWERED: ("pass", "ANSWERED"),
+    disp.IN_FLIGHT: ("unmeas", "IN FLIGHT"),
+    disp.UNDISPATCHED: ("notrun", "NOT SENT"),
+    disp.STALE_STATUS: ("fail", "STALE STATUS"),
+    disp.UNKNOWN: ("notrun", "UNKNOWN"),
+}
+
+
+def _ago(ts: float) -> str:
+    """"3h ago" for a POSIX mtime. Every age on this page is computed at render time.
+
+    Deliberately not stored anywhere. A rendered age that came from a cache is the one number on
+    this page that could silently lie about how current it is, so it is re-derived per request —
+    which is also why a hard refresh cannot change it.
+    """
+    secs = max(0.0, datetime.datetime.now().timestamp() - ts)
+    if secs < 90:
+        return "just now"
+    if secs < 5400:
+        return "%dm ago" % round(secs / 60)
+    if secs < 172800:
+        return "%dh ago" % round(secs / 3600)
+    return "%dd ago" % round(secs / 86400)
 
 #: (key, href, label). The key is what render() switches on.
 TABS = [("gates", "/", "Gates"), ("lanes", "/lanes", "Lanes"),
@@ -973,6 +1003,57 @@ def render(when: datetime.datetime, tab: str = "gates") -> str:
         w('</div>')
 
     if tab == "research":
+        # ------------------------------------------------------------------ what to do next
+        # Three failures on 2026-08-23 produced this panel, and each is guarded here:
+        #   1. "which prompts did I upload?" was unanswerable — nothing recorded a dispatch.
+        #   2. R14 was recorded as sent on the strength of an intention, and never went.
+        #   3. R8's answer landed while the currency gate stayed green, because SYNTHESIS.md
+        #      mentioned R8 three times in the FUTURE tense.
+        todo = [r for r in dispatchlib.order() if r["rank"] <= 4]
+        late = synth.unreconciled()
+        w('<div class="par" style="margin-top:14px'
+          + (';border-color:var(--fail)' if late else '') + '">')
+        w('<h3 style="margin-top:0">What to do next</h3>')
+        if not todo:
+            w('<p style="font-size:13px;color:var(--ink3);margin:0">Nothing outstanding — every '
+              'prompt is filed and reconciled.</p>')
+        for r in todo:
+            colour = {1: "var(--fail)", 0: "var(--fail)", 2: "var(--unmeas)"}.get(
+                r["rank"], "var(--ink3)")
+            runs = r["runs"]
+            w(f'<div style="margin:9px 0 0;padding:7px 0 0;border-top:1px solid var(--rule)">'
+              f'<span style="font-family:ui-monospace,monospace;font-size:12px;color:var(--ink3)">'
+              f'{e(r["id"])}</span> '
+              f'<b style="color:{colour}">{e(r["action"])}</b>'
+              f'<span style="font-size:11.5px;color:var(--ink3)"> &middot; {e(r["state"])} '
+              f'&middot; {e(runs)} recorded run(s)</span>'
+              f'<div style="font-size:12.5px;color:var(--ink2);margin-top:2px">{e(r["why"])}</div>'
+              f'</div>')
+        w('<p style="font-size:12px;color:var(--ink3);margin:9px 0 0">'
+          '<b>Reconciling outranks dispatching, deliberately.</b> An unread answer is work already '
+          'paid for and not yet banked; sending another prompt while one sits unreconciled spends '
+          'money to widen a backlog. The ordering is a judgement and lives in '
+          '<code>factory/dispatch.py::_ACTION</code> so it can be argued with rather than guessed '
+          'at.</p>')
+        w('</div>')
+
+        # The currency gate, and the reason there are two of them.
+        w('<div class="par" style="margin-top:12px">')
+        w('<h3 style="margin-top:0">Is the record current?</h3>')
+        w(f'<p style="font-size:13px;margin:0">Never mentioned in the synthesis: '
+          f'<b>{e(", ".join(synth.unsynthesised()) or "none")}</b><br>'
+          f'Filed <i>after</i> the synthesis was last written: '
+          f'<b style="color:{"var(--fail)" if late else "var(--pass)"}">'
+          f'{e(", ".join(late) or "none")}</b></p>')
+        w('<p style="font-size:12px;color:var(--ink3);margin:8px 0 0">'
+          'Two checks because the first one is weak on its own. It asks whether the synthesis '
+          '<i>mentions</i> an id — and on 2026-08-23 R8\'s answer was filed while the document '
+          'said, three times, that R8 was <i>still outstanding</i>. The id was mentioned, in the '
+          'future tense, and the gate went green over an answer nobody had read. The second check '
+          'compares modification times, which cannot be satisfied by writing an id anywhere.</p>')
+        w('</div>')
+
+
         # ---------------------------------------------------------------- research prompts
         rdir = FACTORY / "docs" / "research"
         adir = rdir / "answers"
@@ -991,6 +1072,39 @@ def render(when: datetime.datetime, tab: str = "gates") -> str:
                                                  for a in adir.glob("*.md"))
                 if not answered:
                     pending.append(f)
+        # ---------------------------------------------------------------- one-glance state strip
+        # Derived from factory.dispatch on every request — the same function `python -m
+        # factory.dispatch` prints, so the page and the CLI cannot disagree about what "answered"
+        # means. There is no client-side state here and nothing is remembered between requests:
+        # a hard refresh re-derives every chip from the files on disk and cannot clear one.
+        dstate = disp.state()
+        counts = {}
+        for v in dstate.values():
+            counts[v] = counts.get(v, 0) + 1
+        order = sorted(dstate, key=lambda k: (int(k[1:]) if k[1:].isdigit() else 999, k))
+        w('<div class="head" style="margin-top:34px">')
+        w('<h1>Research</h1>')
+        w('<div class="sub">'
+          + ' &middot; '.join(f'{counts[k]} {_RCHIP[k][1].lower()}'
+                              for k in (disp.ANSWERED, disp.IN_FLIGHT, disp.UNDISPATCHED,
+                                        disp.STALE_STATUS, disp.UNKNOWN) if counts.get(k))
+          + '</div>')
+        w('</div>')
+        w('<div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:14px">')
+        for rid in order:
+            cls, label = _RCHIP.get(dstate[rid], ("notrun", dstate[rid]))
+            done = dstate[rid] == disp.ANSWERED
+            w(f'<div style="border:1px solid var(--rule);border-left:3px solid var(--{cls});'
+              f'background:var(--raise);padding:5px 9px;display:flex;gap:8px;align-items:baseline'
+              f'{";opacity:.62" if done else ""}">'
+              f'<b style="font-family:ui-monospace,monospace;font-size:12.5px">{e(rid)}</b>'
+              f'<span class="chip {cls}">{e(label)}</span></div>')
+        w('</div>')
+        w('<p style="font-size:12px;color:var(--ink3);margin:9px 0 0">Completed passes are dimmed '
+          'and green-edged. Every chip is re-derived from <code>docs/research/</code> on each '
+          'request &mdash; <b>a refresh cannot clear one</b>, and none of it is stored in the '
+          'browser.</p>')
+
         gap = synth.unsynthesised()
         w('<div class="par" style="margin-top:34px;border-color:'
           + ("var(--unmeas)" if gap else "var(--rule)") + '">')
@@ -1025,8 +1139,8 @@ def render(when: datetime.datetime, tab: str = "gates") -> str:
         filed = sorted(adir.glob("R[0-9]*-answer*.md")) if adir.is_dir() else []
         if not pending:
             w('<div class="head" style="margin-top:44px">')
-            w('<h1>Research</h1>')
-            w(f'<div class="sub">Nothing outstanding &mdash; every written prompt has a filed '
+            w('<h1>Nothing outstanding</h1>')
+            w(f'<div class="sub">Every written prompt has a filed '
               f'answer. Write a new one into <code>docs/research/</code> as '
               f'<code>R&lt;n&gt;-&lt;topic&gt;.md</code> and it appears here automatically.</div>')
             w('</div>')
@@ -1041,10 +1155,13 @@ def render(when: datetime.datetime, tab: str = "gates") -> str:
                 body = f.read_text(encoding="utf-8")
                 first = next((ln.lstrip("# ").strip() for ln in body.splitlines()
                               if ln.startswith("# ")), f.stem)
-                w('<div class="par" style="margin-top:16px">')
-                w(f'<h3>{e(first)}</h3>')
+                rid = f.name.split("-")[0].upper()
+                cls, label = _RCHIP.get(dstate.get(rid, ""), ("notrun", "UNKNOWN"))
+                w(f'<div class="par" style="margin-top:16px;border-left:3px solid var(--{cls})">')
+                w(f'<h3>{e(first)} <span class="chip {cls}">{e(label)}</span></h3>')
                 w(f'<p style="font-size:12.5px;color:var(--ink3);margin:0 0 8px">'
-                  f'<code>docs/research/{e(f.name)}</code> &middot; {len(body):,} chars</p>')
+                  f'<code>docs/research/{e(f.name)}</code> &middot; {len(body):,} chars &middot; '
+                  f'written {e(_ago(f.stat().st_mtime))}</p>')
                 w(f'<button type="button" data-copy="rs-{e(f.stem)}" style="font-size:12px;'
                   f'padding:5px 10px;margin-bottom:8px;cursor:pointer;border:1px solid var(--rule);'
                   f'border-radius:3px;background:var(--raise);color:var(--ink);'
@@ -1088,11 +1205,13 @@ def render(when: datetime.datetime, tab: str = "gates") -> str:
                 first = next((ln.lstrip("# ").strip()
                               for ln in a.read_text(encoding="utf-8", errors="replace").splitlines()
                               if ln.startswith("# ")), a.stem)
-                w('<div class="par" style="margin-top:12px">')
-                w(f'<h3 style="margin-top:0">{e(first)}</h3>')
+                st = a.stat()
+                w('<div class="par" style="margin-top:12px;border-left:3px solid var(--pass)">')
+                w(f'<h3 style="margin-top:0">{e(first)} '
+                  f'<span class="chip pass">ANSWERED</span></h3>')
                 w(f'<p style="font-size:12.5px;color:var(--ink3);margin:0">'
                   f'<code>docs/research/answers/{e(a.name)}</code> &middot; '
-                  f'{a.stat().st_size:,} bytes</p>')
+                  f'{st.st_size:,} bytes &middot; filed {e(_ago(st.st_mtime))}</p>')
                 w('</div>')
 
     if tab == "handoff":

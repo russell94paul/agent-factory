@@ -91,3 +91,32 @@ Hold to what the existing document does well, which is refusing to smooth:
 
 Then re-run `python -m pytest tests/test_synthesis_current.py` — it fails while any filed answer
 goes unmentioned."""
+
+
+def unreconciled() -> List[str]:
+    """Answers filed AFTER the synthesis was last written — the check `unsynthesised()` cannot do.
+
+    ⚠ `unsynthesised()` asks whether the synthesis *mentions* an id, and that is weaker than it
+    looks. On 2026-08-23 R8's answer was filed while `SYNTHESIS.md` said, in three places, *"R8 is
+    still outstanding"* and *"read them together when R8 lands"* — so the id was mentioned, in the
+    future tense, and the gate went green over an answer nobody had read. A check that passes
+    because a document talks about the thing it has not done is the vacuous-verification failure
+    this repo exists to prevent.
+
+    Modification time is a blunt instrument and deliberately so: it cannot be satisfied by writing
+    the id anywhere, only by editing the synthesis after the answer landed. It over-reports (a
+    whitespace edit clears it) rather than under-reports, which is the correct direction for a
+    check — a false alarm costs a glance, a false pass costs the record.
+    """
+    syn = SYNTHESIS if isinstance(SYNTHESIS, pathlib.Path) else pathlib.Path(SYNTHESIS)
+    if not syn.is_file() or not ANSWERS.is_dir():
+        return []
+    when = syn.stat().st_mtime
+    late = set()
+    for f in ANSWERS.glob("R[0-9]*-answer*.md"):
+        try:
+            if f.stat().st_mtime > when:
+                late.add(f.name.split("-")[0].upper())
+        except OSError:
+            continue
+    return sorted(late, key=lambda r: int(r[1:]))

@@ -196,3 +196,75 @@ def main() -> None:
 
 if __name__ == "__main__":  # pragma: no cover
     main()
+
+
+#: A run-log row: ``| 1 | 2026-08-23 | Answer filed. |``
+_ROW = re.compile(r"^\|\s*([0-9]+|—|-)\s*\|\s*([^|]*?)\s*\|\s*(.*?)\s*\|\s*$", re.M)
+
+
+def run_log(path: pathlib.Path) -> List[Dict[str, str]]:
+    """The dispatch rows a prompt records about itself.
+
+    The record `dispatch.state()` reads is a *declaration*; this is a *history*. The module's own
+    docstring admits it cannot see whether a prompt was ever pasted anywhere, and on 2026-08-23
+    that gap bit twice: nobody could say which prompts had been uploaded, and R14 was recorded as
+    dispatched on the strength of "running 13 and 14 now" — an intention, not an observation — when
+    only R13 went.
+
+    ⚠ So a row here is only as good as the moment it was written. **Write it when the paste is
+    confirmed, never when it is announced.** A row that says a send happened when it did not is
+    worse than no row, because it reads as evidence.
+    """
+    try:
+        head = path.read_text(encoding="utf-8", errors="replace")[:4000]
+    except OSError:
+        return []
+    if "## Run log" not in head:
+        return []
+    block = head.split("## Run log", 1)[1]
+    out = []
+    for run, when, outcome in _ROW.findall(block):
+        if run.lower() in ("run", "---", "") or set(when) <= {"-"}:
+            continue                       # the header row and the markdown rule
+        out.append({"run": run, "dispatched": when, "outcome": outcome})
+    return out
+
+
+#: Why each state needs a human, in the order a human should act on it. Ordering is a JUDGEMENT and
+#: is written down here rather than implied, so it can be argued with instead of guessed at.
+_ACTION = {
+    STALE_STATUS: (0, "reconcile the record",
+                   "the document contradicts the disk and one of them is wrong"),
+    UNDISPATCHED: (2, "send it", "written and waiting on you — nothing is working on it"),
+    UNKNOWN: (3, "declare a status", "no status line, so no instrument can place it"),
+    IN_FLIGHT: (4, "wait", "a researcher has it"),
+    ANSWERED: (5, "nothing", "filed and reconciled"),
+}
+
+
+def order(research=None, answers=None, syn_unreconciled=None) -> List[Dict[str, str]]:
+    """What to do next, ranked, each with the reason — highest priority first.
+
+    Reconciling beats dispatching on purpose. An unread answer is work already paid for and not yet
+    banked; sending another prompt while one sits unreconciled spends money to widen a backlog.
+    """
+    if syn_unreconciled is None:
+        try:
+            from .synthesis import unreconciled
+            syn_unreconciled = set(unreconciled())
+        except Exception:                                          # noqa: BLE001
+            syn_unreconciled = set()
+    else:
+        syn_unreconciled = set(syn_unreconciled)
+
+    rows = []
+    for rid, st in state(research, answers).items():
+        if rid in syn_unreconciled:
+            rank, action, why = 1, "reconcile it into SYNTHESIS", (
+                "answered, and filed after the synthesis was last written — the answer is paid for "
+                "and not yet banked")
+        else:
+            rank, action, why = _ACTION.get(st, (6, "?", ""))
+        rows.append({"id": rid, "state": st, "rank": rank, "action": action, "why": why,
+                     "runs": len(run_log(prompts(research).get(rid, pathlib.Path("/nonexistent"))))})
+    return sorted(rows, key=lambda r: (r["rank"], int(r["id"][1:])))
