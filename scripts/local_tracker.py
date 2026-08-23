@@ -39,6 +39,7 @@ from factory import claims as claimlib  # noqa: E402
 from factory import operator as opans  # noqa: E402
 from factory import worktrees as wt  # noqa: E402
 from factory import handoff as ho  # noqa: E402
+from factory import runs as runlib  # noqa: E402
 
 OUT = FACTORY / "tracker.html"
 
@@ -477,6 +478,19 @@ def e(t) -> str:
     return html.escape(str(t), quote=False)
 
 
+def _tok(n) -> str:
+    """302442227 -> 302M. Nine-digit token counts are read wrong by a factor of ten at a glance.
+
+    Never rounds to zero: a lane that spent 400 tokens must not render as `0k`, because "cheap"
+    and "nothing ran" are different findings and this panel exists to keep them apart.
+    """
+    n = int(n or 0)
+    for div, suf in ((1_000_000_000, "B"), (1_000_000, "M"), (1_000, "k")):
+        if n >= div:
+            return f"{n / div:.2f}{suf}" if n < div * 10 else f"{n / div:.0f}{suf}"
+    return str(n)
+
+
 def render(when: datetime.datetime, tab: str = "gates") -> str:
     # Research needs no measurement, and a full measure is ~10s of probes. Paying that to read a
     # prompt was the main reason this page felt slow.
@@ -667,6 +681,67 @@ def render(when: datetime.datetime, tab: str = "gates") -> str:
           'files between them, taken greedily down the recommendation order. Five lanes have no '
           'unmet dependency; only these can be worked <i>together</i>.</p>')
         w('</div>')
+
+        # ------------------------------------------------------------------ past runs
+        # Until `factory/runs.py` there was nothing to render here at all: finish() deletes the
+        # claim, the bus is per-worktree, and an hour after a lane closed it was indistinguishable
+        # from one that never launched. Every figure below carries its basis, because most of this
+        # history is RECONSTRUCTED after the fact and saying so is the difference between a
+        # measurement and a guess.
+        rows = runlib.report()
+        shown = [r for r in rows if r["basis"] != runlib.NOT_RECORDED]
+        never = [r for r in rows if r["basis"] == runlib.NOT_RECORDED]
+        w('<div class="par" style="margin-top:12px">')
+        w(f'<h3 style="margin-top:0">Past runs &mdash; {len(shown)} of {len(rows)} lanes have '
+          f'a history</h3>')
+        if not shown:
+            w('<p style="font-size:13px;color:var(--ink3);margin:0">Nothing recorded yet. That is '
+              '<b>NOT-RECORDED</b>, not zero &mdash; no lane has closed since the ledger existed.</p>')
+        for r in shown:
+            c = r["cost"]
+            out_col = {runlib.FINISHED: "var(--pass)", runlib.REFUSED: "var(--fail)"}.get(
+                r.get("outcome"), "var(--unmeas)")
+            label = r.get("outcome") or r["basis"]
+            w('<div style="margin:10px 0 0;padding:8px 0 0;border-top:1px solid var(--rule)">')
+            w(f'<div style="font-size:13.5px"><code>{e(r["lane"])}</code> '
+              f'<span style="color:var(--ink3)">{e(r.get("title", ""))}</span> '
+              f'<b style="color:{out_col};font-family:ui-monospace,monospace;font-size:11.5px">'
+              f'{e(label)}</b>'
+              f'<span style="color:var(--ink3);font-size:11.5px"> &middot; basis '
+              f'{e(r["basis"])} &middot; {e(r["runs"])} recorded run(s)</span></div>')
+            bits = []
+            if r.get("commits") is not None:
+                bits.append(f'{r["commits"]} commit(s)')
+            if r.get("dirty"):
+                bits.append('<b style="color:var(--unmeas)">uncommitted changes</b>')
+            if c["basis"] == runlib.MEASURED:
+                bits.append(f'{_tok(c["output"])} out')
+                bits.append(f'{_tok(c["cache_read"])} cache read')
+                bits.append(f'{c["wall_clock_s"] / 3600:.1f}h')
+                bits.append(e(", ".join(m.replace("claude-", "") for m in c["models"]) or "?"))
+                bits.append(f'{c["sessions"]} session(s)')
+            else:
+                bits.append('<span style="color:var(--ink3)">cost NOT-RECORDED</span>')
+            w(f'<div style="font-size:12.5px;color:var(--ink2);margin-top:3px">'
+              f'{" &middot; ".join(bits)}</div>')
+            # The reason this panel exists: a lane that refused to close, and why.
+            for p in (r.get("problems") or []):
+                w(f'<div style="font-size:12px;color:var(--fail);margin-top:3px">&#9888; {e(p)}</div>')
+            if r.get("detail") and r.get("outcome"):
+                w(f'<div style="font-size:12px;color:var(--ink3);margin-top:2px">{e(r["detail"])}</div>')
+            w('</div>')
+        if never:
+            w(f'<p style="font-size:12.5px;color:var(--ink3);margin:10px 0 0">'
+              f'<b>Never launched:</b> {e(", ".join(x["lane"] for x in never))} &mdash; reported '
+              f'NOT-RECORDED rather than zero, because no instrument has ever seen them run.</p>')
+        w('<p style="font-size:12px;color:var(--ink3);margin:8px 0 0">'
+          '<b>RECORDED</b> means <code>finish()</code> wrote the row as it happened, so the outcome '
+          'is the lane&rsquo;s own claim. <b>RECONSTRUCTED</b> is derived afterwards from git and '
+          'the session transcripts &mdash; it can say what a lane cost and committed, but not '
+          'whether it <i>finished</i>, so no outcome is shown. Cost is measured from the '
+          '<code>usage</code> block on every assistant message, never estimated.</p>')
+        w('</div>')
+
         ranked = recommend(passing)
         if ranked:
             top, _, why = ranked[0]

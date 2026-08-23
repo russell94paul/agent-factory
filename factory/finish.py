@@ -21,6 +21,7 @@ from typing import List, Optional
 from . import bus as _bus
 from . import claims as _claims
 from . import findings as _findings
+from . import runs as _runs
 from . import sessions as _sessions
 from . import worktrees as _wt
 
@@ -96,19 +97,26 @@ def finish(lane: str, push: bool = True, force: bool = False,
            remote: str = "origin", base: str | None = None) -> dict:
     """Assert, push, release, announce. Never merges."""
     done: List[str] = []
+    branch = f"{_wt.BRANCH_PREFIX}{lane}"
     problems = checks(lane, base=base)
     if problems and not force:
+        # Recorded BEFORE the raise. A refusal is the row you most want a week later — "why did
+        # control-plane never close?" — and it is exactly the event that left no trace: the
+        # exception propagates, the operator fixes it or does not, and nothing remembers either
+        # way. Recording it costs one append and makes the UI able to answer the question.
+        _record(lane, _runs.REFUSED, "refused to finish", problems, branch, base)
         raise NotFinished("; ".join(problems))
     if problems:
         done.append(f"forced past {len(problems)} check(s): {'; '.join(problems)}")
 
-    branch = f"{_wt.BRANCH_PREFIX}{lane}"
     if push:
         rc, out = _git(lane, "push", "-u", remote, branch)
         if rc != 0:
             # A failed push must NOT release the claim. Losing the branch is the thing this
             # whole step exists to prevent, so stop here and leave the lane claimed.
-            raise NotFinished(f"push failed, claim NOT released: {out.strip()[:200]}")
+            msg = f"push failed, claim NOT released: {out.strip()[:200]}"
+            _record(lane, _runs.REFUSED, "push failed", [msg], branch, base)
+            raise NotFinished(msg)
         done.append(f"pushed {branch} to {remote}")
 
     try:
@@ -124,4 +132,28 @@ def finish(lane: str, push: bool = True, force: bool = False,
         done.append("released the claim")
     else:
         done.append("no claim was held")
+
+    # Last, and deliberately: the claim is gone by now, so this append is the ONLY thing that
+    # will still say this lane finished. Recorded after the release rather than before so a run
+    # that died mid-close is not remembered as a clean finish.
+    _record(lane, _runs.FINISHED, "; ".join(done), [], branch, base)
     return {"lane": lane, "did": done, "merged": False}
+
+
+def _record(lane: str, outcome: str, detail: str, problems: List[str], branch: str,
+            base: str | None) -> None:
+    """Append to the run ledger, and never let the ledger break a close.
+
+    A failure to *record* a finish must not turn a finished lane into an exception — the work is
+    pushed and the claim released by then, and raising here would report success as failure. It
+    is a record, not a control.
+    """
+    try:
+        rc, out = _git(lane, "rev-list", "--count",
+                       f"{_integration(lane) if base is None else base}..HEAD")
+        n = out.strip()
+        commits = int(n) if rc == 0 and n.isdigit() else None
+        _runs.record(lane, outcome, detail=detail, problems=problems, branch=branch,
+                     commits=commits, cwd=_wt.path_for(lane))
+    except Exception:                                              # noqa: BLE001
+        pass

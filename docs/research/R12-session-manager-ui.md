@@ -1,6 +1,6 @@
 # R12 — Managing many concurrent agent sessions: what the substrate must know, and whether to adopt one that exists
 
-**Status: NOT DISPATCHED.** Written 2026-08-23. Paste the whole file. The answer is filed at
+**Status: DISPATCHED 2026-08-23.** Written 2026-08-23. Paste the whole file. The answer is filed at
 `docs/research/answers/R12-answer-session-manager-ui.md`.
 
 ⚠ **Standing rule in this estate: an object named by a handoff is a hypothesis, not a finding.**
@@ -23,7 +23,7 @@ say so:
 |---|---|---|
 | **R7** — session manager | what should *run* sessions: PTYs, supervision, leases, multiplexing, failure recovery | **answered** — read `answers/R7-answer-session-manager.md` in the pack |
 | **R8 §2.6** — agent terminal | state of the art for supervising N agents; human factors, attention, alarm fatigue | split out into R9 at R8's own invitation |
-| **R9** — game-styled supervision UI | does a game HUD *skin* help or hurt | not dispatched |
+| **R9** — game-styled supervision UI | does a game HUD *skin* help or hurt | dispatched 2026-08-23, alongside this |
 
 R7 asked what runs a session. R9 asks what it should look like. **R12 asks what the layer between
 them must know to be honest** — how a session is discovered, named, addressed, resumed, costed, and

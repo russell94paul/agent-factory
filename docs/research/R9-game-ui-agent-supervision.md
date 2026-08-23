@@ -1,6 +1,6 @@
 # R9 — A game-styled supervision UI for autonomous agents: does the skin help or hurt?
 
-**Status: NOT DISPATCHED.** Written 2026-08-22. Paste the whole file. The answer lands beside it as
+**Status: DISPATCHED 2026-08-23.** Written 2026-08-22. Paste the whole file. The answer lands beside it as
 `docs/research/answers/R9-answer-game-ui-agent-supervision.md`.
 
 Read `R8-data-engineering-agent-factory.md` §2.6 first — this is the split-out of that strand, and

@@ -1,6 +1,6 @@
 # R11 — What do the other agent factories make first-class that we have no name for?
 
-**Status: NOT DISPATCHED.** Written 2026-08-23. Paste the whole file. The answer is filed at
+**Status: DISPATCHED 2026-08-23.** Written 2026-08-23. Paste the whole file. The answer is filed at
 `docs/research/answers/R11-answer-factory-concept-diff.md`.
 
 Read `docs/research/agent-factory-concept-inventory.md` first — it is the frozen baseline this

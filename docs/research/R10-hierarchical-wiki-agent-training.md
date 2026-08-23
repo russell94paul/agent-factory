@@ -1,6 +1,6 @@
 # R10 — Can a hierarchical wiki plus an auto-researcher train a repo-agnostic agentic pipeline?
 
-**Status: NOT DISPATCHED.** Written 2026-08-22. Paste the whole file into ChatGPT Deep Research (or
+**Status: DISPATCHED 2026-08-23.** Written 2026-08-22. Paste the whole file into ChatGPT Deep Research (or
 equivalent). The answer lands beside it as
 `docs/research/answers/R10-answer-hierarchical-wiki-agent-training.md`.
 
