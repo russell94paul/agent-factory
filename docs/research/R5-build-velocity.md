@@ -1,7 +1,6 @@
 # R5 — How should this build actually go faster?
 
-**Status: NOT DISPATCHED.** Written 2026-08-22 for a Deep Research pass. Paste the whole file. The
-answer lands beside it as `docs/research/answers/R5-answer-build-velocity.md`.
+**Status: ANSWERED 2026-08-22.** Written 2026-08-22 for a Deep Research pass. Paste the whole file. The answer is filed at `docs/research/answers/R5-answer-build-velocity.md`.
 
 Every number below is measured, and the measurement method is stated so you can distrust it
 properly. Where something is a judgement rather than a measurement, it says so.

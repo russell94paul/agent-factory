@@ -1,7 +1,6 @@
 # R6 — What should be automated, and what should raise an alarm, across parallel agent sessions?
 
-**Status: NOT DISPATCHED.** Written 2026-08-22 for a Deep Research pass. Paste the whole file. The
-answer lands beside it as `docs/research/answers/R6-answer-automation-and-alerting.md`.
+**Status: ANSWERED 2026-08-22.** Written 2026-08-22 for a Deep Research pass. Paste the whole file. The answer is filed at `docs/research/answers/R6-answer-automation-and-alerting.md`.
 
 Companion to [`R5-build-velocity.md`](R5-build-velocity.md), which asks how to go faster. This one
 asks what should notice when going faster breaks something. Read R5 first if you have not; the

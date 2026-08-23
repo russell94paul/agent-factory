@@ -1,6 +1,6 @@
 # R7 — A session manager for agent teams: what to adopt, what to build, what to automate
 
-**Status: NOT DISPATCHED.** Written 2026-08-22. Paste the whole file. The answer lands beside it as
+**Status: ANSWERED 2026-08-22.** Written 2026-08-22. Paste the whole file. The answer is filed at
 `docs/research/answers/R7-answer-session-manager.md`.
 
 Read `R5-build-velocity.md` and `R6-automation-and-alerting.md` first if you have them — this
