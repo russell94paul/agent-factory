@@ -62,10 +62,18 @@ TRUST_BLOCKED = "OUTPUT-UNCERTIFIED"
 UNGATED = "UNGATED"
 
 
-def _verdicts() -> Dict[str, object]:
+def _verdicts(measured=None) -> Dict[str, object]:
     """gate id -> Result, measured on this call. Never cached: a launch decision read off a stale
-    board is the failure mode every other surface here is written to avoid."""
-    return {g.id: r for g, r in measure()}
+    board is the failure mode every other surface here is written to avoid.
+
+    `measured` accepts an ALREADY-TAKEN `measure()` list — the `(Gate, Result)` pairs, not a
+    dict — so a caller that has just measured for its own reasons does not pay for a second full
+    pass. ⛔ It is a *same-instant* reuse, not a cache: the readiness page measures once per
+    render and hands the result straight here. Passing anything older re-introduces exactly the
+    staleness this docstring refuses, and nothing here can tell the difference — the caller owns
+    that promise.
+    """
+    return {g.id: r for g, r in (measure() if measured is None else measured)}
 
 
 def _blockers(ids, verdicts) -> List[dict]:
@@ -108,13 +116,15 @@ def _observability() -> List[dict]:
     return out
 
 
-def levels() -> List[dict]:
+def levels(measured=None) -> List[dict]:
     """The three questions, answered separately, measured now.
 
     Order is deliberate: run, leave, trust. Each is strictly harder than the one before it, and an
     operator reads down until the answer stops being yes.
+
+    `measured` is a same-render `measure()` result to reuse; see `_verdicts`.
     """
-    v = _verdicts()
+    v = _verdicts(measured)
     obs = _observability()
     obs_bad = [o for o in obs if not o["ok"]]
 
@@ -150,7 +160,7 @@ def levels() -> List[dict]:
     ]
 
 
-def teams() -> List[dict]:
+def teams(measured=None) -> List[dict]:
     """Per-team launch state, taking UNGATED seriously.
 
     A team with no gates is not at 0%. It has no contract, so there is nothing to measure and a
@@ -159,7 +169,7 @@ def teams() -> List[dict]:
     """
     from .roadmap import TEAMS
 
-    v = _verdicts()
+    v = _verdicts(measured)
     out = []
     for name, spec in TEAMS.items():
         gids = list(spec.get("gates") or [])
@@ -178,9 +188,9 @@ def teams() -> List[dict]:
     return out
 
 
-def summary() -> str:
+def summary(measured=None) -> str:
     """One line for a CLI or a banner. The first level whose answer is not yes."""
-    for lv in levels():
+    for lv in levels(measured):
         if lv["blockers"]:
             n = len(lv["blockers"])
             return f"{lv['state']} — {lv['question']} blocked by {n} gate(s)"
