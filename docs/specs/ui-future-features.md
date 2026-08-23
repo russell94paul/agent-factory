@@ -291,3 +291,52 @@ built**, or two sessions will write two models of the same thing — which is ex
 with R13 this morning.
 
 **Unlocks:** now, and it is small. The instrument is a directory read and five states.
+
+## 11. A wiki of its own for the factory — ⚠ half of this is already refused, and half is the best-supported idea we have
+
+**Raised by Paul, 2026-08-23, explicitly as not urgent.** Logged rather than actioned. It arrives
+with more evidence attached than any other entry here, because R10 already answered a version of it.
+
+### The question splits in two, and the halves have opposite verdicts
+
+**"Its own wiki"** — a second corpus, holding the factory's own knowledge. **R10 refused this shape**
+(SYNTHESIS §12.6) on two measured grounds:
+
+- **Context degradation.** Accuracy fell ~24% from adding 30k *irrelevant* tokens *even with the
+  relevant content present*. The existing wiki is ~1M tokens, roughly forty times the ~25k threshold
+  where this begins. A second corpus does not escape that; it adds to it.
+- **Memory laundering.** An unsupervised write-back loop turns hallucinated content into
+  innocuous-sounding prose that still misleads later reasoning. Safe only two-tier — **confirmed**
+  (human-verified) vs **proposed** (auto) — and never auto-absorbed.
+
+**"And wiki design"** — a *designed surface* over the knowledge rather than a bigger pile of it. That
+is R10's **mechanism C, structured context assembly**, which carries **the strongest number in the
+whole answer**: revisions 3.8 → 2.0, first-draft acceptance 32% → 55%. It was rated *beneficial*
+where the corpus idea was rated *no*.
+
+⭐ **So the feature is not "should the factory have a wiki" but "should the factory ASSEMBLE
+context deliberately instead of retrieving from a corpus".** Same words, opposite verdicts, and the
+distinction is the entire design.
+
+### What is already happening without anyone calling it this
+
+R10's actual top recommendation was **mechanism E — procedure synthesis into invocable skills**,
+"the highest-leverage of the five", and explicitly an instruction about `~/.claude/skills/`. The
+`deep-research` skill written on 2026-08-23 is one instance: a session's hard-won lessons distilled
+into something the model can trigger, rather than a page it must be told to read. **That path is open
+and needs no new surface.**
+
+### ⛔ Unlock condition, and it is unusually concrete
+
+**R10's two strongest figures are `REPORTED-unverified`.** It attributes context assembly to *"Swift
+et al. 2026"* and skill distillation to *"SkillX"*, and **neither is linked and neither has been
+read.** The 32% → 55% number is the reason to build the assembly surface, and it cannot be a design
+premise until someone opens the source.
+
+So: **verify those two citations before designing anything.** That is now a small, well-shaped job
+for the `deep-research` skill, whose §3 exists for exactly this. If the sources hold, mechanism C is
+the best-evidenced thing in the backlog. If they do not, this entry loses its foundation and should
+be closed rather than quietly kept.
+
+**Do not add a gate for this.** A gate asserts we are measuring something, and nothing here is being
+measured yet.
