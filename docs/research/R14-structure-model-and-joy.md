@@ -1,6 +1,6 @@
 # R14 — Attack our structure, name the right objects, and design something people are glad to open
 
-**Status: NOT DISPATCHED.** Written 2026-08-23. Paste the whole file. Attach
+**Status: ANSWERED 2026-08-23 (run 2).** Written 2026-08-23. Paste the whole file. Attach
 `docs/research/ui-surface-inventory.md` **and the repo** — this pass is worth little without the
 code, and §2 explains exactly what to read.
 The answer is filed at `docs/research/answers/R14-answer-structure-model-and-joy.md`.
@@ -10,6 +10,7 @@ The answer is filed at `docs/research/answers/R14-answer-structure-model-and-joy
 
 | Run | Dispatched | Outcome |
 |---|---|---|
+| 2 | 2026-08-23 | **Answered — but NOT by an outside model.** Run locally as a Claude subagent with full read access to this repo, so for the first time the pass actually read the modules instead of a summary. ⚠ **That is a real trade and it cuts both ways.** The brief asked for an adversarial outside view of our bones; an agent reading our own code, in our own estate, with our own conventions in front of it, is **less independent** than the ChatGPT passes were. Weigh its structural findings as well-grounded and its judgement as partial. `NOT-SUPPLIED` should be near-absent in this answer — if it is, that is the access showing, not rigour. |
 | 1 | 2026-08-23 | ⚠ **Recorded as dispatched, but it never ran.** Corrected 2026-08-23 on Paul's word. The row is kept rather than deleted: a send that did not happen is exactly what this table exists to catch, and erasing it would leave the same blind spot that made "which did I upload?" unanswerable. |
 | 2 | pending | Dispatch with `R14-evidence-pack.md` attached (456 KB — includes the AMT proposal as §A2; rebuild with `scripts/build_r14_pack.py`). Prompt refreshed 2026-08-23 after R8, R13 and R15 all landed: the platform and topology questions are now closed and the terminal question is settled, so this pass is design-only. |
 

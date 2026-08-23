@@ -1,6 +1,6 @@
 # R13 — Architecture and UI survey · RUN 2: four questions run 1 left open
 
-**Status: ANSWERED 2026-08-23 (run 1). Run 2 rewritten and pending — see the run log.** Rewritten 2026-08-23 for run 2. Paste the whole file and attach
+**Status: ANSWERED 2026-08-23 (runs 1 and 2).** Rewritten 2026-08-23 for run 2. Paste the whole file and attach
 `docs/research/R13-evidence-pack.md`. The answer is filed at
 `docs/research/answers/R13-answer-architecture-and-ui-survey-run2.md`.
 
@@ -8,7 +8,7 @@
 
 | Run | Dispatched | Outcome |
 |---|---|---|
-| 2 | pending | Rewritten as a narrow repair. Four questions only; the survey is not to be redone. |
+| 2 | 2026-08-23 | Answered. **Run locally as a Claude subagent with repo access, not as an outside pass** — so §2.1 was answered against `ui-surface-inventory.md` for real this time, which is the defect that caused this run. ⚠ Less independent than runs 1's outside model; grade its file-and-line claims as strong and its judgement as partial. ⚠ **§2.2 was overtaken by events mid-flight**: the suite gate was cached and the server threaded the same afternoon (27.3 s cold → 0.84 s warm), so that question was answered by implementation and the agent was asked to attack the implementation instead. |
 | 1 | 2026-08-23 | Answer filed and **reconciled into `SYNTHESIS.md` §14 — most of it was adopted.** Strong on the stack decision, the approval survey and provenance. ⚠ It never read `ui-surface-inventory.md`, its own named attachment, so §8 was guesswork and was discounted. It also deferred on the terminal question rather than arguing it. |
 
 > `dispatch` reads a status line and whether an answer file exists; by its own account it cannot see

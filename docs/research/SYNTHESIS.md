@@ -841,7 +841,7 @@ against the git SHA of `tests/` and `factory/`, and render it with its age attac
 no-silent-cache rule permits, because the age travels with the figure. Recorded as F77 by the
 session that caught it; confirmed independently here at 97.6%.
 
-### 13.6 ⛔ R12 and R15 contradict each other on the load-bearing fact — unresolved
+### 13.6 ✅ R12 and R15 contradicted each other — SETTLED 2026-08-23, R12 was right
 
 R15's own §0 named R12's source-level findings as its **control case**. It reached the opposite
 conclusion and did not notice:
@@ -855,10 +855,34 @@ conclusion and did not notice:
 duplicate-session failure of 2026-08-23.** Neither is stronger on its face: both claim to have read
 the source, and neither cites a line.
 
-**The discriminating test is cheap and nobody has run it:** open switchboard's `open-terminal`
-handler and read what happens when `activeSessions` does *not* contain the session id. R12 says it
-spawns with `--resume`; R15 says it attaches. One file settles it. **Until someone reads it, treat
-switchboard's attach behaviour as UNKNOWN and do not let either answer carry a design premise.**
+**The discriminating test was cheap and it has now been run.** R13 run 2 read
+`doctly/switchboard` `main.js` at commit `4c5a6da4ee23818584a53094e85989d7143da0c4`, and the result
+was **independently re-verified against the raw file from this session** before being recorded here
+— because §13.5's own heading is *"one answer invented its evidence"*, and a settled verdict
+resting on a single unchecked citation would be the same failure again.
+
+**Verdict: R12 is right. R15 is wrong.** `activeSessions` is an in-process `Map` (`main.js:101`)
+and the `open-terminal` handler (`main.js:1288`) returns `reattached: true` only when that Map
+already holds the id. A search of the file for `kill(0`, `tasklist`, `process.kill`, `ps -` or any
+lockfile check returns **zero hits** — there is no OS-level liveness probe anywhere in it. R15's
+*"it detects any Claude session in the project folder"* is not supported by the source.
+
+⭐ **And the third reading both passes missed, which is the part that matters.** Switchboard does not
+"spawn a duplicate" — it unconditionally issues `claude --resume <sessionId>` and never checks
+whether anything else holds that id. Whether a second live process results is decided by the Claude
+CLI, a program switchboard does not consult, does not control, and whose refusal it never surfaces.
+So the honest verdict is **not "it duplicates" but "it has no guard, and delegates the guard to
+something it cannot see"** — which is worse, because it is unobservable: the UI reports the same
+*not running* for **exited**, for **running-outside-switchboard**, and for **running-and-refused**.
+
+This is not a patchable bug. It is the **absence of a liveness concept** — the thing
+`ui-surface-inventory.md` §6 item 3 records that we had to invent for ourselves, and the reason our
+four states (including `RUNNING-ORPHANED`) are a real lead rather than a reimplementation.
+
+⚠ **One scope correction to R12:** the exposure is *not* limited to sessions started outside
+switchboard. A crash leaves the Map empty while PTYs may survive (the tidy-up only runs on
+`closed`/`will-quit`), and the fork path re-keys a live session under a `realSessionId`, so
+`has(sessionId)` can miss a PTY switchboard **does** own.
 
 ### 13.7 What changes
 
