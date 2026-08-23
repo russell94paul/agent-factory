@@ -231,3 +231,63 @@ make a data-model change correct, and which of them can be checked without a hum
 report?
 
 **Unlocks when:** a PBI contract exists and its negative control passes — i.e. it can fail.
+
+## 10. ⭐ Handoffs need a state, not just a type — and the directory is already past the point of sorting
+
+**The idea (Paul, 2026-08-23):** *"we need to ensure all handoffs get their own type or lane."*
+
+**Type is the right instinct and the wrong noun.** `factory/handoff.py` already draws the type
+distinction, in its own docstring: `LANE` (one lane finishing, belongs on the lane card) versus
+`SESSION` (everything that moved, belongs on its own tab). Today produced a third kind it has no
+name for — a **brief written for another live session** (`drafts/r13-rewrite-context-…`), which is
+neither a lane closing nor a session ending.
+
+### What the directory actually looks like, measured
+
+```
+boot-prompts/          186 files          Jun 39 · Jul 87 · Aug 60
+distinct prefixes      183 of 186         ← essentially every file is its own workstream
+undated filenames      137 of 186 (74%)
+carrying a `next:`      29 of 186 (16%)
+mentioning supersession 49 of 186 (26%)
+```
+
+⭐ **The load-bearing failure is not missing types. It is that nothing declares which handoff is
+CURRENT for anything.** `CLAUDE.md` instructs a session to *"read the newest one matching the ticket
+or workstream"* — an instruction that describes an organisation which does not exist: 183 of 186
+prefixes are unique, so there is nothing to match against, and 74% carry no date in the filename to
+be "newest" by. **The rule is a heuristic over 186 singletons.**
+
+This is the same failure class the research prompts had before `dispatch.py`: state living in prose,
+no instrument, and a human doing the sorting from memory. That was worth fixing and this is worth
+fixing for the same reason.
+
+### The shape worth building
+
+Mirror `dispatch.py`, because it already works. A declared **workstream key** and a **state**:
+
+```
+CURRENT      the head for its workstream — at most one
+SUPERSEDED   another handoff names it, by filename
+SPENT        its `next:` was done; kept as record, never as an entry point
+ORPHAN       no workstream, no `next:`, nothing points at it
+UNCLASSIFIED predates the convention — NOT the same as ORPHAN
+```
+
+Plus the type: `BOOT` (session entry, has a `next:`) · `LANE` · `BRIEF` (context for another live
+session) · `RECORD` (a closeout with no next action).
+
+⚠ **Do not backfill the 186.** They report `UNCLASSIFIED`, which is a fact about the convention's
+age, not about the files. Sorting them retroactively means guessing which of two undated July files
+superseded the other, and a wrong guess is worse than an honest gap — the ZERO versus NOT-RECORDED
+rule, applied to a directory.
+
+**The test that makes it real:** exactly one `CURRENT` per workstream, asserted. Two heads means the
+next session reads the wrong one, which is the failure the whole directory exists to prevent.
+
+⚠ **Another session is building a handoff tab right now** (in `scripts/local_tracker.py`, which also
+gained Flow and Goals today). This is the data layer that tab needs. **Coordinate before either is
+built**, or two sessions will write two models of the same thing — which is exactly what happened
+with R13 this morning.
+
+**Unlocks:** now, and it is small. The instrument is a directory read and five states.
