@@ -1,4 +1,4 @@
-# Synthesis — what ten research passes concluded, and what changes
+# Synthesis — what twelve research passes concluded, and what changes
 
 **2026-08-21, extended 2026-08-22.** Eight documents: R1 eval harness, R2 topology, R3 control
 plane, R4 agnostic optimiser (twice), **R5 build velocity**, **R6 automation and alerting**, and —
@@ -736,3 +736,139 @@ programme does not let a number travel without its basis, including a number tha
    gets a second process against the same id. That is the failure that prompted this brief. How
    does 'adopt' survive it?"*
 7. **R10 thread:** *"Give the sources for 'Swift et al. 2026' and SkillX."*
+
+
+---
+
+## 13. R8 and R15 — the ceiling is removable, and one answer invented its evidence (added 2026-08-23)
+
+Both landed after §12 was written. R13 and R14 are still out. R9 was withdrawn.
+
+### 13.1 ⭐ R8 answers architecture-v0's central question: the 3-lane cap is an artefact
+
+`architecture-v0` §1b asked us to attack the claim that *"an agent's isolation tier is chosen by
+what its task touches"*, and named the two ways it was most likely wrong: that Snowflake clones
+might be expensive to validate against, and that "data work does not conflict" was asserted rather
+than measured.
+
+**R8 says the ladder holds and the ceiling is an artefact of treating all work as one kind.**
+
+| | Current | R8's recommendation |
+|---|---|---|
+| Isolation unit | local worktree, processes as the user, no network block | container or microVM per agent, host network off by default |
+| **Concurrency ceiling** | **~3, file-level conflicts** | **resource-bound, "potentially 10+ on a modern server"** — each agent has its own DB clone |
+| Blast radius | high — agents can ALTER or drop prod objects | low — confined to clones; prod reachable only through a gated deploy |
+| Credentials | the operator's own Azure and Snowflake creds, unrestricted | brokered short-lived scoped tokens, nothing long-lived on the worker |
+| Cost | untracked | billed per sandbox, with quotas and auto-shutdown |
+
+Boot times, `OBSERVED`: Firecracker ~100–200 ms at ~5 MiB overhead; Kata ~150–300 ms; gVisor
+faster still but 10–30% I/O cost.
+
+⭐ **The smallest impactful change is smaller than the recommendation.** R8 does **not** say go to
+the cloud. It says **containerise agent execution on one machine** — Docker or Firecracker, mounted
+clones, an egress proxy — because *"the first break will be credentials isolation"*, and it cites
+our own **F53** (an edit to `~/.claude/skills/` was instantly global) as the evidence. Explicitly
+**not yet**: a multi-VM cluster or a new scheduling engine. *"First prove isolation locally."*
+
+### 13.2 The one rule worth adopting immediately
+
+> **Forbid any `CREATE OR REPLACE` on a shared schema unless preceded by an explicit clone.**
+
+That is R8's answer to "which data-sandboxing pattern can be made *mandatory* rather than
+conventional", and it is enforceable in code rather than in a runbook. It is also the same shape as
+the estate's standing evidence-gated-deploy rule — validate against a clone, deploy through a gate —
+so it costs no new discipline, only a check.
+
+### 13.3 ⚠ A correction to what "unattended" can mean
+
+Our readiness set asks *"can an agent team run a connector migration unattended?"* R8 puts a number
+on the state of the art, `REPORTED` from an Anthropic study: **99.9th-percentile autonomous turns
+last ~45 minutes, and the median is under a minute.** Longest productive production runs are *"tens
+of minutes, not hours or days"*, and most teams deliberately break runs under an hour to bound risk.
+
+**So the honest target is a 30–45 minute unbroken run, not an unattended migration.** Our 3-of-14
+figure is not far off a field that mostly does not attempt more. This does not lower the bar for
+*certification* — it changes what the bar is measuring.
+
+### 13.4 Where R8 ignored constraints it was given — recorded, not smoothed
+
+Two of its recommendations contradict facts the prompt supplied:
+
+- **"Scheduling → an event-driven workflow scheduler (e.g. Prefect, Dagger)."** R8 §3 told it that
+  our build plane at `:8765` is bespoke and **does not import Prefect**, so none of Prefect's
+  primitives are available (R2-followup). Recommending Prefect as the scheduler is a recommendation
+  to adopt the thing we established we are not using.
+- **"Communication → Kafka or Azure EventBridge, event sourcing."** The prompt's constraints say a
+  design needing a platform team to operate is the wrong answer regardless of merit. A Kafka
+  deployment is exactly that.
+
+Take the isolation half of R8 and leave the platform half. The isolation argument is costed, sourced
+and specific; the scheduling and messaging recommendations are generic and were made against
+constraints the answer had in front of it.
+
+### 13.5 R15 — a useful corpus, and three things wrong with it
+
+R15 read repositories rather than literature and produced the extraction table it was asked for.
+Its architecture recommendation is a Rust/Tauri desktop app with a run-record as the durable unit,
+an append-only SQLite store, and a separate verifier process after each run. **Its four screens —
+Runs Board, Run Details, Blocked Questions, Approval Review — are a reasonable answer** and three of
+them are already data-complete in this repo (`runs.report()`, `sessions.blocked()`, transcripts).
+
+Three defects, recorded here so they do not harden into fact:
+
+1. **It invented evidence about us.** *"In our user studies we found embedded shells cause cognitive
+   context-switch."* **There are no user studies.** That fabricated citation is used to support the
+   terminal recommendation — the one question every prompt was told to answer on the merits. It also
+   asserts *"Switchboard's 120fps cards"* after recording *"PERFORMANCE: Not documented."*
+2. **It omits §5.0 entirely** — *what to fix in ours first*, deliverable item 5, added specifically
+   so the substrate would be repaired before the interface. The answer goes straight to a new
+   architecture.
+3. **The corpus is thinner than the floor it was given** — ~25 candidates, 6 deep reads, most of the
+   named list marked LISTED-ONLY. And `block/goose` is misidentified as `aaif-goose/goose`.
+
+⚠ **Its desktop-app recommendation should not be acted on**, and not because it is wrong in
+principle: it is unaffordable in time, and the page it would replace is slow for a reason that is
+now measured. `measure()` runs 30 gates **serially in 9.3 s**; the loop is `for g in GATES:
+g.probe()` over independent I/O-bound probes, and the server is `socketserver.TCPServer`. An 8-wide
+pool puts a page near **1.2 s**. That is ~30 lines against the surface we already have, and
+`terminal-configuration.md` §2 already specifies it.
+
+### 13.6 ⛔ R12 and R15 contradict each other on the load-bearing fact — unresolved
+
+R15's own §0 named R12's source-level findings as its **control case**. It reached the opposite
+conclusion and did not notice:
+
+| | Claim | Tier |
+|---|---|---|
+| **R12** | switchboard *"never attaches to an arbitrary running process; it only re-uses PTYs that it itself spawned"* — and will **spawn a second process against the same session id** | OBSERVED |
+| **R15** | *"ATTACH: Yes – it can attach to any running session… It detects any Claude session in the project folder, not just those it spawned"* | OBSERVED |
+
+**Both cannot be true, and the answer decides whether adopting switchboard reproduces the exact
+duplicate-session failure of 2026-08-23.** Neither is stronger on its face: both claim to have read
+the source, and neither cites a line.
+
+**The discriminating test is cheap and nobody has run it:** open switchboard's `open-terminal`
+handler and read what happens when `activeSessions` does *not* contain the session id. R12 says it
+spawns with `--resume`; R15 says it attaches. One file settles it. **Until someone reads it, treat
+switchboard's attach behaviour as UNKNOWN and do not let either answer carry a design premise.**
+
+### 13.7 What changes
+
+1. **Do not adopt R15's desktop app.** Make the existing tracker instant instead — thread the server
+   and parallelise the probes, 9.3 s → ~1.2 s, ~30 lines. Then apply R14's design to a fast surface.
+2. **Containerise agent execution on one machine** (R8's smallest impactful change), before any
+   cloud step. The first break is credentials isolation, and F53 is the evidence.
+3. **Adopt the mandatory-clone rule** (§13.2) — enforceable in code, no new discipline.
+4. **Restate the unattended goal as a 30–45 minute unbroken run** (§13.3), and say so in the
+   readiness set rather than leaving the gate asking for something the field does not attempt.
+5. **Read switchboard's `open-terminal` handler** and settle §13.6. One file.
+6. **Take R8's isolation argument, leave its scheduling and messaging recommendations** (§13.4).
+
+### 13.8 What they could not settle
+
+- **R8:** whether zero-copy clones are cheap to *validate against* at our data volumes — it asserts
+  near-zero creation cost but does not cost validation, which was half of architecture-v0's §7
+  worry. And "10+ agents on a modern server" is `INFERRED`, with no measurement behind the number.
+- **R15:** anything about design craft — no type scale, no colour system, no hierarchy, no motion,
+  and no mention of `UNMEASURABLE`, which is the colour problem no standard palette solves. That is
+  R14's job and R14 has not run.
