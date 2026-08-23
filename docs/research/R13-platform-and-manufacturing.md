@@ -1,468 +1,369 @@
 # R13 — The manufacturing step, the platform, and the UI that has to make delivery move
 
-**Status: READY TO DISPATCH.** Written 2026-08-23. File the answer at
-`docs/research/answers/R13-answer-platform-and-manufacturing.md` and nowhere else.
-
-**§0 settled 2026-08-23: the in-page terminal is put to the pass as an open question**, on the
-explicit record that two prior attempts failed on it. R7 restated our own position back to us; R12
-was never told the constraint existed. This time it is neither asserted nor omitted — it is asked,
-with both prior failures named so the pass cannot repeat either.
+**Status: READY TO DISPATCH.** Written 2026-08-23, rewritten the same day after three review passes.
+File the answer at `docs/research/answers/R13-answer-platform-and-manufacturing.md` and nowhere else.
 
 ## How to run this
 
-**Paste everything inside the fence. Nothing outside it needs to go with it.**
+**Paste everything inside the fence.** Nothing outside it goes with it.
 
-⚠ **This repo is private.** A research tool cannot fetch `agent-factory`, `prefect-connectors`,
-`clients`, `core_api`, `eclipse` or the wiki — not by URL, not by search. So the fence carries every
-figure inline rather than citing a path. **If a returned answer quotes one of our file paths as
-though it read it, it did not — treat that answer as contaminated.**
-`docs/specs/agent-factory-technical-and-business-spec.md` may be attached as a supplementary file,
-but the fence must stand alone without it.
+⚠ **This repo is private.** A research tool cannot fetch one path in it. The fence therefore carries
+every figure inline and names no internal file. **An answer that cites one of our paths as though it
+read it is contaminated** — check for that first, it is the cheapest tell.
 
----
+## What the three review passes changed
 
-## §0 — The in-page terminal, and why it is asked rather than asserted
+The first draft was simulated against a stand-in for the target model before dispatch. It came back
+compliant and hollow, and the diagnosis was specific enough to rebuild from.
 
-**Decision, 2026-08-23: put it to the pass as an open question.** The fence carries it as `E8`.
+| Finding | Change |
+|---|---|
+| ⛔ **`0 of 15` was an instrument artefact.** The gate matched `rf"\x08{d}\x08"` — literal backspace bytes where `\b` was intended — so it could only ever return zero. True figure **6 of 15** | [[F76]]. D2 was dispatching from a false baseline; corrected throughout |
+| ⛔ **"a constraint we are deliberately not giving you"** told a competent model a settled position existed and invited it to guess it — the R7 echo, produced by the sentence meant to prevent it | Cut. E8 now states no position at all |
+| ⭐ **Six questions have no public literature behind them.** The simulation returned confident prose for all of them anyway, in the same shape as the well-evidenced ones | **Questions split into Tier A (researchable) and Tier B (probably not).** Tier B must return an experiment design, not a paragraph |
+| **It skimmed the middle.** The three "attack this first" points sat mid-prompt and were skipped entirely | Moved into Part 2, before anything it is supposed to attack |
+| Three passages made agreeing the cheap move — *"the only axis where we are not starting from behind"*, *"our genuinely novel claim"*, *"three of three, right each time"* | All three cut or inverted |
+| It answered **"moderate effort"** — the exact adjective-not-a-figure failure the prompt forbids | Now a required unit, checked in the self-audit |
+| 3,833 words; the tail thinned out | ~2,400 |
 
-This is the third time this question has been in front of a researcher and the first time it has
-been *asked*. R7 restated our own position instead of challenging it, so we learned nothing. R12 was
-never given the constraint at all and duly recommended adopting an Electron app whose entire model
-is an embedded terminal per session — **an answer cannot respect a rule it was not given**, so its
-"adopt" is not a refutation of R7, it is an answer to a different question.
-
-⚠ **Both failure modes are now named inside the fence**, which is the point: a pass told only
-*"we do not embed terminals"* returns our own position with citations, and a pass told nothing
-returns a terminal grid. Asking it explicitly, with both prior failures on the record, is the only
-form that can come back gradeable.
-
-⭐ **The consequence of leaving it open is that E8 gates E1 and E7.** Nothing downstream about UI
-substrate is decidable until it is answered, so grade E8 first when the answer lands — and if the
-pass ducks it or hands our position back a third time, that section is void and the rest of the UI
-answer is read with it discounted.
-
-Paul's own position on 2026-08-23 was *"terminal mode needs to exit"*. It is **deliberately not
-stated in the fence**, so the answer is evidence rather than an echo.
+⭐ **The most useful output was not the answer, it was the confession.** A model told to play the
+target honestly will name what it skimmed and where it felt pulled to agree. That is worth more than
+a review of the prompt, and it should be run before every future pass.
 
 ---
 
 ```
-You are advising a small data-and-analytics consultancy that has built an "agent factory" — a
-system for producing agent teams whose output is CERTIFIED rather than believed. We have run
-twelve prior research passes. This one asks three linked questions that none of them covered.
+You are advising a small data-and-analytics consultancy on three linked decisions. We have run
+twelve prior research passes; this is the thirteenth. Read the rules first — they decide whether
+your answer is usable at all.
 
-Everything below was measured by us on 2026-08-22/23 and carries a basis marker:
-  [M] measured, instrument named   [D] derived from something measured
-  [R] reported, inherited, not re-verified   [A] assumed, no measurement
+=====================================================================
+PART 1 — THE CONTRACT. Read before you plan your searches.
+=====================================================================
 
-Apply the same suspicion to every source you meet. Read the code or the documentation, never the
-launch post, and tier every claim you return:
-  OBSERVED  — you read the source or ran it
-  DOCUMENTED — it is in official docs but you did not verify it
-  MARKETED  — it is a vendor claim on a landing page
-A claim with no citation is a rumour and we will discard it.
+WHAT WE WILL DO WITH YOUR ANSWER: grade it as a DIFF against the positions stated below, discard
+anything uncited, and fold the rest into a decision record. Prose that restates our position back
+to us is the failure mode we are guarding against, and we have measured it happening twice.
 
-====================================================================
-PART A — WHO WE ARE AND WHAT THE PRODUCT IS
-====================================================================
+RULE 1 — EVIDENCE CLASS BEFORE PROSE. For EVERY numbered question, open with one line:
 
-We deliver the same unit of work repeatedly: pull vendor data through a connector, land it in
-Snowflake, model it into a star schema, surface it in Power BI or a bespoke Next.js app. Measured
-surface: 24 client directories, 139 connection configs, 739 extraction templates, 186 warehouse
-SQL views, 104 reporting views. [M] Our control-plane API is 30,460 lines of Python across 21
-routers; our portal UI is 22,715 lines of TypeScript across 18 API domains. [M]
+    EVIDENCE: STRONG   multiple independent primary sources; name them
+    EVIDENCE: THIN     one source, or sources that all trace to one origin
+    EVIDENCE: ABSENT   you searched and there is essentially no public material
 
-THE FOUNDING FAILURE, and it decides everything:
+Write this line BEFORE the answer, not after, and let it constrain the length of what follows.
+An ABSENT question gets three sentences and an experiment design (Rule 2) — NOT a paragraph of
+plausible-sounding architecture. We expect several ABSENTs. Returning ABSENT with the searches you
+ran named is a GOOD answer and we will treat it as one. A confident paragraph on a question with no
+literature behind it is the single most damaging thing you can send us, because it is
+indistinguishable in shape from the ones that are real.
 
-This estate twice built mechanisms that ACTED without anything measuring whether the action
-helped. One agent produced 233 diagnoses, 234 escalations and ZERO fixes over 81 days. [R] A
-separate loop ran 965 times, recorded its own 1.6% success rate, and never adjusted. [R] Both were
-capable. Neither was measurable.
+RULE 2 — WHEN EVIDENCE IS ABSENT, DESIGN THE EXPERIMENT INSTEAD. Say what we should measure
+ourselves, with what instrument, over what period, and what result would decide it. We can run a
+one-week internal experiment. We would rather have that than a synthesis of nothing.
 
-The consequence is precise: a dashboard over the first mechanism would have shown 234 escalations
-climbing steadily, and a self-improving loop pointed at that number would have optimised for
-ESCALATING FASTER and called it progress. An activity metric with no outcome metric is not a weak
-metric, it is an inverted one. Our code therefore RAISES an exception when an activity metric is
-registered without a paired outcome metric, rather than warning.
+RULE 3 — TIER EVERY CLAIM.
+    OBSERVED    you read the source or ran it
+    DOCUMENTED  official docs, not verified by you
+    MARKETED    a vendor claim on a landing page
+An uncited claim is a rumour and is discarded. Do not cite our internal files; you cannot see them.
 
-THE PRODUCT THESIS, in one sentence from our README:
+RULE 4 — COST IN UNITS. Any effort estimate is in engineer-days or engineer-weeks. "Significant
+engineering effort" and "moderate" are non-answers; a previous pass returned nothing but those.
 
-  "A team of agents did the work, and we can prove it — or we can prove we could not tell."
+RULE 5 — BANNED OUTPUTS. A framework comparison table. A list of agent platforms with feature
+columns. Anything reported as a gap that appears in Part 6's deferral list. Restating a measurement
+we gave you as though it were a finding.
 
-That is an EVIDENCE product, not a PROCESS product. Every session manager and agent platform we
-have looked at manages processes. None of them answers: who did this work, under what
-configuration, and what proves it was correct. We believe that is the only axis where we are not
-starting from behind. Tell us if we are wrong about that — with citations.
+RULE 6 — DISAGREEMENT IS THE DELIVERABLE. The section where you name a specific claim of ours you
+believe is wrong, and the evidence, is the one we read first. Concluding we should build LESS is
+admissible and we will not treat it as a non-answer — but it is not the expected answer either, and
+three of our recent passes reached it partly because we made it the comfortable one. Say what the
+evidence supports.
 
-====================================================================
-PART B — WHAT WE HAVE BUILT (so you return a DIFF, not a survey)
-====================================================================
+=====================================================================
+PART 2 — ATTACK THESE FIRST. They are load-bearing and may be wrong.
+=====================================================================
 
-29 Python modules, 5,180 LOC; 16 test modules; 30 readiness gates; 26 named concepts enumerated
-from code. [M] The load-bearing ones:
+Placed first deliberately: in a trial run of this prompt these sat in the middle and were skipped.
 
-1. GreenContract — a named set of falsifiable assertions; the root success object.
-2. FOUR VERDICTS, NEVER COLLAPSED — PASS / FAIL / UNMEASURABLE / NOT_RUN. UNMEASURABLE is raised
-   by a probe as an EXCEPTION, so a dark instrument cannot read as healthy. It is explicitly not
-   a pass. Collapsing "I could not look" into "I looked and it was fine" is how a measurement that
-   never happened passes for one that did.
-3. THE NEGATIVE CONTROL — a harness that deliberately breaks the world and asserts the contract
-   notices. A test fails the suite if any assertion has never been observed failing. An eval nobody
-   has proved can fail is decoration.
-4. THE CONFIG IS THE VERSION — an agent is a (prompt, model, effort, tools, retry, turns, budget)
-   tuple; change one element and its certification does not transfer.
-5. EVALUATOR AS A PRINCIPAL — a separate service; three fields in (artifact_uri, artifact_sha256,
-   run_id), verdict out. The client cannot name the corpus it is scored against; the service
-   resolves that from its own config. Write-once verdict store.
-6. APPEND-ONLY, EVIDENCE-GATED WORK LEDGER — state is a fold over events; a task cannot close as
-   done without at least one MEASURED or DERIVED piece of evidence attached. Enforced by the store,
-   not by convention.
-7. PARALLELISM BOUND BY FILE LOCALITY, not the dependency graph — one git worktree per lane, with
-   claims that refuse overlapping lanes.
-8. READINESS AS 30 MEASURED GATES — each measures from a named file AT RUN TIME and reports the
-   path it measured from.
+A1. OUR CENTRAL ARCHITECTURAL CLAIM — THE ISOLATION LADDER.
+    "An agent's isolation tier is chosen by WHAT ITS TASK TOUCHES, declared up front, and enforced
+    — not by what kind of agent it is."
+      T0  git worktree on the operator's machine (BUILT). Repo files only, no egress, no DB verbs.
+      T1  container, egress allowlist, READ-ONLY warehouse role. Repo + SELECT on real data.
+      T2  container + EPHEMERAL ZERO-COPY CLONE SCHEMA dropped on exit. Full DDL/DML in the clone.
+    The reasoning: "do not touch prod" in a prompt is a REQUEST; a role with no grant on prod is a
+    CONTROL. We think generic agent frameworks miss this because isolating a filesystem does
+    nothing when the risk is DDL on a shared warehouse.
+    Three specific ways it could collapse — check each, do not summarise them:
+      (a) a zero-copy clone is cheap to CREATE but the compute to VALIDATE against it may not be,
+          and a clone of a SHARED database may not behave like the original. If T2 is not actually
+          cheap the whole argument fails. What is true of Snowflake specifically?
+      (b) "data work does not conflict" is asserted, not measured. Two agents building two views
+          can collide on a shared dimension table, a naming convention, or the same reporting
+          object. Does the conflict graph need DIFFERENT EDGES rather than fewer?
+      (c) T1/T2 assume containers on Windows via WSL2. We have never measured start-up cost. What
+          is it in practice, and what breaks?
 
-Three things we believe nobody ships, and want you to confirm or refute:
-  (a) a verdict that can say "I could not tell" — every dashboard we have seen is two-valued;
-  (b) provenance to a config hash: this artefact was produced by THIS agent, on THIS model, with
-      THIS prompt, under THIS contract version. Our hash exists and covers 0 of 15 dimensions [M],
-      so this is a gap with a name, not a feature;
-  (c) cost paired with an outcome, ENFORCED rather than recommended.
+A2. WE CLAIM NOBODY SHIPS THREE THINGS. Refute them if you can — each is stated so it CAN be.
+      (i)   a verdict that can say "I could not tell": four-valued PASS / FAIL / UNMEASURABLE /
+            NOT_RUN, where UNMEASURABLE is raised by the probe as an exception so a dark instrument
+            cannot read as healthy. We believe every comparable dashboard is two-valued.
+      (ii)  provenance to a config hash: this artefact was produced by THIS agent, on THIS model,
+            with THIS prompt, under THIS contract version.
+      (iii) cost paired with an outcome, ENFORCED — our code RAISES when an activity metric is
+            registered with no outcome metric to anchor it, rather than warning.
 
-====================================================================
-PART C — THE ARCHITECTURE, AND THE CLAIM MOST LIKELY TO BE WRONG
-====================================================================
+A3. WE MAY BE WRONG THAT GUARDRAILS ARE A NEW LAYER. We have filed "a pre-action guardrail" as a
+    category we lack, distinct from our post-hoc gates, on the strength of one defect: a function
+    sent a workflow engine a CANCELLING signal BEFORE the ownership check ran, so the refusal
+    protected the container and never protected the run. ARGUE THE OTHER SIDE: that this is an
+    ordinary authorisation-ordering / TOCTOU bug, that calling it a missing layer is a category
+    error, and that we would be building a framework to fix a code review. Then tell us which
+    reading survives.
 
-Four planes with a hard boundary between them:
+=====================================================================
+PART 3 — WHO WE ARE, AND THE FOUNDING FAILURE
+=====================================================================
 
-  APPROVE   humans only: merge, per-secret grant, promote to prod  <- never automated
-  PROVE     readiness gates, contracts, findings ledger, run audits
-  RUN       the isolation ladder (below)
-  DECIDE    conflict graph, claims, scheduling, caps, budgets
+We deliver one unit of work repeatedly: pull vendor data through a connector, land it in Snowflake,
+model it, surface it in Power BI or a bespoke web app. Measured surface: 24 client directories, 139
+connection configs, 739 extraction templates, 186 warehouse views, 104 reporting views. (739
+templates is the SURFACE, not 739 units of work — how many are live is unmeasured.)
 
-The boundary that matters is RUN/PROVE: the thing being measured must not be the thing doing the
-measuring.
+THE FOUNDING FAILURE, and it decides what the product is:
 
-THE ISOLATION LADDER is our genuinely novel claim, and the thing to attack first:
+This estate twice built mechanisms that ACTED without anything measuring whether the action helped.
+One agent produced 233 diagnoses, 234 escalations and ZERO fixes over 81 days. A separate loop ran
+965 times, recorded its own 1.6% success rate, and never adjusted. Both were capable. Neither was
+measurable.
 
-  An agent's isolation tier is chosen by WHAT ITS TASK TOUCHES, declared up front, and enforced —
-  not by what kind of agent it is.
+The consequence is precise: a dashboard over the first would have shown 234 escalations climbing
+steadily, and a self-improving loop pointed at that number would have optimised for ESCALATING
+FASTER and called it progress. An activity metric with no outcome metric is not a weak metric, it
+is an inverted one.
 
-  T0  git worktree on the operator machine (BUILT). Repo files only. No network egress, no DB
-      verbs. For code, docs, tests.
-  T1  container, egress allowlist, read-only warehouse role. Repo + SELECT on real data. For
-      analysis and reconciliation.
-  T2  container + EPHEMERAL ZERO-COPY CLONE SCHEMA, dropped on exit. Full DDL/DML inside the clone
-      only. For building views, migrations, backfills.
+Our stated thesis, which Part 2 A2 asks you to attack: "A team of agents did the work, and we can
+prove it — or we can prove we could not tell." We hold that this is an EVIDENCE product and that
+the platforms we have looked at are PROCESS products. Tell us if that distinction does not survive
+contact with what is actually shipping.
 
-The argument: "do not touch prod" in a prompt is a REQUEST; a role with no grant on prod is a
-CONTROL. We think this is what generic agent frameworks miss — isolating a filesystem does nothing
-when the risk is DDL on a shared warehouse.
+TWO THINGS WE HAVE NOT DECIDED, and they change the answers. Answer conditionally on both branches
+and say which branch moves your recommendation:
+  - whether this is internal capacity or a client-facing product;
+  - whether the platform targets five repositories or one to begin with.
 
-Where we think it is most likely wrong, and want you to check:
-  - A zero-copy clone is cheap to CREATE; the compute to VALIDATE against it is not, and a clone
-    of a SHARE may not behave like the real thing. If T2 is not actually cheap, the argument
-    collapses. [A]
-  - "Data work does not conflict" is asserted, not measured. [A] Two agents building two views can
-    collide on a shared dimension table, a naming convention, or the same reporting object. The
-    conflict graph may need DIFFERENT EDGES, not fewer.
-  - T1/T2 assume containers on Windows via WSL. Unmeasured; start-up cost is a guess. [A]
+=====================================================================
+PART 4 — QUESTIONS, TIER A: we believe these are researchable
+=====================================================================
 
-====================================================================
-PART D — QUESTION 1: THE MANUFACTURING STEP DOES NOT EXIST
-====================================================================
+A1-A3 above are also Tier A and carry the same rules.
 
-This is the primary question. Our goal is to COMPOSE AGENT TEAMS FROM A PLATFORM AND DEPLOY THEM
-INTO REPOSITORIES. Today the factory's output is a SESSION, not a SPEC. An agent is currently a
-prompt string, a model and a gate list — that is launcher input, not a manufactured artefact.
+D1. WHO HAS ACTUALLY BUILT AGENT-TEAM MANUFACTURING — a versioned, content-addressed agent or team
+    spec composed in one place and deployed into repositories? For each real implementation: WHAT
+    IS THE UNIT THAT GETS VERSIONED AND DEPLOYED, and WHAT IS ITS IDENTITY DERIVED FROM? We care
+    about the identity question more than the feature list. Read code or docs, not launch posts.
 
-The object we think we need:
+D2. VERSIONING AN AGENT so a certification cannot silently transfer. We name 15 dimensions and our
+    spec object currently carries 6 as fields: prompt, model, effort, tools, max_turns, budget_usd.
+    Absent: tool_implementation, sandbox_image, model_routing, context_policy, external_knowledge,
+    permissions, contract_version, harness_version, side_effect_replay. Which of the nine actually
+    bite in practice, which are theoretical, and WHAT ARE WE NOT LISTING AT ALL? (Our own view is
+    that contract_version bites first, because a certification granted under contract v4
+    transferring silently to v5 is a false guarantee rather than a missing feature.)
 
-  AgentSpec:
-    id: navira-view-builder
-    version: 7                              # bumped on ANY field below — that is the point
-    prompt_ref: prompts/view-builder@a3f9c1 # content-addressed, never inline
-    model / effort / tools
-    tier: T2                                # chooses the sandbox — Part C
-    budget: {tokens, wall_clock, warehouse_credits}
-    contract: green@v5                      # which assertions certify it
-    gates: [...]
-    needs_human: [credential-grant, merge, promote]
+D4. THE SHAPE OF A REGISTRY of certified specs — the thing a platform deploys FROM. We already
+    know the container-registry analogy; assume it and go further. Specifically: what carries the
+    VERDICT alongside the artefact, and has anyone applied signed-attestation machinery to agent
+    configurations rather than to builds?
 
-Our gap list for "create a team and deploy it to a repo", measured:
-  1. AgentSpec as a versioned artefact              ABSENT
-  2. Version hash covering all 15 dimensions        0 of 15 [M]
-  3. Content-addressed prompts                      ABSENT
-  4. Tier declared and ENFORCED, refusal audited    ABSENT
-  5. Bounded deployment into a repo                 BUILT (worktree + turn cap + spend cap +
-                                                    an attempt ledger PERSISTED TO DISK so the cap
-                                                    survives a restart)
-  6. Per-repo contract to certify against           BUILT for connectors, not generalised
-  7. Cross-repo targeting                           ABSENT — every path resolves from cwd
-  8. A registry of certified specs to deploy FROM   ABSENT
+F1. PRE-ACTION GUARDRAILS — see A3, which asks you to attack the premise first. If the category
+    survives, what is the state of the art, where does it sit in the call path, and what does it
+    cost?
 
-A hard-won lesson that shapes this: A SPEC FIELD THAT NOTHING READS IS WORSE THAN NO FIELD. In one
-month we produced a --model flag built into a dead variable, so every agent ANNOUNCED A MODEL IT
-WAS NOT RUNNING ON; a code detector that silently degraded to 1 finding instead of 313; and gates
-reporting PASS while measuring nothing.
+F2. STRUCTURED TRACES. We derive tokens, cache traffic, model and wall-clock from a raw transcript,
+    so telemetry is not absent — but there is NO STRUCTURED TRAJECTORY OBJECT: no span, no typed
+    event stream, nothing another tool can read. Should a certified run emit a standard-shaped
+    trajectory? Is the relevant standard STABLE, and if not, what is the pinning story?
 
-ASK:
-D1. Who has actually built agent-team manufacturing — a versioned, content-addressed agent/team
-    spec that is composed in one place and deployed into repositories? Look at real
-    implementations, not launch posts: Claude Agent SDK subagent definitions, OpenAI AgentKit,
-    Google ADK + Agent Engine, Microsoft Agent Framework + Foundry, LangGraph Platform, CrewAI,
-    Factory.ai, Cognition, Sierra, and anything on GitHub with real adoption. For each: what is the
-    UNIT that gets versioned and deployed, and what is its identity derived from?
-D2. What is the state of the art on VERSIONING an agent so a certification does not silently
-    transfer? Which dimensions do real systems include in identity, and which do they miss? We
-    believe there are ~15; tell us what we have wrong.
-D3. Content-addressed prompts: who does this, what does it cost operationally, and what breaks?
-D4. What is the right shape for a REGISTRY of certified specs — the thing a platform deploys from?
-    Is there prior art beyond container-registry analogies?
-D5. Cross-repo deployment: how do real systems target N repositories without every path resolving
-    from the operator's working directory? What did they learn the hard way?
+F3. TASK AND ENVIRONMENT PACKAGING as one reproducible unit — task plus environment plus scoring.
+    Which standard is real, which is actually ADOPTED, and would adopting one make our evaluation
+    corpus portable?
 
-====================================================================
-PART E — QUESTION 2: THE UI, AND WHAT IT IS ACTUALLY FOR
-====================================================================
+F4. COMPENSATING ACTIONS. GIT REVERT DOES NOT UNDO A DROPPED TABLE. Our isolation ladder implies
+    rollback semantics for data work and nobody has designed them. What is the actual PRACTICE —
+    not the theory — for compensating a partially-applied warehouse change made by an autonomous
+    agent? Snowflake specifics welcome.
 
-Paul's ask is "a complete overhaul optimising for speed and ease of monitoring". We think the
-naive reading of that is a trap, and want you to tell us whether we are right.
+=====================================================================
+PART 5 — QUESTIONS, TIER B: we suspect these have no literature
+=====================================================================
 
-WHAT WE MEASURED, and it reframes the question:
+A trial run produced confident, sourceless prose for every one of these. DO NOT DO THAT. Apply
+Rule 1 strictly. If the answer is ABSENT, say so in three sentences and give us the experiment
+(Rule 2). We will believe you, and it is more useful than a synthesis.
 
-  runs finishing with no human                    3 of 14   [M]
-  gate events that were ever a REFUSAL            0 of 22   [M]
-  green PRs waiting on a human to press merge     2, for 6 and 9 DAYS  [M]
-  agents blocked on a plain-English question
-    written in a file nothing read                4         [M]
-  concurrent lanes supported                      3         [D] max independent set of the
-                                                            file-conflict graph
-  page load on our existing tracker               10-19 s, and two concurrent requests
-                                                  return empty (single-threaded)  [M]
+CONTEXT YOU NEED FOR ALL OF PART 5 — what we measured:
 
-Two green PRs waited NINE DAYS for a click. No amount of agent improvement touches that number.
+    runs finishing with no human                     3 of 14
+    gate events that were ever a REFUSAL             0 of 22
+    green PRs waiting for a human to press merge     2, for 6 and 9 DAYS
+    agents blocked on plain-English questions
+      written in a file nothing read                 4, for days
+    concurrent lanes supported                       3
+    page load on our existing status tool            10-19 s; two concurrent requests return empty
 
-Each of our four planes implies a different user, and only one is for a non-engineer:
+Our four planes and who each is for:
+    DECIDE   operator — what can start, what conflicts, what it costs    partly built
+    RUN      nobody, ideally — only exceptions: stalled, orphaned        partly built
+    PROVE    reviewer — the verdict AND what it was measured with        partly built
+    APPROVE  anyone, including a non-engineer — what was delivered,
+             what proves it, approve or reject                           NOTHING EXISTS
+The plane with no surface and the plane where delivery is measurably stuck are the same plane. Tell
+us whether that coincidence is load-bearing or incidental.
 
-  DECIDE   operator  — what can start, what conflicts, what it costs   partly built
-  RUN      nobody, ideally — only the exceptions: stalled, orphaned,
-           over-budget                                                 partly built
-  PROVE    reviewer  — the verdict AND what it was measured with       partly built
-  APPROVE  anyone, incl. a non-engineer — what was delivered, what
-           proves it, approve or reject                                NOTHING EXISTS
+Also relevant: a refusal rate of exactly zero is indistinguishable from a gate that CANNOT refuse.
+And four surfaces already exist to look at this work; a fifth was built as a delivery PLATFORM and
+died, while the operations half of the same repo carried every ticket.
 
-So: the "normal user" surface and the measured delivery bottleneck are THE SAME SURFACE.
-
-A refusal rate of exactly zero is not a clean bill of health — it is indistinguishable from a gate
-that cannot refuse. Absence of alarms and absence of alarm CAPABILITY look identical from outside.
-
-WHAT ALREADY EXISTS — four live surfaces and a fifth that DIED. Any new UI is the sixth thing built
-to look at this work. The dead one is the cautionary case: a monorepo founded as a delivery
-PLATFORM whose platform half stopped moving after four months while the operations half carried
-every ticket. "Build a new platform UI" has been tried here and it died. Factor that in.
-
-WHAT OUR EXISTING TRACKER DOES that a session manager does not, so you do not recommend rebuilding
-it: every number RE-MEASURES ON REFRESH — there is no cache, because a page that can quietly show
-yesterday's state is the exact drift this project exists to remove. Verdicts are four-valued. The
-task board is GENERATED from the gates, so it cannot drift from what is measured. Its ranking
-function states in writing which part is judgement, because a bare ranking is an oracle.
-
-THE TWO REQUIREMENTS AS BUDGETS:
-  Speed — currently 10-19 s per page. The interesting question is NOT "how do we cache this" but
-    "how does a page stay HONEST and fast at the same time", because re-measuring on refresh is a
-    CORRECTNESS property, not a performance compromise. If a figure must be cached, it carries its
-    age in the same string.
-  Monitoring — our measured failure is ALARM ABSENCE, not alarm fatigue. The signal existed and was
-    never surfaced. Whatever surfaces a blocked agent's question must INTERRUPT, not badge.
-
-ONE CONSTRAINT WE ARE DELIBERATELY NOT GIVING YOU — see E8. Every other constraint in Part H is
-binding; the in-page terminal is the one we want argued rather than obeyed.
-
-ASK:
-E1. Given that this is an EVIDENCE product, what is the right PRIMARY OBJECT of the UI: the
-    session, the lane, the artefact, or the decision? Argue it; do not list options.
-E2. What does the state of the art do for the APPROVE plane — review-and-merge queues where the
-    work was done by an agent? WHO HAS SHIPPED THIS, and what did they learn? This is the single
-    most valuable thing you can return.
-E3. What is the evidence on surfacing an agent's blocking question to a human so it is answered in
-    MINUTES rather than DAYS? Interrupt, queue, inbox, push? Our measured latency is days.
-E4. What would a NON-ENGINEER need in order to approve agent-produced work safely, and what has
-    actually been tried? Include failures.
-E5. How do teams present PROVENANCE and COST-PER-OUTCOME without it becoming a vanity dashboard?
-E6. How do the fastest agent-observability UIs stay honest and fast simultaneously — what is the
-    real architecture behind sub-second pages over live state, and what do they give up?
+E1. What is the right PRIMARY OBJECT of the UI — the session, the lane, the artefact, or the
+    decision? Argue it. (If the evidence-product framing from Part 3 does not survive your check,
+    answer for the framing you think is right and say so.)
+E2. THE APPROVE PLANE: review-and-merge queues where the work was done by an agent. Has anyone
+    SHIPPED this, and what did they learn? If the honest answer is that nobody has published one,
+    say that plainly — it is what we most need to know.
+E3. Surfacing an agent's BLOCKING QUESTION so it is answered in minutes rather than days. Is there
+    any empirical latency data, or only prescriptive patterns?
+E4. What would a NON-ENGINEER need to approve agent-produced work safely? Include documented
+    failures, not just designs.
+E5. Presenting PROVENANCE and COST-PER-OUTCOME without a vanity dashboard.
+E6. How do fast agent-observability UIs stay HONEST and fast at once? Our status tool re-measures
+    on every refresh with no cache, deliberately — a page that can quietly show yesterday's state
+    is the drift this project exists to remove. What is the real architecture, and what is given up?
 E7. Given four surfaces exist and a fifth died: WHAT SHOULD WE REFUSE TO BUILD?
-E8. THE ONE WE KEEP FAILING TO GET ANSWERED — and we want it argued, not agreed with. Should a
-    live terminal be embedded in the supervision UI at all, or is a terminal an ESCAPE HATCH you
-    leave the page to reach?
-
-    Read this part carefully, because two prior passes broke on it in opposite directions. One was
-    handed our position and returned it to us with citations, which taught us nothing. The other
-    was never told the question existed and recommended an Electron app whose entire model is an
-    embedded terminal per session. WE ARE THEREFORE NOT TELLING YOU WHAT WE THINK. Take a side and
-    defend it.
-
-    What we can tell you is what we measured, and it cuts both ways:
+E8. Should a live terminal be embedded in the supervision UI at all, or is a terminal an ESCAPE
+    HATCH you leave the page to reach? We have NO position for you to agree with; take a side.
+    What we measured, and it cuts both ways:
       - a terminal DIED and its agent kept working, invisibly, for minutes. Alive, visible and
         attachable turned out to be three different properties and nothing distinguished them;
-      - four agents sat blocked on questions written in plain English in a file nothing read, for
-        days. A terminal would have shown those questions to anyone watching — and nobody was;
-      - our operators DO drop to a terminal, routinely, and the work is fundamentally
-        text-and-git-shaped;
-      - the one substrate we evaluated has NO ATTACH: it re-uses only PTYs it spawned itself, and
-        spawns a SECOND process against a live session id it did not launch. That is precisely the
-        incident above, reproduced by design.
+      - four agents sat blocked for days on questions a terminal would have shown to anyone
+        watching — and nobody was watching;
+      - our operators DO drop to a terminal routinely; the work is text-and-git-shaped;
+      - one substrate we read (Switchboard — Electron, node-pty) has NO ATTACH: it re-uses only
+        PTYs it spawned itself, and spawns a SECOND process against a live session id it did not
+        launch.
+    Answer: (a) in SHIPPED supervision UIs for long-running agents, is a terminal a first-class
+    pane, an escape hatch, or absent — cite real products; (b) what does embedding one buy over a
+    status list plus the transcript; (c) what does it COST — attach semantics, duplicate processes,
+    state divergence, security surface; (d) if it is an escape hatch, what carries the load
+    instead; (e) what one-week experiment would settle this for us?
 
-    Specifically: (a) in shipped supervision UIs for long-running agents, is a terminal a
-    first-class pane, an escape hatch, or absent — with citations to real products, not launch
-    posts; (b) what does an embedded terminal buy that a status list plus the transcript does not;
-    (c) what does embedding one COST in practice — attach semantics, duplicate processes, state
-    divergence, security surface; (d) if terminals are an escape hatch, what carries the load in
-    the primary UI instead; (e) what evidence would settle this, that we could gather ourselves in
-    under a week?
+D5. CROSS-REPO TARGETING. How do real systems target N repositories without every path resolving
+    from the operator's working directory? Lore is acceptable here if labelled as such.
 
-====================================================================
-PART F — QUESTION 3: FOUR ABSENCES WE HAVE NAMED BUT NOT DESIGNED
-====================================================================
+=====================================================================
+PART 6 — SETTLED AND DEFERRED. Reporting these as findings is a failed pass.
+=====================================================================
 
-Not deferred, not renamed. Nothing here has a stated unlock condition, which is itself the finding.
+ALREADY ANSWERED by twelve passes and ~450 KB of filed answers. You may CONTRADICT any of these
+WITH NEW EVIDENCE — that is valuable. You may not restate them as discoveries.
 
-F1. GUARDRAILS AS A PRE-ACTION LAYER. Our gates evaluate FINISHED OUTPUT; a guardrail blocks a bad
-    action BEFORE it happens. Worked example we already shipped: a function sent a workflow engine
-    a CANCELLING signal BEFORE the ownership check ran — so the refusal protected the container and
-    never protected the run. A post-hoc gate cannot catch that class. What is the real state of the
-    art, and what does it cost?
-F2. STRUCTURED TRACES. We derive tokens, cache traffic, model and wall-clock from a raw transcript,
-    so telemetry is not wholly absent — but there is NO STRUCTURED TRAJECTORY OBJECT: no span, no
-    typed event stream, nothing another tool could read. Should a certified run emit a
-    standard-shaped trajectory (OpenTelemetry GenAI semantic conventions, or otherwise)? What is
-    actually stable versus still churning?
-F3. TASK AND ENVIRONMENT PACKAGING as one reproducible unit (task + environment + scoring). METR's
-    task standard, Inspect's task format, verifiers-style environment packaging. Which is real,
-    which is adopted, and would adopting one make our corpus portable?
-F4. COMPENSATING ACTIONS. GIT REVERT DOES NOT UNDO A DROPPED TABLE. Our isolation ladder implies
-    rollback semantics for data work and nobody has designed them. What is the actual practice —
-    not the theory — for compensating a partially-applied warehouse change made by an autonomous
-    agent?
-
-====================================================================
-PART G — DO NOT RE-ASK. Twelve passes, ~370 KB of answers already filed.
-====================================================================
-
-Re-asking these buys the same answer at full price. A pass that "discovers" one of these has
-produced nothing. You may CONTRADICT any of them WITH NEW EVIDENCE — that is valuable. You may not
-restate them as findings.
-
-  R1  Eval harness. Keep our contract as the authoritative verifier; do NOT add a general LLM-eval
-      framework. The weak parts are control-plane, not eval sophistication.
-  R2  Topology. DO NOT build a three-agent architect->implementer->tester team. One end-to-end
-      worker + a NON-LLM verifier holding the authoritative PASS bit + a human for privileged ops.
-      Evidence: 180 configurations across 5 architectures and 4 benchmarks; multi-agent averaged
-      -3.5%; SEQUENTIAL TASKS DEGRADED 39-70%, and our work is sequential shared-state work.
-  R3  Control plane. Do not optimise yet — make it bounded, reapable, fail-closed and independently
-      evaluable first. Tamper-evidence is not a trust boundary; an evaluator SERVICE is.
-  R4  Agnostic optimiser. Not yet, but build repo-agnostic INTERFACES now: cheap now, expensive to
-      retrofit.
-  R5  Build velocity. Lean runner + sandbox + circuit-breakers is the gating step. Worktree per
-      agent; 41.7% cross-agent conflict rate on a shared branch.
-  R6  Automation. Branch per lane, merged one at a time.
-  R7  Session managers. Inspiration, not adoption.
-  R10 A hierarchical auto-updating wiki: NO. ~24% accuracy loss from 30k IRRELEVANT tokens even
-      with the relevant content present; our wiki is ~1M tokens. The win is distilling procedures
-      into INVOCABLE SKILLS, not growing a better corpus.
-  R11 Concept diff against other factories. Seven absent concepts, every one costed as
-      "significant engineering". None recommended now.
-  R12 Session-manager substrate. Its own source-reading contradicted its summary: the tool it
-      recommended HAS NO ATTACH and spawns a duplicate process against a live session id — which is
-      exactly the incident that prompted the question.
-
-FOUR INDEPENDENT PASSES CONVERGED WITHOUT BEING ASKED: "the weakest parts are control-plane
-problems" / "control-plane changes are more urgent than agent architecture" / "this system should
-not be optimised yet" / "the current experiment is not yet a reliable experiment". Treat as settled
-unless you bring new MEASUREMENT.
+  Keep our own contract as the authoritative verifier; do NOT add a general LLM-eval framework.
+  DO NOT build a three-agent architect/implementer/tester team. One end-to-end worker + a NON-LLM
+    verifier holding the authoritative PASS bit + a human for privileged operations. Evidence: 180
+    configurations across 5 architectures and 4 benchmarks; multi-agent averaged -3.5%; SEQUENTIAL
+    tasks degraded 39-70%, and our work is sequential shared-state work.
+  Do not optimise yet — bounded, reapable, fail-closed and independently evaluable first.
+  Tamper-evidence is not a trust boundary; an evaluator SERVICE with its own identity is.
+  Build repo-agnostic INTERFACES now, not a repo-agnostic optimiser.
+  Worktree per agent; 41.7% cross-agent conflict rate on a shared branch.
+  A hierarchical auto-updating wiki: NO. ~24% accuracy loss from 30k IRRELEVANT tokens even with
+    the relevant content present; ours is ~1M tokens. The win is distilling procedures into
+    invocable skills, not growing the corpus.
 
 NEVER OPTIMISE, and do not propose optimising: retry caps, gate thresholds, tenancy checks,
-timeouts, evaluator thresholds, the corpus. These are SAFETY SPECIFICATION, not hyperparameters.
-Optimising eventual success simply rewards more retries, and optimising on the candidate's own
-score changes the ruler rather than the system.
+timeouts, evaluator thresholds, the evaluation corpus. These are SAFETY SPECIFICATION, not
+hyperparameters. Optimising eventual success simply rewards more retries; optimising against the
+candidate's own score changes the ruler rather than the system.
 
-DEFERRED WITH A STATED UNLOCK CONDITION — these are deliberate non-decisions, NOT gaps. Reporting
-them as gaps is the single most likely way for this pass to waste itself:
-  separate architect LLM; mandatory tester LLM; agent<->agent messaging; manager<->manager and
-  army tiers; dynamic team-selection LLM; ten team types; an agentic gym ("training on current
-  traces risks learning pathological loops"); framework migration; the optimiser itself.
+DEFERRED WITH A STATED UNLOCK CONDITION — deliberate non-decisions, NOT gaps. Reporting any of
+these as a gap is the most likely way for this pass to waste itself:
+  a separate architect LLM; a mandatory tester LLM; agent-to-agent messaging; manager-to-manager
+  and army tiers; a dynamic team-selection LLM; ten team types; an agentic gym ("training on
+  current traces risks learning pathological loops"); framework migration; the optimiser itself.
 
-====================================================================
-PART H — CONSTRAINTS ANY RECOMMENDATION MUST RESPECT
-====================================================================
+=====================================================================
+PART 7 — CONSTRAINTS. Each carries its basis. ATTACK ANY THAT IS NOT "HARD".
+=====================================================================
 
-Omitting one of these has already cost us two research passes.
+Two prior passes failed here: one was given a constraint that was FALSE and bent its ranking around
+it; one was never given a constraint at all and recommended a tool that constraint ruled out. So
+every constraint below is labelled, and you are invited to argue with the soft ones.
 
-  - WINDOWS-FIRST on the operator's machine. WSL exists; say what changes. This has already
-    produced two platform-dependent instruments that were red everywhere else.
-  - THREE CONCURRENT LANES today. A design assuming ten agents answers a question we do not have.
-  - SMALL TEAM. Anything needing a platform team to operate is wrong regardless of merit.
-  - PER-SECRET HUMAN APPROVAL IS A HARD RULE. No batch-approval of credentials, ever.
-  - NO UNLABELLED STALE NUMBERS. A cached figure carries its age in the same string.
-  - THE EXISTING INSTRUMENT PANEL IS NEVER REMOVED, only added to.
-  - MERGING STAYS HUMAN.
-  - In-page terminal: NOT a constraint — it is question E8. Argue it.
+  HARD      Per-secret human approval. No batch-approval of credentials, ever.
+  HARD      Merging stays human.
+  HARD      Evidence-gated deploys: prove the target, validate at the consumer's layer, prove no
+            regression, capture a rollback. (Bears directly on F4 and D5 — do not return "capture
+            a rollback" as a recommendation; it is already required.)
+  HARD      No cost-per-outcome figure computed over successes only. Today only successful
+            attempts record cost, so we state no dollar figure at all. A recommendation that
+            assumes a usable cost number today is inadmissible.
+  MEASURED  Three concurrent lanes. A design assuming ten agents answers a question we do not have.
+  MEASURED  Page freshness: a cached figure must carry its age in the same string.
+  POLICY    The existing instrument panel is never removed, only added to.
+  POLICY    Small team. Anything needing a platform team to operate is wrong regardless of merit.
+  ASSUMED   Windows-first on the operator's machine, with WSL2 available. If your recommendation
+            changes under WSL2, SAY WHAT CHANGES — a previous pass listed this and then never
+            applied it.
 
-====================================================================
-PART I — WHAT TO RETURN
-====================================================================
+=====================================================================
+PART 8 — OUTPUT, then audit yourself against Part 1
+=====================================================================
 
-A DIFF, not a survey. We would rather hear "of the 30 things I found, 24 you already have, 4 are on
-your own deferral list, 2 are genuinely absent" than a list of invented gaps. THE FAILURE MODE WE
-ARE GUARDING AGAINST IS A GENERIC AGENT-FRAMEWORK LISTICLE.
+1. CONSTRAINT AUDIT, first and briefly: which constraints in Part 7 you attacked and why, and
+   CONSTRAINTS YOU NEEDED AND DID NOT HAVE. The second half is the one that has cost us passes.
+2. VERDICT TABLE. At least 20 concepts, each with exactly ONE verdict and a citation:
+     PRESENT / RENAMED (give the mapping) / DEFERRED (it is in Part 6) / ABSENT /
+     NOT-SEARCHED (you did not look, or looked and found nothing — name the searches; MAX 5 items)
+3. ANSWERS to A1-A3, D1-D5, E1-E8, F1-F4, each opening with its EVIDENCE line.
+4. RANKED BUILD ORDER, at most 5 items, each with what it unlocks and a cost in engineer-days or
+   engineer-weeks.
+5. WHAT TO REFUSE TO BUILD.
+6. WHERE YOU DISAGREE WITH US — the section we read first.
 
-1. VERDICT TABLE. Every concept or practice you return gets exactly ONE verdict and a citation:
-     PRESENT       we already have it, under our own name
-     RENAMED       we have it under a different name — give the mapping
-     DEFERRED      it is on our deferral list above, with an unlock condition
-     ABSENT        genuinely missing and not deferred
-     NOT-SEARCHED  no evidence exists either way — say so rather than guessing
-2. DIRECT ANSWERS to D1-D5, E1-E8, F1-F4. ANSWER E8 EXPLICITLY AND TAKE A SIDE;
-   a section that restates our constraints back to us is a failed section. Where the evidence is thin, SAY THE EVIDENCE IS THIN.
-3. A RANKED BUILD ORDER for the manufacturing step and the UI, with what each unlocks and what it
-   costs. Cost in engineering time, not adjectives — "significant engineering effort" is not a
-   figure and a previous pass gave us nothing but that.
-4. WHAT TO REFUSE TO BUILD, and why.
-5. WHERE YOU DISAGREE WITH US. This is the most valuable section. Name the specific claim of ours
-   you think is wrong and the evidence that makes you think so. An answer that validates everything
-   we sketched is a wasted run.
-6. YOUR OWN CONFIDENCE, per section, and what would change it.
-
-You are explicitly permitted — encouraged — to conclude that we should BUILD LESS than we are
-proposing. Three of our last three passes concluded exactly that, independently, and they were
-right each time.
+BEFORE YOU SUBMIT, check yourself against Part 1 and state the result:
+  - Does every numbered answer open with an EVIDENCE line?
+  - Did any ABSENT question get more than three sentences plus an experiment? Cut it.
+  - Any effort estimate still an adjective? Convert it or delete it.
+  - Anything in your verdict table that appears in Part 6's deferral list? Remove it.
+  - Did you take an actual side on A3 and E8, or hedge? Hedging on those two is a failed section.
+  - Name the ONE claim of ours you are least confident you evaluated fairly rather than accepted.
 ```
 
 ---
 
 ## Grading the answer when it lands
 
-1. **Where an answer's own evidence contradicts its executive summary, the evidence wins.** That
+1. ⭐ **Grade the EVIDENCE lines first, before reading any prose.** If a question we predicted
+   would be ABSENT came back STRONG, either we were wrong — good, that is the pass earning itself —
+   or it is confabulating, and the named sources will show which within a minute. **This check is
+   cheap and it is the whole reason Rule 1 exists.**
+2. **Where an answer's own evidence contradicts its executive summary, the evidence wins.** That
    rule already caught R12: its summary said "adopt", its OBSERVED section said the tool has no
-   attach and spawns duplicates.
-2. **Any concept returned with no citation is discarded**, however plausible.
-3. **Any answer quoting one of our file paths as though it read it is contaminated** — the repo is
-   private and unreachable. Check for this first; it is the cheapest tell.
-4. **Every `DEFERRED` item it reports as a gap** is a sign the deferral list was not read, and
-   downgrades the whole pass.
-5. ⭐ **Grade E8 first.** If the pass ducked the in-page-terminal question, hedged it, or handed our
-   own position back a third time, that section is void — record it as void rather than reading a
-   preference into it, and discount the rest of the UI answer accordingly. Three passes failing the
-   same question would itself be the finding: it would mean the question is not answerable from the
-   literature and we have to settle it with the week-long experiment E8(e) asks for.
-5. File at `docs/research/answers/R13-answer-platform-and-manufacturing.md`, then fold into
-   `SYNTHESIS.md` **before acting on it**, recording disagreements rather than smoothing them.
-   `factory/synthesis.py` globs exactly one directory — an answer filed anywhere else can never
-   appear in `unsynthesised()`, so the currency test can never go red for it.
+   attach and spawns duplicates against live session ids.
+3. **Any concept returned with no citation is discarded**, however plausible.
+4. **An answer quoting our file paths as though it read them is contaminated.** Check first.
+5. **Every `DEFERRED` item reported as a gap** shows Part 6 was not read and downgrades the pass.
+6. **Read the "constraints you needed and did not have" audit before the recommendations.** It is
+   the direct countermeasure to the R12 failure, and it is the only part of the answer that can
+   tell us the brief was wrong.
+7. **A3 and E8 are the two questions where hedging is itself the finding.** If a third pass ducks
+   E8, the question is not answerable from the literature and we run the week-long experiment
+   E8(e) asks for instead of dispatching a fourth.
 
 ## See also
 
 `../specs/agent-factory-technical-and-business-spec.md` — the full baseline, attachable as a
 supplementary file · `ui-surface-inventory.md` · `agent-factory-concept-inventory.md` ·
-`SYNTHESIS.md`
+`SYNTHESIS.md` · [[F76]]

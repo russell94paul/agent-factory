@@ -106,7 +106,7 @@ a verb its tier does not carry is refused, and the refusal is an audit event —
 ## 5. The agent as an artefact
 
 Today an agent is a `Lane`: a prompt string, a model, a gate list. That is a launcher input. The
-`hash` gate wants 15 dimensions and covers **0**. `MEASURED`
+`hash` gate wants 15 dimensions and covers **6**. `MEASURED` ⚠ corrected 2026-08-23 — it read **0** because the probe searched for literal backspace bytes and could never match ([[F76]]).
 
 ```yaml
 AgentSpec:
@@ -184,7 +184,7 @@ is currently a habit inside a prompt. It should be a required stage between RUN 
 |---|---|---|---|
 | 1 | **Run the loop once, for real, with the new primitives** | Two gates read UNMEASURABLE because nothing has run. No architecture decision should precede a single real run. | hours |
 | 2 | **Instrument cost** — tokens + wall clock on the `finished` bus event | Every claim about a cheap lane is currently reasoning. Cheapest possible measurement. | hours |
-| 3 | **AgentSpec + a real version hash** | Unlocks certification meaning anything; 0 of 15 dimensions today. | days |
+| 3 | **AgentSpec + a real version hash** | Unlocks certification meaning anything; 6 of 15 dimensions today ([[F76]]). | days |
 | 4 | **T1 container with an egress allowlist** | First actual isolation. Proves the container story on Windows before anything depends on it. | days |
 | 5 | **Reviewer as a required stage** | Highest measured defect yield of anything we did this month. | days |
 | 6 | **T2 ephemeral clone** | The big one, and the one most likely to be wrong — do it after 4 proved the container path. | weeks |

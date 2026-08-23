@@ -152,7 +152,7 @@ Not a recommendation — the shape of the decision, so an outside answer can be 
 | B | **Adopt an external session manager** (switchboard et al.) | months of UI work skipped | R12 OBSERVED: no true attach, spawns a **duplicate against a live session id**, cannot see `needs`; no plugin API | the duplicate-spawn behaviour *is* the bug we hit |
 | C | **Build a terminal grid ourselves** | full control | competing on a commodity axis with Warp, VS Code, tmux, switchboard | §3 — it would be the sixth surface |
 | D | **Build the APPROVE surface** — a decision queue | targets the *measured* bottleneck; the only plane a non-engineer can use | does not make agents more visible | nothing yet |
-| E | **Provenance UI** — every artefact traceable to agent, config hash, evidence, verdict | the one axis where this repo is ahead of every product | needs the version hash fixed (**0 of 15 dimensions covered today**) | its own prerequisite |
+| E | **Provenance UI** — every artefact traceable to agent, config hash, evidence, verdict | the one axis where this repo is ahead of every product | needs the version hash fixed (**6 of 15 dimensions today** — read `0 of 15` until 2026-08-23, [[F76]]) | its own prerequisite |
 
 ⭐ **B and C are the same bet on someone else's axis. D and E are the axes this repo already owns.**
 D is the smaller and targets a measured problem; E is the differentiator and has a prerequisite.
@@ -165,7 +165,7 @@ all of which this repo is closer to than any of them:
 1. **A verdict that can say "I could not tell."** Four-valued, with `UNMEASURABLE` as a first-class
    outcome rather than a silent pass. Every dashboard on the market is two-valued.
 2. **Provenance to a config hash.** "This artefact was produced by *this* agent, on *this* model,
-   with *this* prompt and *this* contract version." The hash exists and covers **0 of 15
+   with *this* prompt and *this* contract version." The hash covers **6 of 15
    dimensions** — so this is a gap, not a feature, but it is a gap with a name.
 3. **Cost paired with an outcome, enforced.** `metrics.py` *refuses* an activity metric with no
    outcome metric. R12 reached the same rule independently. Now that per-lane cost is measured,

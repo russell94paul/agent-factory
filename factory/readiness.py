@@ -700,9 +700,27 @@ VERSION_DIMENSIONS = [
 
 
 def g_version_hash_is_complete():
+    """How many of the declared version dimensions exist as fields the hash can cover.
+
+    ⚠ This probe reported ``0 of 15`` from the day it was written until 2026-08-23, and the
+    figure travelled into the spec, the research prompts and the wiki as a MEASURED fact. The
+    match was ``rf"\x08{d}\x08"`` — two literal BACKSPACE bytes, where ``\b`` word-boundaries
+    were intended. In an f-string ``\b`` is a backspace escape, not a regex token, so the pattern
+    could never match anything and the gate returned zero unconditionally.
+
+    It is the same family as the self-matching evaluator probe below, with the sign flipped: that
+    one could only ever pass, this one could only ever fail. **A gate that cannot pass has stopped
+    measuring just as completely as one that cannot fail**, and it is harder to notice because a
+    red gate on unfinished work looks like the truth.
+
+    ⚠ It greps SOURCE TEXT for each dimension name, so a name in a docstring counts. The number
+    is an upper bound on fields present, not a proof the hash covers them — though in practice
+    ``AgentSpec.version`` hashes ``asdict(self)``, so every field that exists IS hashed, and the
+    nine absent dimensions are absent as fields rather than excluded from the digest.
+    """
     src = "factory/blueprint.py"
     body = (FACTORY / "blueprint.py").read_text(encoding="utf-8")         if (FACTORY / "blueprint.py").is_file() else         (FACTORY / "factory" / "blueprint.py").read_text(encoding="utf-8")
-    have = [d for d in VERSION_DIMENSIONS if re.search(rf"{d}", body)]
+    have = [d for d in VERSION_DIMENSIONS if re.search(rf"\b{d}\b", body)]
     missing = [d for d in VERSION_DIMENSIONS if d not in have]
     ev = [f"{len(have)} of {len(VERSION_DIMENSIONS)} dimensions in the hashed config",
           "missing: " + ", ".join(missing)]

@@ -177,8 +177,13 @@ has answered a process question we did not ask.
 1. **A verdict that can say "I could not tell."** Four-valued, `UNMEASURABLE` first-class. Every
    dashboard on the market is two-valued. `[M]` — this is built.
 2. **Provenance to a config hash.** "This artefact was produced by *this* agent, on *this* model,
-   with *this* prompt, under *this* contract version." The hash exists and covers **0 of 15
-   dimensions.** `[M]` — **this is a gap with a name, not a feature.**
+   with *this* prompt, under *this* contract version." The hash covers **6 of 15 dimensions**
+   `[M]` — **a gap with a name, not a feature.**
+   ⚠ **This figure read `0 of 15` until 2026-08-23 and was wrong.** The gate matched
+   `rf"\x08{d}\x08"` — literal backspace bytes where `\b` was intended — so it could only ever
+   return zero, and the zero travelled into the prompts, the UI inventory and the wiki as `[M]`.
+   ⭐ **A gate that cannot pass has stopped measuring as completely as one that cannot fail**, and
+   is harder to catch: a red gate on unfinished work looks like the truth. See [[F76]].
 3. **Cost paired with an outcome, enforced.** `metrics.py` *refuses* an unanchored activity metric.
    R12 reached the same rule independently — an outside pass reproducing a rule we already enforce
    is the strongest corroboration available. `[M]`
@@ -273,7 +278,14 @@ AgentSpec:
 Two rules follow, and both are already violated:
 
 - **The version hash must cover every field.** A certification granted under `green@v4` must not
-  silently transfer to `v5`. **Today it covers 0 of 15 dimensions.** `[M]`
+  silently transfer to `v5`. **Today 6 of the 15 named dimensions exist as fields** — `prompt`,
+  `model`, `effort`, `tools`, `max_turns`, `budget_usd` — and `AgentSpec.version` hashes every
+  field it has, so the other nine are absent *as fields* rather than excluded from the digest.
+  Missing: `tool_implementation`, `sandbox_image`, `model_routing`, `context_policy`,
+  `external_knowledge`, `permissions`, `contract_version`, `harness_version`,
+  `side_effect_replay`. ⭐ **`contract_version` bites first** — a certification granted under
+  contract v4 transferring silently to v5 is a false guarantee, not a missing feature. `[M]`, and
+  see [[F76]] for why this read `0 of 15` until 2026-08-23.
 - ⛔ **A spec field that nothing reads is worse than no field.** This month produced a `--model`
   flag built into a dead variable — **every lane announced a model it was not running on** — a
   detector silently degrading to 1 finding instead of 313, and gates reporting PASS while measuring
@@ -285,8 +297,8 @@ Stated as a gap list, because this is the actual ask:
 
 | # | Required | State |
 |---:|---|---|
-| 1 | An `AgentSpec` that is a versioned artefact, not launcher arguments | **absent** — §7 |
-| 2 | A version hash covering all 15 dimensions | **0 of 15** `[M]` |
+| 1 | An `AgentSpec` that is a versioned artefact, not launcher arguments | **partial** — `AgentSpec`/`TeamSpec` exist with a sha256 version over every field and a YAML loader; `deploy.py` takes an `AgentSpec`, but **nothing outside the tests reads `load_team`**, so the team object is manufactured by no one `[M]` |
+| 2 | A version hash covering all 15 dimensions | **6 of 15** `[M]` — was mis-reported as 0, [[F76]] |
 | 3 | Content-addressed prompts (`prompt_ref`, never inline) | **absent** |
 | 4 | Tier declaration enforced by the DECIDE plane, refusal as an audit event | **absent**; would give the `refuses` gate its first real record |
 | 5 | Bounded deployment into a repo | **built** — `deploy.py`: worktree + turn cap + dollar cap + `AttemptLedger` persisted so a cap survives restart |
