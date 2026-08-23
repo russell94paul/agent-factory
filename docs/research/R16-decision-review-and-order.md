@@ -1,10 +1,11 @@
 # R16 — Attack the eighteen decisions, and the order we intend to do them in
 
-**Status: NOT DISPATCHED.** Written 2026-08-23. Paste the whole file and attach
-`docs/research/R16-evidence-pack.md`. The answer is filed at
-`docs/research/answers/R16-answer-decision-review-and-order.md`.
+**Status: ANSWERED 2026-08-23.** Written 2026-08-23. Answered **locally, as two Claude subagent
+lanes** — not by an outside model, and not by a paste. See the run log. Answers filed at
+`docs/research/answers/R16-answer-decision-review-and-order.md` (the audit) and
+`docs/research/answers/R16-outside-evidence-lane.md` (the external-evidence lane).
 
-**Runs on:** DEEP_RESEARCH
+**Pass type:** DECISION_REVIEW
 **Depends on:** R13, R14
 
 ⚠ **The hold is lifted, and here is the basis so it can be argued with.** This file used to say
@@ -22,6 +23,7 @@ pass will review a record that has not absorbed it.
 
 | Run | Dispatched | Outcome |
 |---|---|---|
+| 1 | 2026-08-23 | **ANSWERED — as two local Claude subagent lanes, because ChatGPT was blocked.** An audit lane (blind-first — read each cited answer and form a view BEFORE reading what SYNTHESIS concluded) plus a separate **outside-evidence lane** that searched the open web and only then read our positions. ⚠ **Less independent than an outside model and this pass was the most exposed of all** — it reads our own conclusions, from inside our own repo. Grade its file-and-line claims as strong and its judgement as partial. It found **11 ranked incoherences**; two were verified and acted on the same day (§1.1 the U+0008 regex; §2.1 all three gate edges). |
 | 1 | **blocked** | Waited on R13 run 2 and R14. Hold lifted 2026-08-23 — both answered, both named in SYNTHESIS.md. |
 
 ---

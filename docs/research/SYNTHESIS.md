@@ -1038,3 +1038,102 @@ brief, not carried into a fifth pass.
 - **Anything measured about our latency.** Its budget (first paint <100 ms, interaction <50–100 ms,
   full re-measure <500 ms) is from user-perception guidelines, `INFERRED` — not from profiling the
   9.3 s we measured.
+
+
+---
+
+## 15. R16 — the decisions attacked, and two instruments that could not do their job (added 2026-08-23)
+
+Run as **two local Claude subagent lanes**, not an outside model: an audit lane instructed
+blind-first (read each cited answer and form a view *before* reading what this document concluded),
+and a separate **outside-evidence lane** that searched the open web and only then read our
+positions. Filed at `answers/R16-answer-decision-review-and-order.md` and
+`answers/R16-outside-evidence-lane.md`.
+
+⚠ **This was the least independent pass we have run, by its own brief's warning and then some** —
+it reads our conclusions, from inside our repo, on our conventions. Grade its file-and-line claims
+as strong and its judgement as partial. It was scored on disagreements found, and it found eleven.
+**Two were verified here and acted on the same day. Nine are open.**
+
+### 15.1 ⭐ `g_version_hash_is_complete` could never pass — U+0008 in the regex
+
+`OBSERVED`, from the raw bytes of `factory/readiness.py:870`, and re-verified independently before
+being written down here:
+
+```
+rf"\x08{d}\x08"      the bytes that were actually in the file
+rf"\b{d}\b"          what was meant
+```
+
+Someone wrote `f"\b…"` without the `r`; Python resolved `\b` to a literal **backspace control
+character**, and it was saved. `sed`, `inspect.getsource` and every editor render it as nothing,
+which is why four readers quoted this gate's output and none questioned it.
+
+A backspace cannot occur in Python source. **The pattern could never match, so the gate could only
+ever return `0 of 15` and could only ever FAIL.** This repo's thesis is that a green from an
+instrument that cannot refuse is worthless; `readiness.py:88-97` already names an instrument that
+cannot *pass* as an equal defect. We were publishing one.
+
+**True figure: 6 of 15.** The job is **nine** dimensions, not fifteen. The wrong number was
+load-bearing in two places and cited in four:
+
+| Where | Use |
+|---|---|
+| §14.5 above | the basis for action a16 |
+| `R13-answer-…-run2.md` §1 | "Option E is **blocked** on its own prerequisite" |
+| `R14-answer-…` §5 | "Build the fifteen dimensions; do not rename the zero" |
+| `ui-surface-inventory.md` §9 | listed as one of three things nobody else ships |
+
+⚠ **Neither conclusion flips** — the hash is still incomplete and `contract_version` is still among
+the missing — **but the size of the job was overstated by two thirds.** Fixed 2026-08-23, along with
+the same bug in `scripts/file_answers.py:74`, which had silently killed one scoring term in the
+router that files these answers.
+
+### 15.2 ⭐ All three gate edges on the decisions were wrong
+
+`factory/roadmap.py` claimed its load-bearing property in its own docstring — *"an action linked to
+a gate takes its status FROM the gate, always… it makes the hand-maintained part visibly
+hand-maintained instead of letting it borrow the credibility of the measured part."* All three edges
+were then verified and all three were wrong:
+
+| Action | Gate | What the gate actually asks |
+|---|---|---|
+| a8 "containerise **agent execution**" | `isolated` | whether an **evaluator** is a separate principal. One env var + a class would render a8 SHIPPED **with zero agents in containers** |
+| a10 "restate the goal as **30–45 min**" | `finishes` | counts completed runs, **no duration term at all** — and a10 is a proposal to *change this gate*, gated on the unchanged gate. Circular |
+| a16 "adopt the **OTel** field set" | `version` | whether declared dimensions appear in `blueprint.py` — it cannot see where the set came from, and per §15.1 it could not pass at all |
+
+⭐ **So the half of the roadmap presented as `MEASURED` was the least reliable half** — the exact
+inverse of the design intent, and by our own standing rule worse than an admitted gap.
+
+Edges dropped. **The honest count is now 0 MEASURED / 18 AUTHORED, and that is the finding rather
+than an omission.** `_validate()` could only ever prove a gate *exists*; nothing checked that its
+QUESTION matched the action's SUBJECT, and the author did not. A gate edge now requires a
+`why_gate` sentence — a weak control, but it forces the mismatch to be considered.
+
+### 15.3 What R16 raised that is still open
+
+Nine of eleven, unactioned and recorded here so they are not lost:
+
+- **The eval corpus** — R16 calls it *"one file, and the thing every pass assumed someone else
+  had"*. Flagged by the pass as larger than either defect above.
+- **a14's own citation is contradicted by the two passes that landed after it** (§2.2).
+- **a3 and a14 are one piece of work** and the answers already name the object (§2.3).
+- **a1 is filed under a reason superseded twice over** (§2.4).
+- **The 7-versus-13 incoherence is already resolved** — in an answer this document never absorbed
+  (§2.5). That is a reconciliation failure, not a research gap.
+- **a4 and a5 rest on an instrument a6 shows to be unreliable** (§2.6).
+- **a15's stated reason is a sample; its real cause is elsewhere** (§2.7).
+- **a8's payoff is refuted by R14**, and a8 is the most expensive action on the list (§2.8).
+- **a9 asserts an enforceability it does not have** (§2.10).
+
+⚠ **The outside-evidence lane's answer has not been read yet.** It is filed and unreconciled.
+
+### 15.4 The lesson that generalises
+
+**Two of our instruments were broken in the same way and neither could report it.** A regex that
+could not match, and a validator that checked an edge *resolved* rather than that it *decided
+anything*. Both produced confident output. Both were quoted onward.
+
+⭐ **A number nobody can make move is not a measurement — it is a constant with a citation.** Before
+trusting any figure this estate publishes, ask what would have to change for it to read differently,
+and whether that is even reachable.
