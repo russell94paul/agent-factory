@@ -16,6 +16,15 @@ for a completed run, 97.6% of the longest one held by a single uncapped restart 
 offline replay path is disclosed, because it changes the sampling and corpus economics the
 researcher would otherwise reason about from the expensive path alone.
 
+
+## Run log
+
+| Run | Dispatched | Outcome |
+|---|---|---|
+| 1 | *not recorded* | Answer filed **2026-08-21** (measured: the answer file's mtime). This prompt predates the run log, so when it was sent is **NOT-RECORDED** — which is not the same as never. |
+
+> Kept because `factory.dispatch` reads a status line and the presence of an answer file, and by its own account cannot see whether a prompt was ever actually pasted anywhere. Without this table "which did I send, and when?" is not answerable from disk. **Add a row every time this prompt is dispatched.**
+
 ---
 
 ```

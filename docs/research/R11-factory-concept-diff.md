@@ -11,6 +11,15 @@ Every figure in §1 was measured from code or from filed answers on 2026-08-22/2
 Apply the same suspicion to every vendor claim you meet — read the source or the docs, not the
 launch post, and tier everything (§7).
 
+
+## Run log
+
+| Run | Dispatched | Outcome |
+|---|---|---|
+| 1 | 2026-08-23 | Answer filed 2026-08-23. |
+
+> Kept because `factory.dispatch` reads a status line and the presence of an answer file, and by its own account cannot see whether a prompt was ever actually pasted anywhere. Without this table "which did I send, and when?" is not answerable from disk. **Add a row every time this prompt is dispatched.**
+
 ---
 
 ## 0. The question, and what it is not

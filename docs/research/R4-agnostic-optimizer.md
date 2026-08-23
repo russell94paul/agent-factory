@@ -11,6 +11,15 @@ interface-design question with its own prior art — and it decides whether the 
 built for portability now (cheap) or retrofitted later (expensive), which is worth knowing even if
 we build the single-repo version first.
 
+
+## Run log
+
+| Run | Dispatched | Outcome |
+|---|---|---|
+| 1 | *not recorded* | Answer filed **2026-08-21** (measured: the answer file's mtime). This prompt predates the run log, so when it was sent is **NOT-RECORDED** — which is not the same as never. |
+
+> Kept because `factory.dispatch` reads a status line and the presence of an answer file, and by its own account cannot see whether a prompt was ever actually pasted anywhere. Without this table "which did I send, and when?" is not answerable from disk. **Add a row every time this prompt is dispatched.**
+
 ---
 
 ```

@@ -7,6 +7,15 @@ Read `R5-build-velocity.md` and `R6-automation-and-alerting.md` first if you hav
 extends both. R5 measured what parallel agent sessions cost; R6 asked what should watch them; this
 asks what should *run* them.
 
+
+## Run log
+
+| Run | Dispatched | Outcome |
+|---|---|---|
+| 1 | *not recorded* | Answer filed **2026-08-22** (measured: the answer file's mtime). This prompt predates the run log, so when it was sent is **NOT-RECORDED** — which is not the same as never. |
+
+> Kept because `factory.dispatch` reads a status line and the presence of an answer file, and by its own account cannot see whether a prompt was ever actually pasted anywhere. Without this table "which did I send, and when?" is not answerable from disk. **Add a row every time this prompt is dispatched.**
+
 ---
 
 ## The reference implementation to study

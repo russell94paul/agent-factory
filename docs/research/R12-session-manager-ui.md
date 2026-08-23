@@ -7,6 +7,15 @@
 Every figure in §1 was measured on 2026-08-23 and cites its instrument. Apply the same suspicion to
 `doctly/switchboard` — **read its source, not its README** — and tier every claim (§7).
 
+
+## Run log
+
+| Run | Dispatched | Outcome |
+|---|---|---|
+| 1 | 2026-08-23 | Answer filed 2026-08-23. |
+
+> Kept because `factory.dispatch` reads a status line and the presence of an answer file, and by its own account cannot see whether a prompt was ever actually pasted anywhere. Without this table "which did I send, and when?" is not answerable from disk. **Add a row every time this prompt is dispatched.**
+
 ---
 
 ## 0. What this asks, and the three prompts it must not re-ask

@@ -1,9 +1,18 @@
 # R14 — Attack our structure, name the right objects, and design something people are glad to open
 
-**Status: NOT DISPATCHED.** Written 2026-08-23. Paste the whole file. Attach
+**Status: DISPATCHED 2026-08-23.** Written 2026-08-23. Paste the whole file. Attach
 `docs/research/ui-surface-inventory.md` **and the repo** — this pass is worth little without the
 code, and §2 explains exactly what to read.
 The answer is filed at `docs/research/answers/R14-answer-structure-model-and-joy.md`.
+
+
+## Run log
+
+| Run | Dispatched | Outcome |
+|---|---|---|
+| 1 | 2026-08-23 | **Dispatched — no answer yet.** |
+
+> Kept because `factory.dispatch` reads a status line and the presence of an answer file, and by its own account cannot see whether a prompt was ever actually pasted anywhere. Without this table "which did I send, and when?" is not answerable from disk. **Add a row every time this prompt is dispatched.**
 
 ---
 

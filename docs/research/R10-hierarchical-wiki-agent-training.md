@@ -14,6 +14,15 @@ knowledge base — and whether the loop that extends it compounds or corrupts.**
 Every figure in §2 was measured on 2026-08-22 and cites its command or file. Apply the same
 suspicion to every vendor and paper claim you report, and tier all of them (§9).
 
+
+## Run log
+
+| Run | Dispatched | Outcome |
+|---|---|---|
+| 1 | 2026-08-23 | Answer filed 2026-08-23. |
+
+> Kept because `factory.dispatch` reads a status line and the presence of an answer file, and by its own account cannot see whether a prompt was ever actually pasted anywhere. Without this table "which did I send, and when?" is not answerable from disk. **Add a row every time this prompt is dispatched.**
+
 ---
 
 ## 1. The concept being tested

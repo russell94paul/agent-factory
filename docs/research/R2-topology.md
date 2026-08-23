@@ -12,6 +12,15 @@ says, which is what R2 asks for.
 **This is the load-bearing one for us.** We have a three-agent team specification written from
 judgement, with no method behind it and no run history. R2 is the framework we do not have.
 
+
+## Run log
+
+| Run | Dispatched | Outcome |
+|---|---|---|
+| 1 | *not recorded* | Answer filed **2026-08-21** (measured: the answer file's mtime). This prompt predates the run log, so when it was sent is **NOT-RECORDED** — which is not the same as never. |
+
+> Kept because `factory.dispatch` reads a status line and the presence of an answer file, and by its own account cannot see whether a prompt was ever actually pasted anywhere. Without this table "which did I send, and when?" is not answerable from disk. **Add a row every time this prompt is dispatched.**
+
 ---
 
 ```

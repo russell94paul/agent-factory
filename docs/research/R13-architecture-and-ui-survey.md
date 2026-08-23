@@ -1,8 +1,17 @@
 # R13 — Survey every architecture and tool that could build this, before we build any of it
 
-**Status: NOT DISPATCHED.** Written 2026-08-23. Paste the whole file. Attach
+**Status: DISPATCHED 2026-08-23.** Written 2026-08-23. Paste the whole file. Attach
 `docs/research/ui-surface-inventory.md` — it is our own frozen position and this prompt assumes you
 have read it. The answer is filed at `docs/research/answers/R13-answer-architecture-and-ui-survey.md`.
+
+
+## Run log
+
+| Run | Dispatched | Outcome |
+|---|---|---|
+| 1 | 2026-08-23 | **Dispatched — no answer yet.** |
+
+> Kept because `factory.dispatch` reads a status line and the presence of an answer file, and by its own account cannot see whether a prompt was ever actually pasted anywhere. Without this table "which did I send, and when?" is not answerable from disk. **Add a row every time this prompt is dispatched.**
 
 ---
 
