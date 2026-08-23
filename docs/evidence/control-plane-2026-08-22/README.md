@@ -768,7 +768,7 @@ write.
 | harness | before | after |
 |---|---|---|
 | `mutate_readiness_probes.py` — do the GATES depend on the controls? | 8 of 8 | **12 of 12** (the two extra are the review's own edits: the registration call, and `_report_run`'s body) |
-| `mutate_control_plane.py` — do the TESTS depend on the controls? | 8 of 8 | **18 of 18** — 12 after session 2's first pass, then the 409 status, the control name in the body and the sweep budget from review round one, then the retry pass, settled-verdict handling and clause ORDER from round two |
+| `mutate_control_plane.py` — do the TESTS depend on the controls? | 8 of 8 | **20 of 20**, grown one review round at a time: 12 → +409-status/control-field/sweep-budget → +retry-pass/settled-verdicts/clause-ORDER → +verdict-write-back → +queue-ORDERING. ⚠ Regenerated at HEAD, not carried forward: the copy committed before this line was written was produced two commits earlier and understated the count by one (F29) |
 
 New mutations, all LOAD-BEARING: the termination call; the durable handle; the ownership
 check that fails closed; the refusal to believe a verdict outside the vocabulary.

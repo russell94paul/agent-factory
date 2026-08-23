@@ -2,16 +2,20 @@
 the ROUTE's own refusal:  HTTP 409
   body    {"error": "stage 'trigger-run' has been dispatched 5 times; the cap is 5. Re-running it again will not fix it and each attempt costs real money. Supply an explicit override reason to buy one more attempt.", "control": "attempt_cap", "refused": true}
 
-screenshot -> docs\evidence\control-plane-2026-08-22\dashboard\cap-override-toasts.png
   ok  the route answers a control refusal with a status that is not 404  — HTTP 409
   ok  the refusal names the control in its body, so no client parses prose  — {"error": "stage 'trigger-run' has been dispatched 5 times; the cap is 5. Re-running it again will not fix it and each attempt costs real money. Supply an explicit override reason to buy one more attempt.", "control": "attempt_cap", "refused": true}
   ok  the refusal was recognised as a cap refusal, not a generic error  — the operator was asked for a reason
   ok  the first request carried no override
   ok  the second request carried the override to the wire  — {"stage_name": "trigger-run", "override_reason": "credential was fixed, GP-318"}
-  ok  the refusal was shown to the operator as an ERROR, not a success  — [error] stage 'trigger-run' has been dispatched 5 times; the cap is ; [success] Attempt cap overridden — one more attempt, recorded
+  ok  the refusal was shown to the operator as an ERROR, not a success  — [error] stage 'trigger-run' has been dispatched 5 times; the cap is ; [success] Attempt cap overridden — one more attempt, recorded — 1 disp
   ok  no success toast was raised before the override succeeded
   ok  cancelling sends NOTHING  — 1 request(s)
   ok  cancelling says nothing was retried
   ok  a whitespace-only reason is not an override  — 1 request(s)
+  ok  a plain retry that dispatched NOTHING is not reported as success  — [info] Retrying "trigger-run" with context — NOTHING was dispatched
+  ok  a plain fresh restart that dispatched NOTHING is not reported as success  — [info] Fresh restart from "trigger-run" — NOTHING was dispatched. E
+  ok  an override that dispatched NOTHING is not reported as success  — [error] stage 'trigger-run' has been dispatched 5 times; the cap is 5. Re-runn; [info] Attempt cap overridden — one more attempt, recorded — NOTHING was disp
+  ok  the operator is told BOTH possible causes, not a made-up one  — Attempt cap overridden — one more attempt, recorded — NOTHING was dispatched. Ei
+  ok  and is warned that one of them will not recover by itself
 
 WATCHED: the dashboard refuses, and the override reaches the wire.
