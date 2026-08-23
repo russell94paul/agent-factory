@@ -4,6 +4,21 @@
 `R8-evidence-pack.md`**. The answer lands beside it as
 `docs/research/answers/R8-answer-data-engineering-agent-factory.md`.
 
+⛔ **SPLIT AND SUPERSEDED 2026-08-23. Do not re-run this file.** Run 2's answer is filed and reads
+`ANSWERED`, but it carries **zero file paths, zero line references, 6 evidence tiers in 26 KB and
+1 `NOT-SUPPLIED`** — it repeated run 1's failure (good external survey, internal grounding absent)
+with the pack attached and the citation rule stated. The diagnosis is that **one web-research pass
+cannot both survey a literature and audit a 481 KB attachment**, and asking more firmly is not a
+fix. So the brief is split:
+
+| | Owns | Runs on |
+|---|---|---|
+| **R17** | the field — topologies, communication, sandboxes, experimental structures. **No internal facts, no pack** | Claude Research |
+| **R18** | our factory, cited `path:line` | a Claude Code session **inside this repo** |
+
+The external half of the answer below is still worth reading. **The internal half is not
+evidence** — nothing in it was measured against this code.
+
 ## Run log
 
 | Run | Date | Outcome |

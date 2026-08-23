@@ -48,6 +48,7 @@ from factory import schedule as schedlib  # noqa: E402
 from factory import sessions as sesslib  # noqa: E402
 from factory import dispatch as disp  # noqa: E402
 from factory import launch as launchlib  # noqa: E402
+from factory import research_run as rrun  # noqa: E402
 
 OUT = FACTORY / "tracker.html"
 
@@ -163,6 +164,48 @@ def start_session_from_handoff(note: str, dry: bool = False):
     except Exception as exc:                                       # noqa: BLE001
         return False, f"handoff saved to {f.name} but no terminal opened ({type(exc).__name__}: {exc})"
     return True, f"new session opened, holding {f.name}"
+
+
+def start_research_pass(rid: str, dry: bool = False):
+    """Prepare a research pass, and open a session for it when it is one that runs HERE.
+
+    ⛔ The split is the point. `rrun.start()` prepares and records for every runner; only a
+    CLAUDE_CODE pass gets a terminal, and the returned message says which happened. A single
+    "started" string covering both would be the label-that-reads-as-verified defect this repo
+    keeps logging — and the operator would not know whether to go and paste something.
+
+    Preparation happens BEFORE the spawn, so a failed spawn still leaves the prompt on disk and
+    the dispatch recorded, rather than losing both with the click.
+    """
+    import subprocess as _sp
+    try:
+        res = rrun.start(rid)
+    except rrun.ResearchError as exc:
+        return False, f"{rid}: {exc}"
+    except Exception as exc:                                       # noqa: BLE001
+        return False, f"{rid}: {type(exc).__name__}: {exc}"
+
+    if not res["launchable"]:
+        return True, (f"{res['note']} — this one runs on {res['plan']['where']}, "
+                      f"so nothing was started here. Paste it.")
+    if dry:
+        return True, f"DRY RUN — {res['note']}; would open a session"
+
+    ps1 = _launch_script(f"research {rid}", f"{rid} · internal audit", res["prompt_path"],
+                         "38;5;140", session_name=f"{rid} · research")
+    wtexe = _wt()
+    cmd = ([wtexe, "new-tab", "--title", f"{rid} · research", "--startingDirectory", str(FACTORY),
+            "--colorScheme", WT_SCHEME,
+            "powershell", "-NoExit", "-ExecutionPolicy", "Bypass", "-File", str(ps1)]
+           if wtexe else
+           ["cmd", "/c", "start", f"research {rid}", "powershell", "-NoExit",
+            "-ExecutionPolicy", "Bypass", "-File", str(ps1)])
+    try:
+        _sp.Popen(cmd, cwd=str(FACTORY), close_fds=True)
+    except Exception as exc:                                       # noqa: BLE001
+        return False, (f"{res['note']} — but no terminal opened "
+                       f"({type(exc).__name__}: {exc}). The prompt is on disk.")
+    return True, f"{res['note']} — session opened for {rid}"
 
 
 #: One frame for every session (system identity); the banner accent varies per lane (instance
@@ -443,6 +486,7 @@ def hot_reload():
         g["wt"] = _il.reload(_il.import_module("factory.worktrees"))
         g["ho"] = _il.reload(_il.import_module("factory.handoff"))
         g["launchlib"] = _il.reload(_il.import_module("factory.launch"))
+        g["rrun"] = _il.reload(_il.import_module("factory.research_run"))
         _RELOADED_AT = datetime.datetime.now()
         return True, f"reloaded {len(_HOT)} modules, {len(r.GATES)} gates"
     except Exception as exc:                                          # noqa: BLE001
@@ -1614,6 +1658,50 @@ def render(when: datetime.datetime, tab: str = "gates") -> str:
                 w(f'<p style="font-size:12.5px;color:var(--ink3);margin:0 0 8px">'
                   f'<code>docs/research/{e(f.name)}</code> &middot; {len(body):,} chars &middot; '
                   f'written {e(_ago(f.stat().st_mtime))}</p>')
+                # ------------------------------------------------ dispatch control
+                # ⛔ THREE passes, THREE meanings of "start", and one label would lie about two.
+                # Only a CLAUDE_CODE pass runs here; R16 and R17 are pasted into somebody else's
+                # product, so their button prepares the payload and RECORDS the send rather than
+                # claiming to have made it. A launcher that announced the model it was running
+                # while running a different one is already in this repo's findings ledger.
+                try:
+                    pl = rrun.plan(rid, dstate)
+                except Exception as exc:                            # noqa: BLE001
+                    pl = None
+                    w(f'<div class="dep">could not read the declarations in this prompt: '
+                      f'{e(type(exc).__name__)}</div>')
+                if pl:
+                    ok = pl["eligible"] == rrun.READY
+                    w('<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;'
+                      'margin:0 0 10px">')
+                    if ok:
+                        w(f'<form method="POST" action="/research/start" style="margin:0">'
+                          f'<input type="hidden" name="id" value="{e(pl["id"])}">'
+                          f'<button type="submit" style="font-size:12.5px;padding:6px 12px;'
+                          f'cursor:pointer;border:1px solid var(--accent);border-radius:3px;'
+                          f'background:var(--raise);color:var(--accent);font-weight:600;'
+                          f'font-family:ui-monospace,monospace">{e(pl["action"])}</button></form>')
+                    else:
+                        w(f'<button type="button" disabled title="{e(pl["why"])}" '
+                          f'style="font-size:12.5px;padding:6px 12px;cursor:not-allowed;'
+                          f'border:1px solid var(--rule);border-radius:3px;background:var(--raise);'
+                          f'color:var(--ink3);font-family:ui-monospace,monospace">'
+                          f'{e(pl["action"] or "no action")}</button>')
+                    w(f'<span style="font-size:12px;color:var(--ink3)">runs on '
+                      f'<b>{e(pl["where"])}</b>'
+                      + (f' &middot; pack <code>{e(pl["pack"])}</code>' if pl["pack"] else '')
+                      + '</span>')
+                    w('</div>')
+                    if not ok:
+                        w(f'<div class="dep" style="margin:-4px 0 10px">'
+                          f'{e(pl["eligible"])} &mdash; {e(pl["why"])}</div>')
+                    elif not pl["launchable"]:
+                        # Say what the button does NOT do, on the button's own row. Discovering
+                        # it after the click is how a control stops being believed.
+                        w('<div class="dep" style="margin:-4px 0 10px">this cannot start a run '
+                          'from here &mdash; it writes the prompt to <code>.data/'
+                          'research-prompts/</code>, rebuilds the pack if there is one, and marks '
+                          'the prompt DISPATCHED. <b>The paste is yours.</b></div>')
                 w(f'<button type="button" data-copy="rs-{e(f.stem)}" style="font-size:12px;'
                   f'padding:5px 10px;margin-bottom:8px;cursor:pointer;border:1px solid var(--rule);'
                   f'border-radius:3px;background:var(--raise);color:var(--ink);'
@@ -1763,6 +1851,17 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 _CLAIM_MSG = (False, f"could not finish {lane_id}: {type(exc).__name__}: {exc}")
             print(f"  finish: {_CLAIM_MSG[1]}")
             self.send_response(303); self.send_header("Location", "/lanes"); self.end_headers()
+            return
+        if self.path.rstrip("/") == "/research/start":
+            raw = self.rfile.read(int(self.headers.get("Content-Length") or 0)).decode("utf-8", "replace")
+            q = urllib.parse.parse_qs(raw, keep_blank_values=True)
+            _CLAIM_MSG = start_research_pass((q.get("id") or [""])[0],
+                                             dry="dry" in (q.get("mode") or []))
+            print(f"  research/start: {_CLAIM_MSG[1]}")
+            self.send_response(303)
+            self.send_header("Location", "/research")
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
             return
         if self.path.rstrip("/") == "/new-session":
             raw = self.rfile.read(int(self.headers.get("Content-Length") or 0)).decode("utf-8", "replace")

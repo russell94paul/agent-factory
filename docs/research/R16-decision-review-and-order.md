@@ -1,15 +1,28 @@
 # R16 — Attack the eighteen decisions, and the order we intend to do them in
 
-**Status: NOT DISPATCHED — and it must not be sent yet.** Written 2026-08-23. **Hold until R13 run 2
-and R14 have both landed and been reconciled**, or this pass reviews a record that is about to change
-twice. Paste the whole file and attach `docs/research/R16-evidence-pack.md`. The answer is filed at
+**Status: NOT DISPATCHED.** Written 2026-08-23. Paste the whole file and attach
+`docs/research/R16-evidence-pack.md`. The answer is filed at
 `docs/research/answers/R16-answer-decision-review-and-order.md`.
+
+**Runs on:** DEEP_RESEARCH
+**Depends on:** R13, R14
+
+⚠ **The hold is lifted, and here is the basis so it can be argued with.** This file used to say
+*"must not be sent yet — hold until R13 run 2 and R14 have both landed and been reconciled."*
+Measured 2026-08-23: both are `ANSWERED` (`R13-answer-…-run2.md`, `R14-answer-…`), and
+`synthesis.unsynthesised()` is empty with SYNTHESIS.md naming R13 22 times and R14 5 times.
+
+⛔ **That last check is the weak one and this file will not pretend otherwise.** It asks whether the
+synthesis *mentions* an id, not whether anyone engaged with it — the same check went green over R8's
+answer while the document said three times that R8 was still outstanding. **"Landed" is measured;
+"reconciled" is inferred from mention counts.** If R14's five mentions are passing references, this
+pass will review a record that has not absorbed it.
 
 ## Run log
 
 | Run | Dispatched | Outcome |
 |---|---|---|
-| 1 | **blocked** | Waiting on R13 run 2 and R14. Do not dispatch before both are reconciled. |
+| 1 | **blocked** | Waited on R13 run 2 and R14. Hold lifted 2026-08-23 — both answered, both named in SYNTHESIS.md. |
 
 ---
 

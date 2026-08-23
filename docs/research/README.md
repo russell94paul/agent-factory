@@ -13,21 +13,27 @@ pass is *for*; the instrument says where each one *is*.
 ## 1. The order
 
 ```
-DONE ─────────────────────────────────────────────────────────────────────────
+ANSWERED ───────────────────────────────────────────────────────────────────
   R1  eval harness            R2  topology             R3  control plane
   R4  agnostic optimiser      R5  build velocity       R6  automation/alerting
   R7  session manager        R10  wiki training       R11  concept diff
-  R12 session substrate
+  R12 session substrate      R13  option space        R14  structure + design brief
+  R15 repository corpus
+  R8  data-engineering factory ─ ⚠ filed, but see below
 
-IN FLIGHT ────────────────────────────────────────────────────────────────────
-  R8   data-engineering factory + sandboxes      dispatched 08-23, with a 500 KB evidence pack
-  R13  the option space: architectures, stacks, latency, approval, provenance
-  R14  our own structure, the object model, and the design brief
+WRITTEN AND NEVER SENT ────────────────────────────────────────────────────
+  R16  decision review and order        written 08-23
+  R17  R8's external half, no pack      Claude Research
+  R18  R8's internal half, cited        a Claude Code session in this repo
+```
 
-NEXT TO SEND ─────────────────────────────────────────────────────────────────
-  R15  the repository corpus — read the field's SOURCE, then what to fix in ours first
+⚠ **R8 reads `ANSWERED` and its internal half is not evidence.** The filed answer carries zero
+file paths and zero line references against a pack whose own rule demanded both. `dispatch` has no
+state for *dispatched, answered, answer half-rejected* — so the split into R17/R18 is the record,
+and R8's own header carries the ⛔. Read the external half; do not cite the internal half.
 
-WITHDRAWN ────────────────────────────────────────────────────────────────────
+```
+WITHDRAWN ─────────────────────────────────────────────────────────────────
   R9   game-styled supervision UI — dropped 2026-08-23. If an answer arrives, DISCARD it.
        Filing it would make `synthesis` report an answer to a question that no longer exists.
 ```
@@ -35,11 +41,12 @@ WITHDRAWN ───────────────────────�
 ### The only hard ordering left
 
 **R3 was the one strict dependency** (it asks how to search a configuration space, and R2 decides
-what that space contains) and both are answered. **Nothing among R8, R13, R14 and R15 blocks
-anything else** — they read different literatures and different evidence, and serialising them
-would cost days for a coupling better handled as a follow-up question in the existing thread.
+what that space contains) and both are answered. R8, R13, R14 and R15 blocked nothing and are all
+in — they read different literatures and different evidence.
 
-**So R15 can go now, alongside the three in flight.**
+**One ordering is left, and it is real: R17 before R18.** R18 audits R17's recommendations against
+our code, so running it first throws away the comparison. R16 is independent of both and has been
+waiting since 08-23; decide whether it reorders the queue before spending on R17.
 
 ### What the order is really about — acting, not sending
 
@@ -73,7 +80,9 @@ neighbours table for this reason. The lines:
 | **R13** | the **option space** — orchestration patterns, desktop stacks, latency techniques, approval and provenance **as categories**, reasoned from the literature | our own module structure; and it does not read repositories one by one |
 | **R14** | **inward**: is our decomposition right, is the object model right, and the **design brief** — IA, hierarchy, colour, motion, delight | UI stack benchmarking (R13's), vendor concept surveys (R11's) |
 | **R15** | **outward, from source**: what people actually built, read repo by repo, extracted to one comparable schema — then what to fix in **ours** first | weighing stacks in the abstract (R13's), or re-surveying framework taxonomies (R11's) |
-| **R8** | data-engineering as a domain: the downstream oracle, blast radius, credentials, the isolation ladder | the interface, beyond its own §2.6 strand |
+| **R17** | the **field** for data-engineering agents: topologies, communication, sandboxes (incl. the data layer), experimental structures | anything about our code — it has no access and must not guess |
+| **R18** | **our factory**, audited from inside the repo with `path:line` citations | re-deriving what other people built (R17's) |
+| _(R8)_ | _split into R17 + R18. Its external half stands; its internal half was never measured_ | — |
 
 ⭐ **The R13 / R15 line is the one most likely to blur, so it is stated in both:** R13 asks *"what
 are the options and what does the literature say"*; R15 asks *"what did people actually build, and
