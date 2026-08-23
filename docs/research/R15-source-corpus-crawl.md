@@ -281,6 +281,31 @@ Not a dashboard — **the surface an operator lives in all day while several age
   work, and what would they have to see?** Has any repository in the corpus tried it?
 - **What it feels like.** Latency budget in milliseconds for first paint, interaction-to-response,
   and full re-measure — with the technique that buys each, named.
+- **The research flow itself — design it, because it is one of our worst.** This document you are
+  reading was produced by, and will be filed through, a loop that is almost entirely manual and has
+  already lost track of itself. Measured on 2026-08-23:
+
+  ```
+  write the prompt in an editor  ->  open a tab and copy it  ->  paste into a browser
+  ->  wait hours  ->  download `deep-research-report (3).md`  ->  move it into answers/
+  ->  run a classifier that guesses which prompt it answers FROM ITS CONTENT
+  ->  run a currency check  ->  hand-write the reconciliation
+  ```
+
+  What actually went wrong, none of it hypothetical: the operator **could not tell which prompts he
+  had already sent**, because dispatch state was a status string a human edits and nothing recorded
+  the moment of dispatch. Four answers arrived as `deep-research-report (N).md` and **two were
+  byte-identical duplicates** of one run. Filenames carry no identity, so answers must be classified
+  by reading them — this project has already had two arrive with their contents **swapped**. And a
+  generated evidence pack matched the prompt glob and rendered a source file into the research tab.
+
+  So: **what should the surface for running research passes look like?** Composing a prompt against
+  a live view of what is already asked and answered; dispatching without a copy-paste round trip if
+  anything in the corpus has solved that; tracking what is in flight and for how long; ingesting an
+  answer without a filename dance; showing where two passes disagree. **Does any repository in the
+  corpus manage long-running external work like this, and what does its interface do?** If nothing
+  does, say so — that is a finding, and we will design it ourselves.
+
 - **The first screen to build**, and the measurement that would prove it worked.
 
 ### 5.3 Sequenced, because we are not starting clean
