@@ -590,3 +590,13 @@ you have.
 - **AFFECTS** — every lane. Two rules: **a structural guard over an ordered construct must
   assert the order**, and **derive a parametrised test's cases from the code rather than
   listing them**, or the case that matters is the one nobody added.
+
+⭐ **Postscript to F30, found one day later and worth the space:** the test written to prove
+F30 fixed had F30's own defect. `test_the_backlog_actually_drains_over_successive_sweeps`
+asserted `sum(per_sweep) == 5` — **terminator CALLS, not distinct handles.** An
+implementation that never wrote `last_verdict` back to the record would retry `run-00` over
+and over while the other four leaked, and that assertion passes. Measured by deleting the
+write-back in a scratch copy: `[2, 1, 1, 1]` calls — *the same total the old assertion
+checked* — with only 2 of 5 handles ever touched. Now asserts the distinct set, and the
+deletion is a mutation in the harness. **When a fix is verified by counting, ask what else
+produces that count.**
