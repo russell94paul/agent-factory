@@ -41,6 +41,7 @@ from factory import worktrees as wt  # noqa: E402
 from factory import handoff as ho  # noqa: E402
 from factory import runs as runlib  # noqa: E402
 from factory import dispatch as dispatchlib  # noqa: E402
+from factory import flow as flowlib  # noqa: E402
 from factory import sessions as sesslib  # noqa: E402
 from factory import dispatch as disp  # noqa: E402
 
@@ -75,8 +76,8 @@ def _ago(ts: float) -> str:
     return "%dd ago" % round(secs / 86400)
 
 #: (key, href, label). The key is what render() switches on.
-TABS = [("gates", "/", "Gates"), ("lanes", "/lanes", "Lanes"),
-        ("sessions", "/sessions", "Sessions"),
+TABS = [("gates", "/", "Gates"), ("flow", "/flow", "Flow"),
+        ("lanes", "/lanes", "Lanes"), ("sessions", "/sessions", "Sessions"),
         ("research", "/research", "Research"), ("handoff", "/handoff", "Handoff")]
 
 #: Modules whose source can change while the server is running, newest-dependency-last: board and
@@ -1002,6 +1003,73 @@ def render(when: datetime.datetime, tab: str = "gates") -> str:
           'row says <b>UNKNOWN</b> rather than pretending nothing is running.</p>')
         w('</div>')
 
+    if tab == "flow":
+        # ------------------------------------------------------------------ flow
+        # The readiness graph, laid out from the gate list and the dependency map rather than
+        # drawn. Adding a gate moves the picture; `board._validate()` already refuses to import if
+        # an edge names a gate that does not exist, so the figure cannot outlive its data.
+        nodes, edges, crit = flowlib.layout()
+        per_phase = flowlib.counts()
+        passing = sum(c["passing"] for c in per_phase)
+        total = sum(c["total"] for c in per_phase)
+        blocked = sum(1 for n in nodes.values() if n["state"] == "BLOCKED")
+        w('<div class="head" style="margin-top:44px">')
+        w('<h1>Flow</h1>')
+        w(f'<div class="sub">{passing} of {total} gates passing &middot; {len(edges)} dependency '
+          f'edge(s) &middot; {blocked} blocked &middot; re-measured just now</div>')
+        w('</div>')
+
+        w('<div class="par" style="margin-top:14px;overflow-x:auto">')
+        w(flowlib.svg())
+        w('</div>')
+
+        # Legend. Mandatory: a diagram whose grammar is not stated is a diagram the reader guesses at.
+        w('<div class="par" style="margin-top:12px">')
+        w('<h3 style="margin-top:0">How to read it</h3>')
+        w('<p style="font-size:13px;color:var(--ink2);margin:0">'
+          '<b style="color:var(--pass)">&#9679; PASS</b> &middot; '
+          '<b style="color:var(--fail)">&#9632; FAIL</b> &middot; '
+          '<b style="color:var(--unmeas)">&#9670; UNMEASURABLE</b> &middot; '
+          '<b style="color:var(--ink3)">&#9675; NOT_RUN</b></p>')
+        w('<p style="font-size:12.5px;color:var(--ink3);margin:8px 0 0">'
+          'Each verdict has its own <b>glyph as well as a colour</b>, because colour alone cannot '
+          'carry state &mdash; and because <b>UNMEASURABLE is not a worse FAIL</b>. It means the '
+          'instrument could not see, which is a different claim and sometimes the more urgent one.'
+          '</p>')
+        w('<p style="font-size:12.5px;color:var(--ink3);margin:8px 0 0">'
+          'A <b>dashed, faded box</b> is <b>BLOCKED</b> &mdash; it cannot start until something '
+          'upstream passes, which is a different situation from failing and is drawn differently. '
+          'A <b>solid coloured edge</b> is an <i>unmet</i> dependency: the reason its target cannot '
+          'begin. A <b>faint dashed edge</b> is a dependency already satisfied &mdash; history, kept '
+          'because removing it would make the graph look simpler than it is.</p>')
+        if crit:
+            w(f'<p style="font-size:12.5px;color:var(--ink2);margin:8px 0 0">'
+              f'The <b style="color:var(--fail)">heavy red path</b> is the <b>critical path</b>: '
+              f'<code>{e(" &rarr; ".join(crit))}</code> &mdash; the longest chain of unmet '
+              f'dependencies, and the one thing no amount of parallelism removes.</p>')
+        w('<p style="font-size:12px;color:var(--ink3);margin:8px 0 0">'
+          'Every figure here is <b>MEASURED</b> &mdash; the bar under each phase is '
+          'passing&divide;total from the same <code>measure()</code> call that drew the nodes, not '
+          'a chosen width. Nothing on this page is cached; it re-ran when you loaded it.</p>')
+        w('</div>')
+
+        # The shape worth noticing, computed rather than asserted.
+        early = [c for c in per_phase if c["phase"] in ("loop", "bounded")]
+        late = [c for c in per_phase if c["phase"] in ("certification", "handover")]
+        ep, et = sum(c["passing"] for c in early), sum(c["total"] for c in early)
+        lp, lt = sum(c["passing"] for c in late), sum(c["total"] for c in late)
+        if et and lt and (lp / lt) > (ep / et):
+            w('<div class="par" style="margin-top:12px;border-color:var(--unmeas)">')
+            w('<h3 style="margin-top:0">&#9888; Progress is inverted</h3>')
+            w(f'<p style="font-size:13px;color:var(--ink2);margin:0">The <b>foundational</b> phases '
+              f'are at <b>{ep} of {et}</b>, while <b>handover and certification</b> are at '
+              f'<b>{lp} of {lt}</b>. The gates nearest the finish are passing and the ones the whole '
+              f'thing rests on are not.</p>')
+            w('<p style="font-size:12px;color:var(--ink3);margin:8px 0 0">Computed from the phase '
+              'counts on every load, not asserted &mdash; if the ordering changes this panel stops '
+              'appearing by itself.</p>')
+            w('</div>')
+
     if tab == "research":
         # ------------------------------------------------------------------ what to do next
         # Three failures on 2026-08-23 produced this panel, and each is guarded here:
@@ -1472,7 +1540,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.end_headers()
             print(f"  hot reload: {_RELOAD_MSG[1]}")
             return
-        route = {"/": "gates", "/index.html": "gates",
+        route = {"/": "gates", "/index.html": "gates", "/flow": "flow",
                  "/lanes": "lanes", "/sessions": "sessions", "/research": "research",
                  "/handoff": "handoff"}.get(self.path.rstrip("/") or "/")
         if route is None:
