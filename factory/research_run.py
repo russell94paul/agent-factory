@@ -85,7 +85,8 @@ INDEPENDENCE_RISK = {
 
 _RID = re.compile(r"^R\d+$")
 _PASS_TYPE = re.compile(r"\*\*Pass type:\*\*\s*([A-Z_]+)")
-_DEPENDS = re.compile(r"\*\*Depends on:\*\*\s*([^\n*]+)")
+# NOTE: the `**Depends on:**` parser deliberately does NOT live here. It is `dispatch._DEPENDS_LINE`
+# and there is exactly one of it — see `depends_on` below for why a second one was a defect.
 _STATUS = re.compile(r"\*\*Status:\s*([^*]+?)\s*\*\*")
 _PLACEHOLDER = re.compile(r"^\|\s*—\s*\|\s*—\s*\|\s*not yet dispatched\s*\|\s*$", re.M)
 
@@ -127,16 +128,19 @@ def pass_type(rid: str) -> str:
 
 
 def depends_on(rid: str) -> List[str]:
-    """Declared prerequisites. `none` is a declaration; a missing line is also treated as none,
-    because most passes genuinely have none and demanding the line everywhere would just get it
-    written without thought."""
-    m = _DEPENDS.search(_head(_prompt_path(rid)))
-    if not m:
-        return []
-    raw = m.group(1).strip()
-    if raw.lower().startswith("none"):
-        return []
-    return sorted({x.upper() for x in re.findall(r"R\d+", raw)})
+    """Prerequisites of this pass. `none` is a declaration; a missing line is also treated as
+    none, because most passes genuinely have none and demanding the line everywhere would just get
+    it written without thought.
+
+    ⛔ **Delegates to `dispatch.edges` — it does NOT parse the header itself any more.** It used to,
+    and that was the whole bug: this function read the prompt's `**Depends on:**` line while
+    `dispatch.blocked_by` read a hardcoded map, so the button and the readiness board answered the
+    same question differently. R18 declared `R17`, the button correctly refused, and the board
+    invited you to send it. **Two implementations of one relation will always eventually disagree**
+    — so there is now one, and both surfaces call it.
+    """
+    _prompt_path(rid)                       # keeps the "not a research id" / "no prompt" errors
+    return _disp.edges(rid, _root() / "docs" / "research")
 
 
 def pack_builder(rid: str) -> Optional[pathlib.Path]:
@@ -149,7 +153,11 @@ def plan(rid: str, state: Optional[Dict[str, str]] = None) -> dict:
     rid = rid.upper()
     state = _disp.state() if state is None else state
     ptype, deps = pass_type(rid), depends_on(rid)
-    unmet = [d for d in deps if state.get(d) != _disp.ANSWERED]
+    # ⛔ `blocked_by`, not a re-implementation of it. A dep is met only when it is ANSWERED **and**
+    # owes no further run — the R13 scar, which lived only on the board until now. Computing
+    # "unmet" here from `state` alone would have re-created the two-answers-to-one-question defect
+    # this function was just fixed for, one layer down.
+    unmet = _disp.blocked_by(rid, _root() / "docs" / "research", None, state)
     cur = state.get(rid, _disp.UNKNOWN)
     builder = pack_builder(rid)
 

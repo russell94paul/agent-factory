@@ -492,16 +492,35 @@ def hot_reload():
             g[n] = getattr(mods["factory.lanes"], n)
         import importlib as _il
         g["by_lane"] = getattr(_il.reload(_il.import_module("factory.findings")), "by_lane")
-        g["synth"] = _il.reload(_il.import_module("factory.synthesis"))
-        g["claimlib"] = _il.reload(_il.import_module("factory.claims"))
-        g["opans"] = _il.reload(_il.import_module("factory.operator"))
-        g["wt"] = _il.reload(_il.import_module("factory.worktrees"))
-        g["ho"] = _il.reload(_il.import_module("factory.handoff"))
-        g["launchlib"] = _il.reload(_il.import_module("factory.launch"))
-        g["rrun"] = _il.reload(_il.import_module("factory.research_run"))
-        g["tplan"] = _il.reload(_il.import_module("factory.teamplan"))
+        # global name(s) -> module, in DEPENDENCY ORDER: a module must come after everything it
+        # imports from, or the importers keep references to the old objects. Same rule as _HOT.
+        #
+        # ⛔ `factory.dispatch` was MISSING from this block entirely, under BOTH of its aliases,
+        # so "reload code & re-measure" kept serving the dispatch code the process started with —
+        # and reported success. A reload that silently excludes a module is worse than no reload
+        # button: it is a claim of freshness. Found 2026-08-23 when a dependency-graph fix did not
+        # appear on the page. A list beats nine hand-written lines precisely because a missing
+        # entry is now visible as a gap in one place rather than an absence nobody can see.
+        _EXTRA = (
+            (("synth",), "factory.synthesis"),
+            (("disp", "dispatchlib"), "factory.dispatch"),   # after synthesis, before research_run
+            (("claimlib",), "factory.claims"),
+            (("opans",), "factory.operator"),
+            (("wt",), "factory.worktrees"),
+            (("ho",), "factory.handoff"),
+            (("launchlib",), "factory.launch"),
+            (("rrun",), "factory.research_run"),
+            (("tplan",), "factory.teamplan"),
+        )
+        for names, modname in _EXTRA:
+            m = _il.reload(_il.import_module(modname))
+            for nm in names:
+                g[nm] = m
         _RELOADED_AT = datetime.datetime.now()
-        return True, f"reloaded {len(_HOT)} modules, {len(r.GATES)} gates"
+        # ⚠ Counted, not assumed. This said `len(_HOT)` — 6 — while the block actually reloads 16,
+        # so the one number an operator had for "did my edit land" understated by 10, and would
+        # not have moved even while `factory.dispatch` was being skipped entirely.
+        return True, (f"reloaded {len(_HOT) + len(_EXTRA) + 1} modules, {len(r.GATES)} gates")
     except Exception as exc:                                          # noqa: BLE001
         return False, f"{type(exc).__name__}: {exc}"
 

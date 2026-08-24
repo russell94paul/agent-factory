@@ -178,10 +178,20 @@ def render(
     waiting = undispatched(research, answers)
     stale = stale_status(research, answers)
     lines.append("")
-    if waiting:
-        lines.append(f"⚠ {len(waiting)} written and never sent: {', '.join(waiting)} — waiting on Paul.")
+    # ⚠ "Unsent" and "waiting on Paul" are NOT the same set, and printing them as one is the third
+    # form of the R18 defect: R18 is unsent because R17 owes it an answer, not because anybody is
+    # sitting on it. Naming Paul as the blocker for something he cannot act on is the same lie as
+    # the readiness board's "send it — nothing is working on it", just in a different font.
+    held = {r: blocked_by(r, research, answers, st) for r in waiting}
+    on_paul = [r for r in waiting if not held[r]]
+    on_dep = [r for r in waiting if held[r]]
+    if on_paul:
+        lines.append(f"⚠ {len(on_paul)} written and never sent: {', '.join(on_paul)} — waiting on Paul.")
     else:
-        lines.append("Nothing written-and-unsent.")
+        lines.append("Nothing written-and-unsent is waiting on Paul.")
+    if on_dep:
+        lines.append("   held, not idle: " + "; ".join(
+            f"{r} waits on {', '.join(held[r])}" for r in on_dep))
     if stale:
         lines.append(
             f"⛔ {len(stale)} contradict themselves: {', '.join(stale)} — an answer is filed but the "
@@ -194,8 +204,15 @@ def main() -> None:
     print(render())
 
 
-if __name__ == "__main__":  # pragma: no cover
-    main()
+# ⛔ The `if __name__ == "__main__"` guard used to sit HERE, two-thirds of the way up the file,
+# with `_ROW`, `run_log`, `DEPENDS`, `edges`, `blocked_by` and `order` all defined below it. Run as
+# `python -m factory.dispatch` the entry point therefore fired before any of them existed, so
+# anything `render()` touched from the lower half raised `NameError` — which is exactly what
+# happened the moment it needed `blocked_by`. It is at the BOTTOM of the file now.
+#
+# ⚠ No test caught this and none could: tests `import` the module, which executes it to the end,
+# so the broken ordering is invisible from inside pytest. `tests/test_depends_one_source.py`
+# now runs the CLI as a subprocess for that reason.
 
 
 #: A run-log row: ``| 1 | 2026-08-23 | Answer filed. |``
@@ -268,6 +285,48 @@ DEPENDS: Dict[str, List[str]] = {
     "R16": ["R13", "R14"],
 }
 
+#: ``**Depends on:** R17`` — the SAME relation, declared where the person writing a prompt
+#: actually writes it. Header only: a mention halfway down the file is prose about the field,
+#: not a declaration about this prompt.
+_DEPENDS_LINE = re.compile(r"\*\*Depends on:\*\*\s*([^\n*]+)")
+
+
+def _sorted_ids(ids) -> List[str]:
+    return sorted(ids, key=lambda r: int(r[1:]) if r[1:].isdigit() else 999)
+
+
+def declared_depends(rid: str, research: pathlib.Path | None = None) -> List[str]:
+    """The prerequisites a prompt declares in its own header.
+
+    ⛔ **This exists because there were two dependency graphs and they disagreed.** ``DEPENDS``
+    above is authored here; ``**Depends on:**`` is authored in the prompt. R18 declared ``R17`` in
+    its header and had no entry here, so the Research tab disabled its button ("waits on R17")
+    while the readiness board said *"send it — nothing is working on it"*. One fact, two sources,
+    and the **unguarded one said go**.
+
+    ⚠ ``_validate`` cannot catch that class of drift by itself. It checks that every authored edge
+    names a live prompt — a **dangling** edge — and a **missing** edge is invisible to it by
+    construction. So the header is read as a first-class source rather than merely checked.
+    """
+    p = prompts(research).get(rid.upper())
+    if p is None:
+        return []
+    m = _DEPENDS_LINE.search(p.read_text(encoding="utf-8", errors="replace")[:3000])
+    if not m or m.group(1).strip().lower().startswith("none"):
+        return []
+    return _sorted_ids({x.upper() for x in re.findall(r"R\d+", m.group(1))})
+
+
+def edges(rid: str, research: pathlib.Path | None = None) -> List[str]:
+    """Every prerequisite of ``rid``, from BOTH sources, unioned.
+
+    Union rather than precedence, deliberately. An authored edge carries the rationale comment
+    saying *why* the ordering exists, and that is worth keeping; a declared edge is what the
+    prompt's author actually wrote, and is the one that gets updated when a new prompt lands.
+    Neither outranks the other, and dropping either re-opens the gap this closed.
+    """
+    return _sorted_ids(set(DEPENDS.get(rid.upper(), [])) | set(declared_depends(rid, research)))
+
 
 def _validate(research: pathlib.Path | None = None) -> None:
     """Every edge must name a prompt that exists. A dangling edge is a silent lie about ordering."""
@@ -279,13 +338,20 @@ def _validate(research: pathlib.Path | None = None) -> None:
         for v in vs:
             if v not in ids:
                 bad.append(f"DEPENDS[{k!r}] names {v!r}, which is not a prompt")
+    # Declared edges get the same treatment. A header naming a prompt that does not exist is the
+    # same silent lie about ordering as a stale entry in the map above — and until `edges()` began
+    # reading headers, nothing stood behind them at all.
+    for rid in ids:
+        for v in declared_depends(rid, research):
+            if v not in ids:
+                bad.append(f"{rid} declares **Depends on:** {v!r}, which is not a prompt")
     if bad:
         raise ValueError(
             "the research dependency map has gone stale:\n  " + "\n  ".join(bad) +
             "\nEvery edge must name a live prompt. Fix the map or restore the prompt.")
 
 
-def blocked_by(rid: str, research=None, answers=None) -> List[str]:
+def blocked_by(rid: str, research=None, answers=None, st: Dict[str, str] | None = None) -> List[str]:
     """Which of `rid`'s dependencies still owe an answer. Empty means it is free to send.
 
     ⚠ **A dependency is not satisfied merely by having AN answer.** R13 was ANSWERED from run 1
@@ -295,10 +361,19 @@ def blocked_by(rid: str, research=None, answers=None) -> List[str]:
     to prevent.
 
     So a dep counts as met only when it is ANSWERED **and has no pending row in its run log.**
+
+    ⛔ Reads `edges()`, not `DEPENDS` — both the authored map and the prompt's own header. Reading
+    only the map is what let R18 show "send it" on this board while its button said "waits on R17".
+
+    `st` accepts an ALREADY-TAKEN `state()` dict. The readiness page measures once per render and
+    `plan()` is handed that result; recomputing here would both cost a second pass over the disk
+    and — worse — silently ignore an injected state, which is how the caller tests this at all.
+    Same same-instant-reuse contract as `launch._verdicts`: passing anything older is the caller's
+    problem, and nothing here can tell the difference.
     """
-    st = state(research, answers)
+    st = state(research, answers) if st is None else st
     out = []
-    for d in DEPENDS.get(rid, []):
+    for d in edges(rid, research):
         if st.get(d) != ANSWERED:
             out.append(d)
             continue
@@ -360,3 +435,7 @@ def order(research=None, answers=None, syn_unreconciled=None) -> List[Dict[str, 
 
 
 _validate()
+
+
+if __name__ == "__main__":  # pragma: no cover
+    main()
