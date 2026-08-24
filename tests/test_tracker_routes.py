@@ -107,6 +107,11 @@ def test_the_synthesize_button_appears_only_when_there_is_something_to_reconcile
     # exercised by their own tests; what is under test here is the CONTROL's presence.
     monkeypatch.setattr(lt.synth, "prompt", lambda: "stub reconciling prompt")
     monkeypatch.setattr(lt.synth, "session_prompt", lambda: "stub session prompt")
+    # ⛔ Stub the CLAIM STORE too. Without this the test reads the real .data/claims and passes
+    # only while no reconcile session happens to be running — which is a test coupled to the
+    # machine's live state, i.e. green for a reason unrelated to what it asserts. Caught on
+    # 2026-08-23 the first time a real reconcile held the claim during a suite run.
+    monkeypatch.setattr(lt.claimlib, "task_holder", lambda k: (lt.claimlib.HELD_GONE, None))
     page = lt.render(datetime.datetime(2026, 8, 22, 12, 0), "research")
     assert 'action="/synthesize/start"' in page
     assert "reconcile it here" in page
@@ -156,3 +161,26 @@ def test_synthesis_refuses_when_there_is_nothing_outstanding(monkeypatch):
     monkeypatch.setattr(lt.synth, "unreconciled", lambda: [])
     ok, msg = lt.start_synthesis_pass(dry=True)
     assert not ok and "nothing to reconcile" in msg
+
+
+def test_the_button_is_disabled_while_a_reconcile_session_holds_the_claim(monkeypatch):
+    """The third state, and the one the first version of these tests forgot.
+
+    A control that renders enabled and then refuses on POST is a control lying about its own
+    availability. With a gap outstanding AND the claim held, the button must render disabled and
+    offer the release route — the same shape a held lane claim gets.
+    """
+    monkeypatch.setattr(lt.synth, "unsynthesised", lambda: ["R99"])
+    monkeypatch.setattr(lt.synth, "unreconciled", lambda: [])
+    monkeypatch.setattr(lt.synth, "prompt", lambda: "stub reconciling prompt")
+    monkeypatch.setattr(lt.synth, "session_prompt", lambda: "stub session prompt")
+    monkeypatch.setattr(lt.claimlib, "task_holder",
+                        lambda k: (lt.claimlib.HELD_UNVERIFIED, {"since": "2026-08-23T18:04:35+00:00",
+                                                                 "note": "reconciling R99"}))
+    page = lt.render(datetime.datetime(2026, 8, 22, 12, 0), "research")
+    assert 'action="/synthesize/start"' not in page, (
+        "the button is offered while a session already holds the claim — a second one would write "
+        "the same file and the loser's pass would vanish"
+    )
+    assert "a session is reconciling now" in page
+    assert "/release-task/synthesis" in page, "no way out of a held claim is a wedged button"
