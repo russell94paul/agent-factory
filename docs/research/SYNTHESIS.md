@@ -1,4 +1,10 @@
-# Synthesis — what thirteen research passes concluded, and what changes
+# Synthesis — what the research passes concluded, and what changes
+
+⚠ **The title used to say "thirteen research passes" and had said so for three additions.** Sixteen
+answers are filed in `answers/` — R1–R8 and R10–R17, R9 withdrawn — so the count was a number nobody
+could make move, which §15.4 is about. Removed rather than re-fixed, because it will go stale again.
+Mentioning an id is still not reconciling it (`factory/synthesis.py` says so in its own docstring);
+§15.3 records one answer this document has still never absorbed.
 
 **2026-08-21, extended 2026-08-22.** Eight documents: R1 eval harness, R2 topology, R3 control
 plane, R4 agnostic optimiser (twice), **R5 build velocity**, **R6 automation and alerting**, and —
@@ -80,6 +86,11 @@ Evidence: 180 configurations across 5 architectures, 3 model families, 4 agentic
 multi-agent averaged **−3.5%**, sequential tasks degraded **39–70%**, and gains diminished once a
 single-agent baseline exceeded ~45%. Anthropic's 90.2% multi-agent result is breadth-first research
 at ~15× tokens, and their own guidance says coding is less parallelisable.
+
+⚠ **Tier those two Anthropic numbers — §16.6.** The 90.2% is `MARKETED` (internal eval, LLM judge,
+internal rubric, no independent confirmation), and Anthropic publishes *both* "~15× more tokens as
+chats" and "3-10× more tokens than single-agent approaches" on different pages. We cite them
+*against* multi-agent so the conclusion is unaffected, but the figures travel with those caveats now.
 
 `blueprints/orchestrator_team.yaml` is marked superseded and kept, with the unlock threshold in the
 file.
@@ -315,7 +326,9 @@ they arrived by different routes:
 
 - **R5, from data.** A study of ~33,000 agent-generated GitHub PRs: *same-agent* PRs in flight
   conflicted **19.8%** of the time, *different-agent* PRs **41.7%** — and most conflicts were
-  **structural** (one agent deleting a file another edited), not line-level.
+  **structural** (one agent deleting a file another edited), not line-level. ⚠ **That is the correct
+  attribution and five other places in this repo lost it — §16.1.** The 41.7% is a published finding
+  about other people's repositories. It has never been measured here.
 - **R6, as an Observed practice.** Branch-per-lane / worktree-per-agent, merged one at a time.
 
 Agreement between independent passes is the control, divergence is the finding — so this is the
@@ -662,6 +675,11 @@ of exactly the shape a guardrail catches: `terminate_prefect_flow_run` sent Pref
 **before** the ownership check, so the refusal protected the container and never protected the run.
 A post-hoc gate cannot catch that class. **File as a real absence.**
 
+⭐ **R17 puts a measurement under this — §16.7.** A gate at the first artefact boundary catches
+**75.4%** of the defects the same gate at the last boundary catches **10.7%** of, and
+end-of-pipeline verification buys **+2.3 pp over no verification at all**. The guardrail gap is not
+a taxonomy tidy-up; it is where almost all of the detection is.
+
 Second: **task packaging** (METR Task Standard — task + environment + scoring as one reproducible
 unit). That is the same question R8 is out asking about isolation tiers, arriving from the
 benchmark side. Read them together when R8 lands.
@@ -779,6 +797,11 @@ conventional", and it is enforceable in code rather than in a runbook. It is als
 the estate's standing evidence-gated-deploy rule — validate against a clone, deploy through a gate —
 so it costs no new discipline, only a check.
 
+⛔ **"Enforceable in code" was wrong, and §16.4 supersedes this.** R17 read Snowflake's own docs: a
+rule about what SQL an agent may write is an instruction living in a repo the agent can edit. The
+mandatory version of the same intent is a **grant** — the lane's role owns no production object, so
+`CREATE OR REPLACE` is not available to it at all. Keep the intent, replace the mechanism.
+
 ### 13.3 ⚠ A correction to what "unattended" can mean
 
 Our readiness set asks *"can an agent team run a connector migration unattended?"* R8 puts a number
@@ -789,6 +812,10 @@ of minutes, not hours or days"*, and most teams deliberately break runs under an
 **So the honest target is a 30–45 minute unbroken run, not an unattended migration.** Our 3-of-14
 figure is not far off a field that mostly does not attempt more. This does not lower the bar for
 *certification* — it changes what the bar is measuring.
+
+⭐ **Independently corroborated and sharpened by R17 — §16.8.** The number to compare against is the
+**80%** horizon (Opus 4.5: **27 minutes**), not the 50% one; METR states outright that its horizon is
+*not* unattended runtime; and 3-of-14 is normal-to-good against the only measured long-horizon suite.
 
 ### 13.4 Where R8 ignored constraints it was given — recorded, not smoothed
 
@@ -889,7 +916,10 @@ switchboard. A crash leaves the Map empty while PTYs may survive (the tidy-up on
 1. **Do not adopt R15's desktop app.** Make the existing tracker instant instead — thread the server
    and parallelise the probes, 9.3 s → ~1.2 s, ~30 lines. Then apply R14's design to a fast surface.
 2. **Containerise agent execution on one machine** (R8's smallest impactful change), before any
-   cloud step. The first break is credentials isolation, and F53 is the evidence.
+   cloud step. The first break is credentials isolation, and F53 is the evidence. ⚠ **Narrowed by
+   §16.5**: a plain container is not the boundary — a frontier model escaped Docker/K8s in ~49% of
+   measured attempts — and there is a cheaper first move than containerising anything, using
+   settings already shipped in the tool we run.
 3. **Adopt the mandatory-clone rule** (§13.2) — enforceable in code, no new discipline.
 4. **Restate the unattended goal as a 30–45 minute unbroken run** (§13.3), and say so in the
    readiness set rather than leaving the gate asking for something the field does not attempt.
@@ -901,6 +931,10 @@ switchboard. A crash leaves the Map empty while PTYs may survive (the tidy-up on
 - **R8:** whether zero-copy clones are cheap to *validate against* at our data volumes — it asserts
   near-zero creation cost but does not cost validation, which was half of architecture-v0's §7
   worry. And "10+ agents on a modern server" is `INFERRED`, with no measurement behind the number.
+  ✅ **Answered by R17 (§16.3), and the question was the wrong one.** Validation compute scales with
+  query-seconds, not lane count, so the cost worry was attached to the wrong variable. What actually
+  breaks the clone story is that it is a different privilege path, a different temporal path, and —
+  for share-consumed data — not available at all. And R8's "10+" is refuted: see §16.2.
 - **R15:** anything about design craft — no type scale, no colour system, no hierarchy, no motion,
   and no mention of `UNMEASURABLE`, which is the colour problem no standard palette solves. That is
   R14's job and R14 has not run.
@@ -931,6 +965,12 @@ is precisely what R8 recommends changing.
 ⭐ **Two independent passes, from opposite directions, converge on the same answer: reorganising
 the agents buys nothing; re-scoping what they touch buys everything.** That is the strongest
 result in this document, and it retires the idea that a cleverer topology is worth pursuing.
+
+⛔ **Half of that survived R17 and half did not — §16.2.** "Reorganising the agents buys nothing" is
+now a *theorem* rather than a survey result, which is stronger than what is written here.
+"Re-scoping what they touch buys everything" is **refuted as stated**: cloning removes one class of
+conflict edge and adds three the conflict graph has no representation for. The cap is replaced, not
+lifted. Do not cite this paragraph without §16.2.
 
 ### 14.2 The platform question is settled, and it settles against R15
 
@@ -1199,3 +1239,9 @@ external support, and two of the six findings above argue it is aimed at the wro
 If the binding limit is reviewer throughput, the useful first move is something that **raises review
 capacity or lowers what needs reviewing** — not something that delivers the queue sooner. That is a
 different action, and nobody has written it down yet.
+
+✅ **A fourth pass reached the same place independently, and it names the action — §16.9.** R17
+measured the ceiling at 22,000 developers (median review time **+441.5%**, PRs merged with **no
+review +31.3%**) and draws the conclusion this section stops one step short of: *raising lane
+concurrency before the evidence gate is made sublinear reduces safety, not just speed — because a
+saturated gate does not present as a queue, it presents as a bypass.*

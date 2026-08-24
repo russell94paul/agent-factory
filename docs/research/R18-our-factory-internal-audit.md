@@ -1,6 +1,6 @@
 # R18 — Our own factory, audited from inside the repo: the internal half of R8
 
-**Status: NOT DISPATCHED.** Written 2026-08-23.
+**Status: DISPATCHED 2026-08-23.** Written 2026-08-23.
 
 **Pass type:** STRUCTURE_CRITIQUE
 **Depends on:** R17
@@ -23,8 +23,7 @@ reading what we concluded about it — and take the mandatory web lane, or this 
 
 | Run | Date | Outcome |
 |---|---|---|
-| — | — | not yet dispatched |
-
+| 1 | 2026-08-23 | Dispatched from the readiness board — STRUCTURE_CRITIQUE run in-repo via the deep-research skill |
 ## ⭐ Why the pack is gone
 
 R8 shipped a **481 KB evidence pack** — R1–R7 answers, `architecture-v0.md`,
