@@ -1,6 +1,6 @@
 # R17 — Agent factories for data engineering: the external half of R8, re-asked without a pack
 
-**Status: NOT DISPATCHED.** Written 2026-08-23. Paste the whole file. **Attach nothing.** The
+**Status: DISPATCHED 2026-08-23.** Written 2026-08-23. Paste the whole file. **Attach nothing.** The
 answer lands beside it as
 `docs/research/answers/R17-answer-data-engineering-external-survey.md`.
 
@@ -21,8 +21,7 @@ the repo, the wiki, the ledger or a verifier.
 
 | Run | Date | Outcome |
 |---|---|---|
-| — | — | not yet dispatched |
-
+| 1 | 2026-08-23 | Dispatched from the readiness board — EXTERNAL_SURVEY run in-repo via the deep-research skill |
 ## ⭐ Why this exists, and why there is no evidence pack
 
 R8 was run twice and failed the same way twice.
