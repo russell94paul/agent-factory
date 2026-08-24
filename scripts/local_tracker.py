@@ -260,6 +260,23 @@ def start_synthesis_pass(dry: bool = False):
         return True, (f"DRY RUN -- would reconcile {', '.join(gap)} into SYNTHESIS.md "
                       f"({len(body):,}-char session prompt); nothing written")
 
+    # ⛔ Claim BEFORE spawning, or the window is exactly as wide as the thing being guarded.
+    # Without this, two clicks opened two sessions each told to write docs/research/SYNTHESIS.md.
+    # Two agents on one 76 KB document is last-write-wins and the loser's whole pass vanishes with
+    # no error anywhere.
+    #
+    # ⚠ No pid is recorded, and that is not laziness. The pid we could capture is `wt`'s, which
+    # exits within seconds and does NOT own the claude session it hands off to — recording it
+    # would make the claim read HELD-GONE almost immediately, i.e. a guard that reports itself
+    # free while the session runs. With no pid, `task_holder` returns HELD_UNVERIFIED and this
+    # FAILS CLOSED: the second click is refused and told how to release. That matches the module's
+    # own rule — a stale claim still blocks, and the refusal says how to clear it, because a
+    # control that quietly expires is one you cannot reason about.
+    try:
+        claimlib.task_claim("synthesis", note="reconciling " + ", ".join(gap))
+    except claimlib.ClaimError as exc:
+        return False, f"{exc} Release it at /release-task/synthesis if that session is gone."
+
     d = FACTORY / ".data" / "research-prompts"
     d.mkdir(parents=True, exist_ok=True)
     launch_file = d / "SYNTHESIS-session.txt"
@@ -277,8 +294,10 @@ def start_synthesis_pass(dry: bool = False):
     try:
         _sp.Popen(cmd, cwd=str(FACTORY), close_fds=True)
     except Exception as exc:                                       # noqa: BLE001
+        # Nothing started, so holding the claim would block the next honest attempt for no reason.
+        claimlib.task_release("synthesis")
         return False, (f"prompt written to {launch_file.name} -- but no terminal opened "
-                       f"({type(exc).__name__}: {exc}).")
+                       f"({type(exc).__name__}: {exc}). Claim released.")
     return True, (f"session opened -- reconciling {', '.join(gap)} into SYNTHESIS.md. "
                   "It writes that ONE file; re-render this page to see the gap close.")
 
@@ -1802,8 +1821,13 @@ def render(when: datetime.datetime, tab: str = "gates", team: str = "") -> str:
         # ⛔ There used to be no button here, and the page said so in print. That reasoning held
         # while the only mechanism was a paste loop; it does not now. The button dispatches
         # judgement to a session, it does not perform it. See factory/synthesis.py.
+        # A claim already held means a session is reconciling right now. Rendering an enabled
+        # button that then refuses on POST is a control that lies about its own availability —
+        # so the state is shown here, with the release route, exactly as a lane claim is.
+        _sv, _sheld = claimlib.task_holder("synthesis")
+        held = _sv != claimlib.HELD_GONE
         w('<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 10px">')
-        if runnable:
+        if runnable and not held:
             w('<form method="POST" action="/synthesize/start" style="margin:0">'
               '<button type="submit" style="font-size:12.5px;padding:6px 12px;cursor:pointer;'
               'border:1px solid var(--accent);border-radius:3px;background:var(--raise);'
@@ -1812,6 +1836,22 @@ def render(when: datetime.datetime, tab: str = "gates", team: str = "") -> str:
             w(f'<span style="font-size:12px;color:var(--ink3)">opens a session that reads '
               f'{e(", ".join(runnable))} in full and writes <code>SYNTHESIS.md</code> &mdash; '
               f'<b>that one file only</b></span>')
+        elif runnable and held:
+            since = ""
+            try:
+                import datetime as _dtm
+                _s = _dtm.datetime.fromisoformat((_sheld or {}).get("since", ""))
+                since = " · started " + claimlib.Claim("synthesis", _s, "").human_age()
+            except Exception:                                       # noqa: BLE001
+                pass
+            w('<button type="button" disabled title="a reconcile session already holds this" '
+              'style="font-size:12.5px;padding:6px 12px;cursor:not-allowed;border:1px solid '
+              'var(--rule);border-radius:3px;background:var(--raise);color:var(--ink3);'
+              'font-family:ui-monospace,monospace">reconcile it here</button>')
+            w(f'<span style="font-size:12px;color:var(--ink3)"><b>a session is reconciling '
+              f'now</b>{e(since)} &mdash; a second one would write the same file and the loser\'s '
+              f'pass would vanish. <a href="/release-task/synthesis">release</a> if it is gone.'
+              f'</span>')
         else:
             w('<button type="button" disabled title="nothing outstanding to reconcile" '
               'style="font-size:12.5px;padding:6px 12px;cursor:not-allowed;border:1px solid '
@@ -2158,6 +2198,16 @@ class Handler(http.server.BaseHTTPRequestHandler):
         global _SYNC_MSG
         global _CLAIM_MSG
         import urllib.parse
+        # The escape hatch for a task claim whose session is gone. A guard with no release is a
+        # wedged button, and this module's own rule is that a stale claim blocks but always says
+        # how to clear it — never expires quietly.
+        tm = re.match(r"^/release-task/([a-z0-9-]+)$", self.path.rstrip("/"))
+        if tm:
+            dropped = claimlib.task_release(tm.group(1))
+            _CLAIM_MSG = (True, f"released the {tm.group(1)} claim" if dropped
+                          else f"no {tm.group(1)} claim to release")
+            self.send_response(303); self.send_header("Location", "/research"); self.end_headers()
+            return
         um = re.match(r"^/unanswer/([a-z0-9-]+)$", self.path.rstrip("/"))
         if um:
             ok = opans.clear(um.group(1))

@@ -47,6 +47,19 @@ STALE_AFTER = _dt.timedelta(hours=4)
 
 _SAFE = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
 
+#: Claims on work that is NOT a lane — a reconcile run, a research pass, anything a button spawns
+#: that must not be spawned twice.
+#:
+#: ⛔ A separate namespace rather than a new entry in `LANES`, deliberately. R14 measured that
+#: `lane` is already four objects wearing one string — work package, file-conflict key, git branch,
+#: directory, claim key, ledger key — and named that, not topology, as the reason the 3-lane cap
+#: will not move. Registering "synthesis" as a lane to reuse `claim()` would have added a fifth
+#: meaning to the most overloaded word in this codebase to save a dozen lines.
+#:
+#: The store and the lock are shared, because the race is identical. The conflict graph is not: a
+#: task conflicts only with itself.
+TASK_PREFIX = "task--"
+
 
 class ClaimError(Exception):
     """The claim was refused. The message says by what, and what to do about it."""
@@ -141,6 +154,11 @@ def active() -> Dict[str, Claim]:
     if not ROOT.is_dir():
         return out
     for f in sorted(ROOT.glob("*.json")):
+        # Task claims share the store but are NOT lanes. Leaking one in here would put a phantom
+        # row on the Lanes tab and make `blockers()` weigh it against the lane conflict graph,
+        # where it has no meaning.
+        if f.name.startswith(TASK_PREFIX):
+            continue
         try:
             d = json.loads(f.read_text(encoding="utf-8"))
             out[f.stem] = Claim(f.stem, _dt.datetime.fromisoformat(d["since"]),
@@ -276,3 +294,97 @@ def parallel_set(passing: Optional[set] = None) -> List[str]:
         if not any(other in chosen for other in clash.get(lane.id, [])):
             chosen.append(lane.id)
     return chosen
+
+
+# ---------------------------------------------------------------------------------------------
+# Task claims — re-entry guards for work a BUTTON spawns.
+#
+# The defect this closes, measured 2026-08-23: `/synthesize/start` had no guard at all, so two
+# clicks opened two Claude Code sessions, each told to write `docs/research/SYNTHESIS.md`. Two
+# agents writing one 76 KB document is last-write-wins — the loser's entire pass vanishes with no
+# error anywhere. `/research/start` already refuses a second dispatch (ALREADY-SENT); this is the
+# same refusal for work that is not a research prompt.
+#
+# ⚠ Liveness is measured against the PID we spawned, and gets THREE verdicts, never two. A process
+# table we could not read is not evidence that nothing is running — the same distinction
+# `sessions._running_pids` draws by returning None rather than an empty set, and the one `holder()`
+# draws for lanes. Unverified FAILS CLOSED: it refuses, and says why, because the cost of a wrong
+# refusal is a re-click and the cost of a wrong pass is a destroyed document.
+
+
+def _task_path(key: str) -> pathlib.Path:
+    if not _SAFE.match(key or ""):
+        raise ClaimError(f"{key!r} is not a valid task key")
+    return ROOT / f"{TASK_PREFIX}{key}.json"
+
+
+def task_holder(key: str):
+    """(verdict, payload) for whoever holds task `key`. HELD_GONE with no payload means free."""
+    p = _task_path(key)
+    if not p.exists():
+        return HELD_GONE, None
+    try:
+        d = json.loads(p.read_text(encoding="utf-8"))
+    except Exception:                                              # noqa: BLE001
+        # An unreadable claim is not an absent one — same rule as `active()`.
+        return HELD_UNVERIFIED, {"pid": None, "note": "claim file will not parse"}
+    pid = d.get("pid")
+    if not pid:
+        return HELD_UNVERIFIED, d
+    try:
+        from . import sessions as _sessions
+        live = _sessions._running_pids()
+    except Exception:                                              # noqa: BLE001
+        live = None
+    if live is None:
+        return HELD_UNVERIFIED, d
+    return (HELD_LIVE if int(pid) in live else HELD_GONE), d
+
+
+def task_claim(key: str, pid: Optional[int] = None, who: str = "", note: str = "",
+               force: bool = False) -> Claim:
+    """Claim `key` for a spawned session, or refuse with a message saying what holds it.
+
+    `pid` is recorded so the NEXT caller can measure liveness rather than read a clock. A claim
+    whose session has exited is reclaimed automatically — a guard that wedges permanently after a
+    crash turns a race into a deadlock, which is why `_exclusive()` steals an abandoned lock too.
+    """
+    with _exclusive():
+        verdict, held = task_holder(key)
+        if verdict != HELD_GONE and not force:
+            age = ""
+            try:
+                since = _dt.datetime.fromisoformat((held or {}).get("since", ""))
+                age = f", started {Claim(key, since, '').human_age()}"
+            except Exception:                                      # noqa: BLE001
+                pass
+            if verdict == HELD_LIVE:
+                raise ClaimError(
+                    f"{key} is already running as pid {(held or {}).get('pid')}{age}. "
+                    "Starting a second one would put two agents on the same file, and the loser's "
+                    "work disappears without an error. Wait for it, or use force if you know it "
+                    "is wedged.")
+            why = ((held or {}).get("reason")
+                   or ("no pid was recorded for it" if not (held or {}).get("pid")
+                       else "the process table could not be read"))
+            note = (held or {}).get("note")
+            raise ClaimError(
+                f"{key} may already be running{age} and liveness could NOT be verified — {why}. "
+                + (f"It was claimed for: {note}. " if note else "")
+                + "Refusing rather than guessing: not being able to look is not proof that "
+                  "nothing is there.")
+        ROOT.mkdir(parents=True, exist_ok=True)
+        now = _dt.datetime.now(_dt.timezone.utc)
+        payload = {"since": now.isoformat(), "pid": pid,
+                   "who": who or os.environ.get("USERNAME", "unknown"),
+                   "note": note, "forced": bool(verdict != HELD_GONE and force)}
+        _task_path(key).write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    return Claim(key, now, payload["who"], note)
+
+
+def task_release(key: str) -> bool:
+    p = _task_path(key)
+    if not p.exists():
+        return False
+    p.unlink()
+    return True
