@@ -230,6 +230,59 @@ def start_research_pass(rid: str, dry: bool = False):
     return True, f"{res['note']} -- session opened, running {rid} as {pt}"
 
 
+def start_synthesis_pass(dry: bool = False):
+    """Open a session that reconciles the filed answers into SYNTHESIS.md.
+
+    ⛔ This page used to state, in print, that there is no synthesize button "because synthesis is
+    judgement, and a button that cannot exercise it would either fake it or do nothing". That was
+    right while the only mechanism was a paste loop. It is superseded for the same reason the
+    research paste loop was: the button does not exercise judgement, it DISPATCHES judgement to a
+    session in this repo and records that it did. See `factory/synthesis.py` for the full argument.
+
+    ⚠ It still cannot make the reconciliation GOOD — `unsynthesised()` checks mention and
+    `unreconciled()` checks mtime, and a session writing one sentence per answer clears both. That
+    is said on the page rather than papered over.
+
+    `dry` writes NOTHING, and is checked BEFORE anything is prepared — the defect fixed in
+    `start_research_pass` on 2026-08-23, not re-introduced here.
+    """
+    import subprocess as _sp
+    gap = synth.unsynthesised() or synth.unreconciled()
+    if not gap:
+        return False, ("nothing to reconcile -- SYNTHESIS.md mentions every filed answer and "
+                       "postdates all of them")
+    try:
+        body = synth.session_prompt()
+    except Exception as exc:                                       # noqa: BLE001
+        return False, f"could not build the reconciling prompt: {type(exc).__name__}: {exc}"
+
+    if dry:
+        return True, (f"DRY RUN -- would reconcile {', '.join(gap)} into SYNTHESIS.md "
+                      f"({len(body):,}-char session prompt); nothing written")
+
+    d = FACTORY / ".data" / "research-prompts"
+    d.mkdir(parents=True, exist_ok=True)
+    launch_file = d / "SYNTHESIS-session.txt"
+    launch_file.write_text(body, encoding="utf-8")
+
+    title = "synthesis · " + ", ".join(gap)
+    ps1 = _launch_script("synthesis", title, launch_file, "38;5;180", session_name=title)
+    wtexe = _wt()
+    cmd = ([wtexe, "new-tab", "--title", title, "--startingDirectory", str(FACTORY),
+            "--colorScheme", WT_SCHEME,
+            "powershell", "-NoExit", "-ExecutionPolicy", "Bypass", "-File", str(ps1)]
+           if wtexe else
+           ["cmd", "/c", "start", "synthesis", "powershell", "-NoExit",
+            "-ExecutionPolicy", "Bypass", "-File", str(ps1)])
+    try:
+        _sp.Popen(cmd, cwd=str(FACTORY), close_fds=True)
+    except Exception as exc:                                       # noqa: BLE001
+        return False, (f"prompt written to {launch_file.name} -- but no terminal opened "
+                       f"({type(exc).__name__}: {exc}).")
+    return True, (f"session opened -- reconciling {', '.join(gap)} into SYNTHESIS.md. "
+                  "It writes that ONE file; re-render this page to see the gap close.")
+
+
 #: One frame for every session (system identity); the banner accent varies per lane (instance
 #: identity). Five differently-coloured windows would read as noise, not information.
 WT_SCHEME = "Agent Factory Blue"
@@ -1736,13 +1789,40 @@ def render(when: datetime.datetime, tab: str = "gates", team: str = "") -> str:
           'browser.</p>')
 
         gap = synth.unsynthesised()
+        late = synth.unreconciled()
+        runnable = gap or late
         w('<div class="par" style="margin-top:34px;border-color:'
-          + ("var(--unmeas)" if gap else "var(--rule)") + '">')
+          + ("var(--unmeas)" if runnable else "var(--rule)") + '">')
         w('<h3 style="margin-top:0">Decision record</h3>')
         if gap:
             w(f'<p style="font-size:13.5px;color:var(--ink2);margin:0 0 8px">'
               f'<b>SYNTHESIS.md does not mention {e(", ".join(gap))}</b>, which have filed '
               f'answers. The record has fallen behind the research it reconciles.</p>')
+        # ---------------------------------------------------- the reconcile control
+        # ⛔ There used to be no button here, and the page said so in print. That reasoning held
+        # while the only mechanism was a paste loop; it does not now. The button dispatches
+        # judgement to a session, it does not perform it. See factory/synthesis.py.
+        w('<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 10px">')
+        if runnable:
+            w('<form method="POST" action="/synthesize/start" style="margin:0">'
+              '<button type="submit" style="font-size:12.5px;padding:6px 12px;cursor:pointer;'
+              'border:1px solid var(--accent);border-radius:3px;background:var(--raise);'
+              'color:var(--accent);font-weight:600;font-family:ui-monospace,monospace">'
+              'reconcile it here</button></form>')
+            w(f'<span style="font-size:12px;color:var(--ink3)">opens a session that reads '
+              f'{e(", ".join(runnable))} in full and writes <code>SYNTHESIS.md</code> &mdash; '
+              f'<b>that one file only</b></span>')
+        else:
+            w('<button type="button" disabled title="nothing outstanding to reconcile" '
+              'style="font-size:12.5px;padding:6px 12px;cursor:not-allowed;border:1px solid '
+              'var(--rule);border-radius:3px;background:var(--raise);color:var(--ink3);'
+              'font-family:ui-monospace,monospace">reconcile it here</button>')
+            w('<span style="font-size:12px;color:var(--ink3)">nothing outstanding</span>')
+        w('</div>')
+        if runnable:
+            w('<div class="dep" style="margin:-2px 0 10px">⚠ This dispatches the judgement, it '
+              'does not perform it &mdash; and <b>neither check below can tell a real '
+              'reconciliation from one sentence per answer</b>. Read what it writes.</div>')
             w('<button type="button" data-copy="synth-prompt" style="font-size:12px;'
               'padding:5px 10px;margin-bottom:8px;cursor:pointer;border:1px solid var(--rule);'
               'border-radius:3px;background:var(--raise);color:var(--ink);'
@@ -1755,13 +1835,15 @@ def render(when: datetime.datetime, tab: str = "gates", team: str = "") -> str:
         else:
             w('<p style="font-size:13.5px;color:var(--ink2);margin:0">'
               '<code>docs/research/SYNTHESIS.md</code> mentions every filed answer.</p>')
-        # Deliberately not "up to date": the check asserts MENTION, not engagement. There is no
-        # synthesize button because synthesis is judgement, and a button that cannot exercise it
-        # would either fake it or do nothing.
+        # Deliberately not "up to date": the check asserts MENTION, not engagement. The
+        # no-synthesize-button rule that used to live here is superseded — a button can now open a
+        # session that does the reading, which is a different thing from a button that fakes it.
+        # What has NOT changed is that neither check can see whether the reading happened.
         w('<p style="font-size:12px;color:var(--ink3);margin:8px 0 0">Checks that each answer is '
           '<i>mentioned</i>, not that it was engaged with &mdash; it catches a record nobody '
-          'touched, and nothing subtler. There is no synthesize button: synthesis is judgement.'
-          '</p>')
+          'touched, and nothing subtler. The button above dispatches the judgement to a session; '
+          'it does not exercise it, and <b>a run that writes one sentence per answer clears both '
+          'checks</b>.</p>')
         w('</div>')
 
         # Always render the heading, even with nothing outstanding: a nav link to a blank page
@@ -2000,6 +2082,16 @@ class Handler(http.server.BaseHTTPRequestHandler):
             _CLAIM_MSG = start_research_pass((q.get("id") or [""])[0],
                                              dry="dry" in (q.get("mode") or []))
             print(f"  research/start: {_CLAIM_MSG[1]}")
+            self.send_response(303)
+            self.send_header("Location", "/research")
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            return
+        if self.path.rstrip("/") == "/synthesize/start":
+            raw = self.rfile.read(int(self.headers.get("Content-Length") or 0)).decode("utf-8", "replace")
+            q = urllib.parse.parse_qs(raw, keep_blank_values=True)
+            _CLAIM_MSG = start_synthesis_pass(dry="dry" in (q.get("mode") or []))
+            print(f"  synthesize/start: {_CLAIM_MSG[1]}")
             self.send_response(303)
             self.send_header("Location", "/research")
             self.send_header("Cache-Control", "no-store")

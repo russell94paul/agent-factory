@@ -88,3 +88,71 @@ def test_the_research_tab_offers_only_unanswered_prompts(research_page):
         assert offered != answered, (
             f"{f.name}: answered={answered} but offered={offered} — the research tab should "
             "advertise exactly the prompts with no filed answer")
+
+
+# ------------------------------------------------------------------ the reconcile control
+
+
+def test_the_synthesize_button_appears_only_when_there_is_something_to_reconcile(monkeypatch):
+    """⛔ This page used to state in print that no synthesize button exists, "because synthesis is
+    judgement, and a button that cannot exercise it would either fake it or do nothing". That held
+    while the only mechanism was a paste loop. The button now DISPATCHES judgement to a session,
+    the same move that replaced the research paste loop.
+
+    Both states are asserted, because a control that is always enabled is not a control.
+    """
+    monkeypatch.setattr(lt.synth, "unsynthesised", lambda: ["R99"])
+    monkeypatch.setattr(lt.synth, "unreconciled", lambda: [])
+    # R99 has no file on disk, so the real prompt builders would raise looking it up. They are
+    # exercised by their own tests; what is under test here is the CONTROL's presence.
+    monkeypatch.setattr(lt.synth, "prompt", lambda: "stub reconciling prompt")
+    monkeypatch.setattr(lt.synth, "session_prompt", lambda: "stub session prompt")
+    page = lt.render(datetime.datetime(2026, 8, 22, 12, 0), "research")
+    assert 'action="/synthesize/start"' in page
+    assert "reconcile it here" in page
+
+    monkeypatch.setattr(lt.synth, "unsynthesised", lambda: [])
+    page = lt.render(datetime.datetime(2026, 8, 22, 12, 0), "research")
+    assert 'action="/synthesize/start"' not in page, (
+        "the button is offered with nothing outstanding — it would open a session to do nothing"
+    )
+    assert "nothing outstanding" in page
+
+
+def test_the_page_no_longer_claims_the_button_does_not_exist():
+    """The old copy read 'There is no synthesize button: synthesis is judgement.' A page that
+    denies the existence of one of its own controls is the same class of defect as the page that
+    said it caches nothing while caching."""
+    page = lt.render(datetime.datetime(2026, 8, 22, 12, 0), "research")
+    assert "no synthesize button" not in page.lower()
+
+
+def test_a_dry_synthesis_run_writes_nothing_and_opens_nothing(monkeypatch):
+    """The dry-run lesson from `start_research_pass`, not re-introduced here.
+
+    `dry` is checked BEFORE anything is prepared, so there is no file to assert the absence of —
+    which is exactly the property. Popen is monkeypatched to prove no terminal is opened; a test
+    that actually opened a window would not be a test.
+    """
+    import subprocess
+
+    monkeypatch.setattr(lt.synth, "unsynthesised", lambda: ["R99"])
+    monkeypatch.setattr(lt.synth, "unreconciled", lambda: [])
+    monkeypatch.setattr(lt.synth, "session_prompt", lambda: "stub session prompt")
+    opened = []
+    monkeypatch.setattr(subprocess, "Popen", lambda *a, **k: opened.append(a))
+
+    ok, msg = lt.start_synthesis_pass(dry=True)
+    assert ok and "DRY RUN" in msg and "nothing written" in msg
+    assert not opened, "a dry run opened a terminal"
+    # DELIBERATELY not asserting the session file is absent: it can legitimately pre-exist from an
+    # earlier real run, so that check would be flaky in one direction and vacuous in the other.
+    # The property under test is that `dry` returns BEFORE any preparation, and "no process was
+    # spawned" is the observable that proves it.
+
+
+def test_synthesis_refuses_when_there_is_nothing_outstanding(monkeypatch):
+    monkeypatch.setattr(lt.synth, "unsynthesised", lambda: [])
+    monkeypatch.setattr(lt.synth, "unreconciled", lambda: [])
+    ok, msg = lt.start_synthesis_pass(dry=True)
+    assert not ok and "nothing to reconcile" in msg

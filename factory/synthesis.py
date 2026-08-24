@@ -120,3 +120,55 @@ def unreconciled() -> List[str]:
         except OSError:
             continue
     return sorted(late, key=lambda r: int(r[1:]))
+
+
+# ---------------------------------------------------------------------------------------------
+# Launching the reconciliation, rather than only describing it.
+#
+# ⛔ The Research tab used to carry a comment saying there is deliberately NO synthesize button,
+# "because synthesis is judgement, and a button that cannot exercise it would either fake it or
+# do nothing". That reasoning was correct WHEN THE ONLY MECHANISM WAS A PASTE LOOP — and it is
+# superseded by the same thing that superseded the paste loop for research passes: a button can
+# now open a Claude Code session in this repo that actually does the work.
+#
+# The objection is answered rather than ignored. The button does not exercise judgement; it
+# DISPATCHES judgement to an agent and records that it did, exactly as `/research/start` does. A
+# reconciliation run locally is less independent than a human reading the answers cold, and the
+# run note says so, because that is what tells the next reader how to weigh the record.
+#
+# ⚠ What it still cannot do is make the reconciliation GOOD. `unsynthesised()` checks mention and
+# `unreconciled()` checks modification time; neither checks engagement, and a session that writes
+# one sentence per answer clears both. That gap is unchanged by this button and is stated on the
+# page rather than papered over.
+
+
+def session_prompt() -> str:
+    """What the launched reconciling session is told.
+
+    Wraps :func:`prompt` — which already names the real gap — with the three rules a session
+    working in a shared checkout needs, and the run-provenance stamp.
+    """
+    gap = unsynthesised() or unreconciled()
+    return f"""Reconcile the research record.
+
+{prompt()}
+
+⛔ You may write EXACTLY ONE file: docs/research/SYNTHESIS.md. Do NOT `git add`, commit, stage, or
+edit any other file — other sessions are working in this checkout right now, and the answers you
+are reading are inputs, not drafts to tidy.
+
+⛔ READ THE ANSWERS IN FULL before writing anything. The failure this reconciliation exists to end
+is a record that talks about an answer nobody read: on 2026-08-23 SYNTHESIS.md said three times
+that R8 was "still outstanding" while its answer sat filed on disk, and the mention-check went
+green over it. Writing the id into a sentence is what a broken run looks like.
+
+⛔ Do NOT smooth a disagreement. Where an answer contradicts an earlier one, or something already
+built, record both and say which evidence is stronger and why. Averaging two findings produces a
+third that nobody measured.
+
+When you finish, append one line to the end of SYNTHESIS.md recording HOW this pass ran:
+reconciled locally by an agent with repo access — stronger on file-and-line claims, less
+independent than a reader coming to the answers cold. Both halves.
+
+Outstanding when this session started: {', '.join(gap) if gap else 'nothing'}.
+"""
