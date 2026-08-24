@@ -185,22 +185,32 @@ def start_research_pass(rid: str, dry: bool = False):
 
     Preparation happens BEFORE the spawn, so a failed spawn still leaves the prompt on disk and the
     dispatch recorded, rather than losing both with the click.
+
+    ⛔ `dry` is passed DOWN to `rrun.start`, never checked here afterwards. It used to be checked
+    here, three statements too late: `rrun.start(rid)` had already rebuilt the evidence pack,
+    flipped the prompt's `**Status:**` to DISPATCHED and appended a ledger row, and this function
+    then printed `DRY RUN --` over the top of it. A dry run that dispatches is worse than none at
+    all, because the output says the opposite of what happened.
     """
     import subprocess as _sp
     try:
-        res = rrun.start(rid)
+        res = rrun.start(rid, dry=dry)
     except rrun.ResearchError as exc:
         return False, f"{rid}: {exc}"
     except Exception as exc:                                       # noqa: BLE001
         return False, f"{rid}: {type(exc).__name__}: {exc}"
 
+    if dry:
+        # Nothing is written on this path — not even the session file. What WOULD run is in
+        # res["session_prompt"] for the caller to inspect.
+        return True, (f"DRY RUN -- {res['note']}; would open a session running "
+                      f"{rid.upper()}-session.txt")
+
     # The session is told to invoke the skill; it is NOT handed a paraphrase of the brief.
     d = FACTORY / ".data" / "research-prompts"
+    d.mkdir(parents=True, exist_ok=True)
     launch_file = d / f"{rid.upper()}-session.txt"
     launch_file.write_text(res["session_prompt"], encoding="utf-8")
-
-    if dry:
-        return True, f"DRY RUN -- {res['note']}; would open a session running {launch_file.name}"
 
     pt = res["plan"]["pass_type"]
     ps1 = _launch_script(f"research {rid}", f"{rid} · {pt}", launch_file,

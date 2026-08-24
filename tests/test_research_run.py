@@ -193,6 +193,56 @@ def test_start_prepares_then_records(estate):
         encoding="utf-8")
 
 
+def test_a_dry_run_changes_nothing_on_disk(estate):
+    """⭐ The whole point of `dry`, asserted as a byte-for-byte property rather than as a message.
+
+    ⛔ This FAILED before the fix. `local_tracker.start_research_pass` checked its own `dry` flag
+    AFTER calling `rr.start(rid)` — which had already rebuilt the pack, rewritten the prompt's
+    `**Status:**` line to DISPATCHED and appended to the ledger. It then printed `DRY RUN --` over
+    the top. The one instruction future tests of `/research/start` were given was "use dry=True to
+    avoid side effects", so every such test would have dispatched a real pass and corrupted the
+    record it was written to protect.
+
+    ⚠ Asserting the *message* would never have caught it — the message was always right. Only the
+    disk knows.
+    """
+    prompt = write(estate, "R90", "**Pass type:** EXTERNAL_SURVEY")
+    before = prompt.read_bytes()
+    ledger_before = rr.ledger().read_bytes() if rr.ledger().is_file() else None
+
+    res = rr.start("R90", {"R90": disp.UNDISPATCHED}, dry=True)
+
+    assert res["dry"] is True
+    assert prompt.read_bytes() == before, (
+        "a dry run rewrote the prompt — its **Status:** line is what dispatch.state() reads, so "
+        "this permanently marks an unsent pass as dispatched"
+    )
+    assert not res["prompt_path"].exists(), "a dry run wrote the payload file"
+    assert (rr.ledger().read_bytes() if rr.ledger().is_file() else None) == ledger_before, (
+        "a dry run appended to the dispatch ledger"
+    )
+    # And it must stay genuinely useful: the caller inspects exactly what WOULD run.
+    assert "deep-research" in res["session_prompt"]
+    assert "would mark R90 DISPATCHED" in res["note"]
+
+
+def test_a_dry_run_still_refuses_a_pass_that_is_not_ready(estate):
+    """Dry must not become a way past the gate — eligibility is checked first, either way."""
+    write(estate, "R90", "**Pass type:** EXTERNAL_SURVEY\n**Depends on:** none")
+    write(estate, "R91", "**Pass type:** STRUCTURE_CRITIQUE\n**Depends on:** R90")
+    with pytest.raises(rr.ResearchError):
+        rr.start("R91", {"R90": disp.UNDISPATCHED, "R91": disp.UNDISPATCHED}, dry=True)
+
+
+def test_a_real_run_still_records(estate):
+    """The other half. A `dry` that silently became the default would fail quietly — the board
+    would just keep reading UNDISPATCHED after a click, the exact gap `record()` closes."""
+    prompt = write(estate, "R90", "**Pass type:** EXTERNAL_SURVEY")
+    rr.start("R90", {"R90": disp.UNDISPATCHED}, dry=False)
+    assert "DISPATCHED" in prompt.read_text(encoding="utf-8")
+    assert rr.ledger().is_file()
+
+
 def test_already_dispatched_is_not_re_offered(estate):
     write(estate, "R90", "**Pass type:** EXTERNAL_SURVEY")
     pl = rr.plan("R90", {"R90": disp.IN_FLIGHT})

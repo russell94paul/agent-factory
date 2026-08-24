@@ -192,6 +192,17 @@ def board(state: Optional[Dict[str, str]] = None) -> List[dict]:
     return sorted(rows, key=lambda r: int(r["id"][1:]) if r["id"][1:].isdigit() else 999)
 
 
+def payload_path(rid: str) -> pathlib.Path:
+    """Where `payload()` WOULD write, computed without writing.
+
+    Split out so a dry run can name the file and build the session prompt around it while
+    touching nothing. `_prompt_path` is still called, so an unknown id still raises here rather
+    than returning a path to a file that could never exist.
+    """
+    _prompt_path(rid)
+    return _root() / ".data" / "research-prompts" / f"{rid.upper()}.txt"
+
+
 def payload(rid: str) -> pathlib.Path:
     """Write the prompt where a launcher or a human can pick it up, verbatim.
 
@@ -200,9 +211,8 @@ def payload(rid: str) -> pathlib.Path:
     silently truncates it (F10).
     """
     src = _prompt_path(rid)
-    d = _root() / ".data" / "research-prompts"
-    d.mkdir(parents=True, exist_ok=True)
-    out = d / f"{rid.upper()}.txt"
+    out = payload_path(rid)
+    out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
     return out
 
@@ -276,17 +286,40 @@ def _append_run_row(s: str, row: str) -> str:
     return s[:i] + "".join(lines)
 
 
-def start(rid: str, state: Optional[Dict[str, str]] = None) -> dict:
+def start(rid: str, state: Optional[Dict[str, str]] = None, dry: bool = False) -> dict:
     """Prepare a pass and hand back everything needed to launch it. **Never spawns** — the caller
     owns process creation, the same split `launch_command` uses, so a dry run cannot open a
     terminal by accident.
 
     Recording happens here, AFTER the payload is on disk: a dispatch marked before its prompt was
     written would be a lie about a file that does not exist.
+
+    ⛔ **`dry` belongs HERE, not in the caller, and putting it in the caller was a real defect.**
+    `local_tracker.start_research_pass` used to call this function and *then* check its own `dry`
+    flag — so a "dry run" had already rebuilt the evidence pack, rewritten the prompt's
+    `**Status:**` line to DISPATCHED and appended a row to the ledger before the flag was ever
+    read. It reported `DRY RUN --` while having permanently marked the pass as sent.
+
+    ⚠ That is not a theoretical cost: the other session's boot prompt instructs future tests of
+    `/research/start` to use `dry=True` precisely to avoid side effects, so every such test would
+    have silently dispatched a real prompt and corrupted the record it was written to protect.
+
+    A dry run therefore writes **nothing at all** — no payload, no pack, no status line, no
+    ledger row. It resolves the path the payload *would* take and builds the real session prompt
+    around it, so what you inspect is what would run.
     """
     pl = plan(rid, state)
     if pl["eligible"] != READY:
         raise ResearchError(f"{pl['id']} is not ready: {pl['why']}")
+
+    if dry:
+        would = [f"would write {payload_path(pl['id']).name}"]
+        if pl["pack"]:
+            would.append(f"would rebuild {pl['pack']}")
+        would.append(f"would mark {pl['id']} DISPATCHED and append to {ledger().name}")
+        return {"ok": True, "dry": True, "note": " · ".join(would),
+                "prompt_path": payload_path(pl["id"]),
+                "session_prompt": session_prompt(pl, payload_path(pl["id"])), "plan": pl}
 
     notes = []
     out = payload(pl["id"])
@@ -294,7 +327,7 @@ def start(rid: str, state: Optional[Dict[str, str]] = None) -> dict:
     if pl["pack"]:
         notes.append(f"rebuilt {build_pack(pl['id'])}")
     notes.append(record(pl["id"], f"{pl['pass_type']} run in-repo via the deep-research skill"))
-    return {"ok": True, "note": " · ".join(notes), "prompt_path": out,
+    return {"ok": True, "dry": False, "note": " · ".join(notes), "prompt_path": out,
             "session_prompt": session_prompt(pl, out), "plan": pl}
 
 
