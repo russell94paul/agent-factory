@@ -31,7 +31,7 @@ What we have works and is capped. Both halves are measured.
 | Why capped | two lanes editing one file | `MEASURED` 41.7% conflict rate on a shared branch (R5) |
 | Execution environment | the operator's shell, the operator's credentials | `MEASURED` — there is no sandbox |
 | Data blast radius | unbounded | `MEASURED` — no dry-run gate, no row-count diff, no rollback capture |
-| Cost | unknown | `MEASURED` — nothing records tokens or wall clock |
+| Cost | partially recorded | ⚠ `MEASURED` **2026-08-23, and the previous entry was false.** This read *"nothing records tokens or wall clock"* while carrying the `MEASURED` tier — a stale claim stamped as measured. The `cost` gate reads **"cost is recorded only on success"**: it IS recorded, on the success path, and the real defect is narrower and worse — a run that fails costs money and leaves no cost record, so the cheapest runs to measure are the ones we cannot see. Found by R18; re-measured here before correcting. |
 
 ⭐ **The ceiling is not a concurrency limit, it is a *file* limit.** Lanes conflict because two
 agents would edit `pipelines.py`. That is a property of code work. **Data work does not conflict
@@ -106,7 +106,7 @@ a verb its tier does not carry is refused, and the refusal is an audit event —
 ## 5. The agent as an artefact
 
 Today an agent is a `Lane`: a prompt string, a model, a gate list. That is a launcher input. The
-`hash` gate wants 15 dimensions and covers **0**. `MEASURED`
+gate wants 15 dimensions and covers **6**. ⚠ `MEASURED` **2026-08-23 — this said `0`, and named a gate called `hash` that does not exist.** The gate is `version`, and it reads *"9 dimensions absent from the version"*. Two errors in one clause: a number that has moved and an id that never resolved. Found by R18 (which caught the number); the wrong gate id was caught re-measuring it.
 
 ```yaml
 AgentSpec:
@@ -184,7 +184,7 @@ is currently a habit inside a prompt. It should be a required stage between RUN 
 |---|---|---|---|
 | 1 | **Run the loop once, for real, with the new primitives** | Two gates read UNMEASURABLE because nothing has run. No architecture decision should precede a single real run. | hours |
 | 2 | **Instrument cost** — tokens + wall clock on the `finished` bus event | Every claim about a cheap lane is currently reasoning. Cheapest possible measurement. | hours |
-| 3 | **AgentSpec + a real version hash** | Unlocks certification meaning anything; 0 of 15 dimensions today. | days |
+| 3 | **AgentSpec + a real version hash** | Unlocks certification meaning anything; **6 of 15** dimensions today, 9 absent (corrected 2026-08-23 — this said 0 of 15). | days |
 | 4 | **T1 container with an egress allowlist** | First actual isolation. Proves the container story on Windows before anything depends on it. | days |
 | 5 | **Reviewer as a required stage** | Highest measured defect yield of anything we did this month. | days |
 | 6 | **T2 ephemeral clone** | The big one, and the one most likely to be wrong — do it after 4 proved the container path. | weeks |
