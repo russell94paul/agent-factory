@@ -12,6 +12,7 @@
   --doing:#8A5A12; --doing-2:#F7EEDF;
   --blocked:#9B2F35; --blocked-2:#F8E5E6;
   --done:#2C6A45; --done-2:#E3EFE8;
+  --reject:#46536B; --reject-2:#E6E9ED;
   --shadow:0 1px 2px rgba(23,22,28,.05), 0 10px 28px -20px rgba(23,22,28,.35);
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
@@ -23,6 +24,7 @@
   --doing:#D8A85A; --doing-2:#2A2113;
   --blocked:#E4868B; --blocked-2:#2E1719;
   --done:#6FBE93; --done-2:#14261C;
+  --reject:#A3B0C7; --reject-2:#1C2029;
   --shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 28px -20px rgba(0,0,0,.9);
 }}
 :root[data-theme="dark"]{
@@ -34,6 +36,7 @@
   --doing:#D8A85A; --doing-2:#2A2113;
   --blocked:#E4868B; --blocked-2:#2E1719;
   --done:#6FBE93; --done-2:#14261C;
+  --reject:#A3B0C7; --reject-2:#1C2029;
   --shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 28px -20px rgba(0,0,0,.9);
 }
 *{box-sizing:border-box}
@@ -96,6 +99,9 @@ h2.sec:first-of-type{margin-top:0}
 .tk{background:var(--raise);border:1px solid var(--rule);border-left:3px solid var(--todo);padding:16px 18px;margin-bottom:9px}
 .tk.doing{border-left-color:var(--doing)} .tk.blocked{border-left-color:var(--blocked)}
 .tk.done{border-left-color:var(--done);opacity:.62}
+/* A reject reads as settled, never as delivered: struck title, no green, full legibility. */
+.tk.rejected{border-left-color:var(--reject);opacity:.72;background:var(--reject-2)}
+.tk.rejected h4{text-decoration:line-through;text-decoration-thickness:1px;color:var(--ink-2)}
 .tk-top{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:7px}
 .tk-id{font-family:"DM Mono",monospace;font-size:12px;font-weight:500;color:var(--accent)}
 .tk h4{margin:0;font-size:16px;font-weight:600;font-family:Archivo,sans-serif;flex:1;min-width:220px}
@@ -104,6 +110,7 @@ h2.sec:first-of-type{margin-top:0}
 .pill.doing{background:var(--doing-2);color:var(--doing)}
 .pill.blocked{background:var(--blocked-2);color:var(--blocked)}
 .pill.done{background:var(--done-2);color:var(--done)}
+.pill.rejected{background:var(--reject-2);color:var(--reject)}
 .pill.eff{background:var(--sink);color:var(--mute)}
 .tk .why{font-size:13.5px;color:var(--ink-2);margin:0 0 8px;max-width:78ch}
 .tk dl{display:grid;grid-template-columns:92px 1fr;gap:4px 14px;font-size:12.5px;margin:0 0 10px}
@@ -241,7 +248,7 @@ footer b{color:var(--ink-2)}
   "why": "A gap register judged against a stated objective, so “missing” means missing relative to something.",
   "acc": "Every gap names the answer that should have covered it, by file and section.",
   "ev": "docs/corpus/GAPS.md",
-  "status": "open"
+  "status": "blocked"
  },
  {
   "id": "CIP-03",
@@ -267,7 +274,7 @@ footer b{color:var(--ink-2)}
   "why": "The record is the artefact everything else checks. One real one beats a template nobody filled.",
   "acc": "Passes check_intake.py --stage commit, then --stage deploy. Consumer route walked, not assumed.",
   "ev": "docs/evidence/&lt;TICKET&gt;.md, all four sections",
-  "status": "open"
+  "status": "blocked"
  },
  {
   "id": "CIP-05",
@@ -281,7 +288,7 @@ footer b{color:var(--ink-2)}
   "why": "Closes the loop from what the client declared to what actually landed.",
   "acc": "certify returns PASS on all twelve, and labels its own basis REPLAYED or LIVE.",
   "ev": "certify output, committed",
-  "status": "open"
+  "status": "blocked"
  },
  {
   "id": "CIP-06",
@@ -295,7 +302,7 @@ footer b{color:var(--ink-2)}
   "why": "The corpus holds one file. A frozen evaluator scoring n=1 cannot tell a good version from a lucky replay.",
   "acc": "Corpus count rises; MANIFEST.sha256 verifies; test_corpus.py green.",
   "ev": "evals/MANIFEST.sha256",
-  "status": "open"
+  "status": "blocked"
  },
  {
   "id": "CIP-07",
@@ -309,7 +316,7 @@ footer b{color:var(--ink-2)}
   "why": "Entity types, relationships, roles, decision gates. The dimensions are the schema, not a style choice.",
   "acc": "Every question maps to one of the four; count is 20–30; none is free text without a target field.",
   "ev": "docs/specs/questionnaire.md",
-  "status": "open"
+  "status": "blocked"
  },
  {
   "id": "CIP-08",
@@ -323,7 +330,7 @@ footer b{color:var(--ink-2)}
   "why": "A question whose answer nothing checks is a question that produces a hope.",
   "acc": "A table with three columns and no empty third cell.",
   "ev": "the mapping table, in the spec",
-  "status": "open"
+  "status": "blocked"
  },
  {
   "id": "CIP-09",
@@ -337,7 +344,7 @@ footer b{color:var(--ink-2)}
   "why": "20–30 questions is at the edge of what a client will finish. Every field we can read is a field we must not ask.",
   "acc": "Fields derivable from the source are pre-filled and marked as probed, not asserted.",
   "ev": "a probe run against the pilot source",
-  "status": "open"
+  "status": "blocked"
  },
  {
   "id": "CIP-10",
@@ -351,7 +358,7 @@ footer b{color:var(--ink-2)}
   "why": "Any hand-editing step between the client's answer and the contract is where drift enters.",
   "acc": "A filled form produces frontmatter that passes check_intake.py with zero edits.",
   "ev": "round-trip test",
-  "status": "open"
+  "status": "blocked"
  },
  {
   "id": "CIP-11",
@@ -365,7 +372,7 @@ footer b{color:var(--ink-2)}
   "why": "The client sees their own declaration reflected back as Live / Partial / Awaiting / Pending / Not-in-scope.",
   "acc": "Uses the existing five-term vocabulary. No sixth term invented.",
   "ev": "rendered page, screenshot in docs/evidence/",
-  "status": "open"
+  "status": "blocked"
  },
  {
   "id": "CIP-12",
@@ -379,7 +386,7 @@ footer b{color:var(--ink-2)}
   "why": "Three ticket-record systems already disagree. A fourth that owns state is the failure, not the fix.",
   "acc": "Portal has no write path to anything but a PR. Killing the portal loses no record.",
   "ev": "the PR a submission produced",
-  "status": "open"
+  "status": "blocked"
  },
  {
   "id": "CIP-13",
@@ -393,7 +400,7 @@ footer b{color:var(--ink-2)}
   "why": "Per-client auth and row-level security are already provisioned in code. Inventing a second model is how isolation breaks.",
   "acc": "No new auth code. Access provisioned by the existing CLI.",
   "ev": "the provisioning run",
-  "status": "open"
+  "status": "blocked"
  },
  {
   "id": "CIP-14",
@@ -407,7 +414,7 @@ footer b{color:var(--ink-2)}
   "why": "Named as missing in the compounding research — the store currently accepts ~100% of writes.",
   "acc": "A deliberately ungrounded write is refused in a test. Rejection rate is reported, not assumed.",
   "ev": "the negative control",
-  "status": "open"
+  "status": "blocked"
  },
  {
   "id": "CIP-15",
@@ -421,7 +428,7 @@ footer b{color:var(--ink-2)}
   "why": "Retooled AOR. Compare the corpus to real demand, not to itself — comparing it to itself measures repetition.",
   "acc": "Judged by relevance, not cosine similarity and not outcome. Output is a ranked gap list.",
   "ev": "the first ranked gap list",
-  "status": "open"
+  "status": "blocked"
  },
  {
   "id": "CIP-16",
@@ -435,7 +442,7 @@ footer b{color:var(--ink-2)}
   "why": "Rank currently scales with retrieval_count alone, so a wrong-but-popular memory climbs and spreads its mistake.",
   "acc": "max(0,(uses−corrections+k)/(uses+2k)) with k≈2. The naive ratio is not shipped.",
   "ev": "the three worked cases from the research note",
-  "status": "open"
+  "status": "blocked"
  },
  {
   "id": "CIP-17",
@@ -449,7 +456,7 @@ footer b{color:var(--ink-2)}
   "why": "A guard blocked nothing for months because it depended on a binary that was not installed and exited the wrong code.",
   "acc": "Each gate proves it blocks AND proves it lets legitimate work through.",
   "ev": "the verify run",
-  "status": "open"
+  "status": "blocked"
  },
  {
   "id": "CIP-18",
@@ -463,7 +470,7 @@ footer b{color:var(--ink-2)}
   "why": "The decisive test that collapsed an 18-point signal to ~0. Without it, any improvement claim measures repetition.",
   "acc": "Compares like with like inside one topic cluster. Reports the control alongside the result.",
   "ev": "the harness, and its output on real data",
-  "status": "open"
+  "status": "blocked"
  },
  {
   "id": "CIP-19",
@@ -477,7 +484,7 @@ footer b{color:var(--ink-2)}
   "why": "A falling correction rate proves improvement only if the questions did not simply get easier.",
   "acc": "A controlled comparison, pre-registered before the data is seen.",
   "ev": "the design, then the result",
-  "status": "open"
+  "status": "blocked"
  },
  {
   "id": "CIP-20",
@@ -491,7 +498,7 @@ footer b{color:var(--ink-2)}
   "why": "The agreeing cases are the control; the divergent ones are the finding. Publishing only the wins is how a confound survives.",
   "acc": "Every divergence investigated and reported, including the ones that weaken the claim.",
   "ev": "the published reconciliation",
-  "status": "open"
+  "status": "blocked"
  },
  {
   "id": "CIP-21",
@@ -515,18 +522,18 @@ footer b{color:var(--ink-2)}
   "why": "",
   "acc": "A blocked agent's question appears on the Sessions tab, oldest-first, with taskbar flash",
   "ev": "factory/sessions.py § blocked()",
-  "status": "open"
+  "status": "abandoned"
  },
  {
   "id": "CIP-24",
   "p": "P1",
   "t": "Assert CLAUDE_CODE_SESSION_NAME reaches the spawned process",
   "track": "factory",
-  "e": "M",
+  "e": "S",
   "dep": [],
-  "why": "",
-  "acc": "tests/test_session_naming.py passes — spawns through the real launcher, reads name from registry",
-  "ev": "scripts/local_tracker.py § _launch_script",
+  "why": "Lane naming is derived from the boot prompt rather than the work, and nothing proves the name survives the spawn. control-room.md §5 Slice 0; also raised independently as deepseek D5.",
+  "acc": "A test spawns through the REAL launcher and reads the name back out of the registry. Until it passes, naming stays INFERRED.",
+  "ev": "docs/specs/control-room.md §5 Slice 0; sessions.py:99; local_tracker.py:345 (sets it, nothing asserts it)",
   "status": "open"
  },
  {
@@ -534,11 +541,11 @@ footer b{color:var(--ink-2)}
   "p": "P2",
   "t": "Fix finish.checks() dead ledger check — per-lane NOTHING TO REPORT",
   "track": "factory",
-  "e": "M",
+  "e": "S",
   "dep": [],
-  "why": "",
-  "acc": "A lane with no findings entry and no NOTHING TO REPORT is refused; finish.checks() can fail",
-  "ev": "factory/finish.py § checks()",
+  "why": "finish.checks() pairs a PER-LANE findings query with a GLOBAL nothing_to_report() count, so one NOTHING TO REPORT written by any lane permanently satisfies the check for every lane. Silence stops meaning 'checked'.",
+  "acc": "nothing_to_report() is scoped per lane; a test proves lane B still fails the check after lane A has written one.",
+  "ev": "factory/finish.py:88-92 (verified 2026-08-29)",
   "status": "open"
  },
  {
@@ -560,9 +567,9 @@ footer b{color:var(--ink-2)}
   "track": "factory",
   "e": "M",
   "dep": [],
-  "why": "",
-  "acc": "python -m factory.readiness returns the same headline from the primary and from every lane worktree",
-  "ev": "factory/readiness.py § CONNECTORS",
+  "why": "F72: the board's number depends on the directory it is run from (9 of 30 from the checkout, 10 of 30 from a worktree, same commit). The $PREFECT_CONNECTORS override has since landed; the cwd-relative default has not, so F72 still reproduces whenever the var is unset.",
+  "acc": "Two halves, both required: (a) resolution no longer varies with cwd when the var is unset; (b) the HEADLINE carries its basis, so a number quoted out of context cannot read as global. Proof: same commit measured from checkout and from a worktree gives the same headline.",
+  "ev": "docs/findings.d/F72-*.md; factory/readiness.py:35-36 (half-fixed, verified 2026-08-29)",
   "status": "open"
  },
  {
@@ -584,9 +591,9 @@ footer b{color:var(--ink-2)}
   "track": "factory",
   "e": "M",
   "dep": [],
-  "why": "",
-  "acc": "/flow drops from 5 measure() calls to 1; every rendered number carries its age as a property",
-  "ev": "factory/schedule.py § Snapshot",
+  "why": "A measurement-scope object so a figure carries what it was measured over. ⚠ NAME COLLISION: factory/schedule.py:59 already defines `class Snapshot` — a frozen when/passed/total/sha record parsed from the artifact's git history, used only inside schedule.py.",
+  "acc": "The new object ships under a name that does not collide, OR the two are deliberately reconciled in writing. A second `Snapshot` in the codebase is not an acceptable outcome.",
+  "ev": "factory/schedule.py:59 (verified 2026-08-29)",
   "status": "open"
  },
  {
@@ -611,7 +618,7 @@ footer b{color:var(--ink-2)}
   "why": "",
   "acc": "A lane cannot exfiltrate a credential; the proxy substitutes a sentinel",
   "ev": "R17 §4.2",
-  "status": "open"
+  "status": "abandoned"
  },
  {
   "id": "CIP-32",
@@ -623,7 +630,7 @@ footer b{color:var(--ink-2)}
   "why": "",
   "acc": "A lane's cost report includes a dollar figure; the budget cap is denominated in dollars",
   "ev": "factory/runs.py § cost()",
-  "status": "open"
+  "status": "abandoned"
  },
  {
   "id": "CIP-34",
@@ -647,6 +654,246 @@ footer b{color:var(--ink-2)}
   "why": "",
   "acc": "factory.corpus.available() returns >= 2 fixtures; python -m factory.certify --calibrate scores both PASS",
   "ev": "AB-04",
+  "status": "open"
+ },
+ {
+  "id": "CIP-36",
+  "p": "P2",
+  "t": "Fire-drill the blocked-question inbox - mechanism exists, latency unmeasured",
+  "track": "factory",
+  "e": "S",
+  "dep": [],
+  "why": "The blocked-question inbox is BUILT — sessions.py:257/265/286 plus hooks/lane-attention.py for the intrusive half — but its gate has never been run. Replaces CIP-23, which asked to build what already existed. By §5's rule 'a slice with no gate is not a slice', it is not done.",
+  "acc": "A fire drill: block a real agent on a real question and time how long until a human sees it. Before: unbounded (4 sat all day). Target: under a minute. Record the drill as evidence.",
+  "ev": "docs/specs/control-room.md §5 Slice 1; factory/sessions.py:286; scripts/hooks/lane-attention.py",
+  "status": "open"
+ },
+ {
+  "id": "AB-01",
+  "p": "R3",
+  "t": "R3 expected-work manifest + scope_hash — 'the biggest missing control'; §5 has no such step",
+  "track": "absorption",
+  "e": "M",
+  "dep": [],
+  "why": "every gate we have measures the work it was told about. Nothing measures work that was never declared, so a team can pass by doing less than the task required. `SYNTHESIS.md` §5's nine-step build order has **no such step**.",
+  "acc": "add the manifest + `scope_hash` as an explicit step in §5, or record in §5 why it was refused.",
+  "ev": "docs/absorption-backlog.md AB-01 — R3, executive verdict; unabsorbed per §17.9.",
+  "status": "open"
+ },
+ {
+  "id": "AB-02",
+  "p": "R3",
+  "t": "R3 FACPR (first-attempt contract pass rate) — attempt 352 and attempt 1 currently score alike",
+  "track": "absorption",
+  "e": "M",
+  "dep": [],
+  "why": "without it, attempt 352 and attempt 1 score identically. Every efficiency claim the factory makes is currently unfalsifiable.",
+  "acc": "add FACPR to `factory/metrics.py` beside the existing activity/outcome pairing.",
+  "ev": "docs/absorption-backlog.md AB-02 — R3; unabsorbed per §17.9.",
+  "status": "open"
+ },
+ {
+  "id": "AB-03",
+  "p": "R3",
+  "t": "R3 budget proxy owning the provider credential — makes build-order step 1's cap enforceable, not advisory",
+  "track": "absorption",
+  "e": "M",
+  "dep": [],
+  "why": "build-order step 1 is *\"hard external attempt / spend / concurrency budget — non-negotiable\"*. Today it is a number in a config an agent can exceed.",
+  "acc": "design the proxy, or downgrade step 1's \"hard\" to \"advisory\" and say so.",
+  "ev": "docs/absorption-backlog.md AB-03 — R3; independently re-derived as §16.8's recommendation two days later.",
+  "status": "open"
+ },
+ {
+  "id": "AB-04",
+  "p": "R3",
+  "t": "R3 corpus gate: 40 fixtures (30 dev + 10 held-out) — corpus is one file, 6,747 bytes; 4 passes asked, 0 actions",
+  "track": "absorption",
+  "e": "M",
+  "dep": [],
+  "why": "⭐ the corpus is **one file, 6,747 bytes** (R16 audit §3.1). Four passes asked for this and *\"no action among the eighteen names it.\"* - ⚠ **RESTATED 2026-08-29 — this is a breadth task, not a sensitivity task. See F76.** The premise that the one-file corpus means *\"the instrument has not been shown able to fail\"* is **false** and was inherited by this very file when it was written. The contract is calibrated: all twelve assertions have a known-bad, enforced by `tests/test_connector_contract.py::test_every_assertion_has_been_proved_able_to_fail`, and `certify --calibrate` now returns `PASS (PASS=12)` — not the `UNMEASURABLE (PASS=11)` the README claimed until today. What one fixture cannot show is that the contract **generalises**: it has been replayed against one connector, and 48 have never been scored.",
+  "acc": "score a **second** real connector end to end and add it to the corpus. That single step converts n=1 into evidence of generality and will find the assumptions baked into the windsorai fixture faster than manufacturing 38 more. Then work toward R3's 30 + 10.",
+  "ev": "docs/absorption-backlog.md AB-04 — R3; echoed by R1 (≥29), R8, and R10 (as a precondition of its own recommendation).",
+  "status": "open"
+ },
+ {
+  "id": "AB-05",
+  "p": "R4",
+  "t": "R4 Fitness Qualification Gate — 5 pre-search tests; §11.4 and §16.6 rejected it without citing the design",
+  "track": "absorption",
+  "e": "M",
+  "dep": [],
+  "why": "§11.4 rejects gates-as-fitness and §16.6 corroborates, but **neither cites the gate design already written**. We argued a question that had a designed answer on file.",
+  "acc": "read R4's design, then either adopt it or record why the rejection stands *against the actual design* rather than against a paraphrase. ## B · Assurance gaps",
+  "ev": "docs/absorption-backlog.md AB-05 — R4; unabsorbed per §17.9.",
+  "status": "open"
+ },
+ {
+  "id": "AB-06",
+  "p": "R1",
+  "t": "R1 unintended-side-effect + reconciliation checks — graded High; R17 §4.7 rediscovered it unconnected",
+  "track": "absorption",
+  "e": "M",
+  "dep": [],
+  "why": "two independent passes reached the same conclusion and neither is in the record. This is the check that would have caught the estate's own 4.86×-duplication near-miss.",
+  "acc": "specify the side-effect check; add to the GreenContract assertion set.",
+  "ev": "docs/absorption-backlog.md AB-06 — R1, graded **High** among damaging omissions. ⭐ Rediscovered independently by R17 §4.7 as *\"none of these receipts describes what the agent did to a shared warehouse — the single biggest gap in the field's tooling for your use case.\"* Same gap, two arrivals, unconnected.",
+  "status": "open"
+ },
+ {
+  "id": "AB-07",
+  "p": "R1",
+  "t": "R1 pass@k vs pass^k reporting set",
+  "track": "absorption",
+  "e": "M",
+  "dep": [],
+  "why": "",
+  "acc": "add to `factory/metrics.py`, or reject in writing.",
+  "ev": "docs/absorption-backlog.md AB-07 — R1; unabsorbed.",
+  "status": "open"
+ },
+ {
+  "id": "AB-08",
+  "p": "R2",
+  "t": "R2 build/run manifest schema + permission topology — run record kept separate from build record",
+  "track": "absorption",
+  "e": "M",
+  "dep": [],
+  "why": "*\"the build plane never runs a connector; the run plane never builds one\"* is called the single most useful thing to understand about the system, and the record has no schema enforcing the separation. Also bears on the 0-of-15 version hash.",
+  "acc": "write the manifest schema; state which plane owns each field.",
+  "ev": "docs/absorption-backlog.md AB-08 — R2; §17.4.",
+  "status": "open"
+ },
+ {
+  "id": "AB-09",
+  "p": "R16",
+  "t": "R16-outside: a container does nothing about prompt injection — narrow the sandbox claim",
+  "track": "absorption",
+  "e": "M",
+  "dep": [],
+  "why": "§13.7 adopted a sandbox move partly on isolation grounds. If the sandbox does not address the actual threat, the justification is wrong even if the move is right.",
+  "acc": "narrow the sandbox claim to what it does defend, and name what still is not defended. ## C · Instruments and testing",
+  "ev": "docs/absorption-backlog.md AB-09 — R16 outside-evidence lane, §3.",
+  "status": "open"
+ },
+ {
+  "id": "AB-10",
+  "p": "R5",
+  "t": "R5 property-based + differential testing — aimed at the instruments that produced F5's 3 false results",
+  "track": "absorption",
+  "e": "M",
+  "dep": [],
+  "why": "F5 records **three confident false results from this repo's own instruments in a single session**. The instruments are the known weak point and the proposed fix is on file, unread.",
+  "acc": "apply to the render/tracker probes first — the ones that produced the false results.",
+  "ev": "docs/absorption-backlog.md AB-10 — R5 §3; §10 took items 1, 2 and 5 only.",
+  "status": "open"
+ },
+ {
+  "id": "AB-11",
+  "p": "R5",
+  "t": "R5 one canonical readout model, regenerated and diffed in CI",
+  "track": "absorption",
+  "e": "M",
+  "dep": [],
+  "why": "exactly the problem R13 run 2 later found shipping — **four page strings each asserting the page caches nothing**, while it caches.",
+  "acc": "single source for readout strings; CI diff.",
+  "ev": "docs/absorption-backlog.md AB-11 — R5 §4.",
+  "status": "open"
+ },
+ {
+  "id": "AB-12",
+  "p": "R13",
+  "t": "R13 run 2 — five of six findings untaken; APPROVE-becomes-a-GitHub-PR first, a decision rests on it",
+  "track": "absorption",
+  "e": "M",
+  "dep": [],
+  "why": "the APPROVE finding removes the very plane §14.2's platform argument was justifying. A settled platform question may rest on a premise a later pass refuted.",
+  "acc": "take each of the five separately; the APPROVE one first, because a decision depends on it. ## D · State, memory and the record",
+  "ev": "docs/absorption-backlog.md AB-12 — R13 run 2; §13.6 took the switchboard settlement, §15.1 quotes it once.",
+  "status": "open"
+ },
+ {
+  "id": "AB-13",
+  "p": "R10",
+  "t": "R10 retire or merge one of the six overlapping stores — before any new store lands",
+  "track": "absorption",
+  "e": "M",
+  "dep": [],
+  "why": "bears directly on §16.10's ledger split and on R18's enumeration of shared state. We have since been designing new stores against a recommendation to reduce them. ⚠ Separately, R10 attributes its strongest figure (32% → 55%) to two different authors in one source list — treat R10's numbers as unverified.",
+  "acc": "enumerate the six, pick one to retire or merge, and do it before any new store lands.",
+  "ev": "docs/absorption-backlog.md AB-13 — R10 §7. R16 §3.4 flags that a5 took *\"skills over corpus\"* and dropped the recommendation it sat inside.",
+  "status": "open"
+ },
+ {
+  "id": "AB-14",
+  "p": "R8",
+  "t": "R8's record/channel answer was wrong ('CQRS'); §16.10 refutes it but never files it against R8",
+  "track": "absorption",
+  "e": "M",
+  "dep": [],
+  "why": "the record does not show that a research pass got this wrong, so the same wrong answer can arrive again from the same source.",
+  "acc": "file the refutation against R8 explicitly.",
+  "ev": "docs/absorption-backlog.md AB-14 — R8 §2; refuted by §16.10.",
+  "status": "open"
+ },
+ {
+  "id": "AB-15",
+  "p": "R12",
+  "t": "R12 productivity list — prompt templates, session forking cost, cross-session search, checkpoints, queue",
+  "track": "absorption",
+  "e": "M",
+  "dep": [],
+  "why": "this is the closest thing on file to the session-consolidation problem that prompted this backlog.",
+  "acc": "tier them against current pain; cross-session search looks highest-value. ## E · Whole answers never absorbed",
+  "ev": "docs/absorption-backlog.md AB-15 — R12 §4.4; unabsorbed.",
+  "status": "open"
+ },
+ {
+  "id": "AB-16",
+  "p": "R14",
+  "t": "R14 in its entirety — 1,389 lines, 7 mentions, 0 conclusions taken; absorb or reject in writing",
+  "track": "absorption",
+  "e": "M",
+  "dep": [],
+  "why": "",
+  "acc": "read it and either absorb its conclusions or **reject it in writing**. Either closes this; neither has happened.",
+  "ev": "docs/absorption-backlog.md AB-16 — §17.2 — *\"1,389 lines, seven mentions, and not one conclusion taken.\"*",
+  "status": "open"
+ },
+ {
+  "id": "AB-17",
+  "p": "R18",
+  "t": "R18 in its entirety — exists; every reference to it is in the future tense",
+  "track": "absorption",
+  "e": "M",
+  "dep": [],
+  "why": "",
+  "acc": "as AB-16.",
+  "ev": "docs/absorption-backlog.md AB-17 — §17.3 — it exists, and every reference to it in the synthesis is in the future tense.",
+  "status": "open"
+ },
+ {
+  "id": "AB-18",
+  "p": "R16",
+  "t": "R16 audit — nine findings are bare pointers with no content; fill in or delete",
+  "track": "absorption",
+  "e": "M",
+  "dep": [],
+  "why": "",
+  "acc": "fill in the nine, or delete the pointers so the record stops implying they were handled. ## F · The argument the record only heard one side of",
+  "ev": "docs/absorption-backlog.md AB-18 — §15.3 lists nine findings **with no content**.",
+  "status": "open"
+ },
+ {
+  "id": "AB-19",
+  "p": "R?",
+  "t": "Settle the alerting question with all five positions on the table; R6's is nowhere",
+  "track": "absorption",
+  "e": "M",
+  "dep": [],
+  "why": "§14.3 records the middle pair as *\"three passes and one measurement agree — stop asking and build it\"*; §15.5 then retracts the independence. **R6's position — filed first, and on the same side as the strongest external finding — is nowhere.** Two sources agreed and were counted; the two agreeing with the inverted-U were not.",
+  "acc": "re-decide with all five positions on the table, and record the decision with its dissent. --- ## Closing rule A row closes when its **ACTION** is done *or* when a written rejection exists naming the row. Both outcomes are progress. What is not progress — and what produced this file — is a row that is mentioned in a synthesis and mistaken for one that was handled.",
+  "ev": "docs/absorption-backlog.md AB-19 — §17.9's closing paragraph.",
   "status": "open"
  },
  {
@@ -756,6 +1003,30 @@ footer b{color:var(--ink-2)}
   "acc": "Promote now - it is U6 on the Council Room board and needs no design, only review and commit.",
   "ev": "surfaced 2026-08-29 in session review",
   "status": "open"
+ },
+ {
+  "id": "OBS-10",
+  "p": "X0",
+  "t": "Nothing executes a TeamSpec — this is the missing middle the whole vision waits on",
+  "track": "observed",
+  "e": "M",
+  "dep": [],
+  "why": "The stated goal is a factory that configures an agent team to take a ticket end to end with evidence. Measured 2026-08-29: the CONFIGURATOR exists and is good — presets.py holds five baseline presets grounded in real tickets, each with model, effort, turn and dollar caps, an escalation trigger and an explicit refusal. The CERTIFIER exists — contract.py and certify.py, A1-A12 passing. Between them there is nothing: `git grep 'TeamSpec|load_team' -- factory/*.py scripts/**/*.py` outside blueprint.py returns NOTHING. SYNTHESIS §11.5 found the same independently: 'the data model exists; the runtime does not. That is the cheapest high-value thing R7 surfaces.' Every UI feature in the vision — create a team, monitor progress, read logs, see failures — is a view onto a runtime that does not exist. Building the UI first gives it nothing to display. The two unwired halves fit together: blueprint.TeamSpec is the thing to run, and deploy.py already has the bounding it needs (RepoDeployer, budget caps, AttemptLedger) and also has zero callers.",
+  "acc": "Promote NOW, ahead of the parked lane and ahead of the intake platform's later phases: take a TeamSpec, run it bounded through deploy.py, append the outcome to the ledger. Done when one preset runs one real ticket end to end and certify scores the result. Pairs with CIP-21.",
+  "ev": "measured 2026-08-29",
+  "status": "open"
+ },
+ {
+  "id": "OBS-11",
+  "p": "X0",
+  "t": "The board's Flow tab duplicates local_tracker's parallelism computation",
+  "track": "observed",
+  "e": "M",
+  "dep": [],
+  "why": "local_tracker.py already renders '15 can run in parallel right now — computed from the dependency graph, not judged' and 'Longest dependency chain — the part that cannot be parallelised away'. The Flow tab added to the board on 2026-08-29 computes the same two things over a different population (CIP tickets rather than readiness gates). Same algorithm, two surfaces, and the duplication was introduced AFTER writing the grep-first rule that exists to prevent exactly this — the rule was not applied to the person writing it.",
+  "acc": "Promote at the next consolidation pass: keep local_tracker as the authority on readiness and parallelism, cut the Flow tab back to 'which ticket next', or merge them. Whichever is chosen, record why the other was retired.",
+  "ev": "measured 2026-08-29",
+  "status": "open"
  }
 ],
 "pitfalls":[
@@ -799,32 +1070,44 @@ document.documentElement.classList.add("js");
 var STILL=false; try{STILL=matchMedia("(prefers-reduced-motion: reduce)").matches;}catch(e){}
 var D=JSON.parse(document.getElementById("data").textContent);
 var STATE=(function(){try{var s=document.getElementById("saved");return s?JSON.parse(s.textContent):{};}catch(e){return {};}})();
-var dirty=false, ns=null, TAB="board", FILTER="all";
+var dirty=false, ns=null, TAB="flow", FILTER="all";
 function esc(s){return String(s).replace(/[&<>]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c];});}
-var STATES=[["todo","To do"],["doing","Doing"],["blocked","Blocked"],["done","Done"]];
+var STATES=[["todo","To do"],["doing","Doing"],["blocked","Blocked"],["done","Done"],["rejected","Rejected"]];
 // The store is the record; this page is a view of it. An unclicked ticket
 // inherits the store's status, so work closed elsewhere shows up here.
-var STORE_MAP={open:"todo", claimed:"doing", blocked:"blocked", done:"done", abandoned:"done"};
+//
+// ⭐ `abandoned` maps to its OWN state, never to "done". It mapped to "done" until
+// 2026-08-29, when the cross-reference rejected CIP-23/31/32 and the board would have
+// reported three write-offs as three deliveries — the done count going 2 → 5 with no
+// work performed. A reject and a delivery are opposite outcomes; a view that renders
+// them identically is exactly the kind of instrument this repo exists to refuse.
+var STORE_MAP={open:"todo", claimed:"doing", blocked:"blocked", done:"done", abandoned:"rejected"};
 var STORE={};
 D.tickets.forEach(function(t){ STORE[t.id]=STORE_MAP[t.status]||"todo"; });
 function st(id){ return STATE[id] || STORE[id] || "todo"; }
 function fromStore(id){ return !STATE[id] && STORE[id] && STORE[id]!=="todo"; }
 function counts(){
-  var c={todo:0,doing:0,blocked:0,done:0};
+  var c={todo:0,doing:0,blocked:0,done:0,rejected:0};
   D.tickets.forEach(function(t){c[st(t.id)]++;});
   return c;
 }
+// Rejected work leaves the denominator. A phase of five whose two write-offs still counted
+// would sit at 3/5 forever and read as unfinished; the honest denominator is work that is
+// still real. `done` never includes a reject.
 function phaseCounts(p){
-  var ts=D.tickets.filter(function(t){return t.p===p;});
-  return {n:ts.length, done:ts.filter(function(t){return st(t.id)==="done";}).length};
+  var ts=D.tickets.filter(function(t){return t.p===p && st(t.id)!=="rejected";});
+  var rej=D.tickets.filter(function(t){return t.p===p && st(t.id)==="rejected";}).length;
+  return {n:ts.length, done:ts.filter(function(t){return st(t.id)==="done";}).length, rej:rej};
 }
+// A dependency that was REJECTED is settled, not outstanding — it must stop blocking, or
+// every downstream ticket inherits a permanent unmet edge from work nobody will ever do.
 function depBlocked(t){
-  return (t.dep||[]).filter(function(d){return st(d)!=="done";});
+  return (t.dep||[]).filter(function(d){var s=st(d); return s!=="done" && s!=="rejected";});
 }
 
 function pBoard(){
   var c=counts();
-  var h='<p class="lede">Twenty tickets across six phases. <strong>Move a ticket and the board remembers</strong> — state persists on this page, so it survives the session that made it. The same twenty already exist in <span class="mono">.data/tasks.jsonl</span>, so nothing here is a parallel record.</p>';
+  var h='<p class="lede">'+D.tickets.filter(function(t){return t.track==="platform";}).length+' tickets across six phases. <strong>Move a ticket and the board remembers</strong> — state persists on this page, so it survives the session that made it. They already exist in <span class="mono">.data/tasks.jsonl</span>, so nothing here is a parallel record.</p>';
   h+='<div class="prog">';
   D.phases.forEach(function(p){
     var pc=phaseCounts(p.id), pct=pc.n?Math.round(100*pc.done/pc.n):0;
@@ -833,11 +1116,12 @@ function pBoard(){
   });
   h+='</div>';
   h+='<div class="filters"><span class="lbl">Show</span>'+
-     '<button class="chip" data-f="all" aria-pressed="'+(FILTER==="all")+'">All 20</button>'+
+     '<button class="chip" data-f="all" aria-pressed="'+(FILTER==="all")+'">All '+D.tickets.filter(function(t){return t.track==="platform";}).length+'</button>'+
      '<button class="chip" data-f="todo" aria-pressed="'+(FILTER==="todo")+'">To do '+c.todo+'</button>'+
      '<button class="chip" data-f="doing" aria-pressed="'+(FILTER==="doing")+'">Doing '+c.doing+'</button>'+
      '<button class="chip" data-f="blocked" aria-pressed="'+(FILTER==="blocked")+'">Blocked '+c.blocked+'</button>'+
      '<button class="chip" data-f="done" aria-pressed="'+(FILTER==="done")+'">Done '+c.done+'</button>'+
+     (c.rejected?'<button class="chip" data-f="rejected" aria-pressed="'+(FILTER==="rejected")+'">Rejected '+c.rejected+'</button>':'')+
      '<button class="chip" data-f="ready" aria-pressed="'+(FILTER==="ready")+'">Ready to start</button></div>';
 
   D.phases.forEach(function(p){
@@ -888,7 +1172,7 @@ function pBoard(){
     var ftot=D.tickets.filter(function(t){return t.track==="factory";}).length;
     h+='<section class="phase-group"><div class="phase-hd"><span class="tag" style="background:var(--doing)">TRACK 2</span>'+
        '<h3>agent-factory hardening</h3><span class="exit">'+fdone+' of '+ftot+' done</span></div>'+
-       '<div class="note"><b>These are mis-prefixed and pending rename.</b> CIP-21 upward came from the external review and harden the factory itself &mdash; a different job from CIP-01&ndash;20, which build the intake platform. Their <span class="mono">P</span> labels mean something different from the platform&rsquo;s, which is why they are not interleaved above. The corrected ticket-generation prompt renames them to <span class="mono">AF-*</span> on the <span class="mono">F0&ndash;F8</span> axis.</div>';
+       '<div class="note"><b>Same factory, different end of it.</b> This board previously called these &ldquo;a different job from CIP-01&ndash;20&rdquo;. <b>That was wrong, and it misled a reader on 2026-08-29.</b> The plan is explicit (&sect;0.4): the 7-stage pipeline <span class="mono">B1&hellip;B7</span> already names the shape, and <i>&ldquo;the client portal is a front end on B1 and B2 &hellip; <b>It is not a new pipeline.</b>&rdquo;</i> &sect;3 draws one loop &mdash; questionnaire &rarr; contract &rarr; execution &rarr; certify A1&ndash;A12 &rarr; learning &mdash; under the heading <i>&ldquo;we already own every piece but the front end&rdquo;</i>. So <b>CIP-01&ndash;20 build the missing B1&ndash;B2 surface; CIP-21+ harden the machinery that already runs B3&ndash;B7.</b> Both are the factory. They are shown separately because their <span class="mono">P</span> labels mean different things &mdash; not because they are different products. <b>The <span class="mono">AF-*</span> rename is on hold</b>: it would formalise a split the plan denies. <span class="mono">B1&ndash;B7</span> is defined in <span class="mono">aldc-launchpad/.claude/commands/launchpad-tracker.md:21</span>, implemented at <span class="mono">cli/platform/b1_requirements.py</span>.</div>';
     fac.forEach(function(t){
       var s2=st(t.id), blocked=depBlocked(t);
       h+='<article class="tk '+s2+'"><div class="tk-top"><span class="tk-id">'+t.id+'</span>'+
@@ -911,6 +1195,40 @@ function pBoard(){
   }
 
   // Third lane. Things surfaced mid-flight while doing something else — the
+  // Absorption backlog. Nineteen conclusions that reached a mechanism and never reached the
+  // decision record. These rendered NOWHERE until 2026-08-29 — their `AB-01 · R3` titles did not
+  // match the builder's regex, so all 19 fell into "tasks skipped", on the very board that
+  // carries CIP-01 ("action or reject AB-01..AB-19"). A backlog invisible on its own tracker.
+  var abs_=D.tickets.filter(function(t){
+    if(t.track!=="absorption") return false;
+    if(FILTER==="all") return true;
+    if(FILTER==="ready") return st(t.id)==="todo" && depBlocked(t).length===0;
+    return st(t.id)===FILTER;
+  });
+  if(abs_.length){
+    var adone=D.tickets.filter(function(t){return t.track==="absorption"&&(st(t.id)==="done"||st(t.id)==="rejected");}).length;
+    var atot=D.tickets.filter(function(t){return t.track==="absorption";}).length;
+    h+='<section class="phase-group"><div class="phase-hd"><span class="tag" style="background:var(--doing)">LANE 4</span>'+
+       '<h3>Absorption backlog</h3><span class="exit">'+adone+' of '+atot+' actioned</span></div>'+
+       '<div class="note"><b>The gap is absorption, not knowledge.</b> Eighteen research passes reached these conclusions and none of them reached the decision record. <b>A written REJECT closes a row as legitimately as a build does</b> &mdash; what is not allowed is leaving it unjudged. <b>These rows were invisible on this board until 2026-08-29</b>, dropped by a title-format mismatch and disclosed only as a skip count in build output; <span class="mono">CIP-01</span>, whose whole job is actioning them, sat directly above a list it could not show.</div>';
+    abs_.forEach(function(t){
+      var s4=st(t.id);
+      h+='<article class="tk '+s4+'"><div class="tk-top"><span class="tk-id">'+t.id+'</span>'+
+        '<span class="pill eff" title="source research pass">'+esc(t.p)+'</span>'+
+        '<h4>'+esc(t.t)+'</h4><span class="pill '+s4+'">'+s4+'</span>'+
+        (fromStore(t.id)?'<span class="pill eff" title="from .data/tasks.jsonl, not set on this page">from store</span>':'')+'</div>'+
+        (t.why?'<p class="why">'+esc(t.why)+'</p>':'')+
+        '<dl><dt>action</dt><dd>'+t.acc+'</dd>'+
+        '<dt>source</dt><dd class="mono" style="font-size:11.5px">'+esc(t.ev)+'</dd></dl>'+
+        '<div class="states"><span class="lbl" style="align-self:center;margin-right:4px">state</span>';
+      STATES.forEach(function(x){
+        h+='<button type="button" data-set="'+t.id+'" data-v="'+x[0]+'" aria-pressed="'+(s4===x[0])+'">'+x[1]+'</button>';
+      });
+      h+='</div></article>';
+    });
+    h+='</section>';
+  }
+
   // category that gets lost. The wiki's potential-tickets.md is the same idea and
   // has graduated 0 of 15, so every row here carries the trigger that promotes it.
   var obs=D.tickets.filter(function(t){
@@ -1167,7 +1485,99 @@ function reveal(){
   setTimeout(function(){Array.prototype.forEach.call(els,function(el){el.classList.add("in");});},2600);
 }
 
-var TABS=[["board","Board",1],["deps","Dependencies",0],["plan","The plan",0],["arch","Architecture",0],["risk","Pitfalls",2],["trade","Trade-offs",0],["method","Method",0]];
+
+/* ── the flow: critical path as a spine, everything else demoted ── */
+function critical(){
+  var plat=D.tickets.filter(function(t){return t.track==="platform";});
+  var by={}; plat.forEach(function(t){by[t.id]=t;});
+  var depth={}, memo={};
+  function dp(id){
+    if(memo[id]!==undefined) return memo[id];
+    var deps=(by[id]&&by[id].dep||[]).filter(function(d){return by[d];});
+    memo[id]= deps.length? 1+Math.max.apply(null,deps.map(dp)) : 0;
+    return memo[id];
+  }
+  plat.forEach(function(t){depth[t.id]=dp(t.id);});
+  var end=null;
+  plat.forEach(function(t){ if(end===null||depth[t.id]>depth[end]) end=t.id; });
+  var path=[end];
+  while(true){
+    var deps=(by[path[0]].dep||[]).filter(function(d){return by[d];});
+    if(!deps.length) break;
+    deps.sort(function(a,b){return depth[b]-depth[a];});
+    path.unshift(deps[0]);
+  }
+  return {path:path, depth:depth, by:by};
+}
+function figFlow(){
+  var c=critical(), onPath={};
+  c.path.forEach(function(id){onPath[id]=1;});
+  var plat=D.tickets.filter(function(t){return t.track==="platform";});
+  var off=plat.filter(function(t){return !onPath[t.id];});
+  var CW=150, PAD=26, SPINE=118;
+  var W=PAD*2+c.path.length*CW, H=300;
+  var out='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="The critical path drawn as a spine with '+c.path.length+' tickets, everything off it shown smaller below, and the parked lanes collapsed into one box.">';
+  out+='<defs><marker id="fa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/></marker>'+
+       '<marker id="fb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>';
+  out+='<text x="'+PAD+'" y="26" font-size="12" font-weight="600" fill="var(--accent)">THE CRITICAL PATH &mdash; '+c.path.length+' deep. Nothing ships sooner than this chain.</text>';
+  out+='<text x="'+PAD+'" y="44" font-size="11" fill="currentColor" opacity=".6">Every other ticket can slip without moving the date. These cannot.</text>';
+
+  c.path.forEach(function(id,i){
+    var t=c.by[id], x=PAD+i*CW, stt=st(id), started=stt!=="todo";
+    var blocked=(t.dep||[]).filter(function(d){return st(d)!=="done";}).length>0;
+    var col = stt==="done"?"var(--done)":stt==="doing"?"var(--doing)":"var(--accent)";
+    out+='<g class="nd" data-dag="'+id+'" tabindex="0" role="button" aria-label="'+esc(id+" "+t.t)+'">';
+    out+='<rect x="'+x+'" y="'+SPINE+'" width="'+(CW-18)+'" height="52" fill="'+(blocked?"var(--raise)":"var(--accent-2)")+'" stroke="'+col+'" stroke-width="'+(blocked?1.4:2.4)+'"'+(blocked?' stroke-dasharray="4 3"':'')+'/>';
+    out+='<text x="'+(x+10)+'" y="'+(SPINE+20)+'" font-size="12" font-weight="600" fill="'+col+'">'+id+'</text>';
+    out+='<text x="'+(x+10)+'" y="'+(SPINE+36)+'" font-size="10" fill="currentColor" opacity=".8">'+esc(t.t.slice(0,17))+(t.t.length>17?"\u2026":"")+'</text>';
+    out+='<text x="'+(x+10)+'" y="'+(SPINE+48)+'" font-size="9.5" fill="currentColor" opacity=".55">'+(blocked?"waiting":"READY")+' \u00b7 '+t.e+'</text>';
+    out+='</g>';
+    if(i<c.path.length-1)
+      out+='<line x1="'+(x+CW-18)+'" y1="'+(SPINE+26)+'" x2="'+(x+CW-3)+'" y2="'+(SPINE+26)+'" stroke="var(--accent)" stroke-width="2" marker-end="url(#fa)"/>';
+  });
+
+  out+='<text x="'+PAD+'" y="212" font-size="11" font-weight="600" fill="currentColor" opacity=".7">OFF THE PATH &mdash; '+off.length+' platform tickets. Real work, but slipping any of them moves nothing.</text>';
+  var ox=PAD;
+  off.forEach(function(t){
+    var stt=st(t.id);
+    var col = stt==="done"?"var(--done)":stt==="doing"?"var(--doing)":"var(--mute)";
+    out+='<g class="nd" data-dag="'+t.id+'" tabindex="0" role="button" aria-label="'+esc(t.id)+'">';
+    out+='<rect x="'+ox+'" y="222" width="58" height="22" fill="none" stroke="'+col+'" stroke-width="1.2" opacity=".8"/>';
+    out+='<text x="'+(ox+8)+'" y="237" font-size="10" fill="'+col+'">'+t.id.replace("CIP-","")+'</text></g>';
+    ox+=64;
+  });
+
+  var parked=D.tickets.filter(function(t){return t.track!=="platform";}).length;
+  out+='<rect x="'+PAD+'" y="262" width="'+(W-PAD*2)+'" height="26" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="4 4" opacity=".35"/>';
+  out+='<text x="'+(PAD+10)+'" y="279" font-size="10.5" fill="currentColor" opacity=".55">PARKED \u00b7 '+parked+' tickets (factory hardening + observed-in-flight) \u00b7 none on the critical path \u00b7 finishing all of them moves the date by zero days</text>';
+  out+='</svg>';
+  return '<figure class="rv"><div class="box">'+out+'</div><figcaption><b>The spine is the whole plan.</b> Solid accent means ready to start; dashed means still waiting on the ticket to its left. Everything below the spine is real work that does not move the delivery date &mdash; which is not an argument for skipping it, only for not starting there.</figcaption></figure>';
+}
+function pFlow(){
+  var c=critical();
+  var ready=D.tickets.filter(function(t){return t.track==="platform"&&st(t.id)==="todo"&&depBlocked(t).length===0;});
+  var first=ready.length?ready[0]:null;
+  var h='<p class="lede">Forty-two tickets exist. <strong>Two of them are worth your attention this week</strong> &mdash; the rest either wait on those two or do not move the date at all.</p>';
+  if(first){
+    var t=first;
+    h+='<div class="note ok rv"><b>Start here: '+t.id+' &mdash; '+esc(t.t)+'</b><br><span style="font-size:13px">'+
+       (t.why||'')+'</span><br><span style="font-size:12.5px;color:var(--mute)"><b>Done when:</b> '+t.acc+'</span></div>';
+  }
+  if(ready.length>1){
+    h+='<div class="note rv"><b>In parallel:</b> '+ready.slice(1).map(function(x){return '<span class="mono">'+x.id+'</span> '+esc(x.t);}).join(" &middot; ")+'</div>';
+  }
+  h+=figFlow();
+  h+='<h2 class="sec">Why only these</h2><div class="tw rv"><table><thead><tr><th>Group</th><th>Count</th><th>Effect on the delivery date</th></tr></thead><tbody>'+
+     '<tr><td><b>The critical path</b></td><td class="n">'+c.path.length+'</td><td class="r">every one of these delays everything</td></tr>'+
+     '<tr><td>Off-path platform</td><td class="n">'+(20-c.path.length)+'</td><td>can slip; still needed before launch</td></tr>'+
+     '<tr><td>Factory hardening</td><td class="n">13</td><td class="g">zero &mdash; no dependencies, nothing waits on them</td></tr>'+
+     '<tr><td>Observed in flight</td><td class="n">9</td><td class="g">zero &mdash; a parking lot with promotion rules</td></tr>'+
+     '</tbody></table></div>'+
+     '<div class="note"><b>The path runs through the questionnaire.</b> CIP-07 &rarr; CIP-08 &rarr; CIP-10 is where the one measured number in this whole plan lives: a questionnaire targeting entity types, relationships, roles and decision gates yields <b>70&ndash;80%</b> of the spec automatically; a generic one yields <b>30&ndash;40%</b>. Everything else here is plumbing around that difference.</div>';
+  return h;
+}
+
+var TABS=[["flow","Start here",0],["board","Board",1],["deps","Dependencies",0],["plan","The plan",0],["arch","Architecture",0],["risk","Pitfalls",2],["trade","Trade-offs",0],["method","Method",0]];
 function render(){
   var c=counts();
   document.getElementById("tabs").innerHTML=TABS.map(function(t){
@@ -1176,7 +1586,7 @@ function render(){
     if(t[2]===2) n='<span class="n">'+D.pitfalls.length+'</span>';
     return '<button role="tab" data-tab="'+t[0]+'" aria-selected="'+(TAB===t[0])+'">'+t[1]+n+'</button>';
   }).join("");
-  var b= TAB==="board"?pBoard(): TAB==="deps"?pDeps(): TAB==="plan"?pPlan(): TAB==="arch"?pArch():
+  var b= TAB==="flow"?pFlow(): TAB==="board"?pBoard(): TAB==="deps"?pDeps(): TAB==="plan"?pPlan(): TAB==="arch"?pArch():
          TAB==="risk"?pRisk(): TAB==="trade"?pTrade(): pMethod();
   document.getElementById("root").innerHTML='<div class="panel">'+b+'</div>';
   reveal();

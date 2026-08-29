@@ -49,8 +49,8 @@ unabsorbed. Any new question must name the answer that failed to cover it, by fi
 
 ## The external review landed, and was checked
 
-`docs/reviews/external/deepseek.md` — 535 lines. **D0–D4 delivered; D5 (what it could not judge)
-missing.** It read the right ref (`feat/readiness-generator`, not the skeleton `main`).
+`docs/reviews/external/deepseek.md` — 541 lines. **D0–D5 ALL delivered.** ⚠ This prompt previously
+said D5 was missing. It is not: `deepseek.md:528-541`, a 7-row table. Corrected 2026-08-29. It read the right ref (`feat/readiness-generator`, not the skeleton `main`).
 
 `docs/reviews/external/verification.md` records what survived. Do not re-verify it; build on it.
 
@@ -109,6 +109,34 @@ Republish to the **same URL** so Paul's saved ticket states survive. The board i
 follows while working — every section must answer "what do I do next" without a second document.
 
 ---
+
+## ⭐ The finding that reorders this plan — read before sequencing anything
+
+`OBS-10`. Measured 2026-08-29:
+
+```
+git grep "TeamSpec|load_team" -- factory/*.py scripts/**/*.py   # outside blueprint.py
+(nothing)
+```
+
+**Nothing executes a TeamSpec.** The configurator exists and is good — `presets.py` holds five
+baseline presets grounded in real tickets, each with a model, effort, turn and dollar caps, an
+escalation trigger and an explicit refusal. The certifier exists — `contract.py` / `certify.py`,
+A1–A12 passing. **Between them there is no runtime.** SYNTHESIS §11.5 found the same independently:
+*"the data model exists; the runtime does not. That is the cheapest high-value thing R7 surfaces."*
+
+Two consequences for sequencing:
+
+1. **Every UI feature in the stated vision — create a team, monitor progress, read logs, see
+   failures — is a view onto a runtime that does not exist.** Build the UI first and it has nothing
+   to display but presets. This does not mean the UI is wrong; it means it is second.
+2. **The two unwired halves fit together.** `blueprint.TeamSpec` is the thing to run;
+   `deploy.py` already carries the bounding it needs (`RepoDeployer`, budget caps, `AttemptLedger`)
+   and also has zero callers. Wiring one to the other is the unlock, and it is small.
+
+⚠ The parked lane currently holds this. **That parking is wrong** — it is off the intake-platform
+critical path but it is on the critical path of what Paul actually described the factory as being.
+Decide explicitly which plan governs before scheduling.
 
 ## Parallelism — computed from the graph, not assigned
 
@@ -177,10 +205,34 @@ This session will be long. Cost is dominated by re-reading things that did not c
 
 ---
 
+## ⚠ Work that exists outside this branch — do not lose it
+
+`trial/wave0-rescue` @ `6872aee` (2026-08-29 12:59) carries **1,151 insertions across 6 files that
+are NOT on `feat/readiness-generator`**: `factory/live_probes.py` (256),
+`scripts/mutate_readiness_probes.py` (240), three test files (492), and an evidence doc.
+
+It matters more than its size. **It is the only place in the estate where a certification assertion
+is wired to a real instrument** — A1 constructs the real connector classes, A5 shells out to the
+real pytest, and *every other verb inherits `Probes._refuse` on purpose, so `UNMEASURABLE` cannot
+quietly become `PASS`*. Everything else this session examined was written-and-unwired.
+
+It is **deliberately RED** — 21 failures, all inside its own three test files, because the author
+made the mutation anchors FAIL rather than `skip` (*"a pytest.skip reads as green"*). So merging it
+breaks the clean `304 passed`, by design. That is a real decision and it has not been made.
+
+Its own commit message says it was *"rescued from an uncommitted scratchpad worktree before it was
+cleaned up"* — **it has already come within one cleanup of being lost once**, and is now preserved
+only by a branch no handoff named until this line.
+
+**DECIDE:** merge and accept RED with a written reason, or keep it parked — but never drop this
+section until one of those happens.
+
+---
+
 ## Open decisions Paul has not made
 
-1. **Push the redaction?** It is committed locally and unpushed. Pushing renames a file an external
-   model may be mid-way through citing.
+1. ~~**Push the redaction?**~~ **DECIDED — already pushed.** `git rev-list --count
+   personal/feat/readiness-generator..HEAD` → 0. Verified 2026-08-29.
 2. **Remove the isolation comment?** `blueprints/windsorai_client_a.yaml:56-57` still describes a
    real data-isolation weakness (one key returning every client's accounts) on a public repo.
 3. **Which pilot client and connector** for CIP-03. Nothing downstream can start without it.
@@ -195,7 +247,8 @@ This session will be long. Cost is dominated by re-reading things that did not c
 - ✅ External review landed, verified, two tickets rejected in writing.
 - ✅ Redaction pushed; nine commits live on `feat/readiness-generator`; 304 tests green.
 - ❌ **No ticket has been started.** Every one is `todo`.
-- ❌ **D5 was never delivered** — nobody has said what the review could not judge.
+- ✅ **D5 was delivered** (`deepseek.md:528-541`). Two of its seven rows are tickets; the other
+  five are not — that is the real remainder.
 - ❌ Factory-track dependencies are unmodelled (all 13 sit at wave 0 with no edges).
 - ❌ `main` is still 157+ commits behind; nothing has been merged.
 - ❌ Git history still carries the client names.

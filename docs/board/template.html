@@ -12,6 +12,7 @@
   --doing:#8A5A12; --doing-2:#F7EEDF;
   --blocked:#9B2F35; --blocked-2:#F8E5E6;
   --done:#2C6A45; --done-2:#E3EFE8;
+  --reject:#46536B; --reject-2:#E6E9ED;
   --shadow:0 1px 2px rgba(23,22,28,.05), 0 10px 28px -20px rgba(23,22,28,.35);
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
@@ -23,6 +24,7 @@
   --doing:#D8A85A; --doing-2:#2A2113;
   --blocked:#E4868B; --blocked-2:#2E1719;
   --done:#6FBE93; --done-2:#14261C;
+  --reject:#A3B0C7; --reject-2:#1C2029;
   --shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 28px -20px rgba(0,0,0,.9);
 }}
 :root[data-theme="dark"]{
@@ -34,6 +36,7 @@
   --doing:#D8A85A; --doing-2:#2A2113;
   --blocked:#E4868B; --blocked-2:#2E1719;
   --done:#6FBE93; --done-2:#14261C;
+  --reject:#A3B0C7; --reject-2:#1C2029;
   --shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 28px -20px rgba(0,0,0,.9);
 }
 *{box-sizing:border-box}
@@ -96,6 +99,9 @@ h2.sec:first-of-type{margin-top:0}
 .tk{background:var(--raise);border:1px solid var(--rule);border-left:3px solid var(--todo);padding:16px 18px;margin-bottom:9px}
 .tk.doing{border-left-color:var(--doing)} .tk.blocked{border-left-color:var(--blocked)}
 .tk.done{border-left-color:var(--done);opacity:.62}
+/* A reject reads as settled, never as delivered: struck title, no green, full legibility. */
+.tk.rejected{border-left-color:var(--reject);opacity:.72;background:var(--reject-2)}
+.tk.rejected h4{text-decoration:line-through;text-decoration-thickness:1px;color:var(--ink-2)}
 .tk-top{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:7px}
 .tk-id{font-family:"DM Mono",monospace;font-size:12px;font-weight:500;color:var(--accent)}
 .tk h4{margin:0;font-size:16px;font-weight:600;font-family:Archivo,sans-serif;flex:1;min-width:220px}
@@ -104,6 +110,7 @@ h2.sec:first-of-type{margin-top:0}
 .pill.doing{background:var(--doing-2);color:var(--doing)}
 .pill.blocked{background:var(--blocked-2);color:var(--blocked)}
 .pill.done{background:var(--done-2);color:var(--done)}
+.pill.rejected{background:var(--reject-2);color:var(--reject)}
 .pill.eff{background:var(--sink);color:var(--mute)}
 .tk .why{font-size:13.5px;color:var(--ink-2);margin:0 0 8px;max-width:78ch}
 .tk dl{display:grid;grid-template-columns:92px 1fr;gap:4px 14px;font-size:12.5px;margin:0 0 10px}
@@ -258,32 +265,44 @@ document.documentElement.classList.add("js");
 var STILL=false; try{STILL=matchMedia("(prefers-reduced-motion: reduce)").matches;}catch(e){}
 var D=JSON.parse(document.getElementById("data").textContent);
 var STATE=(function(){try{var s=document.getElementById("saved");return s?JSON.parse(s.textContent):{};}catch(e){return {};}})();
-var dirty=false, ns=null, TAB="board", FILTER="all";
+var dirty=false, ns=null, TAB="flow", FILTER="all";
 function esc(s){return String(s).replace(/[&<>]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c];});}
-var STATES=[["todo","To do"],["doing","Doing"],["blocked","Blocked"],["done","Done"]];
+var STATES=[["todo","To do"],["doing","Doing"],["blocked","Blocked"],["done","Done"],["rejected","Rejected"]];
 // The store is the record; this page is a view of it. An unclicked ticket
 // inherits the store's status, so work closed elsewhere shows up here.
-var STORE_MAP={open:"todo", claimed:"doing", blocked:"blocked", done:"done", abandoned:"done"};
+//
+// ⭐ `abandoned` maps to its OWN state, never to "done". It mapped to "done" until
+// 2026-08-29, when the cross-reference rejected CIP-23/31/32 and the board would have
+// reported three write-offs as three deliveries — the done count going 2 → 5 with no
+// work performed. A reject and a delivery are opposite outcomes; a view that renders
+// them identically is exactly the kind of instrument this repo exists to refuse.
+var STORE_MAP={open:"todo", claimed:"doing", blocked:"blocked", done:"done", abandoned:"rejected"};
 var STORE={};
 D.tickets.forEach(function(t){ STORE[t.id]=STORE_MAP[t.status]||"todo"; });
 function st(id){ return STATE[id] || STORE[id] || "todo"; }
 function fromStore(id){ return !STATE[id] && STORE[id] && STORE[id]!=="todo"; }
 function counts(){
-  var c={todo:0,doing:0,blocked:0,done:0};
+  var c={todo:0,doing:0,blocked:0,done:0,rejected:0};
   D.tickets.forEach(function(t){c[st(t.id)]++;});
   return c;
 }
+// Rejected work leaves the denominator. A phase of five whose two write-offs still counted
+// would sit at 3/5 forever and read as unfinished; the honest denominator is work that is
+// still real. `done` never includes a reject.
 function phaseCounts(p){
-  var ts=D.tickets.filter(function(t){return t.p===p;});
-  return {n:ts.length, done:ts.filter(function(t){return st(t.id)==="done";}).length};
+  var ts=D.tickets.filter(function(t){return t.p===p && st(t.id)!=="rejected";});
+  var rej=D.tickets.filter(function(t){return t.p===p && st(t.id)==="rejected";}).length;
+  return {n:ts.length, done:ts.filter(function(t){return st(t.id)==="done";}).length, rej:rej};
 }
+// A dependency that was REJECTED is settled, not outstanding — it must stop blocking, or
+// every downstream ticket inherits a permanent unmet edge from work nobody will ever do.
 function depBlocked(t){
-  return (t.dep||[]).filter(function(d){return st(d)!=="done";});
+  return (t.dep||[]).filter(function(d){var s=st(d); return s!=="done" && s!=="rejected";});
 }
 
 function pBoard(){
   var c=counts();
-  var h='<p class="lede">Twenty tickets across six phases. <strong>Move a ticket and the board remembers</strong> — state persists on this page, so it survives the session that made it. The same twenty already exist in <span class="mono">.data/tasks.jsonl</span>, so nothing here is a parallel record.</p>';
+  var h='<p class="lede">'+D.tickets.filter(function(t){return t.track==="platform";}).length+' tickets across six phases. <strong>Move a ticket and the board remembers</strong> — state persists on this page, so it survives the session that made it. They already exist in <span class="mono">.data/tasks.jsonl</span>, so nothing here is a parallel record.</p>';
   h+='<div class="prog">';
   D.phases.forEach(function(p){
     var pc=phaseCounts(p.id), pct=pc.n?Math.round(100*pc.done/pc.n):0;
@@ -292,11 +311,12 @@ function pBoard(){
   });
   h+='</div>';
   h+='<div class="filters"><span class="lbl">Show</span>'+
-     '<button class="chip" data-f="all" aria-pressed="'+(FILTER==="all")+'">All 20</button>'+
+     '<button class="chip" data-f="all" aria-pressed="'+(FILTER==="all")+'">All '+D.tickets.filter(function(t){return t.track==="platform";}).length+'</button>'+
      '<button class="chip" data-f="todo" aria-pressed="'+(FILTER==="todo")+'">To do '+c.todo+'</button>'+
      '<button class="chip" data-f="doing" aria-pressed="'+(FILTER==="doing")+'">Doing '+c.doing+'</button>'+
      '<button class="chip" data-f="blocked" aria-pressed="'+(FILTER==="blocked")+'">Blocked '+c.blocked+'</button>'+
      '<button class="chip" data-f="done" aria-pressed="'+(FILTER==="done")+'">Done '+c.done+'</button>'+
+     (c.rejected?'<button class="chip" data-f="rejected" aria-pressed="'+(FILTER==="rejected")+'">Rejected '+c.rejected+'</button>':'')+
      '<button class="chip" data-f="ready" aria-pressed="'+(FILTER==="ready")+'">Ready to start</button></div>';
 
   D.phases.forEach(function(p){
@@ -347,7 +367,7 @@ function pBoard(){
     var ftot=D.tickets.filter(function(t){return t.track==="factory";}).length;
     h+='<section class="phase-group"><div class="phase-hd"><span class="tag" style="background:var(--doing)">TRACK 2</span>'+
        '<h3>agent-factory hardening</h3><span class="exit">'+fdone+' of '+ftot+' done</span></div>'+
-       '<div class="note"><b>These are mis-prefixed and pending rename.</b> CIP-21 upward came from the external review and harden the factory itself &mdash; a different job from CIP-01&ndash;20, which build the intake platform. Their <span class="mono">P</span> labels mean something different from the platform&rsquo;s, which is why they are not interleaved above. The corrected ticket-generation prompt renames them to <span class="mono">AF-*</span> on the <span class="mono">F0&ndash;F8</span> axis.</div>';
+       '<div class="note"><b>Same factory, different end of it.</b> This board previously called these &ldquo;a different job from CIP-01&ndash;20&rdquo;. <b>That was wrong, and it misled a reader on 2026-08-29.</b> The plan is explicit (&sect;0.4): the 7-stage pipeline <span class="mono">B1&hellip;B7</span> already names the shape, and <i>&ldquo;the client portal is a front end on B1 and B2 &hellip; <b>It is not a new pipeline.</b>&rdquo;</i> &sect;3 draws one loop &mdash; questionnaire &rarr; contract &rarr; execution &rarr; certify A1&ndash;A12 &rarr; learning &mdash; under the heading <i>&ldquo;we already own every piece but the front end&rdquo;</i>. So <b>CIP-01&ndash;20 build the missing B1&ndash;B2 surface; CIP-21+ harden the machinery that already runs B3&ndash;B7.</b> Both are the factory. They are shown separately because their <span class="mono">P</span> labels mean different things &mdash; not because they are different products. <b>The <span class="mono">AF-*</span> rename is on hold</b>: it would formalise a split the plan denies. <span class="mono">B1&ndash;B7</span> is defined in <span class="mono">aldc-launchpad/.claude/commands/launchpad-tracker.md:21</span>, implemented at <span class="mono">cli/platform/b1_requirements.py</span>.</div>';
     fac.forEach(function(t){
       var s2=st(t.id), blocked=depBlocked(t);
       h+='<article class="tk '+s2+'"><div class="tk-top"><span class="tk-id">'+t.id+'</span>'+
@@ -370,6 +390,40 @@ function pBoard(){
   }
 
   // Third lane. Things surfaced mid-flight while doing something else — the
+  // Absorption backlog. Nineteen conclusions that reached a mechanism and never reached the
+  // decision record. These rendered NOWHERE until 2026-08-29 — their `AB-01 · R3` titles did not
+  // match the builder's regex, so all 19 fell into "tasks skipped", on the very board that
+  // carries CIP-01 ("action or reject AB-01..AB-19"). A backlog invisible on its own tracker.
+  var abs_=D.tickets.filter(function(t){
+    if(t.track!=="absorption") return false;
+    if(FILTER==="all") return true;
+    if(FILTER==="ready") return st(t.id)==="todo" && depBlocked(t).length===0;
+    return st(t.id)===FILTER;
+  });
+  if(abs_.length){
+    var adone=D.tickets.filter(function(t){return t.track==="absorption"&&(st(t.id)==="done"||st(t.id)==="rejected");}).length;
+    var atot=D.tickets.filter(function(t){return t.track==="absorption";}).length;
+    h+='<section class="phase-group"><div class="phase-hd"><span class="tag" style="background:var(--doing)">LANE 4</span>'+
+       '<h3>Absorption backlog</h3><span class="exit">'+adone+' of '+atot+' actioned</span></div>'+
+       '<div class="note"><b>The gap is absorption, not knowledge.</b> Eighteen research passes reached these conclusions and none of them reached the decision record. <b>A written REJECT closes a row as legitimately as a build does</b> &mdash; what is not allowed is leaving it unjudged. <b>These rows were invisible on this board until 2026-08-29</b>, dropped by a title-format mismatch and disclosed only as a skip count in build output; <span class="mono">CIP-01</span>, whose whole job is actioning them, sat directly above a list it could not show.</div>';
+    abs_.forEach(function(t){
+      var s4=st(t.id);
+      h+='<article class="tk '+s4+'"><div class="tk-top"><span class="tk-id">'+t.id+'</span>'+
+        '<span class="pill eff" title="source research pass">'+esc(t.p)+'</span>'+
+        '<h4>'+esc(t.t)+'</h4><span class="pill '+s4+'">'+s4+'</span>'+
+        (fromStore(t.id)?'<span class="pill eff" title="from .data/tasks.jsonl, not set on this page">from store</span>':'')+'</div>'+
+        (t.why?'<p class="why">'+esc(t.why)+'</p>':'')+
+        '<dl><dt>action</dt><dd>'+t.acc+'</dd>'+
+        '<dt>source</dt><dd class="mono" style="font-size:11.5px">'+esc(t.ev)+'</dd></dl>'+
+        '<div class="states"><span class="lbl" style="align-self:center;margin-right:4px">state</span>';
+      STATES.forEach(function(x){
+        h+='<button type="button" data-set="'+t.id+'" data-v="'+x[0]+'" aria-pressed="'+(s4===x[0])+'">'+x[1]+'</button>';
+      });
+      h+='</div></article>';
+    });
+    h+='</section>';
+  }
+
   // category that gets lost. The wiki's potential-tickets.md is the same idea and
   // has graduated 0 of 15, so every row here carries the trigger that promotes it.
   var obs=D.tickets.filter(function(t){
@@ -626,7 +680,99 @@ function reveal(){
   setTimeout(function(){Array.prototype.forEach.call(els,function(el){el.classList.add("in");});},2600);
 }
 
-var TABS=[["board","Board",1],["deps","Dependencies",0],["plan","The plan",0],["arch","Architecture",0],["risk","Pitfalls",2],["trade","Trade-offs",0],["method","Method",0]];
+
+/* ── the flow: critical path as a spine, everything else demoted ── */
+function critical(){
+  var plat=D.tickets.filter(function(t){return t.track==="platform";});
+  var by={}; plat.forEach(function(t){by[t.id]=t;});
+  var depth={}, memo={};
+  function dp(id){
+    if(memo[id]!==undefined) return memo[id];
+    var deps=(by[id]&&by[id].dep||[]).filter(function(d){return by[d];});
+    memo[id]= deps.length? 1+Math.max.apply(null,deps.map(dp)) : 0;
+    return memo[id];
+  }
+  plat.forEach(function(t){depth[t.id]=dp(t.id);});
+  var end=null;
+  plat.forEach(function(t){ if(end===null||depth[t.id]>depth[end]) end=t.id; });
+  var path=[end];
+  while(true){
+    var deps=(by[path[0]].dep||[]).filter(function(d){return by[d];});
+    if(!deps.length) break;
+    deps.sort(function(a,b){return depth[b]-depth[a];});
+    path.unshift(deps[0]);
+  }
+  return {path:path, depth:depth, by:by};
+}
+function figFlow(){
+  var c=critical(), onPath={};
+  c.path.forEach(function(id){onPath[id]=1;});
+  var plat=D.tickets.filter(function(t){return t.track==="platform";});
+  var off=plat.filter(function(t){return !onPath[t.id];});
+  var CW=150, PAD=26, SPINE=118;
+  var W=PAD*2+c.path.length*CW, H=300;
+  var out='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="The critical path drawn as a spine with '+c.path.length+' tickets, everything off it shown smaller below, and the parked lanes collapsed into one box.">';
+  out+='<defs><marker id="fa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/></marker>'+
+       '<marker id="fb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>';
+  out+='<text x="'+PAD+'" y="26" font-size="12" font-weight="600" fill="var(--accent)">THE CRITICAL PATH &mdash; '+c.path.length+' deep. Nothing ships sooner than this chain.</text>';
+  out+='<text x="'+PAD+'" y="44" font-size="11" fill="currentColor" opacity=".6">Every other ticket can slip without moving the date. These cannot.</text>';
+
+  c.path.forEach(function(id,i){
+    var t=c.by[id], x=PAD+i*CW, stt=st(id), started=stt!=="todo";
+    var blocked=(t.dep||[]).filter(function(d){return st(d)!=="done";}).length>0;
+    var col = stt==="done"?"var(--done)":stt==="doing"?"var(--doing)":"var(--accent)";
+    out+='<g class="nd" data-dag="'+id+'" tabindex="0" role="button" aria-label="'+esc(id+" "+t.t)+'">';
+    out+='<rect x="'+x+'" y="'+SPINE+'" width="'+(CW-18)+'" height="52" fill="'+(blocked?"var(--raise)":"var(--accent-2)")+'" stroke="'+col+'" stroke-width="'+(blocked?1.4:2.4)+'"'+(blocked?' stroke-dasharray="4 3"':'')+'/>';
+    out+='<text x="'+(x+10)+'" y="'+(SPINE+20)+'" font-size="12" font-weight="600" fill="'+col+'">'+id+'</text>';
+    out+='<text x="'+(x+10)+'" y="'+(SPINE+36)+'" font-size="10" fill="currentColor" opacity=".8">'+esc(t.t.slice(0,17))+(t.t.length>17?"\u2026":"")+'</text>';
+    out+='<text x="'+(x+10)+'" y="'+(SPINE+48)+'" font-size="9.5" fill="currentColor" opacity=".55">'+(blocked?"waiting":"READY")+' \u00b7 '+t.e+'</text>';
+    out+='</g>';
+    if(i<c.path.length-1)
+      out+='<line x1="'+(x+CW-18)+'" y1="'+(SPINE+26)+'" x2="'+(x+CW-3)+'" y2="'+(SPINE+26)+'" stroke="var(--accent)" stroke-width="2" marker-end="url(#fa)"/>';
+  });
+
+  out+='<text x="'+PAD+'" y="212" font-size="11" font-weight="600" fill="currentColor" opacity=".7">OFF THE PATH &mdash; '+off.length+' platform tickets. Real work, but slipping any of them moves nothing.</text>';
+  var ox=PAD;
+  off.forEach(function(t){
+    var stt=st(t.id);
+    var col = stt==="done"?"var(--done)":stt==="doing"?"var(--doing)":"var(--mute)";
+    out+='<g class="nd" data-dag="'+t.id+'" tabindex="0" role="button" aria-label="'+esc(t.id)+'">';
+    out+='<rect x="'+ox+'" y="222" width="58" height="22" fill="none" stroke="'+col+'" stroke-width="1.2" opacity=".8"/>';
+    out+='<text x="'+(ox+8)+'" y="237" font-size="10" fill="'+col+'">'+t.id.replace("CIP-","")+'</text></g>';
+    ox+=64;
+  });
+
+  var parked=D.tickets.filter(function(t){return t.track!=="platform";}).length;
+  out+='<rect x="'+PAD+'" y="262" width="'+(W-PAD*2)+'" height="26" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="4 4" opacity=".35"/>';
+  out+='<text x="'+(PAD+10)+'" y="279" font-size="10.5" fill="currentColor" opacity=".55">PARKED \u00b7 '+parked+' tickets (factory hardening + observed-in-flight) \u00b7 none on the critical path \u00b7 finishing all of them moves the date by zero days</text>';
+  out+='</svg>';
+  return '<figure class="rv"><div class="box">'+out+'</div><figcaption><b>The spine is the whole plan.</b> Solid accent means ready to start; dashed means still waiting on the ticket to its left. Everything below the spine is real work that does not move the delivery date &mdash; which is not an argument for skipping it, only for not starting there.</figcaption></figure>';
+}
+function pFlow(){
+  var c=critical();
+  var ready=D.tickets.filter(function(t){return t.track==="platform"&&st(t.id)==="todo"&&depBlocked(t).length===0;});
+  var first=ready.length?ready[0]:null;
+  var h='<p class="lede">Forty-two tickets exist. <strong>Two of them are worth your attention this week</strong> &mdash; the rest either wait on those two or do not move the date at all.</p>';
+  if(first){
+    var t=first;
+    h+='<div class="note ok rv"><b>Start here: '+t.id+' &mdash; '+esc(t.t)+'</b><br><span style="font-size:13px">'+
+       (t.why||'')+'</span><br><span style="font-size:12.5px;color:var(--mute)"><b>Done when:</b> '+t.acc+'</span></div>';
+  }
+  if(ready.length>1){
+    h+='<div class="note rv"><b>In parallel:</b> '+ready.slice(1).map(function(x){return '<span class="mono">'+x.id+'</span> '+esc(x.t);}).join(" &middot; ")+'</div>';
+  }
+  h+=figFlow();
+  h+='<h2 class="sec">Why only these</h2><div class="tw rv"><table><thead><tr><th>Group</th><th>Count</th><th>Effect on the delivery date</th></tr></thead><tbody>'+
+     '<tr><td><b>The critical path</b></td><td class="n">'+c.path.length+'</td><td class="r">every one of these delays everything</td></tr>'+
+     '<tr><td>Off-path platform</td><td class="n">'+(20-c.path.length)+'</td><td>can slip; still needed before launch</td></tr>'+
+     '<tr><td>Factory hardening</td><td class="n">13</td><td class="g">zero &mdash; no dependencies, nothing waits on them</td></tr>'+
+     '<tr><td>Observed in flight</td><td class="n">9</td><td class="g">zero &mdash; a parking lot with promotion rules</td></tr>'+
+     '</tbody></table></div>'+
+     '<div class="note"><b>The path runs through the questionnaire.</b> CIP-07 &rarr; CIP-08 &rarr; CIP-10 is where the one measured number in this whole plan lives: a questionnaire targeting entity types, relationships, roles and decision gates yields <b>70&ndash;80%</b> of the spec automatically; a generic one yields <b>30&ndash;40%</b>. Everything else here is plumbing around that difference.</div>';
+  return h;
+}
+
+var TABS=[["flow","Start here",0],["board","Board",1],["deps","Dependencies",0],["plan","The plan",0],["arch","Architecture",0],["risk","Pitfalls",2],["trade","Trade-offs",0],["method","Method",0]];
 function render(){
   var c=counts();
   document.getElementById("tabs").innerHTML=TABS.map(function(t){
@@ -635,7 +781,7 @@ function render(){
     if(t[2]===2) n='<span class="n">'+D.pitfalls.length+'</span>';
     return '<button role="tab" data-tab="'+t[0]+'" aria-selected="'+(TAB===t[0])+'">'+t[1]+n+'</button>';
   }).join("");
-  var b= TAB==="board"?pBoard(): TAB==="deps"?pDeps(): TAB==="plan"?pPlan(): TAB==="arch"?pArch():
+  var b= TAB==="flow"?pFlow(): TAB==="board"?pBoard(): TAB==="deps"?pDeps(): TAB==="plan"?pPlan(): TAB==="arch"?pArch():
          TAB==="risk"?pRisk(): TAB==="trade"?pTrade(): pMethod();
   document.getElementById("root").innerHTML='<div class="panel">'+b+'</div>';
   reveal();

@@ -1,181 +1,265 @@
 {
-  "_note": "Authored prose per ticket. Merged with .data/tasks.jsonl by scripts/build_board_artifact.py. Status and existence come from the store; this file only carries the writing.",
+  "_note": "Authored prose per ticket (why / acceptance / effort). Merged with .data/tasks.jsonl by scripts/build_board_artifact.py. Status, existence AND DEPENDENCIES come from the store; this file only carries the writing. Dependencies moved to the store's blocked_by on 2026-08-29 (divergence D-1) - do not reintroduce a `dep` key here, it will not be read.",
   "detail": {
+    "AB-01": {
+      "acc": "add the manifest + `scope_hash` as an explicit step in §5, or record in §5 why it was refused.",
+      "why": "every gate we have measures the work it was told about. Nothing measures work that was never declared, so a team can pass by doing less than the task required. `SYNTHESIS.md` §5's nine-step build order has **no such step**.",
+      "ev": "docs/absorption-backlog.md AB-01 — R3, executive verdict; unabsorbed per §17.9.",
+      "e": "M"
+    },
+    "AB-02": {
+      "acc": "add FACPR to `factory/metrics.py` beside the existing activity/outcome pairing.",
+      "why": "without it, attempt 352 and attempt 1 score identically. Every efficiency claim the factory makes is currently unfalsifiable.",
+      "ev": "docs/absorption-backlog.md AB-02 — R3; unabsorbed per §17.9.",
+      "e": "M"
+    },
+    "AB-03": {
+      "acc": "design the proxy, or downgrade step 1's \"hard\" to \"advisory\" and say so.",
+      "why": "build-order step 1 is *\"hard external attempt / spend / concurrency budget — non-negotiable\"*. Today it is a number in a config an agent can exceed.",
+      "ev": "docs/absorption-backlog.md AB-03 — R3; independently re-derived as §16.8's recommendation two days later.",
+      "e": "M"
+    },
+    "AB-04": {
+      "acc": "score a **second** real connector end to end and add it to the corpus. That single step converts n=1 into evidence of generality and will find the assumptions baked into the windsorai fixture faster than manufacturing 38 more. Then work toward R3's 30 + 10.",
+      "why": "⭐ the corpus is **one file, 6,747 bytes** (R16 audit §3.1). Four passes asked for this and *\"no action among the eighteen names it.\"* - ⚠ **RESTATED 2026-08-29 — this is a breadth task, not a sensitivity task. See F76.** The premise that the one-file corpus means *\"the instrument has not been shown able to fail\"* is **false** and was inherited by this very file when it was written. The contract is calibrated: all twelve assertions have a known-bad, enforced by `tests/test_connector_contract.py::test_every_assertion_has_been_proved_able_to_fail`, and `certify --calibrate` now returns `PASS (PASS=12)` — not the `UNMEASURABLE (PASS=11)` the README claimed until today. What one fixture cannot show is that the contract **generalises**: it has been replayed against one connector, and 48 have never been scored.",
+      "ev": "docs/absorption-backlog.md AB-04 — R3; echoed by R1 (≥29), R8, and R10 (as a precondition of its own recommendation).",
+      "e": "M"
+    },
+    "AB-05": {
+      "acc": "read R4's design, then either adopt it or record why the rejection stands *against the actual design* rather than against a paraphrase. ## B · Assurance gaps",
+      "why": "§11.4 rejects gates-as-fitness and §16.6 corroborates, but **neither cites the gate design already written**. We argued a question that had a designed answer on file.",
+      "ev": "docs/absorption-backlog.md AB-05 — R4; unabsorbed per §17.9.",
+      "e": "M"
+    },
+    "AB-06": {
+      "acc": "specify the side-effect check; add to the GreenContract assertion set.",
+      "why": "two independent passes reached the same conclusion and neither is in the record. This is the check that would have caught the estate's own 4.86×-duplication near-miss.",
+      "ev": "docs/absorption-backlog.md AB-06 — R1, graded **High** among damaging omissions. ⭐ Rediscovered independently by R17 §4.7 as *\"none of these receipts describes what the agent did to a shared warehouse — the single biggest gap in the field's tooling for your use case.\"* Same gap, two arrivals, unconnected.",
+      "e": "M"
+    },
+    "AB-07": {
+      "acc": "add to `factory/metrics.py`, or reject in writing.",
+      "ev": "docs/absorption-backlog.md AB-07 — R1; unabsorbed.",
+      "e": "M"
+    },
+    "AB-08": {
+      "acc": "write the manifest schema; state which plane owns each field.",
+      "why": "*\"the build plane never runs a connector; the run plane never builds one\"* is called the single most useful thing to understand about the system, and the record has no schema enforcing the separation. Also bears on the 0-of-15 version hash.",
+      "ev": "docs/absorption-backlog.md AB-08 — R2; §17.4.",
+      "e": "M"
+    },
+    "AB-09": {
+      "acc": "narrow the sandbox claim to what it does defend, and name what still is not defended. ## C · Instruments and testing",
+      "why": "§13.7 adopted a sandbox move partly on isolation grounds. If the sandbox does not address the actual threat, the justification is wrong even if the move is right.",
+      "ev": "docs/absorption-backlog.md AB-09 — R16 outside-evidence lane, §3.",
+      "e": "M"
+    },
+    "AB-10": {
+      "acc": "apply to the render/tracker probes first — the ones that produced the false results.",
+      "why": "F5 records **three confident false results from this repo's own instruments in a single session**. The instruments are the known weak point and the proposed fix is on file, unread.",
+      "ev": "docs/absorption-backlog.md AB-10 — R5 §3; §10 took items 1, 2 and 5 only.",
+      "e": "M"
+    },
+    "AB-11": {
+      "acc": "single source for readout strings; CI diff.",
+      "why": "exactly the problem R13 run 2 later found shipping — **four page strings each asserting the page caches nothing**, while it caches.",
+      "ev": "docs/absorption-backlog.md AB-11 — R5 §4.",
+      "e": "M"
+    },
+    "AB-12": {
+      "acc": "take each of the five separately; the APPROVE one first, because a decision depends on it. ## D · State, memory and the record",
+      "why": "the APPROVE finding removes the very plane §14.2's platform argument was justifying. A settled platform question may rest on a premise a later pass refuted.",
+      "ev": "docs/absorption-backlog.md AB-12 — R13 run 2; §13.6 took the switchboard settlement, §15.1 quotes it once.",
+      "e": "M"
+    },
+    "AB-13": {
+      "acc": "enumerate the six, pick one to retire or merge, and do it before any new store lands.",
+      "why": "bears directly on §16.10's ledger split and on R18's enumeration of shared state. We have since been designing new stores against a recommendation to reduce them. ⚠ Separately, R10 attributes its strongest figure (32% → 55%) to two different authors in one source list — treat R10's numbers as unverified.",
+      "ev": "docs/absorption-backlog.md AB-13 — R10 §7. R16 §3.4 flags that a5 took *\"skills over corpus\"* and dropped the recommendation it sat inside.",
+      "e": "M"
+    },
+    "AB-14": {
+      "acc": "file the refutation against R8 explicitly.",
+      "why": "the record does not show that a research pass got this wrong, so the same wrong answer can arrive again from the same source.",
+      "ev": "docs/absorption-backlog.md AB-14 — R8 §2; refuted by §16.10.",
+      "e": "M"
+    },
+    "AB-15": {
+      "acc": "tier them against current pain; cross-session search looks highest-value. ## E · Whole answers never absorbed",
+      "why": "this is the closest thing on file to the session-consolidation problem that prompted this backlog.",
+      "ev": "docs/absorption-backlog.md AB-15 — R12 §4.4; unabsorbed.",
+      "e": "M"
+    },
+    "AB-16": {
+      "acc": "read it and either absorb its conclusions or **reject it in writing**. Either closes this; neither has happened.",
+      "ev": "docs/absorption-backlog.md AB-16 — §17.2 — *\"1,389 lines, seven mentions, and not one conclusion taken.\"*",
+      "e": "M"
+    },
+    "AB-17": {
+      "acc": "as AB-16.",
+      "ev": "docs/absorption-backlog.md AB-17 — §17.3 — it exists, and every reference to it in the synthesis is in the future tense.",
+      "e": "M"
+    },
+    "AB-18": {
+      "acc": "fill in the nine, or delete the pointers so the record stops implying they were handled. ## F · The argument the record only heard one side of",
+      "ev": "docs/absorption-backlog.md AB-18 — §15.3 lists nine findings **with no content**.",
+      "e": "M"
+    },
+    "AB-19": {
+      "acc": "re-decide with all five positions on the table, and record the decision with its dissent. --- ## Closing rule A row closes when its **ACTION** is done *or* when a written rejection exists naming the row. Both outcomes are progress. What is not progress — and what produced this file — is a row that is mentioned in a synthesis and mistaken for one that was handled.",
+      "why": "§14.3 records the middle pair as *\"three passes and one measurement agree — stop asking and build it\"*; §15.5 then retracts the independence. **R6's position — filed first, and on the same side as the strongest external finding — is nowhere.** Two sources agreed and were counted; the two agreeing with the inverted-U were not.",
+      "ev": "docs/absorption-backlog.md AB-19 — §17.9's closing paragraph.",
+      "e": "M"
+    },
     "CIP-01": {
       "why": "Nineteen conclusions that named a mechanism and never reached the decision record. A written reject closes one as legitimately as a build does.",
       "acc": "Every AB row carries DO / REJECT / MERGE and a one-line reason. Zero rows left unjudged.",
       "ev": "docs/absorption-backlog.md, every row terminal",
-      "e": "L",
-      "dep": []
+      "e": "L"
     },
     "CIP-02": {
-      "why": "A gap register judged against a stated objective, so \u201cmissing\u201d means missing relative to something.",
+      "why": "A gap register judged against a stated objective, so “missing” means missing relative to something.",
       "acc": "Every gap names the answer that should have covered it, by file and section.",
       "ev": "docs/corpus/GAPS.md",
-      "e": "M",
-      "dep": [
-        "CIP-01"
-      ]
+      "e": "M"
     },
     "CIP-03": {
       "why": "A pilot chosen for convenience proves nothing transferable. State the selection reason so a failure is interpretable.",
       "acc": "One connector named, with the reason it is representative and what it will not prove.",
-      "ev": "docs/evidence/&lt;TICKET&gt;.md \u00a71",
-      "e": "S",
-      "dep": []
+      "ev": "docs/evidence/&lt;TICKET&gt;.md §1",
+      "e": "S"
     },
     "CIP-04": {
       "why": "The record is the artefact everything else checks. One real one beats a template nobody filled.",
       "acc": "Passes check_intake.py --stage commit, then --stage deploy. Consumer route walked, not assumed.",
       "ev": "docs/evidence/&lt;TICKET&gt;.md, all four sections",
-      "e": "M",
-      "dep": [
-        "CIP-03"
-      ]
+      "e": "M"
     },
     "CIP-05": {
       "why": "Closes the loop from what the client declared to what actually landed.",
       "acc": "certify returns PASS on all twelve, and labels its own basis REPLAYED or LIVE.",
       "ev": "certify output, committed",
-      "e": "M",
-      "dep": [
-        "CIP-04"
-      ]
+      "e": "M"
     },
     "CIP-06": {
       "why": "The corpus holds one file. A frozen evaluator scoring n=1 cannot tell a good version from a lucky replay.",
       "acc": "Corpus count rises; MANIFEST.sha256 verifies; test_corpus.py green.",
       "ev": "evals/MANIFEST.sha256",
-      "e": "S",
-      "dep": [
-        "CIP-05"
-      ]
+      "e": "S"
     },
     "CIP-07": {
       "why": "Entity types, relationships, roles, decision gates. The dimensions are the schema, not a style choice.",
-      "acc": "Every question maps to one of the four; count is 20\u201330; none is free text without a target field.",
+      "acc": "Every question maps to one of the four; count is 20–30; none is free text without a target field.",
       "ev": "docs/specs/questionnaire.md",
-      "e": "M",
-      "dep": [
-        "CIP-04"
-      ]
+      "e": "M"
     },
     "CIP-08": {
       "why": "A question whose answer nothing checks is a question that produces a hope.",
       "acc": "A table with three columns and no empty third cell.",
       "ev": "the mapping table, in the spec",
-      "e": "M",
-      "dep": [
-        "CIP-07"
-      ]
+      "e": "M"
     },
     "CIP-09": {
-      "why": "20\u201330 questions is at the edge of what a client will finish. Every field we can read is a field we must not ask.",
+      "why": "20–30 questions is at the edge of what a client will finish. Every field we can read is a field we must not ask.",
       "acc": "Fields derivable from the source are pre-filled and marked as probed, not asserted.",
       "ev": "a probe run against the pilot source",
-      "e": "M",
-      "dep": [
-        "CIP-08"
-      ]
+      "e": "M"
     },
     "CIP-10": {
       "why": "Any hand-editing step between the client's answer and the contract is where drift enters.",
       "acc": "A filled form produces frontmatter that passes check_intake.py with zero edits.",
       "ev": "round-trip test",
-      "e": "M",
-      "dep": [
-        "CIP-08"
-      ]
+      "e": "M"
     },
     "CIP-11": {
       "why": "The client sees their own declaration reflected back as Live / Partial / Awaiting / Pending / Not-in-scope.",
       "acc": "Uses the existing five-term vocabulary. No sixth term invented.",
       "ev": "rendered page, screenshot in docs/evidence/",
-      "e": "L",
-      "dep": [
-        "CIP-10"
-      ]
+      "e": "L"
     },
     "CIP-12": {
       "why": "Three ticket-record systems already disagree. A fourth that owns state is the failure, not the fix.",
       "acc": "Portal has no write path to anything but a PR. Killing the portal loses no record.",
       "ev": "the PR a submission produced",
-      "e": "M",
-      "dep": [
-        "CIP-11"
-      ]
+      "e": "M"
     },
     "CIP-13": {
       "why": "Per-client auth and row-level security are already provisioned in code. Inventing a second model is how isolation breaks.",
       "acc": "No new auth code. Access provisioned by the existing CLI.",
       "ev": "the provisioning run",
-      "e": "S",
-      "dep": [
-        "CIP-11"
-      ]
+      "e": "S"
     },
     "CIP-14": {
-      "why": "Named as missing in the compounding research \u2014 the store currently accepts ~100% of writes.",
+      "why": "Named as missing in the compounding research — the store currently accepts ~100% of writes.",
       "acc": "A deliberately ungrounded write is refused in a test. Rejection rate is reported, not assumed.",
       "ev": "the negative control",
-      "e": "M",
-      "dep": [
-        "CIP-05"
-      ]
+      "e": "M"
     },
     "CIP-15": {
-      "why": "Retooled AOR. Compare the corpus to real demand, not to itself \u2014 comparing it to itself measures repetition.",
+      "why": "Retooled AOR. Compare the corpus to real demand, not to itself — comparing it to itself measures repetition.",
       "acc": "Judged by relevance, not cosine similarity and not outcome. Output is a ranked gap list.",
       "ev": "the first ranked gap list",
-      "e": "L",
-      "dep": [
-        "CIP-11"
-      ]
+      "e": "L"
     },
     "CIP-16": {
       "why": "Rank currently scales with retrieval_count alone, so a wrong-but-popular memory climbs and spreads its mistake.",
-      "acc": "max(0,(uses\u2212corrections+k)/(uses+2k)) with k\u22482. The naive ratio is not shipped.",
+      "acc": "max(0,(uses−corrections+k)/(uses+2k)) with k≈2. The naive ratio is not shipped.",
       "ev": "the three worked cases from the research note",
-      "e": "M",
-      "dep": [
-        "CIP-14"
-      ]
+      "e": "M"
     },
     "CIP-17": {
       "why": "A guard blocked nothing for months because it depended on a binary that was not installed and exited the wrong code.",
       "acc": "Each gate proves it blocks AND proves it lets legitimate work through.",
       "ev": "the verify run",
-      "e": "M",
-      "dep": [
-        "CIP-14"
-      ]
+      "e": "M"
     },
     "CIP-18": {
       "why": "The decisive test that collapsed an 18-point signal to ~0. Without it, any improvement claim measures repetition.",
       "acc": "Compares like with like inside one topic cluster. Reports the control alongside the result.",
       "ev": "the harness, and its output on real data",
-      "e": "M",
-      "dep": [
-        "CIP-15"
-      ]
+      "e": "M"
     },
     "CIP-19": {
       "why": "A falling correction rate proves improvement only if the questions did not simply get easier.",
       "acc": "A controlled comparison, pre-registered before the data is seen.",
       "ev": "the design, then the result",
-      "e": "L",
-      "dep": [
-        "CIP-18"
-      ]
+      "e": "L"
     },
     "CIP-20": {
       "why": "The agreeing cases are the control; the divergent ones are the finding. Publishing only the wins is how a confound survives.",
       "acc": "Every divergence investigated and reported, including the ones that weaken the claim.",
       "ev": "the published reconciliation",
-      "e": "M",
-      "dep": [
-        "CIP-19"
-      ]
+      "e": "M"
+    },
+    "CIP-24": {
+      "why": "Lane naming is derived from the boot prompt rather than the work, and nothing proves the name survives the spawn. control-room.md §5 Slice 0; also raised independently as deepseek D5.",
+      "acc": "A test spawns through the REAL launcher and reads the name back out of the registry. Until it passes, naming stays INFERRED.",
+      "ev": "docs/specs/control-room.md §5 Slice 0; sessions.py:99; local_tracker.py:345 (sets it, nothing asserts it)",
+      "e": "S"
+    },
+    "CIP-25": {
+      "why": "finish.checks() pairs a PER-LANE findings query with a GLOBAL nothing_to_report() count, so one NOTHING TO REPORT written by any lane permanently satisfies the check for every lane. Silence stops meaning 'checked'.",
+      "acc": "nothing_to_report() is scoped per lane; a test proves lane B still fails the check after lane A has written one.",
+      "ev": "factory/finish.py:88-92 (verified 2026-08-29)",
+      "e": "S"
+    },
+    "CIP-27": {
+      "why": "F72: the board's number depends on the directory it is run from (9 of 30 from the checkout, 10 of 30 from a worktree, same commit). The $PREFECT_CONNECTORS override has since landed; the cwd-relative default has not, so F72 still reproduces whenever the var is unset.",
+      "acc": "Two halves, both required: (a) resolution no longer varies with cwd when the var is unset; (b) the HEADLINE carries its basis, so a number quoted out of context cannot read as global. Proof: same commit measured from checkout and from a worktree gives the same headline.",
+      "ev": "docs/findings.d/F72-*.md; factory/readiness.py:35-36 (half-fixed, verified 2026-08-29)",
+      "e": "M"
+    },
+    "CIP-29": {
+      "why": "A measurement-scope object so a figure carries what it was measured over. ⚠ NAME COLLISION: factory/schedule.py:59 already defines `class Snapshot` — a frozen when/passed/total/sha record parsed from the artifact's git history, used only inside schedule.py.",
+      "acc": "The new object ships under a name that does not collide, OR the two are deliberately reconciled in writing. A second `Snapshot` in the codebase is not an acceptable outcome.",
+      "ev": "factory/schedule.py:59 (verified 2026-08-29)",
+      "e": "M"
+    },
+    "CIP-36": {
+      "why": "The blocked-question inbox is BUILT — sessions.py:257/265/286 plus hooks/lane-attention.py for the intrusive half — but its gate has never been run. Replaces CIP-23, which asked to build what already existed. By §5's rule 'a slice with no gate is not a slice', it is not done.",
+      "acc": "A fire drill: block a real agent on a real question and time how long until a human sees it. Before: unbounded (4 sat all day). Target: under a minute. Record the drill as evidence.",
+      "ev": "docs/specs/control-room.md §5 Slice 1; factory/sessions.py:286; scripts/hooks/lane-attention.py",
+      "e": "S"
     }
   }
 }

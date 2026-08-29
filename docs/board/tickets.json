@@ -2,7 +2,7 @@
   "_generated_by": "python scripts/export_board.py",
   "_authoritative_source": ".data/tasks.jsonl (append-only, gitignored)",
   "_note": "DERIVED snapshot for recovery and for rendering the board. Never hand-edit.",
-  "count": 64,
+  "count": 67,
   "tasks": [
     {
       "id": "253d7fa9",
@@ -475,8 +475,10 @@
       "title": "CIP-02 - P0 Publish docs/corpus/GAPS.md from the existing corpus",
       "owner": null,
       "parent": null,
-      "status": "open",
-      "blocked_by": [],
+      "status": "blocked",
+      "blocked_by": [
+        "CIP-01"
+      ],
       "evidence": [],
       "events": [
         {
@@ -486,6 +488,14 @@
           "data": {
             "title": "CIP-02 - P0 Publish docs/corpus/GAPS.md from the existing corpus",
             "parent": null
+          }
+        },
+        {
+          "ts": 1788045643.470562,
+          "actor": "d1-dep-migration-2026-08-29",
+          "kind": "block",
+          "data": {
+            "by": "CIP-01"
           }
         }
       ]
@@ -515,8 +525,10 @@
       "title": "CIP-04 - P1 Author the first real intake record end to end",
       "owner": null,
       "parent": null,
-      "status": "open",
-      "blocked_by": [],
+      "status": "blocked",
+      "blocked_by": [
+        "CIP-03"
+      ],
       "evidence": [],
       "events": [
         {
@@ -527,6 +539,14 @@
             "title": "CIP-04 - P1 Author the first real intake record end to end",
             "parent": null
           }
+        },
+        {
+          "ts": 1788045643.4714508,
+          "actor": "d1-dep-migration-2026-08-29",
+          "kind": "block",
+          "data": {
+            "by": "CIP-03"
+          }
         }
       ]
     },
@@ -535,9 +555,17 @@
       "title": "CIP-05 - P1 Certify that connector A1-A12 against a recorded run",
       "owner": null,
       "parent": null,
-      "status": "open",
-      "blocked_by": [],
-      "evidence": [],
+      "status": "blocked",
+      "blocked_by": [
+        "CIP-04"
+      ],
+      "evidence": [
+        {
+          "kind": "crossref",
+          "ref": "AMBIGUOUS-as-written, do not close against windsorai: A1-A12 already PASS for windsorai/CLIENT-A (`python -m factory.certify blueprints/windsorai_client_a.yaml --calibrate` -> PASS=12, REPLAYED). But P1 means the PILOT connector and CIP-03 (pick it) is still open. Read 'certify the pilot connector chosen in CIP-03'; windsorai is the WORKED EXAMPLE this must reproduce, not the deliverable.",
+          "basis": "MEASURED"
+        }
+      ],
       "events": [
         {
           "ts": 1788038294.1685462,
@@ -547,6 +575,24 @@
             "title": "CIP-05 - P1 Certify that connector A1-A12 against a recorded run",
             "parent": null
           }
+        },
+        {
+          "ts": 1788045014.5583293,
+          "actor": "crossref-2026-08-29",
+          "kind": "evidence",
+          "data": {
+            "kind": "crossref",
+            "ref": "AMBIGUOUS-as-written, do not close against windsorai: A1-A12 already PASS for windsorai/CLIENT-A (`python -m factory.certify blueprints/windsorai_client_a.yaml --calibrate` -> PASS=12, REPLAYED). But P1 means the PILOT connector and CIP-03 (pick it) is still open. Read 'certify the pilot connector chosen in CIP-03'; windsorai is the WORKED EXAMPLE this must reproduce, not the deliverable.",
+            "basis": "MEASURED"
+          }
+        },
+        {
+          "ts": 1788045643.472498,
+          "actor": "d1-dep-migration-2026-08-29",
+          "kind": "block",
+          "data": {
+            "by": "CIP-04"
+          }
         }
       ]
     },
@@ -555,9 +601,17 @@
       "title": "CIP-06 - P1 Add the recorded run to evals/corpus + MANIFEST",
       "owner": null,
       "parent": null,
-      "status": "open",
-      "blocked_by": [],
-      "evidence": [],
+      "status": "blocked",
+      "blocked_by": [
+        "CIP-05"
+      ],
+      "evidence": [
+        {
+          "kind": "crossref",
+          "ref": "AMBIGUOUS-as-written, do not close against windsorai: already true for windsorai - evals/corpus/windsorai-2026-08-20.json exists and is listed in evals/MANIFEST.sha256 under f7cd15c2d379..., the exact hash certify replays against. But this means the PILOT connector (CIP-03, still open). Same worked-example/deliverable distinction as CIP-05.",
+          "basis": "MEASURED"
+        }
+      ],
       "events": [
         {
           "ts": 1788038294.1690452,
@@ -567,6 +621,24 @@
             "title": "CIP-06 - P1 Add the recorded run to evals/corpus + MANIFEST",
             "parent": null
           }
+        },
+        {
+          "ts": 1788045014.5587568,
+          "actor": "crossref-2026-08-29",
+          "kind": "evidence",
+          "data": {
+            "kind": "crossref",
+            "ref": "AMBIGUOUS-as-written, do not close against windsorai: already true for windsorai - evals/corpus/windsorai-2026-08-20.json exists and is listed in evals/MANIFEST.sha256 under f7cd15c2d379..., the exact hash certify replays against. But this means the PILOT connector (CIP-03, still open). Same worked-example/deliverable distinction as CIP-05.",
+            "basis": "MEASURED"
+          }
+        },
+        {
+          "ts": 1788045643.4737902,
+          "actor": "d1-dep-migration-2026-08-29",
+          "kind": "block",
+          "data": {
+            "by": "CIP-05"
+          }
         }
       ]
     },
@@ -575,8 +647,10 @@
       "title": "CIP-07 - P2 Draft 20-30 questions on the four ontology dimensions",
       "owner": null,
       "parent": null,
-      "status": "open",
-      "blocked_by": [],
+      "status": "blocked",
+      "blocked_by": [
+        "CIP-04"
+      ],
       "evidence": [],
       "events": [
         {
@@ -587,6 +661,14 @@
             "title": "CIP-07 - P2 Draft 20-30 questions on the four ontology dimensions",
             "parent": null
           }
+        },
+        {
+          "ts": 1788045643.4752035,
+          "actor": "d1-dep-migration-2026-08-29",
+          "kind": "block",
+          "data": {
+            "by": "CIP-04"
+          }
         }
       ]
     },
@@ -595,8 +677,10 @@
       "title": "CIP-08 - P2 Map every question to a frontmatter field and a check; unmapped = 0",
       "owner": null,
       "parent": null,
-      "status": "open",
-      "blocked_by": [],
+      "status": "blocked",
+      "blocked_by": [
+        "CIP-07"
+      ],
       "evidence": [],
       "events": [
         {
@@ -607,6 +691,14 @@
             "title": "CIP-08 - P2 Map every question to a frontmatter field and a check; unmapped = 0",
             "parent": null
           }
+        },
+        {
+          "ts": 1788045643.4763634,
+          "actor": "d1-dep-migration-2026-08-29",
+          "kind": "block",
+          "data": {
+            "by": "CIP-07"
+          }
         }
       ]
     },
@@ -615,8 +707,10 @@
       "title": "CIP-09 - P2 Schema-probe so clients confirm rather than type",
       "owner": null,
       "parent": null,
-      "status": "open",
-      "blocked_by": [],
+      "status": "blocked",
+      "blocked_by": [
+        "CIP-08"
+      ],
       "evidence": [],
       "events": [
         {
@@ -627,6 +721,14 @@
             "title": "CIP-09 - P2 Schema-probe so clients confirm rather than type",
             "parent": null
           }
+        },
+        {
+          "ts": 1788045643.4770527,
+          "actor": "d1-dep-migration-2026-08-29",
+          "kind": "block",
+          "data": {
+            "by": "CIP-08"
+          }
         }
       ]
     },
@@ -635,8 +737,10 @@
       "title": "CIP-10 - P2 Form to frontmatter emitter, no manual editing",
       "owner": null,
       "parent": null,
-      "status": "open",
-      "blocked_by": [],
+      "status": "blocked",
+      "blocked_by": [
+        "CIP-08"
+      ],
       "evidence": [],
       "events": [
         {
@@ -647,6 +751,14 @@
             "title": "CIP-10 - P2 Form to frontmatter emitter, no manual editing",
             "parent": null
           }
+        },
+        {
+          "ts": 1788045643.4776523,
+          "actor": "d1-dep-migration-2026-08-29",
+          "kind": "block",
+          "data": {
+            "by": "CIP-08"
+          }
         }
       ]
     },
@@ -655,8 +767,10 @@
       "title": "CIP-11 - P3 Portal render of intake + per-field status (5-term vocabulary)",
       "owner": null,
       "parent": null,
-      "status": "open",
-      "blocked_by": [],
+      "status": "blocked",
+      "blocked_by": [
+        "CIP-10"
+      ],
       "evidence": [],
       "events": [
         {
@@ -667,6 +781,14 @@
             "title": "CIP-11 - P3 Portal render of intake + per-field status (5-term vocabulary)",
             "parent": null
           }
+        },
+        {
+          "ts": 1788045643.479272,
+          "actor": "d1-dep-migration-2026-08-29",
+          "kind": "block",
+          "data": {
+            "by": "CIP-10"
+          }
         }
       ]
     },
@@ -675,8 +797,10 @@
       "title": "CIP-12 - P3 Submit to PR to Jira; portal mirrors and owns nothing",
       "owner": null,
       "parent": null,
-      "status": "open",
-      "blocked_by": [],
+      "status": "blocked",
+      "blocked_by": [
+        "CIP-11"
+      ],
       "evidence": [],
       "events": [
         {
@@ -687,6 +811,14 @@
             "title": "CIP-12 - P3 Submit to PR to Jira; portal mirrors and owns nothing",
             "parent": null
           }
+        },
+        {
+          "ts": 1788045643.4809916,
+          "actor": "d1-dep-migration-2026-08-29",
+          "kind": "block",
+          "data": {
+            "by": "CIP-11"
+          }
         }
       ]
     },
@@ -695,8 +827,10 @@
       "title": "CIP-13 - P3 Reuse portal_provision.py auth + RLS; no new auth model",
       "owner": null,
       "parent": null,
-      "status": "open",
-      "blocked_by": [],
+      "status": "blocked",
+      "blocked_by": [
+        "CIP-11"
+      ],
       "evidence": [],
       "events": [
         {
@@ -707,6 +841,14 @@
             "title": "CIP-13 - P3 Reuse portal_provision.py auth + RLS; no new auth model",
             "parent": null
           }
+        },
+        {
+          "ts": 1788045643.481723,
+          "actor": "d1-dep-migration-2026-08-29",
+          "kind": "block",
+          "data": {
+            "by": "CIP-11"
+          }
         }
       ]
     },
@@ -715,8 +857,10 @@
       "title": "CIP-14 - P4 Write gate: reject low-grounding writes; prove it rejects",
       "owner": null,
       "parent": null,
-      "status": "open",
-      "blocked_by": [],
+      "status": "blocked",
+      "blocked_by": [
+        "CIP-05"
+      ],
       "evidence": [],
       "events": [
         {
@@ -727,6 +871,14 @@
             "title": "CIP-14 - P4 Write gate: reject low-grounding writes; prove it rejects",
             "parent": null
           }
+        },
+        {
+          "ts": 1788045643.4830277,
+          "actor": "d1-dep-migration-2026-08-29",
+          "kind": "block",
+          "data": {
+            "by": "CIP-05"
+          }
         }
       ]
     },
@@ -735,8 +887,10 @@
       "title": "CIP-15 - P4 Coverage metric (retooled AOR): question vs corpus, relevance-judged",
       "owner": null,
       "parent": null,
-      "status": "open",
-      "blocked_by": [],
+      "status": "blocked",
+      "blocked_by": [
+        "CIP-11"
+      ],
       "evidence": [],
       "events": [
         {
@@ -747,6 +901,14 @@
             "title": "CIP-15 - P4 Coverage metric (retooled AOR): question vs corpus, relevance-judged",
             "parent": null
           }
+        },
+        {
+          "ts": 1788045643.4847507,
+          "actor": "d1-dep-migration-2026-08-29",
+          "kind": "block",
+          "data": {
+            "by": "CIP-11"
+          }
         }
       ]
     },
@@ -755,8 +917,10 @@
       "title": "CIP-16 - P4 Guarded helpfulness ranking; ship the guards, not the naive ratio",
       "owner": null,
       "parent": null,
-      "status": "open",
-      "blocked_by": [],
+      "status": "blocked",
+      "blocked_by": [
+        "CIP-14"
+      ],
       "evidence": [],
       "events": [
         {
@@ -767,6 +931,14 @@
             "title": "CIP-16 - P4 Guarded helpfulness ranking; ship the guards, not the naive ratio",
             "parent": null
           }
+        },
+        {
+          "ts": 1788045643.4861333,
+          "actor": "d1-dep-migration-2026-08-29",
+          "kind": "block",
+          "data": {
+            "by": "CIP-14"
+          }
         }
       ]
     },
@@ -775,8 +947,10 @@
       "title": "CIP-17 - P4 Negative control for every new gate in this plan",
       "owner": null,
       "parent": null,
-      "status": "open",
-      "blocked_by": [],
+      "status": "blocked",
+      "blocked_by": [
+        "CIP-14"
+      ],
       "evidence": [],
       "events": [
         {
@@ -787,6 +961,14 @@
             "title": "CIP-17 - P4 Negative control for every new gate in this plan",
             "parent": null
           }
+        },
+        {
+          "ts": 1788045643.4874642,
+          "actor": "d1-dep-migration-2026-08-29",
+          "kind": "block",
+          "data": {
+            "by": "CIP-14"
+          }
         }
       ]
     },
@@ -795,8 +977,10 @@
       "title": "CIP-18 - P5 Within-topic fair test harness",
       "owner": null,
       "parent": null,
-      "status": "open",
-      "blocked_by": [],
+      "status": "blocked",
+      "blocked_by": [
+        "CIP-15"
+      ],
       "evidence": [],
       "events": [
         {
@@ -807,6 +991,14 @@
             "title": "CIP-18 - P5 Within-topic fair test harness",
             "parent": null
           }
+        },
+        {
+          "ts": 1788045643.4883919,
+          "actor": "d1-dep-migration-2026-08-29",
+          "kind": "block",
+          "data": {
+            "by": "CIP-15"
+          }
         }
       ]
     },
@@ -815,8 +1007,10 @@
       "title": "CIP-19 - P5 Causal test: pre/post or A/B on spec completeness",
       "owner": null,
       "parent": null,
-      "status": "open",
-      "blocked_by": [],
+      "status": "blocked",
+      "blocked_by": [
+        "CIP-18"
+      ],
       "evidence": [],
       "events": [
         {
@@ -827,6 +1021,14 @@
             "title": "CIP-19 - P5 Causal test: pre/post or A/B on spec completeness",
             "parent": null
           }
+        },
+        {
+          "ts": 1788045643.4893358,
+          "actor": "d1-dep-migration-2026-08-29",
+          "kind": "block",
+          "data": {
+            "by": "CIP-18"
+          }
         }
       ]
     },
@@ -835,8 +1037,10 @@
       "title": "CIP-20 - P5 Publish the reconciliation, including what did not replicate",
       "owner": null,
       "parent": null,
-      "status": "open",
-      "blocked_by": [],
+      "status": "blocked",
+      "blocked_by": [
+        "CIP-19"
+      ],
       "evidence": [],
       "events": [
         {
@@ -846,6 +1050,14 @@
           "data": {
             "title": "CIP-20 - P5 Publish the reconciliation, including what did not replicate",
             "parent": null
+          }
+        },
+        {
+          "ts": 1788045643.4904902,
+          "actor": "d1-dep-migration-2026-08-29",
+          "kind": "block",
+          "data": {
+            "by": "CIP-19"
           }
         }
       ]
@@ -861,6 +1073,11 @@
         {
           "kind": "citation",
           "ref": "factory/deploy.py \u00a7 docstring | acceptance: python -m pytest tests/test_launch_budget.py passes; a generated .ps1 contains --max-budget-usd",
+          "basis": "MEASURED"
+        },
+        {
+          "kind": "dependency-model",
+          "ref": "DEPENDENCY MODEL NOT AUTHORED. This ticket sits at wave 0 with no edges because no one has modelled the factory track's dependencies -- not because independence was measured. Verified 2026-08-29: all 13 factory tickets are absent from docs/board/ticket-detail.json entirely, so they carry no why, no acceptance criterion, no effort and no dep. Do NOT schedule this track as parallel on the strength of an empty graph. See docs/reviews/divergence-2026-08-29.md D-6.",
           "basis": "MEASURED"
         }
       ],
@@ -883,6 +1100,16 @@
             "ref": "factory/deploy.py \u00a7 docstring | acceptance: python -m pytest tests/test_launch_budget.py passes; a generated .ps1 contains --max-budget-usd",
             "basis": "MEASURED"
           }
+        },
+        {
+          "ts": 1788045643.4927523,
+          "actor": "d1-dep-migration-2026-08-29",
+          "kind": "evidence",
+          "data": {
+            "kind": "dependency-model",
+            "ref": "DEPENDENCY MODEL NOT AUTHORED. This ticket sits at wave 0 with no edges because no one has modelled the factory track's dependencies -- not because independence was measured. Verified 2026-08-29: all 13 factory tickets are absent from docs/board/ticket-detail.json entirely, so they carry no why, no acceptance criterion, no effort and no dep. Do NOT schedule this track as parallel on the strength of an empty graph. See docs/reviews/divergence-2026-08-29.md D-6.",
+            "basis": "MEASURED"
+          }
         }
       ]
     },
@@ -891,12 +1118,17 @@
       "title": "CIP-23 - P2 Surface the needs field from ~/.claude/jobs/*/state.json",
       "owner": null,
       "parent": null,
-      "status": "open",
+      "status": "abandoned",
       "blocked_by": [],
       "evidence": [
         {
           "kind": "citation",
           "ref": "factory/sessions.py \u00a7 blocked() | acceptance: A blocked agent's question appears on the Sessions tab, oldest-first, with taskbar flash",
+          "basis": "MEASURED"
+        },
+        {
+          "kind": "crossref",
+          "ref": "REJECT-already-built, superseded by the fire-drill ticket: sessions.py:257 reads `needs`, :265 sorts needs-first, :286 blocked() reads from JOBS not the session registry - and the subtle bug is already fixed ('a session-keyed inbox systematically hides the questions that have been waiting longest'). The intrusive half exists too: scripts/hooks/lane-attention.py flashes the WindowsTerminal window and bells the tab. Written from sessions.py:112's comment 'a needs field that nothing reads' - a HISTORICAL note describing the problem the same file solves 145 lines later. What is NOT done is the gate. See docs/reviews/ticket-repo-crossref-2026-08-29.md",
           "basis": "MEASURED"
         }
       ],
@@ -919,6 +1151,24 @@
             "ref": "factory/sessions.py \u00a7 blocked() | acceptance: A blocked agent's question appears on the Sessions tab, oldest-first, with taskbar flash",
             "basis": "MEASURED"
           }
+        },
+        {
+          "ts": 1788045014.5576572,
+          "actor": "crossref-2026-08-29",
+          "kind": "evidence",
+          "data": {
+            "kind": "crossref",
+            "ref": "REJECT-already-built, superseded by the fire-drill ticket: sessions.py:257 reads `needs`, :265 sorts needs-first, :286 blocked() reads from JOBS not the session registry - and the subtle bug is already fixed ('a session-keyed inbox systematically hides the questions that have been waiting longest'). The intrusive half exists too: scripts/hooks/lane-attention.py flashes the WindowsTerminal window and bells the tab. Written from sessions.py:112's comment 'a needs field that nothing reads' - a HISTORICAL note describing the problem the same file solves 145 lines later. What is NOT done is the gate. See docs/reviews/ticket-repo-crossref-2026-08-29.md",
+            "basis": "MEASURED"
+          }
+        },
+        {
+          "ts": 1788045014.5579991,
+          "actor": "crossref-2026-08-29",
+          "kind": "close",
+          "data": {
+            "status": "abandoned"
+          }
         }
       ]
     },
@@ -933,6 +1183,11 @@
         {
           "kind": "citation",
           "ref": "scripts/local_tracker.py \u00a7 _launch_script | acceptance: tests/test_session_naming.py passes \u2014 spawns through the real launcher, reads name from registry",
+          "basis": "MEASURED"
+        },
+        {
+          "kind": "dependency-model",
+          "ref": "DEPENDENCY MODEL NOT AUTHORED. This ticket sits at wave 0 with no edges because no one has modelled the factory track's dependencies -- not because independence was measured. Verified 2026-08-29: all 13 factory tickets are absent from docs/board/ticket-detail.json entirely, so they carry no why, no acceptance criterion, no effort and no dep. Do NOT schedule this track as parallel on the strength of an empty graph. See docs/reviews/divergence-2026-08-29.md D-6.",
           "basis": "MEASURED"
         }
       ],
@@ -955,6 +1210,16 @@
             "ref": "scripts/local_tracker.py \u00a7 _launch_script | acceptance: tests/test_session_naming.py passes \u2014 spawns through the real launcher, reads name from registry",
             "basis": "MEASURED"
           }
+        },
+        {
+          "ts": 1788045643.494651,
+          "actor": "d1-dep-migration-2026-08-29",
+          "kind": "evidence",
+          "data": {
+            "kind": "dependency-model",
+            "ref": "DEPENDENCY MODEL NOT AUTHORED. This ticket sits at wave 0 with no edges because no one has modelled the factory track's dependencies -- not because independence was measured. Verified 2026-08-29: all 13 factory tickets are absent from docs/board/ticket-detail.json entirely, so they carry no why, no acceptance criterion, no effort and no dep. Do NOT schedule this track as parallel on the strength of an empty graph. See docs/reviews/divergence-2026-08-29.md D-6.",
+            "basis": "MEASURED"
+          }
         }
       ]
     },
@@ -969,6 +1234,16 @@
         {
           "kind": "citation",
           "ref": "factory/finish.py \u00a7 checks() | acceptance: A lane with no findings entry and no NOTHING TO REPORT is refused; finish.checks() can fail",
+          "basis": "MEASURED"
+        },
+        {
+          "kind": "crossref",
+          "ref": "CONFIRMED-still-needed, defect now precise: finish.py:88-92 reads `if not entries and _findings.nothing_to_report() == 0:` - `entries` is per-lane but nothing_to_report() is a GLOBAL count, so ONE 'NOTHING TO REPORT' written by ANY lane permanently satisfies the check for EVERY lane. That is the dead check.",
+          "basis": "MEASURED"
+        },
+        {
+          "kind": "dependency-model",
+          "ref": "DEPENDENCY MODEL NOT AUTHORED. This ticket sits at wave 0 with no edges because no one has modelled the factory track's dependencies -- not because independence was measured. Verified 2026-08-29: all 13 factory tickets are absent from docs/board/ticket-detail.json entirely, so they carry no why, no acceptance criterion, no effort and no dep. Do NOT schedule this track as parallel on the strength of an empty graph. See docs/reviews/divergence-2026-08-29.md D-6.",
           "basis": "MEASURED"
         }
       ],
@@ -991,6 +1266,26 @@
             "ref": "factory/finish.py \u00a7 checks() | acceptance: A lane with no findings entry and no NOTHING TO REPORT is refused; finish.checks() can fail",
             "basis": "MEASURED"
           }
+        },
+        {
+          "ts": 1788045014.5592217,
+          "actor": "crossref-2026-08-29",
+          "kind": "evidence",
+          "data": {
+            "kind": "crossref",
+            "ref": "CONFIRMED-still-needed, defect now precise: finish.py:88-92 reads `if not entries and _findings.nothing_to_report() == 0:` - `entries` is per-lane but nothing_to_report() is a GLOBAL count, so ONE 'NOTHING TO REPORT' written by ANY lane permanently satisfies the check for EVERY lane. That is the dead check.",
+            "basis": "MEASURED"
+          }
+        },
+        {
+          "ts": 1788045643.4960592,
+          "actor": "d1-dep-migration-2026-08-29",
+          "kind": "evidence",
+          "data": {
+            "kind": "dependency-model",
+            "ref": "DEPENDENCY MODEL NOT AUTHORED. This ticket sits at wave 0 with no edges because no one has modelled the factory track's dependencies -- not because independence was measured. Verified 2026-08-29: all 13 factory tickets are absent from docs/board/ticket-detail.json entirely, so they carry no why, no acceptance criterion, no effort and no dep. Do NOT schedule this track as parallel on the strength of an empty graph. See docs/reviews/divergence-2026-08-29.md D-6.",
+            "basis": "MEASURED"
+          }
         }
       ]
     },
@@ -1005,6 +1300,11 @@
         {
           "kind": "citation",
           "ref": "factory/board.py \u00a7 DEPENDS | acceptance: python -m factory.readiness shows tenancy-verified: PASS when tenants match; FAIL when they do not",
+          "basis": "MEASURED"
+        },
+        {
+          "kind": "dependency-model",
+          "ref": "DEPENDENCY MODEL NOT AUTHORED. This ticket sits at wave 0 with no edges because no one has modelled the factory track's dependencies -- not because independence was measured. Verified 2026-08-29: all 13 factory tickets are absent from docs/board/ticket-detail.json entirely, so they carry no why, no acceptance criterion, no effort and no dep. Do NOT schedule this track as parallel on the strength of an empty graph. See docs/reviews/divergence-2026-08-29.md D-6.",
           "basis": "MEASURED"
         }
       ],
@@ -1027,6 +1327,16 @@
             "ref": "factory/board.py \u00a7 DEPENDS | acceptance: python -m factory.readiness shows tenancy-verified: PASS when tenants match; FAIL when they do not",
             "basis": "MEASURED"
           }
+        },
+        {
+          "ts": 1788045643.4973207,
+          "actor": "d1-dep-migration-2026-08-29",
+          "kind": "evidence",
+          "data": {
+            "kind": "dependency-model",
+            "ref": "DEPENDENCY MODEL NOT AUTHORED. This ticket sits at wave 0 with no edges because no one has modelled the factory track's dependencies -- not because independence was measured. Verified 2026-08-29: all 13 factory tickets are absent from docs/board/ticket-detail.json entirely, so they carry no why, no acceptance criterion, no effort and no dep. Do NOT schedule this track as parallel on the strength of an empty graph. See docs/reviews/divergence-2026-08-29.md D-6.",
+            "basis": "MEASURED"
+          }
         }
       ]
     },
@@ -1041,6 +1351,16 @@
         {
           "kind": "citation",
           "ref": "factory/readiness.py \u00a7 CONNECTORS | acceptance: python -m factory.readiness returns the same headline from the primary and from every lane worktree",
+          "basis": "MEASURED"
+        },
+        {
+          "kind": "crossref",
+          "ref": "HALF-FIXED, rescope to the two remaining pieces: F72 recorded readiness.py:33 with no override; today readiness.py:35-36 is os.environ.get('PREFECT_CONNECTORS', FACTORY.parent/'prefect-connectors') - the env override LANDED, the cwd-relative default did NOT change, so F72 (9 of 30 from the checkout vs 10 of 30 from a worktree, same commit) still reproduces whenever the var is unset. F72's CHANGES also asks the HEADLINE CARRY ITS BASIS - unstarted. Interacts with trial/wave0-rescue, whose RED tests fail partly because $PREFECT_CONNECTORS points at a path that does not exist.",
+          "basis": "MEASURED"
+        },
+        {
+          "kind": "dependency-model",
+          "ref": "DEPENDENCY MODEL NOT AUTHORED. This ticket sits at wave 0 with no edges because no one has modelled the factory track's dependencies -- not because independence was measured. Verified 2026-08-29: all 13 factory tickets are absent from docs/board/ticket-detail.json entirely, so they carry no why, no acceptance criterion, no effort and no dep. Do NOT schedule this track as parallel on the strength of an empty graph. See docs/reviews/divergence-2026-08-29.md D-6.",
           "basis": "MEASURED"
         }
       ],
@@ -1063,6 +1383,26 @@
             "ref": "factory/readiness.py \u00a7 CONNECTORS | acceptance: python -m factory.readiness returns the same headline from the primary and from every lane worktree",
             "basis": "MEASURED"
           }
+        },
+        {
+          "ts": 1788045014.559503,
+          "actor": "crossref-2026-08-29",
+          "kind": "evidence",
+          "data": {
+            "kind": "crossref",
+            "ref": "HALF-FIXED, rescope to the two remaining pieces: F72 recorded readiness.py:33 with no override; today readiness.py:35-36 is os.environ.get('PREFECT_CONNECTORS', FACTORY.parent/'prefect-connectors') - the env override LANDED, the cwd-relative default did NOT change, so F72 (9 of 30 from the checkout vs 10 of 30 from a worktree, same commit) still reproduces whenever the var is unset. F72's CHANGES also asks the HEADLINE CARRY ITS BASIS - unstarted. Interacts with trial/wave0-rescue, whose RED tests fail partly because $PREFECT_CONNECTORS points at a path that does not exist.",
+            "basis": "MEASURED"
+          }
+        },
+        {
+          "ts": 1788045643.4989934,
+          "actor": "d1-dep-migration-2026-08-29",
+          "kind": "evidence",
+          "data": {
+            "kind": "dependency-model",
+            "ref": "DEPENDENCY MODEL NOT AUTHORED. This ticket sits at wave 0 with no edges because no one has modelled the factory track's dependencies -- not because independence was measured. Verified 2026-08-29: all 13 factory tickets are absent from docs/board/ticket-detail.json entirely, so they carry no why, no acceptance criterion, no effort and no dep. Do NOT schedule this track as parallel on the strength of an empty graph. See docs/reviews/divergence-2026-08-29.md D-6.",
+            "basis": "MEASURED"
+          }
         }
       ]
     },
@@ -1077,6 +1417,11 @@
         {
           "kind": "citation",
           "ref": "factory/dispatch.py \u00a7 prompts() | acceptance: A pack never appears as a prompt in the Research tab; string-suffix guards are removed",
+          "basis": "MEASURED"
+        },
+        {
+          "kind": "dependency-model",
+          "ref": "DEPENDENCY MODEL NOT AUTHORED. This ticket sits at wave 0 with no edges because no one has modelled the factory track's dependencies -- not because independence was measured. Verified 2026-08-29: all 13 factory tickets are absent from docs/board/ticket-detail.json entirely, so they carry no why, no acceptance criterion, no effort and no dep. Do NOT schedule this track as parallel on the strength of an empty graph. See docs/reviews/divergence-2026-08-29.md D-6.",
           "basis": "MEASURED"
         }
       ],
@@ -1099,6 +1444,16 @@
             "ref": "factory/dispatch.py \u00a7 prompts() | acceptance: A pack never appears as a prompt in the Research tab; string-suffix guards are removed",
             "basis": "MEASURED"
           }
+        },
+        {
+          "ts": 1788045643.5003304,
+          "actor": "d1-dep-migration-2026-08-29",
+          "kind": "evidence",
+          "data": {
+            "kind": "dependency-model",
+            "ref": "DEPENDENCY MODEL NOT AUTHORED. This ticket sits at wave 0 with no edges because no one has modelled the factory track's dependencies -- not because independence was measured. Verified 2026-08-29: all 13 factory tickets are absent from docs/board/ticket-detail.json entirely, so they carry no why, no acceptance criterion, no effort and no dep. Do NOT schedule this track as parallel on the strength of an empty graph. See docs/reviews/divergence-2026-08-29.md D-6.",
+            "basis": "MEASURED"
+          }
         }
       ]
     },
@@ -1113,6 +1468,16 @@
         {
           "kind": "citation",
           "ref": "factory/schedule.py \u00a7 Snapshot | acceptance: /flow drops from 5 measure() calls to 1; every rendered number carries its age as a property",
+          "basis": "MEASURED"
+        },
+        {
+          "kind": "crossref",
+          "ref": "NAME-COLLISION, not already done: factory/schedule.py:59 ALREADY defines `class Snapshot` - a frozen dataclass (when/passed/total/sha) parsed from the artifact's git history for schedule projection. Not a measurement-scope object, and nothing outside schedule.py uses it. Pick a different name or reconcile the two deliberately.",
+          "basis": "MEASURED"
+        },
+        {
+          "kind": "dependency-model",
+          "ref": "DEPENDENCY MODEL NOT AUTHORED. This ticket sits at wave 0 with no edges because no one has modelled the factory track's dependencies -- not because independence was measured. Verified 2026-08-29: all 13 factory tickets are absent from docs/board/ticket-detail.json entirely, so they carry no why, no acceptance criterion, no effort and no dep. Do NOT schedule this track as parallel on the strength of an empty graph. See docs/reviews/divergence-2026-08-29.md D-6.",
           "basis": "MEASURED"
         }
       ],
@@ -1135,6 +1500,26 @@
             "ref": "factory/schedule.py \u00a7 Snapshot | acceptance: /flow drops from 5 measure() calls to 1; every rendered number carries its age as a property",
             "basis": "MEASURED"
           }
+        },
+        {
+          "ts": 1788045014.559823,
+          "actor": "crossref-2026-08-29",
+          "kind": "evidence",
+          "data": {
+            "kind": "crossref",
+            "ref": "NAME-COLLISION, not already done: factory/schedule.py:59 ALREADY defines `class Snapshot` - a frozen dataclass (when/passed/total/sha) parsed from the artifact's git history for schedule projection. Not a measurement-scope object, and nothing outside schedule.py uses it. Pick a different name or reconcile the two deliberately.",
+            "basis": "MEASURED"
+          }
+        },
+        {
+          "ts": 1788045643.5019622,
+          "actor": "d1-dep-migration-2026-08-29",
+          "kind": "evidence",
+          "data": {
+            "kind": "dependency-model",
+            "ref": "DEPENDENCY MODEL NOT AUTHORED. This ticket sits at wave 0 with no edges because no one has modelled the factory track's dependencies -- not because independence was measured. Verified 2026-08-29: all 13 factory tickets are absent from docs/board/ticket-detail.json entirely, so they carry no why, no acceptance criterion, no effort and no dep. Do NOT schedule this track as parallel on the strength of an empty graph. See docs/reviews/divergence-2026-08-29.md D-6.",
+            "basis": "MEASURED"
+          }
         }
       ]
     },
@@ -1149,6 +1534,11 @@
         {
           "kind": "citation",
           "ref": "factory/blueprint.py \u00a7 AgentSpec | acceptance: A lane cannot CREATE OR REPLACE on a production schema because its role owns nothing",
+          "basis": "MEASURED"
+        },
+        {
+          "kind": "dependency-model",
+          "ref": "DEPENDENCY MODEL NOT AUTHORED. This ticket sits at wave 0 with no edges because no one has modelled the factory track's dependencies -- not because independence was measured. Verified 2026-08-29: all 13 factory tickets are absent from docs/board/ticket-detail.json entirely, so they carry no why, no acceptance criterion, no effort and no dep. Do NOT schedule this track as parallel on the strength of an empty graph. See docs/reviews/divergence-2026-08-29.md D-6.",
           "basis": "MEASURED"
         }
       ],
@@ -1171,6 +1561,16 @@
             "ref": "factory/blueprint.py \u00a7 AgentSpec | acceptance: A lane cannot CREATE OR REPLACE on a production schema because its role owns nothing",
             "basis": "MEASURED"
           }
+        },
+        {
+          "ts": 1788045643.503267,
+          "actor": "d1-dep-migration-2026-08-29",
+          "kind": "evidence",
+          "data": {
+            "kind": "dependency-model",
+            "ref": "DEPENDENCY MODEL NOT AUTHORED. This ticket sits at wave 0 with no edges because no one has modelled the factory track's dependencies -- not because independence was measured. Verified 2026-08-29: all 13 factory tickets are absent from docs/board/ticket-detail.json entirely, so they carry no why, no acceptance criterion, no effort and no dep. Do NOT schedule this track as parallel on the strength of an empty graph. See docs/reviews/divergence-2026-08-29.md D-6.",
+            "basis": "MEASURED"
+          }
         }
       ]
     },
@@ -1179,12 +1579,17 @@
       "title": "CIP-31 - P2 Enable strictAllowlist + mask from managed settings",
       "owner": null,
       "parent": null,
-      "status": "open",
+      "status": "abandoned",
       "blocked_by": [],
       "evidence": [
         {
           "kind": "citation",
           "ref": "R17 \u00a74.2 | acceptance: A lane cannot exfiltrate a credential; the proxy substitutes a sentinel",
+          "basis": "MEASURED"
+        },
+        {
+          "kind": "crossref",
+          "ref": "REJECT-infeasible-as-written: not a settings edit. docs/research/answers/R18-answer-our-factory-internal-audit.md:95 already graded this exact action BLOCKED - settings.json has no sandbox/network/credentials block, and lanes launch into PowerShell on NATIVE WINDOWS, not WSL2, where the sandbox is unsupported (R17 B-15). R18: 'R17 assumed the box runs lanes in WSL2. It does not.' Real cost is a rewrite of _launch_script (local_tracker.py:310-354). Ticket inherited R17's recommendation without R18's refutation of it. See docs/reviews/ticket-repo-crossref-2026-08-29.md",
           "basis": "MEASURED"
         }
       ],
@@ -1207,6 +1612,24 @@
             "ref": "R17 \u00a74.2 | acceptance: A lane cannot exfiltrate a credential; the proxy substitutes a sentinel",
             "basis": "MEASURED"
           }
+        },
+        {
+          "ts": 1788045014.5568287,
+          "actor": "crossref-2026-08-29",
+          "kind": "evidence",
+          "data": {
+            "kind": "crossref",
+            "ref": "REJECT-infeasible-as-written: not a settings edit. docs/research/answers/R18-answer-our-factory-internal-audit.md:95 already graded this exact action BLOCKED - settings.json has no sandbox/network/credentials block, and lanes launch into PowerShell on NATIVE WINDOWS, not WSL2, where the sandbox is unsupported (R17 B-15). R18: 'R17 assumed the box runs lanes in WSL2. It does not.' Real cost is a rewrite of _launch_script (local_tracker.py:310-354). Ticket inherited R17's recommendation without R18's refutation of it. See docs/reviews/ticket-repo-crossref-2026-08-29.md",
+            "basis": "MEASURED"
+          }
+        },
+        {
+          "ts": 1788045014.5572615,
+          "actor": "crossref-2026-08-29",
+          "kind": "close",
+          "data": {
+            "status": "abandoned"
+          }
         }
       ]
     },
@@ -1215,12 +1638,17 @@
       "title": "CIP-32 - P2 Denominate budgets in dollars, not tokens",
       "owner": null,
       "parent": null,
-      "status": "open",
+      "status": "abandoned",
       "blocked_by": [],
       "evidence": [
         {
           "kind": "citation",
           "ref": "factory/runs.py \u00a7 cost() | acceptance: A lane's cost report includes a dollar figure; the budget cap is denominated in dollars",
+          "basis": "MEASURED"
+        },
+        {
+          "kind": "crossref",
+          "ref": "REJECT-already-done: budgets are already USD. blueprint.py:27 `budget_usd: float = 3.0`; deploy.py:232 passes --max-budget-usd; deploy.py:4-7 documents the dollar cap. PROOF: `grep -rn budget factory/*.py | grep -i token` returns NOTHING - there is no token-denominated budget to convert. Remaining work (the cap is enforced by code nothing calls) is CIP-21, which subsumes this. See docs/reviews/ticket-repo-crossref-2026-08-29.md",
           "basis": "MEASURED"
         }
       ],
@@ -1243,6 +1671,24 @@
             "ref": "factory/runs.py \u00a7 cost() | acceptance: A lane's cost report includes a dollar figure; the budget cap is denominated in dollars",
             "basis": "MEASURED"
           }
+        },
+        {
+          "ts": 1788045014.5556133,
+          "actor": "crossref-2026-08-29",
+          "kind": "evidence",
+          "data": {
+            "kind": "crossref",
+            "ref": "REJECT-already-done: budgets are already USD. blueprint.py:27 `budget_usd: float = 3.0`; deploy.py:232 passes --max-budget-usd; deploy.py:4-7 documents the dollar cap. PROOF: `grep -rn budget factory/*.py | grep -i token` returns NOTHING - there is no token-denominated budget to convert. Remaining work (the cap is enforced by code nothing calls) is CIP-21, which subsumes this. See docs/reviews/ticket-repo-crossref-2026-08-29.md",
+            "basis": "MEASURED"
+          }
+        },
+        {
+          "ts": 1788045014.5563219,
+          "actor": "crossref-2026-08-29",
+          "kind": "close",
+          "data": {
+            "status": "abandoned"
+          }
         }
       ]
     },
@@ -1257,6 +1703,11 @@
         {
           "kind": "citation",
           "ref": "AB-02 | acceptance: factory.metrics.report() includes a FACPR field; attempt 352 and attempt 1 are distinguishable",
+          "basis": "MEASURED"
+        },
+        {
+          "kind": "dependency-model",
+          "ref": "DEPENDENCY MODEL NOT AUTHORED. This ticket sits at wave 0 with no edges because no one has modelled the factory track's dependencies -- not because independence was measured. Verified 2026-08-29: all 13 factory tickets are absent from docs/board/ticket-detail.json entirely, so they carry no why, no acceptance criterion, no effort and no dep. Do NOT schedule this track as parallel on the strength of an empty graph. See docs/reviews/divergence-2026-08-29.md D-6.",
           "basis": "MEASURED"
         }
       ],
@@ -1279,6 +1730,16 @@
             "ref": "AB-02 | acceptance: factory.metrics.report() includes a FACPR field; attempt 352 and attempt 1 are distinguishable",
             "basis": "MEASURED"
           }
+        },
+        {
+          "ts": 1788045643.5039644,
+          "actor": "d1-dep-migration-2026-08-29",
+          "kind": "evidence",
+          "data": {
+            "kind": "dependency-model",
+            "ref": "DEPENDENCY MODEL NOT AUTHORED. This ticket sits at wave 0 with no edges because no one has modelled the factory track's dependencies -- not because independence was measured. Verified 2026-08-29: all 13 factory tickets are absent from docs/board/ticket-detail.json entirely, so they carry no why, no acceptance criterion, no effort and no dep. Do NOT schedule this track as parallel on the strength of an empty graph. See docs/reviews/divergence-2026-08-29.md D-6.",
+            "basis": "MEASURED"
+          }
         }
       ]
     },
@@ -1293,6 +1754,11 @@
         {
           "kind": "citation",
           "ref": "AB-04 | acceptance: factory.corpus.available() returns >= 2 fixtures; python -m factory.certify --calibrate scores both PASS",
+          "basis": "MEASURED"
+        },
+        {
+          "kind": "dependency-model",
+          "ref": "DEPENDENCY MODEL NOT AUTHORED. This ticket sits at wave 0 with no edges because no one has modelled the factory track's dependencies -- not because independence was measured. Verified 2026-08-29: all 13 factory tickets are absent from docs/board/ticket-detail.json entirely, so they carry no why, no acceptance criterion, no effort and no dep. Do NOT schedule this track as parallel on the strength of an empty graph. See docs/reviews/divergence-2026-08-29.md D-6.",
           "basis": "MEASURED"
         }
       ],
@@ -1313,6 +1779,67 @@
           "data": {
             "kind": "citation",
             "ref": "AB-04 | acceptance: factory.corpus.available() returns >= 2 fixtures; python -m factory.certify --calibrate scores both PASS",
+            "basis": "MEASURED"
+          }
+        },
+        {
+          "ts": 1788045643.5046613,
+          "actor": "d1-dep-migration-2026-08-29",
+          "kind": "evidence",
+          "data": {
+            "kind": "dependency-model",
+            "ref": "DEPENDENCY MODEL NOT AUTHORED. This ticket sits at wave 0 with no edges because no one has modelled the factory track's dependencies -- not because independence was measured. Verified 2026-08-29: all 13 factory tickets are absent from docs/board/ticket-detail.json entirely, so they carry no why, no acceptance criterion, no effort and no dep. Do NOT schedule this track as parallel on the strength of an empty graph. See docs/reviews/divergence-2026-08-29.md D-6.",
+            "basis": "MEASURED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "16377467",
+      "title": "CIP-36 - P2 Fire-drill the blocked-question inbox - mechanism exists, latency unmeasured",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [
+        {
+          "kind": "crossref",
+          "ref": "Replaces CIP-23, which was already built. control-room.md ss5 Slice 1's gate: 'a fire drill. Block a real agent on a real question, and time how long until a human sees it. Before: unbounded (4 sat all day). Target: under a minute.' That drill has NEVER been run - no evidence file exists. By ss5's own rule ('a slice with no gate is not a slice') the slice is not done. Mechanism: sessions.py:286 blocked() + scripts/hooks/lane-attention.py.",
+          "basis": "MEASURED"
+        },
+        {
+          "kind": "dependency-model",
+          "ref": "DEPENDENCY MODEL NOT AUTHORED. This ticket sits at wave 0 with no edges because no one has modelled the factory track's dependencies -- not because independence was measured. Verified 2026-08-29: all 13 factory tickets are absent from docs/board/ticket-detail.json entirely, so they carry no why, no acceptance criterion, no effort and no dep. Do NOT schedule this track as parallel on the strength of an empty graph. See docs/reviews/divergence-2026-08-29.md D-6.",
+          "basis": "MEASURED"
+        }
+      ],
+      "events": [
+        {
+          "ts": 1788045014.5601578,
+          "actor": "crossref-2026-08-29",
+          "kind": "create",
+          "data": {
+            "title": "CIP-36 - P2 Fire-drill the blocked-question inbox - mechanism exists, latency unmeasured",
+            "parent": null
+          }
+        },
+        {
+          "ts": 1788045014.5604014,
+          "actor": "crossref-2026-08-29",
+          "kind": "evidence",
+          "data": {
+            "kind": "crossref",
+            "ref": "Replaces CIP-23, which was already built. control-room.md ss5 Slice 1's gate: 'a fire drill. Block a real agent on a real question, and time how long until a human sees it. Before: unbounded (4 sat all day). Target: under a minute.' That drill has NEVER been run - no evidence file exists. By ss5's own rule ('a slice with no gate is not a slice') the slice is not done. Mechanism: sessions.py:286 blocked() + scripts/hooks/lane-attention.py.",
+            "basis": "MEASURED"
+          }
+        },
+        {
+          "ts": 1788045643.5052853,
+          "actor": "d1-dep-migration-2026-08-29",
+          "kind": "evidence",
+          "data": {
+            "kind": "dependency-model",
+            "ref": "DEPENDENCY MODEL NOT AUTHORED. This ticket sits at wave 0 with no edges because no one has modelled the factory track's dependencies -- not because independence was measured. Verified 2026-08-29: all 13 factory tickets are absent from docs/board/ticket-detail.json entirely, so they carry no why, no acceptance criterion, no effort and no dep. Do NOT schedule this track as parallel on the strength of an empty graph. See docs/reviews/divergence-2026-08-29.md D-6.",
             "basis": "MEASURED"
           }
         }
@@ -1872,6 +2399,108 @@
           "data": {
             "kind": "note",
             "ref": "105 of 121 untracked paths in aldc-launchpad have never appeared in any ref, including cli/rollback.py. git check-ignore confirms this is drift, not intent. The rollback half of the evidence gate depends on a file that exists on one disk.",
+            "basis": "MEASURED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "f64148fd",
+      "title": "OBS-10 - X0 Nothing executes a TeamSpec \u2014 this is the missing middle the whole vision waits on",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [
+        {
+          "kind": "citation",
+          "ref": "measured 2026-08-29 | acceptance: Promote NOW, ahead of the parked lane and ahead of the intake platform's later phases: take a TeamSpec, run it bounded through deploy.py, append the outcome to the ledger. Done when one preset runs one real ticket end to end and certify scores the result. Pairs with CIP-21.",
+          "basis": "MEASURED"
+        },
+        {
+          "kind": "note",
+          "ref": "The stated goal is a factory that configures an agent team to take a ticket end to end with evidence. Measured 2026-08-29: the CONFIGURATOR exists and is good \u2014 presets.py holds five baseline presets grounded in real tickets, each with model, effort, turn and dollar caps, an escalation trigger and an explicit refusal. The CERTIFIER exists \u2014 contract.py and certify.py, A1-A12 passing. Between them there is nothing: `git grep 'TeamSpec|load_team' -- factory/*.py scripts/**/*.py` outside blueprint.py returns NOTHING. SYNTHESIS \u00a711.5 found the same independently: 'the data model exists; the runtime does not. That is the cheapest high-value thing R7 surfaces.' Every UI feature in the vision \u2014 create a team, monitor progress, read logs, see failures \u2014 is a view onto a runtime that does not exist. Building the UI first gives it nothing to display. The two unwired halves fit together: blueprint.TeamSpec is the thing to run, and deploy.py already has the bounding it needs (RepoDeployer, budget caps, AttemptLedger) and also has zero callers.",
+          "basis": "MEASURED"
+        }
+      ],
+      "events": [
+        {
+          "ts": 1788046939.034935,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "OBS-10 - X0 Nothing executes a TeamSpec \u2014 this is the missing middle the whole vision waits on",
+            "parent": null
+          }
+        },
+        {
+          "ts": 1788046939.035985,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "citation",
+            "ref": "measured 2026-08-29 | acceptance: Promote NOW, ahead of the parked lane and ahead of the intake platform's later phases: take a TeamSpec, run it bounded through deploy.py, append the outcome to the ledger. Done when one preset runs one real ticket end to end and certify scores the result. Pairs with CIP-21.",
+            "basis": "MEASURED"
+          }
+        },
+        {
+          "ts": 1788046939.0368495,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "note",
+            "ref": "The stated goal is a factory that configures an agent team to take a ticket end to end with evidence. Measured 2026-08-29: the CONFIGURATOR exists and is good \u2014 presets.py holds five baseline presets grounded in real tickets, each with model, effort, turn and dollar caps, an escalation trigger and an explicit refusal. The CERTIFIER exists \u2014 contract.py and certify.py, A1-A12 passing. Between them there is nothing: `git grep 'TeamSpec|load_team' -- factory/*.py scripts/**/*.py` outside blueprint.py returns NOTHING. SYNTHESIS \u00a711.5 found the same independently: 'the data model exists; the runtime does not. That is the cheapest high-value thing R7 surfaces.' Every UI feature in the vision \u2014 create a team, monitor progress, read logs, see failures \u2014 is a view onto a runtime that does not exist. Building the UI first gives it nothing to display. The two unwired halves fit together: blueprint.TeamSpec is the thing to run, and deploy.py already has the bounding it needs (RepoDeployer, budget caps, AttemptLedger) and also has zero callers.",
+            "basis": "MEASURED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "dfdb8d17",
+      "title": "OBS-11 - X0 The board's Flow tab duplicates local_tracker's parallelism computation",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [
+        {
+          "kind": "citation",
+          "ref": "measured 2026-08-29 | acceptance: Promote at the next consolidation pass: keep local_tracker as the authority on readiness and parallelism, cut the Flow tab back to 'which ticket next', or merge them. Whichever is chosen, record why the other was retired.",
+          "basis": "MEASURED"
+        },
+        {
+          "kind": "note",
+          "ref": "local_tracker.py already renders '15 can run in parallel right now \u2014 computed from the dependency graph, not judged' and 'Longest dependency chain \u2014 the part that cannot be parallelised away'. The Flow tab added to the board on 2026-08-29 computes the same two things over a different population (CIP tickets rather than readiness gates). Same algorithm, two surfaces, and the duplication was introduced AFTER writing the grep-first rule that exists to prevent exactly this \u2014 the rule was not applied to the person writing it.",
+          "basis": "MEASURED"
+        }
+      ],
+      "events": [
+        {
+          "ts": 1788046939.0376425,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "OBS-11 - X0 The board's Flow tab duplicates local_tracker's parallelism computation",
+            "parent": null
+          }
+        },
+        {
+          "ts": 1788046939.03839,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "citation",
+            "ref": "measured 2026-08-29 | acceptance: Promote at the next consolidation pass: keep local_tracker as the authority on readiness and parallelism, cut the Flow tab back to 'which ticket next', or merge them. Whichever is chosen, record why the other was retired.",
+            "basis": "MEASURED"
+          }
+        },
+        {
+          "ts": 1788046939.0390754,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "note",
+            "ref": "local_tracker.py already renders '15 can run in parallel right now \u2014 computed from the dependency graph, not judged' and 'Longest dependency chain \u2014 the part that cannot be parallelised away'. The Flow tab added to the board on 2026-08-29 computes the same two things over a different population (CIP tickets rather than readiness gates). Same algorithm, two surfaces, and the duplication was introduced AFTER writing the grep-first rule that exists to prevent exactly this \u2014 the rule was not applied to the person writing it.",
             "basis": "MEASURED"
           }
         }
