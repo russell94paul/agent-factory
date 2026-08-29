@@ -59,9 +59,19 @@ unabsorbed conclusion and a rejected one look identical in the record today.
 - **SOURCE** R3; echoed by R1 (≥29), R8, and R10 (as a precondition of its own recommendation).
 - **SAYS** the eval corpus needs 30 development and 10 held-out whole connectors.
 - **WHY IT ISN'T FILLER** ⭐ the corpus is **one file, 6,747 bytes** (R16 audit §3.1). Four passes
-  asked for this and *"no action among the eighteen names it."* The README forbids adding a team,
-  optimizer or UI until the eval can fail — this is what makes that possible.
-- **ACTION** this is plan Phase 3 / T-020. Highest priority row in this file.
+  asked for this and *"no action among the eighteen names it."*
+- ⚠ **RESTATED 2026-08-29 — this is a breadth task, not a sensitivity task. See F76.** The premise
+  that the one-file corpus means *"the instrument has not been shown able to fail"* is **false** and
+  was inherited by this very file when it was written. The contract is calibrated: all twelve
+  assertions have a known-bad, enforced by
+  `tests/test_connector_contract.py::test_every_assertion_has_been_proved_able_to_fail`, and
+  `certify --calibrate` now returns `PASS (PASS=12)` — not the `UNMEASURABLE (PASS=11)` the README
+  claimed until today. What one fixture cannot show is that the contract **generalises**: it has
+  been replayed against one connector, and 48 have never been scored.
+- **ACTION** score a **second** real connector end to end and add it to the corpus. That single step
+  converts n=1 into evidence of generality and will find the assumptions baked into the windsorai
+  fixture faster than manufacturing 38 more. Then work toward R3's 30 + 10.
+- **DOES NOT BLOCK** the README's team/optimizer/UI precondition, which is met.
 
 ### AB-05 — R4's Fitness Qualification Gate
 - **SOURCE** R4; unabsorbed per §17.9.

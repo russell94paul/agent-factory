@@ -26,18 +26,36 @@ metrics.py    every activity metric paired with an outcome metric
 That test is the whole point: it proves the instrument can register a failure. A green suite from
 an instrument that cannot fail is the 965-run loop again.
 
+⚠ **That gate passes today, and it is weaker than its reputation.** `test_eval_can_fail.py` builds a
+synthetic three-assertion contract over a hardcoded dict and **never loads the corpus** — it proves
+the *mutation harness* works, nothing more. The real evidence that the connector contract can fail
+is `tests/test_connector_contract.py`, which calibrates all twelve assertions and enforces the
+property with `test_every_assertion_has_been_proved_able_to_fail`. Cite that file, not this one,
+when the question is whether the instrument can see. (F76.)
+
 ## Status
 
-**Phase A is in progress: the contract exists and is calibrated, the instruments are not wired.**
+**Phase A: the contract exists, is calibrated, and now certifies the recorded run green — against
+one connector.**
 
 ```bash
 python -m factory.certify blueprints/windsorai_gep.yaml --calibrate
-# connector-e2e/windsorai@GEP: UNMEASURABLE (PASS=11, UNMEASURABLE=1)
+# connector-e2e/windsorai@GEP: PASS (PASS=12)
+#   scored against corpus windsorai-2026-08-20 — REPLAYED, not a live measurement
 ```
 
-Eleven assertions pass against the recorded 2026-08-20 windsorai run; A12 blocks because no tenant
-scope has been declared. Evidence and open questions:
+All twelve assertions pass against the recorded 2026-08-20 windsorai run. A12 previously blocked on
+an undeclared tenant scope and no longer does — *"every row within the 2 declared tenant(s)"*.
+Evidence and open questions:
 [`docs/evidence/phase-a-windsorai.md`](docs/evidence/phase-a-windsorai.md).
+
+⚠ **Read `PASS (PASS=12)` for exactly what it says.** It is a *replay* against **one** recorded
+connector, not a live measurement and not a second subject. The contract's assertions have each been
+shown able to fail — `tests/test_connector_contract.py` enforces that with
+`test_every_assertion_has_been_proved_able_to_fail` — but sensitivity is not coverage. What remains
+open is breadth: 48 connectors have never been scored. See
+[`docs/findings.d/F76`](docs/findings.d/F76-the-eval-can-fail-what-it-cannot-do-is-generalise.md),
+which corrects the widely-repeated claim that the one-file corpus means the instrument cannot fail.
 
 Team scope for team one is **source -> container -> Prefect -> warehouse**. Power BI is out until
 a team has proved it can land rows.
