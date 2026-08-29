@@ -106,6 +106,47 @@ def test_a_failed_push_does_not_release_the_claim(monkeypatch):
     assert released == []
 
 
+def test_the_push_remote_is_resolved_from_the_checkout_not_hardcoded(monkeypatch):
+    """finish() hardcoded "origin" until 2026-08-29, when this repo's origin was removed. Every
+    lane close would then have pushed to a remote that does not exist — failing safely, but making
+    the lane permanently unclosable. The remote is a fact about the checkout, so it is read."""
+    from factory import finish
+    monkeypatch.setattr(finish, "checks", lambda lane, base=None: [])
+    monkeypatch.setattr(finish._claims, "release", lambda l: True)
+    monkeypatch.setattr(finish, "default_remote", lambda: "personal")
+    seen = []
+    monkeypatch.setattr(finish, "_git", lambda lane, *a: (seen.append(a), (0, ""))[1])
+    finish.finish("certify", push=True)
+    assert seen[0] == ("push", "-u", "personal", "lane/certify"), seen
+    # …and an explicit remote still wins over the resolved one.
+    seen.clear()
+    finish.finish("certify", push=True, remote="upstream")
+    assert seen[0][2] == "upstream", seen
+
+
+@pytest.mark.parametrize("pushdefault, remotes, expected", [
+    ("personal", ["origin", "personal"], "personal"),   # the configured default wins
+    ("", ["personal"], "personal"),                     # exactly one remote — unambiguous
+    ("", ["origin", "personal"], "origin"),             # ambiguous — keep the historic default
+    ("", [], "origin"),                                 # no remotes at all
+])
+def test_default_remote_reads_the_repo_rather_than_assuming(
+        monkeypatch, pushdefault, remotes, expected):
+    """A remote name is a fact about the checkout, like the branch and the score. Read it."""
+    from factory import finish
+
+    class R:
+        def __init__(self, out): self.stdout = out
+
+    def fake_run(cmd, **kw):
+        if "config" in cmd:
+            return R(pushdefault)
+        return R("\n".join(remotes))
+
+    monkeypatch.setattr(finish.subprocess, "run", fake_run)
+    assert finish.default_remote() == expected
+
+
 def test_finish_never_merges(monkeypatch):
     from factory import finish
     monkeypatch.setattr(finish, "checks", lambda lane, base=None: [])

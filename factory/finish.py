@@ -93,10 +93,37 @@ def checks(lane: str, base: str | None = None) -> List[str]:
     return problems
 
 
+def default_remote() -> str:
+    """The remote a bare `git push` would actually use — resolved, never assumed.
+
+    `finish()` hardcoded ``"origin"`` until 2026-08-29, when this repo's `origin` was removed
+    (its push URL had already been disabled deliberately, so the estate pushes to a personal
+    remote). Every lane close would then have failed on a remote that does not exist. The push
+    failure path is safe — it refuses and keeps the claim — but a lane could never close.
+
+    The name of a remote is a fact about the checkout, exactly like the branch and the score.
+    So read it: `remote.pushDefault` if configured, else the only remote if there is exactly one.
+    Falls back to ``"origin"`` when neither answers, which is the pre-2026-08-29 behaviour.
+    """
+    cfg = subprocess.run(["git", "config", "--get", "remote.pushDefault"],
+                         capture_output=True, text=True, timeout=30)
+    name = cfg.stdout.strip()
+    if name:
+        return name
+    r = subprocess.run(["git", "remote"], capture_output=True, text=True, timeout=30)
+    remotes = [x for x in r.stdout.split() if x]
+    return remotes[0] if len(remotes) == 1 else "origin"
+
+
 def finish(lane: str, push: bool = True, force: bool = False,
-           remote: str = "origin", base: str | None = None) -> dict:
-    """Assert, push, release, announce. Never merges."""
+           remote: str | None = None, base: str | None = None) -> dict:
+    """Assert, push, release, announce. Never merges.
+
+    ``remote`` defaults to :func:`default_remote` — resolved from the checkout rather than
+    hardcoded, so removing or renaming a remote cannot silently make every lane unclosable.
+    """
     done: List[str] = []
+    remote = remote or default_remote()
     branch = f"{_wt.BRANCH_PREFIX}{lane}"
     problems = checks(lane, base=base)
     if problems and not force:
