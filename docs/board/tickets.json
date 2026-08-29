@@ -1,0 +1,1422 @@
+{
+  "_generated_by": "python scripts/export_board.py",
+  "_authoritative_source": ".data/tasks.jsonl (append-only, gitignored)",
+  "_note": "DERIVED snapshot for recovery and for rendering the board. Never hand-edit.",
+  "count": 55,
+  "tasks": [
+    {
+      "id": "253d7fa9",
+      "title": "AB-01 \u00b7 R3 expected-work manifest + scope_hash \u2014 'the biggest missing control'; \u00a75 has no such step",
+      "owner": null,
+      "parent": "2da0c097",
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788019720.9117026,
+          "actor": "paul",
+          "kind": "create",
+          "data": {
+            "title": "AB-01 \u00b7 R3 expected-work manifest + scope_hash \u2014 'the biggest missing control'; \u00a75 has no such step",
+            "parent": "2da0c097"
+          }
+        }
+      ]
+    },
+    {
+      "id": "c9693239",
+      "title": "AB-02 \u00b7 R3 FACPR (first-attempt contract pass rate) \u2014 attempt 352 and attempt 1 currently score alike",
+      "owner": null,
+      "parent": "2da0c097",
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788019720.9119906,
+          "actor": "paul",
+          "kind": "create",
+          "data": {
+            "title": "AB-02 \u00b7 R3 FACPR (first-attempt contract pass rate) \u2014 attempt 352 and attempt 1 currently score alike",
+            "parent": "2da0c097"
+          }
+        }
+      ]
+    },
+    {
+      "id": "e1f4001a",
+      "title": "AB-03 \u00b7 R3 budget proxy owning the provider credential \u2014 makes build-order step 1's cap enforceable, not advisory",
+      "owner": null,
+      "parent": "2da0c097",
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788019720.9141338,
+          "actor": "paul",
+          "kind": "create",
+          "data": {
+            "title": "AB-03 \u00b7 R3 budget proxy owning the provider credential \u2014 makes build-order step 1's cap enforceable, not advisory",
+            "parent": "2da0c097"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cbe9c0cd",
+      "title": "AB-04 \u00b7 R3 corpus gate: 40 fixtures (30 dev + 10 held-out) \u2014 corpus is one file, 6,747 bytes; 4 passes asked, 0 actions",
+      "owner": null,
+      "parent": "2da0c097",
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [
+        {
+          "kind": "note",
+          "ref": "assumed-only probe",
+          "basis": "ASSUMED"
+        },
+        {
+          "kind": "correction",
+          "ref": "the preceding 'assumed-only probe' entry is a gate-test artifact from 2026-08-29, not evidence for AB-04 \u2014 it was written while proving close() refuses ASSUMED-only evidence, and remains only because the store is append-only",
+          "basis": "ASSUMED"
+        },
+        {
+          "kind": "measurement",
+          "ref": "certify --calibrate = PASS(PASS=12) not UNMEASURABLE(11/1); test_connector_contract.py has 17 tests incl. test_every_assertion_has_been_proved_able_to_fail; test_eval_can_fail.py never loads the corpus; corpus.available()==1. See F76.",
+          "basis": "MEASURED"
+        }
+      ],
+      "events": [
+        {
+          "ts": 1788019720.914589,
+          "actor": "paul",
+          "kind": "create",
+          "data": {
+            "title": "AB-04 \u00b7 R3 corpus gate: 40 fixtures (30 dev + 10 held-out) \u2014 corpus is one file, 6,747 bytes; 4 passes asked, 0 actions",
+            "parent": "2da0c097"
+          }
+        },
+        {
+          "ts": 1788019734.3575103,
+          "actor": "probe",
+          "kind": "evidence",
+          "data": {
+            "kind": "note",
+            "ref": "assumed-only probe",
+            "basis": "ASSUMED"
+          }
+        },
+        {
+          "ts": 1788019747.7238896,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "correction",
+            "ref": "the preceding 'assumed-only probe' entry is a gate-test artifact from 2026-08-29, not evidence for AB-04 \u2014 it was written while proving close() refuses ASSUMED-only evidence, and remains only because the store is append-only",
+            "basis": "ASSUMED"
+          }
+        },
+        {
+          "ts": 1788020048.6070156,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "measurement",
+            "ref": "certify --calibrate = PASS(PASS=12) not UNMEASURABLE(11/1); test_connector_contract.py has 17 tests incl. test_every_assertion_has_been_proved_able_to_fail; test_eval_can_fail.py never loads the corpus; corpus.available()==1. See F76.",
+            "basis": "MEASURED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "5d988caa",
+      "title": "AB-05 \u00b7 R4 Fitness Qualification Gate \u2014 5 pre-search tests; \u00a711.4 and \u00a716.6 rejected it without citing the design",
+      "owner": null,
+      "parent": "2da0c097",
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788019720.9148917,
+          "actor": "paul",
+          "kind": "create",
+          "data": {
+            "title": "AB-05 \u00b7 R4 Fitness Qualification Gate \u2014 5 pre-search tests; \u00a711.4 and \u00a716.6 rejected it without citing the design",
+            "parent": "2da0c097"
+          }
+        }
+      ]
+    },
+    {
+      "id": "80671d48",
+      "title": "AB-06 \u00b7 R1 unintended-side-effect + reconciliation checks \u2014 graded High; R17 \u00a74.7 rediscovered it unconnected",
+      "owner": null,
+      "parent": "2da0c097",
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788019720.9151506,
+          "actor": "paul",
+          "kind": "create",
+          "data": {
+            "title": "AB-06 \u00b7 R1 unintended-side-effect + reconciliation checks \u2014 graded High; R17 \u00a74.7 rediscovered it unconnected",
+            "parent": "2da0c097"
+          }
+        }
+      ]
+    },
+    {
+      "id": "1a42acac",
+      "title": "AB-07 \u00b7 R1 pass@k vs pass^k reporting set",
+      "owner": null,
+      "parent": "2da0c097",
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788019720.9153569,
+          "actor": "paul",
+          "kind": "create",
+          "data": {
+            "title": "AB-07 \u00b7 R1 pass@k vs pass^k reporting set",
+            "parent": "2da0c097"
+          }
+        }
+      ]
+    },
+    {
+      "id": "0304b21a",
+      "title": "AB-08 \u00b7 R2 build/run manifest schema + permission topology \u2014 run record kept separate from build record",
+      "owner": null,
+      "parent": "2da0c097",
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788019720.9155328,
+          "actor": "paul",
+          "kind": "create",
+          "data": {
+            "title": "AB-08 \u00b7 R2 build/run manifest schema + permission topology \u2014 run record kept separate from build record",
+            "parent": "2da0c097"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a42d9790",
+      "title": "AB-09 \u00b7 R16-outside: a container does nothing about prompt injection \u2014 narrow the sandbox claim",
+      "owner": null,
+      "parent": "2da0c097",
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788019720.9157197,
+          "actor": "paul",
+          "kind": "create",
+          "data": {
+            "title": "AB-09 \u00b7 R16-outside: a container does nothing about prompt injection \u2014 narrow the sandbox claim",
+            "parent": "2da0c097"
+          }
+        }
+      ]
+    },
+    {
+      "id": "58309d3d",
+      "title": "AB-10 \u00b7 R5 property-based + differential testing \u2014 aimed at the instruments that produced F5's 3 false results",
+      "owner": null,
+      "parent": "2da0c097",
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788019720.9158838,
+          "actor": "paul",
+          "kind": "create",
+          "data": {
+            "title": "AB-10 \u00b7 R5 property-based + differential testing \u2014 aimed at the instruments that produced F5's 3 false results",
+            "parent": "2da0c097"
+          }
+        }
+      ]
+    },
+    {
+      "id": "28dae6e6",
+      "title": "AB-11 \u00b7 R5 one canonical readout model, regenerated and diffed in CI",
+      "owner": null,
+      "parent": "2da0c097",
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788019720.9161894,
+          "actor": "paul",
+          "kind": "create",
+          "data": {
+            "title": "AB-11 \u00b7 R5 one canonical readout model, regenerated and diffed in CI",
+            "parent": "2da0c097"
+          }
+        }
+      ]
+    },
+    {
+      "id": "75ffe3a3",
+      "title": "AB-12 \u00b7 R13 run 2 \u2014 five of six findings untaken; APPROVE-becomes-a-GitHub-PR first, a decision rests on it",
+      "owner": null,
+      "parent": "2da0c097",
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788019720.916413,
+          "actor": "paul",
+          "kind": "create",
+          "data": {
+            "title": "AB-12 \u00b7 R13 run 2 \u2014 five of six findings untaken; APPROVE-becomes-a-GitHub-PR first, a decision rests on it",
+            "parent": "2da0c097"
+          }
+        }
+      ]
+    },
+    {
+      "id": "d6ff5191",
+      "title": "AB-13 \u00b7 R10 retire or merge one of the six overlapping stores \u2014 before any new store lands",
+      "owner": null,
+      "parent": "2da0c097",
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788019720.9167137,
+          "actor": "paul",
+          "kind": "create",
+          "data": {
+            "title": "AB-13 \u00b7 R10 retire or merge one of the six overlapping stores \u2014 before any new store lands",
+            "parent": "2da0c097"
+          }
+        }
+      ]
+    },
+    {
+      "id": "9bcc8a34",
+      "title": "AB-14 \u00b7 R8's record/channel answer was wrong ('CQRS'); \u00a716.10 refutes it but never files it against R8",
+      "owner": null,
+      "parent": "2da0c097",
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788019720.9169266,
+          "actor": "paul",
+          "kind": "create",
+          "data": {
+            "title": "AB-14 \u00b7 R8's record/channel answer was wrong ('CQRS'); \u00a716.10 refutes it but never files it against R8",
+            "parent": "2da0c097"
+          }
+        }
+      ]
+    },
+    {
+      "id": "89c82c06",
+      "title": "AB-15 \u00b7 R12 productivity list \u2014 prompt templates, session forking cost, cross-session search, checkpoints, queue",
+      "owner": null,
+      "parent": "2da0c097",
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788019720.9172294,
+          "actor": "paul",
+          "kind": "create",
+          "data": {
+            "title": "AB-15 \u00b7 R12 productivity list \u2014 prompt templates, session forking cost, cross-session search, checkpoints, queue",
+            "parent": "2da0c097"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a1ec253b",
+      "title": "AB-16 \u00b7 R14 in its entirety \u2014 1,389 lines, 7 mentions, 0 conclusions taken; absorb or reject in writing",
+      "owner": null,
+      "parent": "2da0c097",
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788019720.9174879,
+          "actor": "paul",
+          "kind": "create",
+          "data": {
+            "title": "AB-16 \u00b7 R14 in its entirety \u2014 1,389 lines, 7 mentions, 0 conclusions taken; absorb or reject in writing",
+            "parent": "2da0c097"
+          }
+        }
+      ]
+    },
+    {
+      "id": "254a7e09",
+      "title": "AB-17 \u00b7 R18 in its entirety \u2014 exists; every reference to it is in the future tense",
+      "owner": null,
+      "parent": "2da0c097",
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788019720.917855,
+          "actor": "paul",
+          "kind": "create",
+          "data": {
+            "title": "AB-17 \u00b7 R18 in its entirety \u2014 exists; every reference to it is in the future tense",
+            "parent": "2da0c097"
+          }
+        }
+      ]
+    },
+    {
+      "id": "73b0a05e",
+      "title": "AB-18 \u00b7 R16 audit \u2014 nine findings are bare pointers with no content; fill in or delete",
+      "owner": null,
+      "parent": "2da0c097",
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788019720.9181218,
+          "actor": "paul",
+          "kind": "create",
+          "data": {
+            "title": "AB-18 \u00b7 R16 audit \u2014 nine findings are bare pointers with no content; fill in or delete",
+            "parent": "2da0c097"
+          }
+        }
+      ]
+    },
+    {
+      "id": "bdaafa06",
+      "title": "AB-19 \u00b7 Settle the alerting question with all five positions on the table; R6's is nowhere",
+      "owner": null,
+      "parent": "2da0c097",
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788019720.9183235,
+          "actor": "paul",
+          "kind": "create",
+          "data": {
+            "title": "AB-19 \u00b7 Settle the alerting question with all five positions on the table; R6's is nowhere",
+            "parent": "2da0c097"
+          }
+        }
+      ]
+    },
+    {
+      "id": "2da0c097",
+      "title": "Absorption backlog \u2014 SYNTHESIS \u00a717.9 (imported 2026-08-29)",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788019720.911353,
+          "actor": "paul",
+          "kind": "create",
+          "data": {
+            "title": "Absorption backlog \u2014 SYNTHESIS \u00a717.9 (imported 2026-08-29)",
+            "parent": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "77a65215",
+      "title": "CIP-01 - P0 Action or reject AB-01..AB-19, each in writing",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788038294.166614,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "CIP-01 - P0 Action or reject AB-01..AB-19, each in writing",
+            "parent": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "a2007fa2",
+      "title": "CIP-02 - P0 Publish docs/corpus/GAPS.md from the existing corpus",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788038294.1669655,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "CIP-02 - P0 Publish docs/corpus/GAPS.md from the existing corpus",
+            "parent": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "b079a113",
+      "title": "CIP-03 - P1 Pick the pilot client + connector; record why",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788038294.1675024,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "CIP-03 - P1 Pick the pilot client + connector; record why",
+            "parent": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "1ba2896d",
+      "title": "CIP-04 - P1 Author the first real intake record end to end",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788038294.1679819,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "CIP-04 - P1 Author the first real intake record end to end",
+            "parent": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "1f220a7c",
+      "title": "CIP-05 - P1 Certify that connector A1-A12 against a recorded run",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788038294.1685462,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "CIP-05 - P1 Certify that connector A1-A12 against a recorded run",
+            "parent": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "d9d92e9b",
+      "title": "CIP-06 - P1 Add the recorded run to evals/corpus + MANIFEST",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788038294.1690452,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "CIP-06 - P1 Add the recorded run to evals/corpus + MANIFEST",
+            "parent": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "a226d324",
+      "title": "CIP-07 - P2 Draft 20-30 questions on the four ontology dimensions",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788038294.1694684,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "CIP-07 - P2 Draft 20-30 questions on the four ontology dimensions",
+            "parent": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "bb202a04",
+      "title": "CIP-08 - P2 Map every question to a frontmatter field and a check; unmapped = 0",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788038294.1698546,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "CIP-08 - P2 Map every question to a frontmatter field and a check; unmapped = 0",
+            "parent": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "711c9d13",
+      "title": "CIP-09 - P2 Schema-probe so clients confirm rather than type",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788038294.1701806,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "CIP-09 - P2 Schema-probe so clients confirm rather than type",
+            "parent": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "1108baa0",
+      "title": "CIP-10 - P2 Form to frontmatter emitter, no manual editing",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788038294.1704516,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "CIP-10 - P2 Form to frontmatter emitter, no manual editing",
+            "parent": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "3e38badf",
+      "title": "CIP-11 - P3 Portal render of intake + per-field status (5-term vocabulary)",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788038294.1706553,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "CIP-11 - P3 Portal render of intake + per-field status (5-term vocabulary)",
+            "parent": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "2e6dd67d",
+      "title": "CIP-12 - P3 Submit to PR to Jira; portal mirrors and owns nothing",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788038294.1708298,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "CIP-12 - P3 Submit to PR to Jira; portal mirrors and owns nothing",
+            "parent": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "9418f52c",
+      "title": "CIP-13 - P3 Reuse portal_provision.py auth + RLS; no new auth model",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788038294.1710515,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "CIP-13 - P3 Reuse portal_provision.py auth + RLS; no new auth model",
+            "parent": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "3ac5a1ec",
+      "title": "CIP-14 - P4 Write gate: reject low-grounding writes; prove it rejects",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788038294.1712794,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "CIP-14 - P4 Write gate: reject low-grounding writes; prove it rejects",
+            "parent": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "8d1b7ae1",
+      "title": "CIP-15 - P4 Coverage metric (retooled AOR): question vs corpus, relevance-judged",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788038294.1715374,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "CIP-15 - P4 Coverage metric (retooled AOR): question vs corpus, relevance-judged",
+            "parent": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "90f0f65b",
+      "title": "CIP-16 - P4 Guarded helpfulness ranking; ship the guards, not the naive ratio",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788038294.1717982,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "CIP-16 - P4 Guarded helpfulness ranking; ship the guards, not the naive ratio",
+            "parent": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "16eff46f",
+      "title": "CIP-17 - P4 Negative control for every new gate in this plan",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788038294.1719842,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "CIP-17 - P4 Negative control for every new gate in this plan",
+            "parent": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "8cb8cc05",
+      "title": "CIP-18 - P5 Within-topic fair test harness",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788038294.1721625,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "CIP-18 - P5 Within-topic fair test harness",
+            "parent": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "e5051fe3",
+      "title": "CIP-19 - P5 Causal test: pre/post or A/B on spec completeness",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788038294.1723886,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "CIP-19 - P5 Causal test: pre/post or A/B on spec completeness",
+            "parent": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "e5f49192",
+      "title": "CIP-20 - P5 Publish the reconciliation, including what did not replicate",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [],
+      "events": [
+        {
+          "ts": 1788038294.1726086,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "CIP-20 - P5 Publish the reconciliation, including what did not replicate",
+            "parent": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "9362749b",
+      "title": "CIP-21 - P1 Wire deploy.py budget enforcement into the live launch path",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [
+        {
+          "kind": "citation",
+          "ref": "factory/deploy.py \u00a7 docstring | acceptance: python -m pytest tests/test_launch_budget.py passes; a generated .ps1 contains --max-budget-usd",
+          "basis": "MEASURED"
+        }
+      ],
+      "events": [
+        {
+          "ts": 1788041345.4616792,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "CIP-21 - P1 Wire deploy.py budget enforcement into the live launch path",
+            "parent": null
+          }
+        },
+        {
+          "ts": 1788041345.4619622,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "citation",
+            "ref": "factory/deploy.py \u00a7 docstring | acceptance: python -m pytest tests/test_launch_budget.py passes; a generated .ps1 contains --max-budget-usd",
+            "basis": "MEASURED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "46df379b",
+      "title": "CIP-23 - P2 Surface the needs field from ~/.claude/jobs/*/state.json",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [
+        {
+          "kind": "citation",
+          "ref": "factory/sessions.py \u00a7 blocked() | acceptance: A blocked agent's question appears on the Sessions tab, oldest-first, with taskbar flash",
+          "basis": "MEASURED"
+        }
+      ],
+      "events": [
+        {
+          "ts": 1788041345.4621773,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "CIP-23 - P2 Surface the needs field from ~/.claude/jobs/*/state.json",
+            "parent": null
+          }
+        },
+        {
+          "ts": 1788041345.4623797,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "citation",
+            "ref": "factory/sessions.py \u00a7 blocked() | acceptance: A blocked agent's question appears on the Sessions tab, oldest-first, with taskbar flash",
+            "basis": "MEASURED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "c7842d3d",
+      "title": "CIP-24 - P1 Assert CLAUDE_CODE_SESSION_NAME reaches the spawned process",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [
+        {
+          "kind": "citation",
+          "ref": "scripts/local_tracker.py \u00a7 _launch_script | acceptance: tests/test_session_naming.py passes \u2014 spawns through the real launcher, reads name from registry",
+          "basis": "MEASURED"
+        }
+      ],
+      "events": [
+        {
+          "ts": 1788041345.462626,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "CIP-24 - P1 Assert CLAUDE_CODE_SESSION_NAME reaches the spawned process",
+            "parent": null
+          }
+        },
+        {
+          "ts": 1788041345.4628742,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "citation",
+            "ref": "scripts/local_tracker.py \u00a7 _launch_script | acceptance: tests/test_session_naming.py passes \u2014 spawns through the real launcher, reads name from registry",
+            "basis": "MEASURED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "1a2617eb",
+      "title": "CIP-25 - P2 Fix finish.checks() dead ledger check \u2014 per-lane NOTHING TO REPORT",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [
+        {
+          "kind": "citation",
+          "ref": "factory/finish.py \u00a7 checks() | acceptance: A lane with no findings entry and no NOTHING TO REPORT is refused; finish.checks() can fail",
+          "basis": "MEASURED"
+        }
+      ],
+      "events": [
+        {
+          "ts": 1788041345.463159,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "CIP-25 - P2 Fix finish.checks() dead ledger check \u2014 per-lane NOTHING TO REPORT",
+            "parent": null
+          }
+        },
+        {
+          "ts": 1788041345.463376,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "citation",
+            "ref": "factory/finish.py \u00a7 checks() | acceptance: A lane with no findings entry and no NOTHING TO REPORT is refused; finish.checks() can fail",
+            "basis": "MEASURED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "812c3c6a",
+      "title": "CIP-26 - P2 Add tenancy-verified gate \u2014 confirm declared tenants against a live pull",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [
+        {
+          "kind": "citation",
+          "ref": "factory/board.py \u00a7 DEPENDS | acceptance: python -m factory.readiness shows tenancy-verified: PASS when tenants match; FAIL when they do not",
+          "basis": "MEASURED"
+        }
+      ],
+      "events": [
+        {
+          "ts": 1788041345.4636018,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "CIP-26 - P2 Add tenancy-verified gate \u2014 confirm declared tenants against a live pull",
+            "parent": null
+          }
+        },
+        {
+          "ts": 1788041345.463789,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "citation",
+            "ref": "factory/board.py \u00a7 DEPENDS | acceptance: python -m factory.readiness shows tenancy-verified: PASS when tenants match; FAIL when they do not",
+            "basis": "MEASURED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "bd4269fc",
+      "title": "CIP-27 - P1 Make CONNECTORS resolution unconditional (fix F72)",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [
+        {
+          "kind": "citation",
+          "ref": "factory/readiness.py \u00a7 CONNECTORS | acceptance: python -m factory.readiness returns the same headline from the primary and from every lane worktree",
+          "basis": "MEASURED"
+        }
+      ],
+      "events": [
+        {
+          "ts": 1788041345.464035,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "CIP-27 - P1 Make CONNECTORS resolution unconditional (fix F72)",
+            "parent": null
+          }
+        },
+        {
+          "ts": 1788041345.4642923,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "citation",
+            "ref": "factory/readiness.py \u00a7 CONNECTORS | acceptance: python -m factory.readiness returns the same headline from the primary and from every lane worktree",
+            "basis": "MEASURED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "5aea7b87",
+      "title": "CIP-28 - P2 Move evidence packs to docs/research/.packs/",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [
+        {
+          "kind": "citation",
+          "ref": "factory/dispatch.py \u00a7 prompts() | acceptance: A pack never appears as a prompt in the Research tab; string-suffix guards are removed",
+          "basis": "MEASURED"
+        }
+      ],
+      "events": [
+        {
+          "ts": 1788041345.4645126,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "CIP-28 - P2 Move evidence packs to docs/research/.packs/",
+            "parent": null
+          }
+        },
+        {
+          "ts": 1788041345.4646962,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "citation",
+            "ref": "factory/dispatch.py \u00a7 prompts() | acceptance: A pack never appears as a prompt in the Research tab; string-suffix guards are removed",
+            "basis": "MEASURED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "33fccea3",
+      "title": "CIP-29 - P3 Introduce Snapshot as the measurement scope object",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [
+        {
+          "kind": "citation",
+          "ref": "factory/schedule.py \u00a7 Snapshot | acceptance: /flow drops from 5 measure() calls to 1; every rendered number carries its age as a property",
+          "basis": "MEASURED"
+        }
+      ],
+      "events": [
+        {
+          "ts": 1788041345.464874,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "CIP-29 - P3 Introduce Snapshot as the measurement scope object",
+            "parent": null
+          }
+        },
+        {
+          "ts": 1788041345.4651043,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "citation",
+            "ref": "factory/schedule.py \u00a7 Snapshot | acceptance: /flow drops from 5 measure() calls to 1; every rendered number carries its age as a property",
+            "basis": "MEASURED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "0bef1ce2",
+      "title": "CIP-30 - P3 Add tier field to AgentSpec and build Snowflake grant envelope",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [
+        {
+          "kind": "citation",
+          "ref": "factory/blueprint.py \u00a7 AgentSpec | acceptance: A lane cannot CREATE OR REPLACE on a production schema because its role owns nothing",
+          "basis": "MEASURED"
+        }
+      ],
+      "events": [
+        {
+          "ts": 1788041345.4653234,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "CIP-30 - P3 Add tier field to AgentSpec and build Snowflake grant envelope",
+            "parent": null
+          }
+        },
+        {
+          "ts": 1788041345.4654899,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "citation",
+            "ref": "factory/blueprint.py \u00a7 AgentSpec | acceptance: A lane cannot CREATE OR REPLACE on a production schema because its role owns nothing",
+            "basis": "MEASURED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "3a1f0b84",
+      "title": "CIP-31 - P2 Enable strictAllowlist + mask from managed settings",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [
+        {
+          "kind": "citation",
+          "ref": "R17 \u00a74.2 | acceptance: A lane cannot exfiltrate a credential; the proxy substitutes a sentinel",
+          "basis": "MEASURED"
+        }
+      ],
+      "events": [
+        {
+          "ts": 1788041345.4656925,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "CIP-31 - P2 Enable strictAllowlist + mask from managed settings",
+            "parent": null
+          }
+        },
+        {
+          "ts": 1788041345.4659534,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "citation",
+            "ref": "R17 \u00a74.2 | acceptance: A lane cannot exfiltrate a credential; the proxy substitutes a sentinel",
+            "basis": "MEASURED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "0bc6f304",
+      "title": "CIP-32 - P2 Denominate budgets in dollars, not tokens",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [
+        {
+          "kind": "citation",
+          "ref": "factory/runs.py \u00a7 cost() | acceptance: A lane's cost report includes a dollar figure; the budget cap is denominated in dollars",
+          "basis": "MEASURED"
+        }
+      ],
+      "events": [
+        {
+          "ts": 1788041345.4661765,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "CIP-32 - P2 Denominate budgets in dollars, not tokens",
+            "parent": null
+          }
+        },
+        {
+          "ts": 1788041345.4663684,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "citation",
+            "ref": "factory/runs.py \u00a7 cost() | acceptance: A lane's cost report includes a dollar figure; the budget cap is denominated in dollars",
+            "basis": "MEASURED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "2b6facb4",
+      "title": "CIP-34 - P2 Add FACPR (first-attempt contract pass rate) to metrics.py",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [
+        {
+          "kind": "citation",
+          "ref": "AB-02 | acceptance: factory.metrics.report() includes a FACPR field; attempt 352 and attempt 1 are distinguishable",
+          "basis": "MEASURED"
+        }
+      ],
+      "events": [
+        {
+          "ts": 1788041345.4665818,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "CIP-34 - P2 Add FACPR (first-attempt contract pass rate) to metrics.py",
+            "parent": null
+          }
+        },
+        {
+          "ts": 1788041345.4667456,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "citation",
+            "ref": "AB-02 | acceptance: factory.metrics.report() includes a FACPR field; attempt 352 and attempt 1 are distinguishable",
+            "basis": "MEASURED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "7452619e",
+      "title": "CIP-35 - P3 Score a second connector end-to-end (breadth, not sensitivity)",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [
+        {
+          "kind": "citation",
+          "ref": "AB-04 | acceptance: factory.corpus.available() returns >= 2 fixtures; python -m factory.certify --calibrate scores both PASS",
+          "basis": "MEASURED"
+        }
+      ],
+      "events": [
+        {
+          "ts": 1788041345.4668996,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "CIP-35 - P3 Score a second connector end-to-end (breadth, not sensitivity)",
+            "parent": null
+          }
+        },
+        {
+          "ts": 1788041345.4671361,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "citation",
+            "ref": "AB-04 | acceptance: factory.corpus.available() returns >= 2 fixtures; python -m factory.certify --calibrate scores both PASS",
+            "basis": "MEASURED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "48eeed18",
+      "title": "Migrate exchangeratesapi",
+      "owner": "implementer",
+      "parent": null,
+      "status": "done",
+      "blocked_by": [],
+      "evidence": [
+        {
+          "kind": "contract",
+          "ref": "connector-green=PASS",
+          "basis": "MEASURED"
+        }
+      ],
+      "events": [
+        {
+          "ts": 1787285507.1718116,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "Migrate exchangeratesapi",
+            "parent": null
+          }
+        },
+        {
+          "ts": 1787285507.1723742,
+          "actor": "implementer",
+          "kind": "claim",
+          "data": {}
+        },
+        {
+          "ts": 1787285507.1727614,
+          "actor": "tester",
+          "kind": "evidence",
+          "data": {
+            "kind": "contract",
+            "ref": "connector-green=PASS",
+            "basis": "MEASURED"
+          }
+        },
+        {
+          "ts": 1787285507.1730857,
+          "actor": "implementer",
+          "kind": "close",
+          "data": {
+            "status": "done"
+          }
+        }
+      ]
+    },
+    {
+      "id": "859d609b",
+      "title": "Migrate exchangeratesapi",
+      "owner": "implementer",
+      "parent": null,
+      "status": "done",
+      "blocked_by": [],
+      "evidence": [
+        {
+          "kind": "contract",
+          "ref": "connector-green=PASS",
+          "basis": "MEASURED"
+        }
+      ],
+      "events": [
+        {
+          "ts": 1788016749.9795227,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "Migrate exchangeratesapi",
+            "parent": null
+          }
+        },
+        {
+          "ts": 1788016749.9800982,
+          "actor": "implementer",
+          "kind": "claim",
+          "data": {}
+        },
+        {
+          "ts": 1788016749.9803517,
+          "actor": "tester",
+          "kind": "evidence",
+          "data": {
+            "kind": "contract",
+            "ref": "connector-green=PASS",
+            "basis": "MEASURED"
+          }
+        },
+        {
+          "ts": 1788016749.980574,
+          "actor": "implementer",
+          "kind": "close",
+          "data": {
+            "status": "done"
+          }
+        }
+      ]
+    }
+  ]
+}
