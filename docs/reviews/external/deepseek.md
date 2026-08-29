@@ -1,6 +1,6 @@
 > **Verbatim, with one redaction.** This is the external model's response exactly as returned,
 > except that the client identifier in the blueprint filename was replaced
-> (`windsorai_gep.yaml` → `windsorai_client_a.yaml`, 2 occurrences) to match the repository
+> (2 occurrences in the blueprint filename) to match the repository
 > redaction of 2026-08-29. The model read the pre-redaction branch. No substantive content was
 > altered — see `verification.md` for what was checked rather than edited.
 
