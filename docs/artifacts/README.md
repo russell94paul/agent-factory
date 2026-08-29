@@ -11,10 +11,28 @@ rebuilding from scratch.
 **"with the code"** home — moving these files breaks the readiness gate. They do not move to the
 memory layer, however much they look like documents.
 
-| Source file | Live artifact | Favicon |
-|---|---|---|
-| `agent-factory.html` | https://claude.ai/code/artifact/50d3ca62-3e9c-46dd-8867-7e1c794aff75 | ⚙️ |
-| `orchestration-bench.html` | https://claude.ai/code/artifact/839fd517-5305-46e1-8325-74f18b1a45b0 | ⚖️ |
+| Source file | Live artifact | Favicon | Audience |
+|---|---|---|---|
+| `agent-factory.html` | https://claude.ai/code/artifact/50d3ca62-3e9c-46dd-8867-7e1c794aff75 | ⚙️ | engineering — status, gates, build order |
+| `orchestration-bench.html` | https://claude.ai/code/artifact/839fd517-5305-46e1-8325-74f18b1a45b0 | ⚖️ | engineering — ⚠ R13 run 2 recommends retiring this (AB-12) |
+
+⚠ **`agent-factory.html` is stale as of 2026-08-29.** It reflects the `UNMEASURABLE (PASS=11)` era and
+a "9 of 30 gates" count; `certify --calibrate` now returns `PASS (PASS=12)`. See
+[`F76`](../findings.d/F76-the-eval-can-fail-what-it-cannot-do-is-generalise.md). It has not been
+republished, so the live page carries the old numbers too.
+
+### Filed elsewhere on purpose
+
+**"The Fourth Verdict"** — the internal vision / USP / taxonomy orientation, published 2026-08-29 at
+https://claude.ai/code/artifact/2ff7c0ae-38bc-46dc-a98e-e2868a5d7c71 — lives in
+**`aldc-launchpad/docs/readouts/the-fourth-verdict.html`**, not here.
+
+It is not read by any code in this package, and it spans agent-factory, prefect-connectors,
+aldc-launchpad, neurospect-learn, the Fusion92 tickets, `ccx` and the skills library. By the test in
+`wiki/concepts/patterns/session-contention-and-artefact-homes` — *"it spans repos, so it has no
+single code home"* — that makes it memory-layer, alongside `zeus-foundry-brief.html`. The two files
+in the table above stay here because `factory/readiness.py` yields `agent-factory.html` into the
+suite fingerprint **by name**; moving those breaks the gate.
 
 Both confirmed 2026-08-29 by exact `<title>` match; `agent-factory.html` is corroborated by
 `aldc-launchpad/boot-prompts/agent-factory-phase-a-2026-08-21.md`, which cites the same id, and by
