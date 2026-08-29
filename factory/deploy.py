@@ -27,6 +27,13 @@ CONTEXT_ATTEMPTS = 3
 #: Per-failure detail is truncated to this before injection, for the same reason.
 CONTEXT_DETAIL_CHARS = 400
 
+#: Values for an attempt's ``limit`` field — "did it run out of room", asked separately from
+#: "did it work". Modelled on ``inspect_ai``'s EvalSample.limit, which exists because a run
+#: ended by a turn or cost ceiling is neither a pass nor a failure of the approach.
+LIMIT_HIT = "hit"                #: a cap demonstrably ended it
+LIMIT_NONE = "none"              #: demonstrably NOT a cap
+UNDETERMINED = "undetermined"    #: no signal either way — never assert "none" on this basis
+
 
 class AttemptLedger:
     """Persisted attempt counter, and the record of what went wrong each time.
@@ -88,13 +95,26 @@ class AttemptLedger:
         return e["count"]
 
     # ---------------------------------------------------------------- the context
-    def note_outcome(self, key: str, outcome: str, detail: str = "") -> None:
-        """Attach how the most recent attempt ended. Safe to call when nothing was recorded."""
+    def note_outcome(self, key: str, outcome: str, detail: str = "",
+                     limit: Optional[str] = None) -> None:
+        """Attach how the most recent attempt ended. Safe to call when nothing was recorded.
+
+        ``limit`` answers a DIFFERENT question from ``outcome``: not "did it work" but "did it
+        run out of room". Borrowed from ``inspect_ai``, which carries ``EvalSample.error`` and
+        ``EvalSample.limit`` as separate fields precisely because a run killed by a turn or cost
+        ceiling is neither a pass nor a failure of the approach.
+
+        ⚠ Pass ``limit=UNDETERMINED`` — the default for any non-zero exit — rather than guessing.
+        The CLI gives us no documented signal distinguishing a cap-kill from a crash, and
+        recording "not a cap" on that basis would be the same collapse this module refuses
+        everywhere else: an unmeasured thing asserted as measured.
+        """
         e = self._entry(key)
         if not e["attempts"]:
             return
         e["attempts"][-1]["outcome"] = outcome
         e["attempts"][-1]["detail"] = (detail or "")[:CONTEXT_DETAIL_CHARS]
+        e["attempts"][-1]["limit"] = limit
         self._d[key] = e
         self._flush()
 
@@ -109,23 +129,51 @@ class AttemptLedger:
         return [a for a in reversed(att) if a.get("outcome") != "ok"]
 
     def context(self, key: str) -> str:
-        """Prior failures, rendered for prompt injection. Empty string when there are none."""
+        """Prior failures, rendered for prompt injection. Empty string when there are none.
+
+        ⭐ The closing instruction is CONDITIONAL on what is actually known. Telling an agent to
+        "do something different" after a run that merely ran out of turns is wrong advice — the
+        approach may have been working. Until a cap-kill can be distinguished from a crash, the
+        honest instruction says so rather than prescribing.
+        """
         fails = self.failures(key)[:CONTEXT_ATTEMPTS]
         if not fails:
             return ""
         lines = [
-            "PREVIOUS ATTEMPTS AT THIS TASK FAILED. Read this before starting — you are not "
-            "the first agent to try, and repeating a failed approach wastes an attempt against "
-            "a cap you cannot raise."
+            "PREVIOUS ATTEMPTS AT THIS TASK DID NOT SUCCEED. Read this before starting — you are "
+            "not the first agent to try, and repeating an approach that already failed wastes an "
+            "attempt against a cap you cannot raise."
         ]
+        undetermined = False
         for a in fails:
             outcome = a.get("outcome") or "no outcome recorded (the process did not report back)"
             detail = (a.get("detail") or "").strip() or "no detail captured"
-            lines.append(f"  · attempt {a.get('n')} ({a.get('at')}) — {outcome}: {detail}")
-        lines.append(
-            "Do something different, or explain in your first message why the same approach "
-            "should now succeed."
-        )
+            lim = a.get("limit")
+            if lim == LIMIT_HIT:
+                suffix = "  [ran out of room — a cap ended it, not the approach]"
+            elif lim == UNDETERMINED:
+                suffix = "  [whether a cap ended it is UNDETERMINED]"
+                undetermined = True
+            else:
+                suffix = ""
+            lines.append(
+                f"  · attempt {a.get('n')} ({a.get('at')}) — {outcome}: {detail}{suffix}")
+        if any(a.get("limit") == LIMIT_HIT for a in fails):
+            lines.append(
+                "At least one attempt was ended by a turn or cost ceiling rather than by being "
+                "wrong. If its approach looked sound, continue it — do not restart from scratch."
+            )
+        elif undetermined:
+            lines.append(
+                "It is NOT known whether these ended because the approach was wrong or because a "
+                "cap was reached. Say which you think it was in your first message, then proceed. "
+                "Do not assume the previous approach was wrong."
+            )
+        else:
+            lines.append(
+                "Do something different, or explain in your first message why the same approach "
+                "should now succeed."
+            )
         return "\n".join(lines)
 
 
@@ -193,7 +241,7 @@ class RepoDeployer:
                             "prompt": full_prompt, "attempt": ledger.attempts(key) if ledger else None})
                 + "\n", encoding="utf-8")
             if ledger:
-                ledger.note_outcome(key, "ok", "dry run")
+                ledger.note_outcome(key, "ok", "dry run", limit=LIMIT_NONE)
             return Deployment(wt, wt.name, transcript, returncode=0)
 
         stderr = ""
@@ -206,8 +254,12 @@ class RepoDeployer:
         # about outcomes, so the next attempt starts as blind as this one did.
         if ledger:
             if proc.returncode == 0:
-                ledger.note_outcome(key, "ok", "")
+                ledger.note_outcome(key, "ok", "", limit=LIMIT_NONE)
             else:
+                # UNDETERMINED, not LIMIT_NONE: the CLI gives no documented signal
+                # separating a cap-kill from a crash, and asserting "not a cap" here would
+                # make the retry advice confidently wrong.
                 ledger.note_outcome(key, f"exit {proc.returncode}",
-                                    (stderr or "").strip() or "no stderr captured")
+                                    (stderr or "").strip() or "no stderr captured",
+                                    limit=UNDETERMINED)
         return Deployment(wt, wt.name, transcript, returncode=proc.returncode)

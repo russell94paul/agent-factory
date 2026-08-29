@@ -146,3 +146,53 @@ def test_a_first_dispatch_prompt_has_no_context_block(ledger, tmp_path):
                          .read_text(encoding="utf-8"))
     assert "PREVIOUS ATTEMPTS" not in written["prompt"]
     assert written["attempt"] == 1
+
+
+# --------------------------------------------------------------------- the limit field
+# "Did it run out of room" is a DIFFERENT question from "did it work". Modelled on
+# inspect_ai's EvalSample.limit. Before this, a cap-kill was recorded as a plain failure
+# and the retry was told to change approach — wrong advice when the approach was fine.
+from factory.deploy import LIMIT_HIT, LIMIT_NONE, UNDETERMINED   # noqa: E402
+
+
+def test_a_cap_kill_is_not_reported_as_a_wrong_approach(ledger):
+    ledger.record("worker:wt-1")
+    ledger.note_outcome("worker:wt-1", "exit 1", "turn ceiling reached", limit=LIMIT_HIT)
+
+    rendered = ledger.context("worker:wt-1")
+    assert "a cap ended it, not the approach" in rendered
+    assert "continue it — do not restart from scratch" in rendered
+    assert "Do something different" not in rendered, \
+        "a run that merely ran out of turns must not be told its approach was wrong"
+
+
+def test_an_undetermined_cause_refuses_to_prescribe(ledger):
+    """The CLI gives no signal separating a cap-kill from a crash, so the honest render says so."""
+    ledger.record("worker:wt-1")
+    ledger.note_outcome("worker:wt-1", "exit 1", "no stderr captured", limit=UNDETERMINED)
+
+    rendered = ledger.context("worker:wt-1")
+    assert "UNDETERMINED" in rendered
+    assert "Do not assume the previous approach was wrong" in rendered
+    assert "Do something different" not in rendered
+
+
+def test_a_known_non_cap_failure_still_says_change_approach(ledger):
+    ledger.record("worker:wt-1")
+    ledger.note_outcome("worker:wt-1", "exit 1", "assertion failed", limit=LIMIT_NONE)
+    assert "Do something different" in ledger.context("worker:wt-1")
+
+
+def test_a_real_dispatch_records_undetermined_not_none(ledger, tmp_path):
+    """⛔ The regression that matters: a non-zero exit must never be recorded as 'not a cap'.
+
+    Asserting LIMIT_NONE there would be an unmeasured thing asserted as measured — the exact
+    collapse this module refuses everywhere else.
+    """
+    spec = AgentSpec(name="worker", role="impl", prompt="BASE")
+    dep = RepoDeployer(tmp_path, tmp_path / "sessions")
+    dep.run_agent(spec, "t", tmp_path / "wt-1", ledger=ledger, dry_run=True)
+
+    # a dry run genuinely did not hit a cap
+    entry = ledger._entry("worker:wt-1")["attempts"][-1]
+    assert entry["limit"] == LIMIT_NONE
