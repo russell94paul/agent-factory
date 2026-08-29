@@ -2,7 +2,7 @@
   "_generated_by": "python scripts/export_board.py",
   "_authoritative_source": ".data/tasks.jsonl (append-only, gitignored)",
   "_note": "DERIVED snapshot for recovery and for rendering the board. Never hand-edit.",
-  "count": 55,
+  "count": 64,
   "tasks": [
     {
       "id": "253d7fa9",
@@ -1414,6 +1414,465 @@
           "kind": "close",
           "data": {
             "status": "done"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a71701f6",
+      "title": "OBS-01 - X0 R10 is unabsorbed \u2014 its measurement plan and build order are in no ticket",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [
+        {
+          "kind": "citation",
+          "ref": "surfaced 2026-08-29 in session review | acceptance: Promote when CIP-01 runs: add R10 \u00a76 and \u00a78 to the absorption sweep alongside AB-01..19.",
+          "basis": "MEASURED"
+        },
+        {
+          "kind": "note",
+          "ref": "R10 asked whether a hierarchical wiki plus an auto-researcher can train the pipeline, and the answer is filed (126 lines). Its \u00a76 carries a real A/B design with a falsification criterion (interventions per case must drop >=15% in 30 days) and \u00a78 a build order. Neither appears in CIP-01..20 or the AB backlog, so this is a 20th unabsorbed answer.",
+          "basis": "MEASURED"
+        }
+      ],
+      "events": [
+        {
+          "ts": 1788044072.3440437,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "OBS-01 - X0 R10 is unabsorbed \u2014 its measurement plan and build order are in no ticket",
+            "parent": null
+          }
+        },
+        {
+          "ts": 1788044072.3444386,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "citation",
+            "ref": "surfaced 2026-08-29 in session review | acceptance: Promote when CIP-01 runs: add R10 \u00a76 and \u00a78 to the absorption sweep alongside AB-01..19.",
+            "basis": "MEASURED"
+          }
+        },
+        {
+          "ts": 1788044072.344722,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "note",
+            "ref": "R10 asked whether a hierarchical wiki plus an auto-researcher can train the pipeline, and the answer is filed (126 lines). Its \u00a76 carries a real A/B design with a falsification criterion (interventions per case must drop >=15% in 30 days) and \u00a78 a build order. Neither appears in CIP-01..20 or the AB backlog, so this is a 20th unabsorbed answer.",
+            "basis": "MEASURED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "f72af78c",
+      "title": "OBS-02 - X0 Two independent passes now demand the write gate \u2014 raise CIP-14",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [
+        {
+          "kind": "citation",
+          "ref": "surfaced 2026-08-29 in session review | acceptance: Promote immediately: CIP-14 moves ahead of the other wave-0 factory tickets.",
+          "basis": "MEASURED"
+        },
+        {
+          "kind": "note",
+          "ref": "R10 \u00a75: 'no automatic wiki writes during normal work until we have a gating mechanism in place.' The compounding research names the same missing control from a different direction (the store accepts ~100% of writes). Two research programmes converging on one absent mechanism is the strongest signal in the corpus.",
+          "basis": "MEASURED"
+        }
+      ],
+      "events": [
+        {
+          "ts": 1788044072.344985,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "OBS-02 - X0 Two independent passes now demand the write gate \u2014 raise CIP-14",
+            "parent": null
+          }
+        },
+        {
+          "ts": 1788044072.3452864,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "citation",
+            "ref": "surfaced 2026-08-29 in session review | acceptance: Promote immediately: CIP-14 moves ahead of the other wave-0 factory tickets.",
+            "basis": "MEASURED"
+          }
+        },
+        {
+          "ts": 1788044072.3455734,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "note",
+            "ref": "R10 \u00a75: 'no automatic wiki writes during normal work until we have a gating mechanism in place.' The compounding research names the same missing control from a different direction (the store accepts ~100% of writes). Two research programmes converging on one absent mechanism is the strongest signal in the corpus.",
+            "basis": "MEASURED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "d9a21348",
+      "title": "OBS-03 - X0 UI tickets must be wire, not build \u2014 control-room.md already specs the slices",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [
+        {
+          "kind": "citation",
+          "ref": "surfaced 2026-08-29 in session review | acceptance: Promote when UI tickets are written: each must cite the control-room slice it implements, or say why the spec is wrong.",
+          "basis": "MEASURED"
+        },
+        {
+          "kind": "note",
+          "ref": "docs/specs/control-room.md is 443 lines: \u00a75 has Slice 0..3 with effort estimates, \u00a77 has the explicit refusals, \u00a71.3 has cost per lane, \u00a72.1 identity. Writing 'build tabs and layout' against that is the CIP-22 mistake \u2014 proposing what already exists.",
+          "basis": "MEASURED"
+        }
+      ],
+      "events": [
+        {
+          "ts": 1788044072.3458495,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "OBS-03 - X0 UI tickets must be wire, not build \u2014 control-room.md already specs the slices",
+            "parent": null
+          }
+        },
+        {
+          "ts": 1788044072.3463414,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "citation",
+            "ref": "surfaced 2026-08-29 in session review | acceptance: Promote when UI tickets are written: each must cite the control-room slice it implements, or say why the spec is wrong.",
+            "basis": "MEASURED"
+          }
+        },
+        {
+          "ts": 1788044072.346621,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "note",
+            "ref": "docs/specs/control-room.md is 443 lines: \u00a75 has Slice 0..3 with effort estimates, \u00a77 has the explicit refusals, \u00a71.3 has cost per lane, \u00a72.1 identity. Writing 'build tabs and layout' against that is the CIP-22 mistake \u2014 proposing what already exists.",
+            "basis": "MEASURED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "dd336989",
+      "title": "OBS-04 - X0 The factory track has no dependency edges at all \u2014 true, or unmodelled?",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [
+        {
+          "kind": "citation",
+          "ref": "surfaced 2026-08-29 in session review | acceptance: Promote at the next board pass: either add the edges, or record in writing that there are none.",
+          "basis": "MEASURED"
+        },
+        {
+          "kind": "note",
+          "ref": "All 13 factory-hardening tickets sit at wave 0 with zero edges between them. The graph therefore claims they are fully parallel and none is on the critical path. That is either a real and valuable fact or an artefact of nobody modelling them.",
+          "basis": "MEASURED"
+        }
+      ],
+      "events": [
+        {
+          "ts": 1788044072.346874,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "OBS-04 - X0 The factory track has no dependency edges at all \u2014 true, or unmodelled?",
+            "parent": null
+          }
+        },
+        {
+          "ts": 1788044072.3474188,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "citation",
+            "ref": "surfaced 2026-08-29 in session review | acceptance: Promote at the next board pass: either add the edges, or record in writing that there are none.",
+            "basis": "MEASURED"
+          }
+        },
+        {
+          "ts": 1788044072.3477197,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "note",
+            "ref": "All 13 factory-hardening tickets sit at wave 0 with zero edges between them. The graph therefore claims they are fully parallel and none is on the critical path. That is either a real and valuable fact or an artefact of nobody modelling them.",
+            "basis": "MEASURED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "7b64fec7",
+      "title": "OBS-05 - X0 D5 was never delivered \u2014 nobody has said what the external review could not judge",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [
+        {
+          "kind": "citation",
+          "ref": "surfaced 2026-08-29 in session review | acceptance: Promote by asking the same model for D5 alone, or by writing the limits ourselves from verification.md.",
+          "basis": "MEASURED"
+        },
+        {
+          "kind": "note",
+          "ref": "The pass returned D0-D4 and omitted D5, the section naming where it was guessing. Its absence is consistent with the other labelling problem: all 15 tickets came back tier=OBSERVED, none DERIVED or ASSUMED, and two of them proposed things already built.",
+          "basis": "MEASURED"
+        }
+      ],
+      "events": [
+        {
+          "ts": 1788044072.348036,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "OBS-05 - X0 D5 was never delivered \u2014 nobody has said what the external review could not judge",
+            "parent": null
+          }
+        },
+        {
+          "ts": 1788044072.3483973,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "citation",
+            "ref": "surfaced 2026-08-29 in session review | acceptance: Promote by asking the same model for D5 alone, or by writing the limits ourselves from verification.md.",
+            "basis": "MEASURED"
+          }
+        },
+        {
+          "ts": 1788044072.3487043,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "note",
+            "ref": "The pass returned D0-D4 and omitted D5, the section naming where it was guessing. Its absence is consistent with the other labelling problem: all 15 tickets came back tier=OBSERVED, none DERIVED or ASSUMED, and two of them proposed things already built.",
+            "basis": "MEASURED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "1e4ec1c0",
+      "title": "OBS-06 - X0 The blueprint still describes a client data-isolation weakness, on a public repo",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [
+        {
+          "kind": "citation",
+          "ref": "surfaced 2026-08-29 in session review | acceptance: Promote as a decision, not a build: remove it, or record why it is safe to publish.",
+          "basis": "MEASURED"
+        },
+        {
+          "kind": "note",
+          "ref": "blueprints/windsorai_client_a.yaml:56-57 records that one key returns every client's accounts - 45 of them. Not a credential, so the redaction left it, but it is a real weakness statement on a public repository.",
+          "basis": "MEASURED"
+        }
+      ],
+      "events": [
+        {
+          "ts": 1788044072.3490338,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "OBS-06 - X0 The blueprint still describes a client data-isolation weakness, on a public repo",
+            "parent": null
+          }
+        },
+        {
+          "ts": 1788044072.3493128,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "citation",
+            "ref": "surfaced 2026-08-29 in session review | acceptance: Promote as a decision, not a build: remove it, or record why it is safe to publish.",
+            "basis": "MEASURED"
+          }
+        },
+        {
+          "ts": 1788044072.3497543,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "note",
+            "ref": "blueprints/windsorai_client_a.yaml:56-57 records that one key returns every client's accounts - 45 of them. Not a credential, so the redaction left it, but it is a real weakness statement on a public repository.",
+            "basis": "MEASURED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "223dc2a2",
+      "title": "OBS-07 - X0 Git history still carries the client names the working tree no longer does",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [
+        {
+          "kind": "citation",
+          "ref": "surfaced 2026-08-29 in session review | acceptance: Promote as a decision: rewrite history, make the repo private, or accept and record it.",
+          "basis": "MEASURED"
+        },
+        {
+          "kind": "note",
+          "ref": "The redaction covers the working tree only. Every prior commit on a public repo still has the original names and may be cached or indexed. Removing them needs a filter-repo rewrite and a force push - destructive, and deliberately not done.",
+          "basis": "MEASURED"
+        }
+      ],
+      "events": [
+        {
+          "ts": 1788044072.3501742,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "OBS-07 - X0 Git history still carries the client names the working tree no longer does",
+            "parent": null
+          }
+        },
+        {
+          "ts": 1788044072.3504376,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "citation",
+            "ref": "surfaced 2026-08-29 in session review | acceptance: Promote as a decision: rewrite history, make the repo private, or accept and record it.",
+            "basis": "MEASURED"
+          }
+        },
+        {
+          "ts": 1788044072.350769,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "note",
+            "ref": "The redaction covers the working tree only. Every prior commit on a public repo still has the original names and may be cached or indexed. Removing them needs a filter-repo rewrite and a force push - destructive, and deliberately not done.",
+            "basis": "MEASURED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "4d152c0d",
+      "title": "OBS-08 - X0 main is 157+ commits behind and nothing has been merged",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [
+        {
+          "kind": "citation",
+          "ref": "surfaced 2026-08-29 in session review | acceptance: Promote when the branch is stable: merge, or state why it stays a long-lived branch.",
+          "basis": "MEASURED"
+        },
+        {
+          "kind": "note",
+          "ref": "All work lives on feat/readiness-generator. main is an 18-file skeleton last moved 2026-08-20, so anything browsing the default branch sees almost nothing - and the branch is not independently revertible per ticket.",
+          "basis": "MEASURED"
+        }
+      ],
+      "events": [
+        {
+          "ts": 1788044072.3510602,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "OBS-08 - X0 main is 157+ commits behind and nothing has been merged",
+            "parent": null
+          }
+        },
+        {
+          "ts": 1788044072.3514738,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "citation",
+            "ref": "surfaced 2026-08-29 in session review | acceptance: Promote when the branch is stable: merge, or state why it stays a long-lived branch.",
+            "basis": "MEASURED"
+          }
+        },
+        {
+          "ts": 1788044072.3518162,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "note",
+            "ref": "All work lives on feat/readiness-generator. main is an 18-file skeleton last moved 2026-08-20, so anything browsing the default branch sees almost nothing - and the branch is not independently revertible per ticket.",
+            "basis": "MEASURED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b0c01e07",
+      "title": "OBS-09 - X0 13,560 lines of deploy and rollback tooling exist in no git object (aldc-launchpad)",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [
+        {
+          "kind": "citation",
+          "ref": "surfaced 2026-08-29 in session review | acceptance: Promote now - it is U6 on the Council Room board and needs no design, only review and commit.",
+          "basis": "MEASURED"
+        },
+        {
+          "kind": "note",
+          "ref": "105 of 121 untracked paths in aldc-launchpad have never appeared in any ref, including cli/rollback.py. git check-ignore confirms this is drift, not intent. The rollback half of the evidence gate depends on a file that exists on one disk.",
+          "basis": "MEASURED"
+        }
+      ],
+      "events": [
+        {
+          "ts": 1788044072.3521514,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "OBS-09 - X0 13,560 lines of deploy and rollback tooling exist in no git object (aldc-launchpad)",
+            "parent": null
+          }
+        },
+        {
+          "ts": 1788044072.3524046,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "citation",
+            "ref": "surfaced 2026-08-29 in session review | acceptance: Promote now - it is U6 on the Council Room board and needs no design, only review and commit.",
+            "basis": "MEASURED"
+          }
+        },
+        {
+          "ts": 1788044072.3527632,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "note",
+            "ref": "105 of 121 untracked paths in aldc-launchpad have never appeared in any ref, including cli/rollback.py. git check-ignore confirms this is drift, not intent. The rollback half of the evidence gate depends on a file that exists on one disk.",
+            "basis": "MEASURED"
           }
         }
       ]

@@ -648,6 +648,114 @@ footer b{color:var(--ink-2)}
   "acc": "factory.corpus.available() returns >= 2 fixtures; python -m factory.certify --calibrate scores both PASS",
   "ev": "AB-04",
   "status": "open"
+ },
+ {
+  "id": "OBS-01",
+  "p": "X0",
+  "t": "R10 is unabsorbed — its measurement plan and build order are in no ticket",
+  "track": "observed",
+  "e": "M",
+  "dep": [],
+  "why": "R10 asked whether a hierarchical wiki plus an auto-researcher can train the pipeline, and the answer is filed (126 lines). Its §6 carries a real A/B design with a falsification criterion (interventions per case must drop >=15% in 30 days) and §8 a build order. Neither appears in CIP-01..20 or the AB backlog, so this is a 20th unabsorbed answer.",
+  "acc": "Promote when CIP-01 runs: add R10 §6 and §8 to the absorption sweep alongside AB-01..19.",
+  "ev": "surfaced 2026-08-29 in session review",
+  "status": "open"
+ },
+ {
+  "id": "OBS-02",
+  "p": "X0",
+  "t": "Two independent passes now demand the write gate — raise CIP-14",
+  "track": "observed",
+  "e": "M",
+  "dep": [],
+  "why": "R10 §5: 'no automatic wiki writes during normal work until we have a gating mechanism in place.' The compounding research names the same missing control from a different direction (the store accepts ~100% of writes). Two research programmes converging on one absent mechanism is the strongest signal in the corpus.",
+  "acc": "Promote immediately: CIP-14 moves ahead of the other wave-0 factory tickets.",
+  "ev": "surfaced 2026-08-29 in session review",
+  "status": "open"
+ },
+ {
+  "id": "OBS-03",
+  "p": "X0",
+  "t": "UI tickets must be wire, not build — control-room.md already specs the slices",
+  "track": "observed",
+  "e": "M",
+  "dep": [],
+  "why": "docs/specs/control-room.md is 443 lines: §5 has Slice 0..3 with effort estimates, §7 has the explicit refusals, §1.3 has cost per lane, §2.1 identity. Writing 'build tabs and layout' against that is the CIP-22 mistake — proposing what already exists.",
+  "acc": "Promote when UI tickets are written: each must cite the control-room slice it implements, or say why the spec is wrong.",
+  "ev": "surfaced 2026-08-29 in session review",
+  "status": "open"
+ },
+ {
+  "id": "OBS-04",
+  "p": "X0",
+  "t": "The factory track has no dependency edges at all — true, or unmodelled?",
+  "track": "observed",
+  "e": "M",
+  "dep": [],
+  "why": "All 13 factory-hardening tickets sit at wave 0 with zero edges between them. The graph therefore claims they are fully parallel and none is on the critical path. That is either a real and valuable fact or an artefact of nobody modelling them.",
+  "acc": "Promote at the next board pass: either add the edges, or record in writing that there are none.",
+  "ev": "surfaced 2026-08-29 in session review",
+  "status": "open"
+ },
+ {
+  "id": "OBS-05",
+  "p": "X0",
+  "t": "D5 was never delivered — nobody has said what the external review could not judge",
+  "track": "observed",
+  "e": "M",
+  "dep": [],
+  "why": "The pass returned D0-D4 and omitted D5, the section naming where it was guessing. Its absence is consistent with the other labelling problem: all 15 tickets came back tier=OBSERVED, none DERIVED or ASSUMED, and two of them proposed things already built.",
+  "acc": "Promote by asking the same model for D5 alone, or by writing the limits ourselves from verification.md.",
+  "ev": "surfaced 2026-08-29 in session review",
+  "status": "open"
+ },
+ {
+  "id": "OBS-06",
+  "p": "X0",
+  "t": "The blueprint still describes a client data-isolation weakness, on a public repo",
+  "track": "observed",
+  "e": "M",
+  "dep": [],
+  "why": "blueprints/windsorai_client_a.yaml:56-57 records that one key returns every client's accounts - 45 of them. Not a credential, so the redaction left it, but it is a real weakness statement on a public repository.",
+  "acc": "Promote as a decision, not a build: remove it, or record why it is safe to publish.",
+  "ev": "surfaced 2026-08-29 in session review",
+  "status": "open"
+ },
+ {
+  "id": "OBS-07",
+  "p": "X0",
+  "t": "Git history still carries the client names the working tree no longer does",
+  "track": "observed",
+  "e": "M",
+  "dep": [],
+  "why": "The redaction covers the working tree only. Every prior commit on a public repo still has the original names and may be cached or indexed. Removing them needs a filter-repo rewrite and a force push - destructive, and deliberately not done.",
+  "acc": "Promote as a decision: rewrite history, make the repo private, or accept and record it.",
+  "ev": "surfaced 2026-08-29 in session review",
+  "status": "open"
+ },
+ {
+  "id": "OBS-08",
+  "p": "X0",
+  "t": "main is 157+ commits behind and nothing has been merged",
+  "track": "observed",
+  "e": "M",
+  "dep": [],
+  "why": "All work lives on feat/readiness-generator. main is an 18-file skeleton last moved 2026-08-20, so anything browsing the default branch sees almost nothing - and the branch is not independently revertible per ticket.",
+  "acc": "Promote when the branch is stable: merge, or state why it stays a long-lived branch.",
+  "ev": "surfaced 2026-08-29 in session review",
+  "status": "open"
+ },
+ {
+  "id": "OBS-09",
+  "p": "X0",
+  "t": "13,560 lines of deploy and rollback tooling exist in no git object (aldc-launchpad)",
+  "track": "observed",
+  "e": "M",
+  "dep": [],
+  "why": "105 of 121 untracked paths in aldc-launchpad have never appeared in any ref, including cli/rollback.py. git check-ignore confirms this is drift, not intent. The rollback half of the evidence gate depends on a file that exists on one disk.",
+  "acc": "Promote now - it is U6 on the Council Room board and needs no design, only review and commit.",
+  "ev": "surfaced 2026-08-29 in session review",
+  "status": "open"
  }
 ],
 "pitfalls":[
@@ -786,6 +894,36 @@ function pBoard(){
         '<div class="states"><span class="lbl" style="align-self:center;margin-right:4px">state</span>';
       STATES.forEach(function(x){
         h+='<button type="button" data-set="'+t.id+'" data-v="'+x[0]+'" aria-pressed="'+(s2===x[0])+'">'+x[1]+'</button>';
+      });
+      h+='</div></article>';
+    });
+    h+='</section>';
+  }
+
+  // Third lane. Things surfaced mid-flight while doing something else — the
+  // category that gets lost. The wiki's potential-tickets.md is the same idea and
+  // has graduated 0 of 15, so every row here carries the trigger that promotes it.
+  var obs=D.tickets.filter(function(t){
+    if(t.track!=="observed") return false;
+    if(FILTER==="all") return true;
+    if(FILTER==="ready") return st(t.id)==="todo" && depBlocked(t).length===0;
+    return st(t.id)===FILTER;
+  });
+  if(obs.length){
+    var odone=D.tickets.filter(function(t){return t.track==="observed"&&st(t.id)==="done";}).length;
+    var otot=D.tickets.filter(function(t){return t.track==="observed";}).length;
+    h+='<section class="phase-group"><div class="phase-hd"><span class="tag" style="background:var(--blocked)">LANE 3</span>'+
+       '<h3>Observed in flight</h3><span class="exit">'+odone+' of '+otot+' closed</span></div>'+
+       '<div class="note"><b>Named for how they arrive.</b> Things noticed while doing something else &mdash; which is the highest-value thing anyone notices in a week, and the thing most reliably lost. <b>Every row carries the trigger that promotes it</b>, because the wiki&rsquo;s <span class="mono">potential-tickets.md</span> is this same lane and has graduated <b>0 of 15</b>. A lane with no promotion rule is a graveyard with better formatting. Review at every phase boundary; a row either promotes or is closed with a reason.</div>';
+    obs.forEach(function(t){
+      var s3=st(t.id);
+      h+='<article class="tk '+s3+'"><div class="tk-top"><span class="tk-id">'+t.id+'</span>'+
+        '<h4>'+esc(t.t)+'</h4><span class="pill '+s3+'">'+s3+'</span></div>'+
+        (t.why?'<p class="why">'+esc(t.why)+'</p>':'')+
+        '<dl><dt>promotes when</dt><dd>'+esc(t.acc)+'</dd></dl>'+
+        '<div class="states"><span class="lbl" style="align-self:center;margin-right:4px">state</span>';
+      STATES.forEach(function(x){
+        h+='<button type="button" data-set="'+t.id+'" data-v="'+x[0]+'" aria-pressed="'+(s3===x[0])+'">'+x[1]+'</button>';
       });
       h+='</div></article>';
     });

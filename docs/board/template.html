@@ -358,6 +358,36 @@ function pBoard(){
     });
     h+='</section>';
   }
+
+  // Third lane. Things surfaced mid-flight while doing something else — the
+  // category that gets lost. The wiki's potential-tickets.md is the same idea and
+  // has graduated 0 of 15, so every row here carries the trigger that promotes it.
+  var obs=D.tickets.filter(function(t){
+    if(t.track!=="observed") return false;
+    if(FILTER==="all") return true;
+    if(FILTER==="ready") return st(t.id)==="todo" && depBlocked(t).length===0;
+    return st(t.id)===FILTER;
+  });
+  if(obs.length){
+    var odone=D.tickets.filter(function(t){return t.track==="observed"&&st(t.id)==="done";}).length;
+    var otot=D.tickets.filter(function(t){return t.track==="observed";}).length;
+    h+='<section class="phase-group"><div class="phase-hd"><span class="tag" style="background:var(--blocked)">LANE 3</span>'+
+       '<h3>Observed in flight</h3><span class="exit">'+odone+' of '+otot+' closed</span></div>'+
+       '<div class="note"><b>Named for how they arrive.</b> Things noticed while doing something else &mdash; which is the highest-value thing anyone notices in a week, and the thing most reliably lost. <b>Every row carries the trigger that promotes it</b>, because the wiki&rsquo;s <span class="mono">potential-tickets.md</span> is this same lane and has graduated <b>0 of 15</b>. A lane with no promotion rule is a graveyard with better formatting. Review at every phase boundary; a row either promotes or is closed with a reason.</div>';
+    obs.forEach(function(t){
+      var s3=st(t.id);
+      h+='<article class="tk '+s3+'"><div class="tk-top"><span class="tk-id">'+t.id+'</span>'+
+        '<h4>'+esc(t.t)+'</h4><span class="pill '+s3+'">'+s3+'</span></div>'+
+        (t.why?'<p class="why">'+esc(t.why)+'</p>':'')+
+        '<dl><dt>promotes when</dt><dd>'+esc(t.acc)+'</dd></dl>'+
+        '<div class="states"><span class="lbl" style="align-self:center;margin-right:4px">state</span>';
+      STATES.forEach(function(x){
+        h+='<button type="button" data-set="'+t.id+'" data-v="'+x[0]+'" aria-pressed="'+(s3===x[0])+'">'+x[1]+'</button>';
+      });
+      h+='</div></article>';
+    });
+    h+='</section>';
+  }
   return h;
 }
 

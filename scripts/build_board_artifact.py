@@ -33,7 +33,7 @@ BOARD = ROOT / "docs" / "board"
 # The board shows that honestly rather than pretending one track.
 PLATFORM_MAX = 20
 
-TITLE_RE = re.compile(r"^(?P<id>[A-Z]+-\d+)\s*-\s*(?P<phase>[PF]\d)\s+(?P<title>.+)$")
+TITLE_RE = re.compile(r"^(?P<id>[A-Z]+-\d+)\s*-\s*(?P<phase>[A-Z]\d)\s+(?P<title>.+)$")
 
 
 def load_tasks():
@@ -69,12 +69,17 @@ def build():
             continue
         tid, phase, title = m.group("id"), m.group("phase"), m.group("title")
         num = int(tid.split("-")[1])
-        track = "platform" if (tid.startswith("CIP") and num <= PLATFORM_MAX) else "factory"
+        track = ("observed" if tid.startswith("OBS")
+         else "platform" if (tid.startswith("CIP") and num <= PLATFORM_MAX)
+         else "factory")
 
         d = dict(detail.get(tid, {}))
         # Tickets from the review carry their source and acceptance as evidence.
         if not d.get("acc") or not d.get("ev"):
             for ev in t.get("evidence", []):
+                if ev.get("kind") == "note":
+                    d.setdefault("why", ev.get("ref", ""))
+                    continue
                 src, acc = split_evidence(ev.get("ref", ""))
                 d.setdefault("ev", src)
                 if acc:
@@ -91,7 +96,8 @@ def build():
             "status": t.get("status", "open"),
         })
 
-    tickets.sort(key=lambda x: (x["track"] != "platform", int(x["id"].split("-")[1])))
+    ORDER = {"platform": 0, "factory": 1, "observed": 2}
+    tickets.sort(key=lambda x: (ORDER.get(x["track"], 9), int(x["id"].split("-")[1])))
 
     tmpl = (BOARD / "template.html").read_text(encoding="utf-8")
     if "__TICKETS__" not in tmpl:
@@ -102,9 +108,10 @@ def build():
     io.open(dest, "w", encoding="utf-8", newline="\n").write(out)
 
     plat = sum(1 for x in tickets if x["track"] == "platform")
+    obs = sum(1 for x in tickets if x["track"] == "observed")
     noacc = sum(1 for x in tickets if "No acceptance criterion" in x["acc"])
     print("wrote %s" % dest.relative_to(ROOT))
-    print("  tickets: %d  (platform %d · factory %d)" % (len(tickets), plat, len(tickets) - plat))
+    print("  tickets: %d  (platform %d · factory %d · observed %d)" % (len(tickets), plat, len(tickets)-plat-obs, obs))
     print("  without an acceptance criterion: %d" % noacc)
     if skipped:
         print("  tasks skipped (title not ID - PHASE title): %d" % skipped)
