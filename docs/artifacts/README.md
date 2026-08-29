@@ -32,7 +32,7 @@ because of exactly that. **The link lives in the canonical registry**,
 `aldc-launchpad/docs/artifacts/REGISTRY.md`, which is generated and is the place to look.
 
 It is not read by any code in this package, and it spans agent-factory, prefect-connectors,
-aldc-launchpad, neurospect-learn, the Fusion92 tickets, `ccx` and the skills library. By the test in
+aldc-launchpad, neurospect-learn, the CLIENT-B tickets, `ccx` and the skills library. By the test in
 `wiki/concepts/patterns/session-contention-and-artefact-homes` — *"it spans repos, so it has no
 single code home"* — that makes it memory-layer, alongside `zeus-foundry-brief.html`. The two files
 in the table above stay here because `factory/readiness.py` yields `agent-factory.html` into the

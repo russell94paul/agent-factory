@@ -187,7 +187,7 @@ def build_contract(target: PbiTarget, probes: Optional[Probes] = None) -> GreenC
         """The dataset written to is the one declared, in an environment the change is scoped to.
 
         ⚠ Identity by ID, never by matching values. Two datasets can hold identical numbers and
-        be different datasets — that inference caused a wrong-layer deploy and revert on GEP
+        be different datasets — that inference caused a wrong-layer deploy and revert on CLIENT-A
         "Missing COGs", and again on GP-318 where the named fact was innocent.
         """
         w = p.writes(ctx)

@@ -47,7 +47,7 @@ Model Selection
 Optimization Team
 Triage Team
 Defect Resolution Team
-Client Team (GEP, Fusion92)
+Client Team (CLIENT-A, CLIENT-B)
 R&D
 
 Other features:
@@ -158,7 +158,7 @@ Model Selection
 Optimization Team
 Triage Team
 Defect Resolution Team
-Client Team (GEP, Fusion92
+Client Team (CLIENT-A, CLIENT-B
 
 Other features:
 Interactive UI

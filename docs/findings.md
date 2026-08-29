@@ -58,7 +58,7 @@ distinction between ZERO and NOT-RECORDED that the contract's four verdicts exis
 ### F3 — `grain_confirmed` is not a field, and adding it breaks every blueprint load
 
 - **BELIEVED** — settle the grain question by setting `grain_confirmed` in
-  `blueprints/windsorai_gep.yaml`.
+  `blueprints/windsorai_client_a.yaml`.
 - **ACTUALLY** — `ConnectorTarget` has no such field and `targets.load_target` raises on unknown
   keys by design. Adding it to the YAML breaks every load until the dataclass gains the field.
 - **MEASURED BY** — `_ALLOWED = set(ConnectorTarget.__dataclass_fields__)` in `factory/targets.py`;

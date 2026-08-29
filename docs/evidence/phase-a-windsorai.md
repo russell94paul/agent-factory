@@ -15,7 +15,7 @@ certify `windsorai` today.** The refusal is the deliverable, not a shortfall.
 |---|---|
 | `factory/connector_contract.py` | A1-A12 as executable assertions, parameterised by target |
 | `factory/targets.py` | blueprint -> `ConnectorTarget`; unknown keys raise rather than pass silently |
-| `blueprints/windsorai_gep.yaml` | the windsorai target, every field labelled MEASURED / DERIVED / ASSUMED |
+| `blueprints/windsorai_client_a.yaml` | the windsorai target, every field labelled MEASURED / DERIVED / ASSUMED |
 | `factory/calibration.py` | the known-good world, rebuilt from the 2026-08-20 run |
 | `factory/certify.py` | CLI emitting a JSON verdict — the shape `verify-qa-success` should call |
 | `tests/test_connector_contract.py` | the calibration matrix, 29 cases |
@@ -62,13 +62,13 @@ being made**, and that is indistinguishable from a pass unless the harness says 
 ## What the contract says about `windsorai` today
 
 ```
-connector-e2e/windsorai@GEP: UNMEASURABLE (PASS=11, UNMEASURABLE=1)
+connector-e2e/windsorai@CLIENT-A: UNMEASURABLE (PASS=11, UNMEASURABLE=1)
   [UNMEASURABLE] A12-tenancy-scope: target declares no tenancy scope — cannot certify blast radius
 ```
 
 Eleven assertions pass against the recorded run. The twelfth blocks, and should: one ALDC Windsor
-key returns **every** client's accounts, so an unfiltered pull lands Fusion92 rows in a GEP table
-and nothing downstream can tell. `allowed_tenants` is empty because nobody has written the Navira
+key returns **every** client's accounts, so an unfiltered pull lands CLIENT-B rows in a CLIENT-A table
+and nothing downstream can tell. `allowed_tenants` is empty because nobody has written the CLIENT-A
 account ids down. Until someone does, this connector is not certifiable — which is a true
 statement about the estate, not a limitation of the harness.
 
@@ -83,7 +83,7 @@ statement about the estate, not a limitation of the harness.
    Re-measure from the registry before pinning.
 3. **No pinned test revision exists.** 721 passed on 2026-08-20, but pinning a count is wrong the
    moment a test is added. A5 needs a test-tree revision hash.
-4. **Which Navira account ids are in scope?** Blocks A12, and therefore blocks certification.
+4. **Which CLIENT-A account ids are in scope?** Blocks A12, and therefore blocks certification.
 
 ## Not done
 

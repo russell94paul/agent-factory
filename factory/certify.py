@@ -8,9 +8,9 @@ gate is structurally incapable of validating 36 of them — and it reports that 
 Run with no live probes and every assertion reports UNMEASURABLE. That is the honest answer for
 an unwired harness, and it is deliberately not exit code 0.
 
-    python -m factory.certify blueprints/windsorai_gep.yaml
-    python -m factory.certify blueprints/windsorai_gep.yaml --calibrate   # known-good world
-    python -m factory.certify blueprints/windsorai_gep.yaml --remote --run-id r1   # not us
+    python -m factory.certify blueprints/windsorai_client_a.yaml
+    python -m factory.certify blueprints/windsorai_client_a.yaml --calibrate   # known-good world
+    python -m factory.certify blueprints/windsorai_client_a.yaml --remote --run-id r1   # not us
 
 **`--calibrate` and `--remote` are not two flavours of the same thing.** `--calibrate` scores
 in-process, with the same identity as whoever ran it — fine for developing the contract, worthless

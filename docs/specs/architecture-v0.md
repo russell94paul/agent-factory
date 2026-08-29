@@ -110,7 +110,7 @@ gate wants 15 dimensions and covers **6**. ⚠ `MEASURED` **2026-08-23 — this 
 
 ```yaml
 AgentSpec:
-  id: navira-view-builder
+  id: client-a-view-builder
   version: 7                    # bumped on ANY field below — that is the point
   prompt_ref: prompts/view-builder@a3f9c1     # content-addressed, never inline
   model: sonnet

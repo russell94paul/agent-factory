@@ -36,7 +36,7 @@ from factory.evaluator import (ATTRIBUTION_FIELDS, SUBMISSION_FIELDS, EvaluatorC
                                Submission, UnattributedVerdict, endpoint_mode)
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
-BLUEPRINT = REPO / "blueprints" / "windsorai_gep.yaml"
+BLUEPRINT = REPO / "blueprints" / "windsorai_client_a.yaml"
 
 
 def _sha(p: pathlib.Path) -> str:
@@ -151,7 +151,7 @@ def test_a_weakened_blueprint_is_refused(evaluator, tmp_path):
     """
     weak = tmp_path / "weak.yaml"
     weak.write_text(
-        "connector: windsorai\nclient: GEP\ndeployment: d\n"
+        "connector: windsorai\nclient: CLIENT-A\ndeployment: d\n"
         "landing_table: t\nexpect_rows: false\nprimary_key: []\n"
         "non_null_positive: []\ntenant_column: ''\n", encoding="utf-8")
     verdict = evaluator.submit(Submission(weak.as_uri(), _sha(weak), "run-weak"))

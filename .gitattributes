@@ -1,0 +1,2 @@
+evals/corpus/*.json -text
+evals/MANIFEST.sha256 -text

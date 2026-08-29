@@ -155,7 +155,7 @@ and which evidence is stronger. Do not average them.**
 ## 4. Open questions for Paul, not for the researcher
 
 1. **The embedded terminal** — see the ⛔ above. This is the blocking one.
-2. **Which Navira account ids are in scope?** Blocks the tenancy assertion, and therefore blocks
+2. **Which CLIENT-A account ids are in scope?** Blocks the tenancy assertion, and therefore blocks
    certification of the one green connector.
 3. **Is the landing table one account or two?** 20 rows across 18 campaigns on one date cannot be
    unique on `(account_id, campaign_id, date)`. If it is one account, the declared primary key is

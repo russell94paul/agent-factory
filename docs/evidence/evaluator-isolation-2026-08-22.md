@@ -38,7 +38,7 @@ ownership/credentials out of the agent's capability set does."*
 ### 1. The positive control — the known-good world still scores green, through the service
 
 ```
-$ python -m factory.certify blueprints/windsorai_gep.yaml --remote --run-id evidence-2026-08-22-green
+$ python -m factory.certify blueprints/windsorai_client_a.yaml --remote --run-id evidence-2026-08-22-green
 PASS for evidence-2026-08-22-green - by local-process, bundle 41caa5d8326b
   [PASS] A1-config-satisfiable … through … [PASS] A12-tenancy-scope        (12/12)
 
@@ -139,7 +139,7 @@ Both fixed in this change, same species as the self-matching probe that once ret
 ```bash
 python -m evaluator_service --port 8787          # the separate principal
 export AGENT_FACTORY_EVALUATOR=http://127.0.0.1:8787
-python -m factory.certify blueprints/windsorai_gep.yaml --remote --run-id <id>
+python -m factory.certify blueprints/windsorai_client_a.yaml --remote --run-id <id>
 python -m factory.readiness                      # 4 of 30
 python -m pytest                                 # 72 passed
 ```

@@ -15,11 +15,11 @@ what was decided, what was measured, and what was deliberately deferred.
 
 ## The finding that reframed the build
 
-The questions already exist. `aldc-launchpad/docs/evidence/gep-intake/` holds a triaged, machine-readable
+The questions already exist. `aldc-launchpad/docs/evidence/client-a-intake/` holds a triaged, machine-readable
 intake store for one real client:
 
 ```bash
-cd aldc-launchpad/docs/evidence/gep-intake
+cd aldc-launchpad/docs/evidence/client-a-intake
 python -c "import json;d=json.load(open('triage.json'));r=d['rows'];print(len(r), d['counts'], sum(1 for x in r if str(x.get('question_for_client') or '').strip()))"
 # 36 {'UNDERSPECIFIED': 21, 'DUPLICATE': 7, 'RESEARCH': 5, 'SHIPPED': 2, 'NOT_A_TICKET': 1} 25
 ```
@@ -104,13 +104,13 @@ its own verdict — `CERTIFIED-AGAINST-SUPERSEDED` — not a pass and not a fail
 
 ## Where it lands — decision capture already exists
 
-Measured across `clients/GEP/tickets/*/artifact.yaml` (2 tickets): **2 of 2 carry populated
+Measured across `clients/CLIENT-A/tickets/*/artifact.yaml` (2 tickets): **2 of 2 carry populated
 `decisions`** (8 total), 1 carries a change request.
 
 ```bash
 cd clients && python -c "
 import pathlib,yaml
-for f in sorted(pathlib.Path('GEP/tickets').glob('*/artifact.yaml')):
+for f in sorted(pathlib.Path('CLIENT-A/tickets').glob('*/artifact.yaml')):
     d=yaml.safe_load(f.read_text(encoding='utf-8')) or {}
     print(f.parent.name, len(d.get('decisions') or []), len(d.get('change_requests') or []))"
 ```
@@ -180,7 +180,7 @@ Slices 1 and 2 do not depend on it.
 
 ## Honesty note on which bottleneck this attacks
 
-The portal attacks the **client-response** bottleneck (the GEP domain). It does not attack the
+The portal attacks the **client-response** bottleneck (the CLIENT-A domain). It does not attack the
 connector-delivery bottleneck, whose measured shape is different: one migration was **21.6 minutes of
 active stage time inside 8 h 20 m of wall clock — 4.3%** (`MEASURED`, `docs/specs/product-end-state.md`).
 Two domains, two bottlenecks. Recording this now prevents the portal being judged later against a

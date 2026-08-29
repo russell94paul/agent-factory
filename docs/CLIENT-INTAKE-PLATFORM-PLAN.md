@@ -78,7 +78,7 @@ decisive one killed it**: comparing successes vs failures *within the same topic
 Two things follow, and both are directly reusable here:
 
 - **The fair test is within-topic.** Any claim that our loop improves must compare like with like,
-  or it will measure repetition. This is the same class of error as the GEP wrong-layer deploy.
+  or it will measure repetition. This is the same class of error as the CLIENT-A wrong-layer deploy.
 - **Retooled AOR = coverage:** `coverage = (real questions with a relevant answer) / (all real
   questions)`, judged by **relevance** — not cosine similarity (reintroduces the flaw), not outcome
   (that is RMRR's job). Output is a **ranked gap list**, which is a roadmap.
@@ -145,7 +145,7 @@ over that frontmatter.** That is the cheapest possible v1 and it does not invent
 | **L5 Learning** | coverage, helpfulness, write gate, causal test | **The loop with the evaluator OUTSIDE it** — already drawn in Council Room. Add the write gate as the valve on the Store step. |
 
 **Cross-cutting: one status vocabulary, everywhere.** Reuse the proven set —
-`Live / Partial / Awaiting / Pending / Not-in-scope` (the Navira Delivery & Coverage report shipped
+`Live / Partial / Awaiting / Pending / Not-in-scope` (the CLIENT-A Delivery & Coverage report shipped
 34/8/5/2/2). Do not invent a second one for the portal.
 
 ---
@@ -300,7 +300,7 @@ DELIVERABLES, in order:
      that settles each one.
 
 Begin by running `python workflow-kit/verify.py` and `python -m factory.certify
-blueprints/windsorai_gep.yaml --calibrate` in ../aldc-launchpad and here respectively, and
+blueprints/windsorai_client_a.yaml --calibrate` in ../aldc-launchpad and here respectively, and
 report what they actually say. Do not trust this file's claims about them.
 ```
 

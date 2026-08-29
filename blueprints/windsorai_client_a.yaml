@@ -1,4 +1,4 @@
-# GreenContract target — windsorai @ GEP
+# GreenContract target — windsorai @ CLIENT-A
 #
 # The first real contract instance. Chosen because windsorai landed its first row ever on
 # 2026-08-20 (20 rows, one session id, verified at the consumer layer) after ten attempts and
@@ -9,7 +9,7 @@
 # for a human, not a default to build on.
 
 connector: windsorai
-client: GEP
+client: CLIENT-A
 
 # MEASURED — orchestrator run 2026-08-20, flow run `responsible-pigeon`
 landing_table: QA_DG1_GEP_PREFECT_PR.WINDSORAI__PR.google_ads_CAMPAIGN
@@ -17,8 +17,8 @@ session_column: ___ALDC___GLOBAL_SESSION_ID___
 run_date: "2026-07-22"
 
 # DERIVED — the estate's deployment naming is "<connector> - <client>", measured for
-# `amazon_ads - GEP`. Confirm against `prefect deployment ls` before a live run.
-deployment: "windsorai - GEP"
+# `amazon_ads - CLIENT-A`. Confirm against `prefect deployment ls` before a live run.
+deployment: "windsorai - CLIENT-A"
 
 # DERIVED from connector/connectors/windsorai.py naming convention. Not yet read from source.
 connection_class: WindsorAiConnection
@@ -47,15 +47,15 @@ date_column: date
 non_null_positive: [spend]
 
 # DERIVED — sourced 2026-08-21 from prefect-connectors
-# connector/accounts/GEP/deployments/windsorai.py:23, which declares what the flow REQUESTS.
+# connector/accounts/CLIENT-A/deployments/windsorai.py:23, which declares what the flow REQUESTS.
 # That distinction is the whole point: this list is the requested scope, not the observed
 # landing. Reading it out of landed rows would make completeness unfalsifiable — the exact hole
 # the calibration matrix caught in A9.
 #
-# Its own provenance, quoted from that file: "Navira's Windsor-authorized Google Ads accounts
+# Its own provenance, quoted from that file: "CLIENT-A's Windsor-authorized Google Ads accounts
 # (GP-226, verified 2026-05-29: an unfiltered team-key pull returns 45 Google accounts, of which
-# these 6 are Navira's)". One ALDC Windsor key returns EVERY client's accounts — 45 of them — so
-# an unfiltered pull lands Fusion92 rows in a GEP table and nothing downstream can tell.
+# these 6 are CLIENT-A's)". One ALDC Windsor key returns EVERY client's accounts — 45 of them — so
+# an unfiltered pull lands CLIENT-B rows in a CLIENT-A table and nothing downstream can tell.
 #
 # ⚠ STALENESS, carried deliberately. Verified 2026-05-29, ~12 weeks before this blueprint, and
 # the source file itself says "Confirm against a live pull before activation." A12 now has a
@@ -69,7 +69,7 @@ allowed_tenants:
   - "126-436-3882"   # bigsostore
   - "524-661-7349"   # Cibu
   - "703-152-5903"   # Slobproof
-  - "232-341-9629"   # GEP-Amazon
+  - "232-341-9629"   # CLIENT-A-Amazon
 
 # ⚠ SHAPE CORRECTION. These are DASH-formatted, which is how Windsor emits `account_id` for
 # this source. The calibration corpus was pinned with placeholder ids commented "real shape
@@ -78,7 +78,7 @@ allowed_tenants:
 # landed; inventing them would be fabrication. calibration_target() overrides allowed_tenants
 # from the corpus, so calibration stays self-consistent and this list governs live runs only.
 #
-# ⛔ STILL NOT MEASURED — Meta/Facebook. The same source file records 3 Navira accounts
+# ⛔ STILL NOT MEASURED — Meta/Facebook. The same source file records 3 CLIENT-A accounts
 # authorized in Windsor (of 19 returned unfiltered) whose literal ids were never written down,
 # and holds `REPLACE_BEFORE_ACTIVATION_SEE_TODO` in their place. That placeholder is good
 # design, not an oversight: it matches nothing, so the flow lands zero rows rather than silently

@@ -165,7 +165,7 @@ def _template(name="connector-migration") -> dict:
 
 
 def _blueprint() -> dict:
-    p = FACTORY / "blueprints" / "windsorai_gep.yaml"
+    p = FACTORY / "blueprints" / "windsorai_client_a.yaml"
     if not p.is_file():
         raise Unmeasurable(f"no blueprint at {p}")
     # Deliberately tiny: a real YAML parse would pull a dependency into a probe that must keep
@@ -509,7 +509,7 @@ def g_contract_suite_green():
 def g_output_is_certified():
     try:
         r = subprocess.run(["python", "-m", "factory.certify",
-                            "blueprints/windsorai_gep.yaml"], cwd=FACTORY,
+                            "blueprints/windsorai_client_a.yaml"], cwd=FACTORY,
                            capture_output=True, text=True, timeout=120)
     except Exception as exc:
         raise Unmeasurable(f"could not run certify: {exc}")
@@ -530,14 +530,14 @@ def g_output_is_certified():
 def g_tenancy_declared():
     bp = _blueprint()
     tenants = bp.get("allowed_tenants") or []
-    src = "blueprints/windsorai_gep.yaml"
+    src = "blueprints/windsorai_client_a.yaml"
     if tenants:
         return _pass(f"{len(tenants)} tenant(s) declared", [str(tenants)], src)
     raise Unmeasurable(
         "allowed_tenants is empty — one ALDC Windsor key returns every client's "
-        "accounts, so an unfiltered pull lands Fusion92 rows in a GEP table and "
+        "accounts, so an unfiltered pull lands CLIENT-B rows in a CLIENT-A table and "
         "nothing downstream can tell. Blast radius is uncertifiable until someone "
-        "writes the Navira account ids down.")
+        "writes the CLIENT-A account ids down.")
 
 
 def g_corpus_is_tamper_evident():
@@ -1011,7 +1011,7 @@ def g_impeccable_precedence_settled():
 def g_grain_declared():
     """Is the landing-table grain settled, or still an open question in a comment?"""
     bp = _blueprint()
-    src = "blueprints/windsorai_gep.yaml"
+    src = "blueprints/windsorai_client_a.yaml"
     val = str(bp.get("grain_confirmed") or "").strip()
     ev = ["20 rows across 18 campaigns on one date cannot be unique on "
           "(account_id, campaign_id, date) under a single account",

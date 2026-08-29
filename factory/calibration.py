@@ -30,7 +30,7 @@ from .connector_contract import ConnectorTarget
 from .targets import load_target
 
 CORPUS_ID = "windsorai-2026-08-20"
-BLUEPRINT = Path(__file__).resolve().parent.parent / "blueprints" / "windsorai_gep.yaml"
+BLUEPRINT = Path(__file__).resolve().parent.parent / "blueprints" / "windsorai_client_a.yaml"
 
 
 def _doc() -> Dict[str, Any]:

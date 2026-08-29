@@ -1,5 +1,5 @@
 {
-  "client": "GEP",
+  "client": "CLIENT-A",
   "connector": "windsorai",
   "id": "windsorai-2026-08-20",
   "provenance": {
@@ -7,7 +7,7 @@
     "caveat": "20 rows across 18 campaigns on one date cannot be unique on (account_id, campaign_id, date) under a single account. This world encodes two accounts sharing two campaign ids \u2014 the only arrangement consistent with the measured counts. If the real table holds one account the declared primary key is wrong and A9 will say so.",
     "recorded": "2026-08-20",
     "run": "responsible-pigeon",
-    "table": "QA_DG1_GEP_PREFECT_PR.WINDSORAI__PR.google_ads_CAMPAIGN"
+    "table": "QA_DG1_CLIENT-A_PREFECT_PR.WINDSORAI__PR.google_ads_CAMPAIGN"
   },
   "run_date": "2026-07-22",
   "session": "452d3402-0000-4000-8000-000000000000",
@@ -33,7 +33,7 @@
       "status": 200
     },
     "deployment": {
-      "id": "dep-windsorai-gep",
+      "id": "dep-windsorai-client-a",
       "image_digest": "sha256:d2d7193bc096ae149"
     },
     "forbidden": {

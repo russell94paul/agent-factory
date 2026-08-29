@@ -743,7 +743,7 @@ parameter, not four scripts.
 
 Splitting code (`agent-factory`) from evidence and session memory (`aldc-launchpad`) is defensible:
 the evidence genuinely is cross-repo — `aldc-launchpad/boot-prompts/` carries handoffs for
-`clients`, `navira`, `core_api` and `prefect-connectors` too, and duplicating it per repo would be
+`clients`, `client-a`, `core_api` and `prefect-connectors` too, and duplicating it per repo would be
 worse.
 
 But the *mechanism* joining them is a hard-coded relative path with no verification:
@@ -900,7 +900,7 @@ component"**. Everything below follows from that, and it is also why the primary
 │  RUNNING                                          9 sessions     │
 │  ● control-plane  af/.worktrees/control-plane  ▁▃▅▇▅▃▁▁    3m    │
 │  ● R14-answer     agent-factory                ▇▇▇▇▇▇▇▇   12s    │
-│  ◌ grain          navira                       ▁▁▁▁▁▁▁▁   47m    │
+│  ◌ grain          client-a                       ▁▁▁▁▁▁▁▁   47m    │
 │  … 6 more                                                        │
 ├──────────────────────────────────────────────────────────────────┤
 │  EVIDENCE                        10 of 30 gates · measured 4s    │

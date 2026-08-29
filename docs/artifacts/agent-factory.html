@@ -1053,7 +1053,7 @@ hr.rule{border:0; border-top:1px solid var(--rule); margin:44px 0}
     <div class="sec-n">07 &mdash; blast radius</div>
     <h2 class="sec-h">Tenancy, the gate that does not exist</h2>
     <p class="sec-sub">One vendor key returns every client's accounts. An agent fleet acting across
-      GEP and Fusion92 without a tenancy check is one bad filter away from a cross-client leak.</p>
+      CLIENT-A and CLIENT-B without a tenancy check is one bad filter away from a cross-client leak.</p>
   </div>
 
   <div class="col rv">
@@ -1071,13 +1071,13 @@ hr.rule{border:0; border-top:1px solid var(--rule); margin:44px 0}
         <text x="12" y="72" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="currentColor">One vendor key</text>
         <text x="12" y="92" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".72">returns ALL accounts</text>
         <path d="M180,66 L280,66" fill="none" stroke="var(--pass)" stroke-width="1.6" marker-end="url(#ar)"></path>
-        <text x="192" y="58" font-family="IBM Plex Mono, monospace" font-size="10" fill="var(--pass)">GEP rows</text>
+        <text x="192" y="58" font-family="IBM Plex Mono, monospace" font-size="10" fill="var(--pass)">CLIENT-A rows</text>
         <path d="M180,96 L280,96" fill="none" stroke="var(--fail)" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#ar)"></path>
-        <text x="192" y="114" font-family="IBM Plex Mono, monospace" font-size="10" fill="var(--fail)">Fusion92 rows</text>
+        <text x="192" y="114" font-family="IBM Plex Mono, monospace" font-size="10" fill="var(--fail)">CLIENT-B rows</text>
         <line x1="330" y1="14" x2="330" y2="176" stroke="var(--unmeas)" stroke-width="2.5"></line>
         <text x="340" y="26" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--unmeas)" letter-spacing="1.2">A12 &#8212; THE TENANCY BOUNDARY</text>
         <rect x="400" y="46" width="230" height="70" fill="var(--raise)" stroke="currentColor" stroke-width="1.2"></rect>
-        <text x="414" y="72" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="currentColor">GEP landing table</text>
+        <text x="414" y="72" font-family="Archivo, sans-serif" font-size="13" font-weight="600" fill="currentColor">CLIENT-A landing table</text>
         <text x="414" y="92" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".72">well-formed rows either way</text>
         <path d="M330,66 L392,66" fill="none" stroke="var(--pass)" stroke-width="1.6" marker-end="url(#ar)"></path>
         <path d="M300,96 L326,96" fill="none" stroke="var(--fail)" stroke-width="1.6" stroke-dasharray="5 4"></path>
@@ -1490,7 +1490,7 @@ write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not
     </div>
     <div style="padding:0 18px 18px">
       <p style="font-size:14px;color:var(--ink-2)">The calibration world assumes two accounts sharing two campaign ids. If the real table holds one account, the declared primary key is wrong and A9 is calibrated against a mistake.</p>
-      <p style="font-size:13px"><span class="mono">agent-factory</span> &middot; touches <span class="mono">blueprints/windsorai_gep.yaml, factory/connector_contract.py</span></p>
+      <p style="font-size:13px"><span class="mono">agent-factory</span> &middot; touches <span class="mono">blueprints/windsorai_client_a.yaml, factory/connector_contract.py</span></p>
       <p style="display:flex;flex-wrap:wrap;gap:6px;margin:10px 0"><span class="mono" style="font-size:12px;padding:2px 7px;border:1px solid var(--rule);border-radius:2px;white-space:nowrap;color:var(--ink-2)">grain</span></p>
       <p style="font-size:13px;color:var(--unmeas)"><b>Needs Paul:</b> Snowflake credential approval, and he may just know the answer</p>
       <button type="button" class="mono" data-copy="lane-grain" style="font-size:12px;padding:5px 10px;margin:6px 0;cursor:pointer;border:1px solid var(--rule);background:var(--surface);color:inherit">copy this prompt</button>
@@ -1889,7 +1889,7 @@ write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not
             <td class="what"><b>Is the output actually certified?</b><br>
               <span style="color:var(--ink-2)">12 assertions have no instrument wired</span>
               <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
-                <li>connector-e2e/windsorai@GEP: UNMEASURABLE (UNMEASURABLE=12)</li>
+                <li>connector-e2e/windsorai@CLIENT-A: UNMEASURABLE (UNMEASURABLE=12)</li>
                 <li>Probes refuses every instrument by design — this is the harness declaring it has not measured, not a failure</li>
               </ul>
               <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>The contract must measure a live run, not a replayed one.</i></div>
@@ -1905,7 +1905,7 @@ write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not
               </ul>
               <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>Certifying a pull whose scope is unknown certifies nothing — but a declared list is not a confirmed one, and this gate cannot tell you the ids are still right.</i></div>
             </td>
-            <td class="n"><span class="mono">blueprints/windsorai_gep.yaml</span></td>
+            <td class="n"><span class="mono">blueprints/windsorai_client_a.yaml</span></td>
           </tr>
           <tr>
             <td><span class="chip fail">fail</span></td>
@@ -2014,7 +2014,7 @@ write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not
               </ul>
               <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>The calibration world assumes an arrangement nobody has confirmed.</i></div>
             </td>
-            <td class="n"><span class="mono">blueprints/windsorai_gep.yaml</span></td>
+            <td class="n"><span class="mono">blueprints/windsorai_client_a.yaml</span></td>
           </tr>
           <tr>
             <td><span class="chip pass">pass</span></td>

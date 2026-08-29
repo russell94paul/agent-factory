@@ -199,7 +199,7 @@ def test_a12_catches_another_clients_rows():
     One ALDC vendor key returns every client's accounts. This is that leak, landed.
     """
     world = copy.deepcopy(known_good_world())
-    world["landed"]["rows"][0]["account_id"] = "5555555555"      # a Fusion92 account
+    world["landed"]["rows"][0]["account_id"] = "5555555555"      # a CLIENT-B account
     r = verdict_of(world, "A12")
     assert r.verdict is Verdict.FAIL and "outside scope: 5555555555" in r.detail
 
@@ -224,8 +224,8 @@ def test_a_crashing_instrument_is_unmeasurable_not_fail():
 def test_an_unscoped_target_cannot_certify_tenancy():
     """A target declaring no account ids must block rather than wave through.
 
-    This asserted the SHIPPED blueprint was unscoped until 2026-08-21, when the six Navira
-    account ids were sourced from connector/accounts/GEP/deployments/windsorai.py and filled in.
+    This asserted the SHIPPED blueprint was unscoped until 2026-08-21, when the six CLIENT-A
+    account ids were sourced from connector/accounts/CLIENT-A/deployments/windsorai.py and filled in.
     The property under test was never "the blueprint is empty" — it was "an empty scope blocks".
     So it now builds an unscoped target explicitly instead of relying on the shipped one staying
     incomplete, which is the kind of coupling that turns a real fix into a red suite.
@@ -245,7 +245,7 @@ def test_the_shipped_blueprint_now_declares_a_scope():
     suite above would still be green — a fix that can be undone without a test noticing.
     """
     target = load_target(BLUEPRINT)
-    assert len(target.allowed_tenants) == 6, "six Navira Google Ads accounts, per GP-226"
+    assert len(target.allowed_tenants) == 6, "six CLIENT-A Google Ads accounts, per GP-226"
     assert all("-" in t for t in target.allowed_tenants), (
         "Windsor emits account_id dash-formatted for this source")
 

@@ -78,7 +78,7 @@ The same is true of five more items in the brief:
 5. **Provenance on every agent-produced number.** `MEASURED / DERIVED / ASSUMED`, refusing to render
    when unmeasured — the discipline the published artifacts already use.
 6. **Tenancy in the hard-gate set.** `AUTORESEARCH_REVIEW.md` §5 flags this as the missing gate. An
-   agent fleet acting across GEP and Fusion92 without a tenancy check in the gates is one bad filter
+   agent fleet acting across CLIENT-A and CLIENT-B without a tenancy check in the gates is one bad filter
    away from a cross-client leak. This estate has already had one: a Windsor key returning every
    client's accounts.
 
@@ -252,7 +252,7 @@ Address specifically:
    latency, cost per run, blast-radius containment, and whether cloud credentials can be scoped
    per sandbox. They are on Azure (ACI/Container Apps) with Snowflake; weight the answer
    accordingly.
-6. TENANCY. They serve multiple clients (GEP, Fusion92) from shared infrastructure. What is the
+6. TENANCY. They serve multiple clients (CLIENT-A, CLIENT-B) from shared infrastructure. What is the
    correct isolation model for an optimizer that touches client data paths, and what is the
    minimum gate set that must include a tenancy check? They have already had one incident where a
    single vendor API key returned every client's accounts.

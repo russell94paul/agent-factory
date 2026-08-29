@@ -379,14 +379,14 @@ proved it can land rows. `REPORTED` (README)
 |---|---|---|
 | 1 | Rows land in the target table, keyed and dated as declared | the landing table, queried |
 | 2 | The GreenContract returns `PASS` — not `UNMEASURABLE` — against the run | `python -m factory.certify <blueprint>` |
-| 3 | **Tenant scope holds.** One ALDC Windsor key returns *every* client's accounts; an unfiltered pull lands another client's rows in a GEP table and nothing downstream can tell | A12 against declared `allowed_tenants` |
+| 3 | **Tenant scope holds.** One ALDC Windsor key returns *every* client's accounts; an unfiltered pull lands another client's rows in a CLIENT-A table and nothing downstream can tell | A12 against declared `allowed_tenants` |
 | 4 | Validated **at the consumer's layer**, not only where the change was made | per the estate's evidence gate |
 | 5 | No regression: out-of-scope rows unchanged, row counts stable, deltas equal to expectation | before/after |
 | 6 | A rollback was captured **before** any prod mutation | saved DDL + revert |
 | 7 | The run is in the ledger with cost, wall clock, model and commits | `.data/runs.jsonl`, a real `RECORDED` row |
 | 8 | The team's `TeamSpec` hash is pinned to the verdict | `blueprint.py` |
 
-`blueprints/windsorai_gep.yaml` is the calibration target — chosen because windsorai landed its
+`blueprints/windsorai_client_a.yaml` is the calibration target — chosen because windsorai landed its
 first row ever on 2026-08-20 after ten attempts and zero completions, so the contract is calibrated
 against **known-good**. A contract first exercised on a broken connector cannot tell *"the connector
 is broken"* from *"the contract is wrong."*

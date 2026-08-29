@@ -198,7 +198,7 @@ LANES: List[Lane] = [
             "table holds one account, the declared primary key is wrong and A9 is calibrated "
             "against a mistake.",
         repo="agent-factory",
-        touches="blueprints/windsorai_gep.yaml, factory/connector_contract.py",
+        touches="blueprints/windsorai_client_a.yaml, factory/connector_contract.py",
         size="S",
         gates=["grain"],
         prompt=(

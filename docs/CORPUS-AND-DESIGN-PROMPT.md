@@ -102,7 +102,7 @@ another subject entirely:
 - `agent-sandboxes-simulation-and-bi-exit-2026.md` (494 lines)
 - `army-graph-engineering-research-prompt.md` (155 lines) — 2026-08-03, graph engineering
 - `Narration & Voice System — Self-Improving Data Platform Artifact Skill.md` (816 lines)
-- ⚠ `mmm-method-selection-navira-tier4.md` — **probably out of scope** (client method selection).
+- ⚠ `mmm-method-selection-client-a-tier4.md` — **probably out of scope** (client method selection).
   Include only with a stated reason.
 
 **Tier 3 — the commercial and vision layer:**
@@ -234,7 +234,7 @@ itself contradicts the answers it summarises.
 2. **Our own built modules** — 39 in `factory/`, 26 test files, 2 blueprints, an
    `evaluator_service/`, a sha256-pinned corpus in `evals/`, a `tracker.html`. Measure these, do
    not describe them: `ls factory/*.py | wc -l`, `pytest -q`,
-   `python -m factory.certify blueprints/windsorai_gep.yaml --calibrate`.
+   `python -m factory.certify blueprints/windsorai_client_a.yaml --calibrate`.
 3. **The skills library** at `~/.claude/skills/` — and note its two-tier structure. Only files at
    `<name>/SKILL.md` with YAML frontmatter can be triggered by the model; the rest load only when
    named by path. Read `~/.claude/skills/INDEX.md` and **re-run its counts** rather than quoting
@@ -432,7 +432,7 @@ half-read. D3 is the deliverable that most rewards being done last.
 - **The estate has two halves and they are unrelated.** ALDC/Zeus is client delivery —
   `agent-factory`, `prefect-connectors` (Foundry), `aldc-launchpad`, `clients`. NeuroSpect is the
   trading venture — `neurospect-learn`, `neurospect-wiki`. **Nothing agent-factory-related lives in
-  a NeuroSpect repo.** Clients are **GEP** (canonical; *Navira* is an alias) and **Fusion92**.
+  a NeuroSpect repo.** Clients are **CLIENT-A** (canonical; *CLIENT-A* is an alias) and **CLIENT-B**.
 - **Zeus Memory (`ccx`) silently stores nothing when several Claude sessions are live** — it adopts
   a user only when exactly one hook session is active, and otherwise returns `user_id='anonymous'`
   while the SessionStart hook still prints "✓ connected". If you use `cce_*` tools, verify the

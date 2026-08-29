@@ -39,8 +39,8 @@ when the question is whether the instrument can see. (F76.)
 one connector.**
 
 ```bash
-python -m factory.certify blueprints/windsorai_gep.yaml --calibrate
-# connector-e2e/windsorai@GEP: PASS (PASS=12)
+python -m factory.certify blueprints/windsorai_client_a.yaml --calibrate
+# connector-e2e/windsorai@CLIENT-A: PASS (PASS=12)
 #   scored against corpus windsorai-2026-08-20 — REPLAYED, not a live measurement
 ```
 

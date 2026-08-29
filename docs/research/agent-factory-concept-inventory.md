@@ -82,7 +82,7 @@ handover 7, bounded 4, loop 3. `16` test modules.
 Three gates use check functions that do not carry the prefix. Corrected 2026-08-22 — and recorded
 rather than silently fixed, because it is this document's own rule (**enumerate the registry, not
 the source text**) failing on its first use. The last calibration run reported
-`connector-e2e/windsorai@GEP: UNMEASURABLE (PASS=11, UNMEASURABLE=1)` — A12 blocked on undeclared
+`connector-e2e/windsorai@CLIENT-A: UNMEASURABLE (PASS=11, UNMEASURABLE=1)` — A12 blocked on undeclared
 tenant scope.
 
 ---

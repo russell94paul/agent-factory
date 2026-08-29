@@ -61,7 +61,7 @@ Enumerated from the modules on 2026-08-22, full table in the concept inventory.
 | Test modules | **16** |
 | Research passes filed | **R1–R7**, ~370 KB of answers |
 | Passes written but not yet sent | R8, R9, R10 — and this one |
-| Live certification state | `connector-e2e/windsorai@GEP: UNMEASURABLE (PASS=11, UNMEASURABLE=1)` — A12 blocked on undeclared tenant scope |
+| Live certification state | `connector-e2e/windsorai@CLIENT-A: UNMEASURABLE (PASS=11, UNMEASURABLE=1)` — A12 blocked on undeclared tenant scope |
 
 The load-bearing ones, in our vocabulary:
 

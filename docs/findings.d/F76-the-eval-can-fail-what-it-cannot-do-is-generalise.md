@@ -31,7 +31,7 @@
   world*, which shows each assertion is wired to its subject — it does not show the contract holds
   on a second connector, and 48 connectors remain.
 - **MEASURED BY** — all four, 2026-08-29 at `00f9620`:
-  - `python -m factory.certify blueprints/windsorai_gep.yaml --calibrate` → `PASS (PASS=12)`, every
+  - `python -m factory.certify blueprints/windsorai_client_a.yaml --calibrate` → `PASS (PASS=12)`, every
     assertion listed, footer *"REPLAYED, not a live measurement"*.
   - `python -m pytest tests/test_eval_can_fail.py tests/test_corpus.py -q` → **10 passed**.
   - `grep -n "corpus" tests/test_eval_can_fail.py` → **no hits** (the only `corpus` references in
