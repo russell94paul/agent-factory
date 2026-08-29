@@ -1,0 +1,645 @@
+<title>Intake Platform Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Archivo:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap">
+<style id="css">
+:root{
+  --paper:#F7F6F4; --raise:#FFFFFF; --sink:#EFEDE9;
+  --ink:#17161C; --ink-2:#403D4A; --mute:#6F6B7A;
+  --rule:#DCD8D2; --rule-2:#E9E6E1;
+  --accent:#4C3A8C; --accent-2:#EDE9F6; --accent-3:#372868;
+  --todo:#6F6B7A; --todo-2:#EFEDE9;
+  --doing:#8A5A12; --doing-2:#F7EEDF;
+  --blocked:#9B2F35; --blocked-2:#F8E5E6;
+  --done:#2C6A45; --done-2:#E3EFE8;
+  --shadow:0 1px 2px rgba(23,22,28,.05), 0 10px 28px -20px rgba(23,22,28,.35);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#131218; --raise:#1A1922; --sink:#211F2A;
+  --ink:#EEEBE6; --ink-2:#C0BCC8; --mute:#8C8899;
+  --rule:#2B2934; --rule-2:#211F2A;
+  --accent:#A594E8; --accent-2:#231C3B; --accent-3:#C4B8F2;
+  --todo:#8C8899; --todo-2:#211F2A;
+  --doing:#D8A85A; --doing-2:#2A2113;
+  --blocked:#E4868B; --blocked-2:#2E1719;
+  --done:#6FBE93; --done-2:#14261C;
+  --shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 28px -20px rgba(0,0,0,.9);
+}}
+:root[data-theme="dark"]{
+  --paper:#131218; --raise:#1A1922; --sink:#211F2A;
+  --ink:#EEEBE6; --ink-2:#C0BCC8; --mute:#8C8899;
+  --rule:#2B2934; --rule-2:#211F2A;
+  --accent:#A594E8; --accent-2:#231C3B; --accent-3:#C4B8F2;
+  --todo:#8C8899; --todo-2:#211F2A;
+  --doing:#D8A85A; --doing-2:#2A2113;
+  --blocked:#E4868B; --blocked-2:#2E1719;
+  --done:#6FBE93; --done-2:#14261C;
+  --shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 28px -20px rgba(0,0,0,.9);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:Archivo,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1220px;margin:0 auto;padding:0 24px 96px}
+.mono,code{font-family:"DM Mono",ui-monospace,Consolas,monospace}
+h1,h2,h3{font-family:"Instrument Serif",Georgia,serif;font-weight:400;margin:0;text-wrap:balance}
+a{color:var(--accent)}
+
+.mast{padding:48px 0 22px;border-bottom:1px solid var(--rule)}
+.eyebrow{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:500}
+.mast h1{font-size:clamp(40px,6.5vw,68px);line-height:1;letter-spacing:-.01em;margin:12px 0 0}
+.mast .sub{margin:14px 0 0;max-width:64ch;color:var(--ink-2);font-size:16.5px}
+.mast-meta{display:flex;flex-wrap:wrap;gap:8px 24px;margin-top:22px;font-family:"DM Mono",monospace;font-size:11.5px;color:var(--mute)}
+.mast-meta b{color:var(--ink);font-weight:500}
+
+nav.tabs{position:sticky;top:0;z-index:20;background:var(--paper);border-bottom:1px solid var(--rule);
+  display:flex;gap:2px;overflow-x:auto;padding-top:6px}
+nav.tabs button{appearance:none;border:0;background:none;cursor:pointer;white-space:nowrap;font:inherit;
+  font-size:13.5px;font-weight:500;color:var(--mute);padding:12px 15px;border-bottom:2px solid transparent;
+  margin-bottom:-1px;transition:color .15s ease-out}
+nav.tabs button:hover{color:var(--ink)}
+nav.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+nav.tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:-4px}
+nav.tabs .n{font-family:"DM Mono",monospace;font-size:11px;color:var(--mute);margin-left:6px}
+
+.panel{padding-top:32px}
+.lede{font-size:16.5px;line-height:1.6;max-width:70ch;color:var(--ink-2);margin:0 0 26px}
+.lede strong{color:var(--ink);font-weight:600}
+h2.sec{font-size:14px;margin:40px 0 14px;padding-bottom:8px;border-bottom:1px solid var(--rule);
+  font-family:Archivo,sans-serif;font-weight:600;letter-spacing:.02em}
+h2.sec:first-of-type{margin-top:0}
+
+/* progress */
+.prog{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--rule);
+  border:1px solid var(--rule);margin-bottom:26px}
+.prog div{background:var(--raise);padding:14px 16px}
+.prog .ph{font-family:"DM Mono",monospace;font-size:11px;color:var(--accent);letter-spacing:.08em;font-weight:500}
+.prog .ct{font-family:"DM Mono",monospace;font-size:22px;font-variant-numeric:tabular-nums;margin-top:6px;letter-spacing:-.02em}
+.bar{height:4px;background:var(--rule-2);margin-top:9px;position:relative;overflow:hidden}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--done);display:block}
+
+.filters{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px;align-items:center}
+.filters .lbl{font-family:"DM Mono",monospace;font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--mute);margin-right:3px}
+.chip{appearance:none;cursor:pointer;font:inherit;font-size:12.5px;background:var(--raise);color:var(--ink-2);
+  border:1px solid var(--rule);padding:5px 11px;transition:background .14s,color .14s}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* tickets */
+.phase-group{margin-bottom:30px}
+.phase-hd{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:4px}
+.phase-hd h3{font-size:24px;letter-spacing:-.01em}
+.phase-hd .tag{font-family:"DM Mono",monospace;font-size:11px;background:var(--accent);color:#fff;padding:3px 9px}
+.phase-hd .exit{font-size:12.5px;color:var(--mute)}
+.phase-why{margin:6px 0 14px;font-size:13.5px;color:var(--ink-2);max-width:76ch}
+
+.tk{background:var(--raise);border:1px solid var(--rule);border-left:3px solid var(--todo);padding:16px 18px;margin-bottom:9px}
+.tk.doing{border-left-color:var(--doing)} .tk.blocked{border-left-color:var(--blocked)}
+.tk.done{border-left-color:var(--done);opacity:.62}
+.tk-top{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:7px}
+.tk-id{font-family:"DM Mono",monospace;font-size:12px;font-weight:500;color:var(--accent)}
+.tk h4{margin:0;font-size:16px;font-weight:600;font-family:Archivo,sans-serif;flex:1;min-width:220px}
+.pill{font-family:"DM Mono",monospace;font-size:9.5px;letter-spacing:.09em;padding:3px 7px;text-transform:uppercase}
+.pill.todo{background:var(--todo-2);color:var(--todo)}
+.pill.doing{background:var(--doing-2);color:var(--doing)}
+.pill.blocked{background:var(--blocked-2);color:var(--blocked)}
+.pill.done{background:var(--done-2);color:var(--done)}
+.pill.eff{background:var(--sink);color:var(--mute)}
+.tk .why{font-size:13.5px;color:var(--ink-2);margin:0 0 8px;max-width:78ch}
+.tk dl{display:grid;grid-template-columns:92px 1fr;gap:4px 14px;font-size:12.5px;margin:0 0 10px}
+.tk dt{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--mute);padding-top:3px}
+.tk dd{margin:0;color:var(--ink-2)}
+.tk dd .dep{font-family:"DM Mono",monospace;font-size:11.5px;color:var(--accent)}
+.tk dd .dep.unmet{color:var(--blocked)}
+.states{display:flex;flex-wrap:wrap;gap:5px;padding-top:10px;border-top:1px dashed var(--rule)}
+.states .lbl{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+.states button{appearance:none;cursor:pointer;font:inherit;font-size:12px;padding:4px 11px;background:transparent;
+  color:var(--mute);border:1px solid var(--rule);transition:color .14s,border-color .14s}
+.states button:hover{color:var(--ink);border-color:var(--mute)}
+.states button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.states button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+figure{margin:0 0 26px;background:var(--raise);border:1px solid var(--rule);padding:22px 24px 16px}
+figure .box{overflow-x:auto}
+figure svg{max-width:100%;height:auto;display:block;color:var(--ink);min-width:600px}
+figcaption{margin-top:13px;font-size:13px;color:var(--ink-2);max-width:78ch;line-height:1.55}
+figcaption b{color:var(--ink);font-weight:600}
+.key{display:flex;flex-wrap:wrap;gap:9px 20px;margin-top:12px;font-size:12px;color:var(--ink-2)}
+.key span{display:inline-flex;align-items:center;gap:7px}
+.key i{width:19px;height:0;border-top-width:2.5px;display:inline-block}
+
+.tw{overflow-x:auto;border:1px solid var(--rule);margin-bottom:18px}
+table{border-collapse:collapse;width:100%;font-size:13.5px;background:var(--raise);min-width:560px}
+th,td{text-align:left;padding:11px 15px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:"DM Mono",monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);font-weight:500;background:var(--sink)}
+tr:last-child td{border-bottom:0}
+td.n{font-family:"DM Mono",monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
+td.g{color:var(--done)} td.r{color:var(--blocked)} td.w{color:var(--doing)}
+.note{border-left:3px solid var(--doing);background:var(--doing-2);padding:14px 18px;margin:0 0 16px;font-size:13.5px}
+.note.bad{border-left-color:var(--blocked);background:var(--blocked-2)}
+.note.ok{border-left-color:var(--done);background:var(--done-2)}
+.note b{font-weight:600}
+pre.code{font-family:"DM Mono",monospace;font-size:12.5px;line-height:1.65;background:var(--sink);
+  border:1px solid var(--rule);padding:14px 16px;overflow-x:auto;color:var(--ink-2);margin:0 0 16px;white-space:pre}
+
+.savebar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--raise);border-top:1px solid var(--rule);
+  padding:11px 24px;display:flex;align-items:center;gap:14px;box-shadow:0 -8px 24px -18px rgba(0,0,0,.5)}
+.savebar[hidden]{display:none}
+.savebar .msg{font-size:13px;color:var(--ink-2)} .savebar .msg b{color:var(--ink);font-variant-numeric:tabular-nums}
+.savebar button{appearance:none;cursor:pointer;font:inherit;font-size:13px;font-weight:500;padding:8px 18px;
+  background:var(--accent);color:#fff;border:0;margin-left:auto}
+.savebar button:disabled{opacity:.5;cursor:default}
+footer{margin-top:50px;padding-top:22px;border-top:1px solid var(--rule);font-size:12.5px;color:var(--mute);max-width:80ch}
+footer b{color:var(--ink-2)}
+@media (max-width:720px){.wrap{padding:0 16px 96px}.tk dl{grid-template-columns:1fr;gap:2px}}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.001ms!important;animation-duration:.001ms!important}}
+
+/* motion — visible by default, hidden only once JS runs */
+.rv{opacity:1;transform:none}
+.js .rv{opacity:0;transform:translateY(9px);
+  transition:opacity .5s cubic-bezier(.22,.61,.36,1), transform .5s cubic-bezier(.22,.61,.36,1);
+  transition-delay:calc(var(--i,0) * 55ms)}
+.js .rv.in{opacity:1;transform:none}
+.js .panel{animation:fadein .24s cubic-bezier(.22,.61,.36,1) both}
+@keyframes fadein{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.bar i{transition:width .9s cubic-bezier(.16,.84,.44,1)}
+.dag rect{cursor:pointer;transition:stroke-width .18s ease-out}
+.dag .nd.dim{opacity:.2}
+.dag .ed{transition:opacity .18s ease-out}
+.dag .ed.dim{opacity:.07}
+.dag .ed.hot{stroke:var(--accent);stroke-width:2.2;opacity:1}
+.dag .nd:focus-visible rect{stroke:var(--accent);stroke-width:2.6}
+.daghint{font-size:12.5px;color:var(--mute);margin:10px 0 0}
+@media (prefers-reduced-motion:reduce){
+  .js .rv,.js .rv.in{opacity:1 !important;transform:none !important;transition:none !important}
+  .js .panel{animation:none !important}
+  .bar i{transition:none !important}
+}
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <div class="eyebrow">ALDC · plan of record · 2026-08-29</div>
+    <h1>Intake Platform Board</h1>
+    <p class="sub">A client answers one structured questionnaire; that answer becomes the machine-checkable contract every later stage is judged against; and every correction they make afterwards improves the next client's questionnaire.</p>
+    <div class="mast-meta">
+      <span>Phases <b>6</b></span><span>Tickets <b>20</b></span>
+      <span>Corpora <b>4</b></span><span>Tracker <b style="color:var(--doing)">approved, unbuilt</b></span>
+      <span>Tasks live in <b class="mono">.data/tasks.jsonl</b></span>
+    </div>
+  </header>
+  <nav class="tabs" role="tablist" id="tabs"></nav>
+  <main id="root"></main>
+  <footer>
+    <p><b>Why this is an artifact and not a UI.</b> The Engineering Tracker (Part A) was plan-approved 2026-05-14 and is not built — <span class="mono">data/tracker/</span> holds one PBI-EVAL results file and nothing else. This board works today and its state persists on the page. When Part A ships, these twenty tickets already exist in <span class="mono">.data/tasks.jsonl</span> and move across unchanged.</p>
+    <p style="margin-top:11px"><b>What is not decided here.</b> Effort sizes are estimates for one engineer, not measurements. The 8–12 week figure in the ontology research is for a full domain ontology with 10–30 stakeholder interviews, not a connector spec — no ALDC figure exists, and none is quoted.</p>
+  </footer>
+</div>
+<div class="savebar" id="savebar" hidden>
+  <span class="msg" id="savemsg"></span>
+  <button id="savebtn" type="button">Save board</button>
+</div>
+
+<script type="application/json" id="data">
+{
+"phases":[
+ {"id":"P0","name":"Absorb","when":"before anything else","exit":"AB-01…AB-19 each actioned or rejected in writing; docs/corpus/GAPS.md exists",
+  "why":"Eighteen research passes produced nineteen conclusions that reached a mechanism and never reached the decision record. Adding a twentieth is the failure mode. SYNTHESIS.md §17 measured it: <i>“Seven sentences say an answer has not landed. All seven are false.”</i>"},
+ {"id":"P1","name":"Contract v1","when":"one client, one connector","exit":"a real docs/evidence/&lt;TICKET&gt;.md passes check_intake.py --stage deploy, and certify scores that connector A1–A12",
+  "why":"Prove the whole chain on one real delivery before generalising it. Everything downstream assumes a contract that has actually been satisfied once."},
+ {"id":"P2","name":"Questionnaire","when":"20–30 questions","exit":"a filled form emits valid frontmatter with no manual editing; unmapped question count = 0",
+  "why":"The ontology research is unambiguous: a questionnaire targeting entity types, relationships, roles and decision gates yields <b>70–80%</b> of the model automatically; a generic one yields <b>30–40%</b>. A 2× difference decided entirely by how the form is written."},
+ {"id":"P3","name":"Portal v1","when":"client-facing","exit":"a client completes intake unaided; output lands as a PR; status renders in the five-term vocabulary",
+  "why":"The surface B1 Requirements and B2 Approach have never had. It mirrors the git record — it does not own state."},
+ {"id":"P4","name":"Learning instrumented","when":"after P1 and P2","exit":"write gate rejects a low-grounding write in a test; helpfulness ships with its guards",
+  "why":"Deliberately last. An optimiser pointed at gates that are not yet mechanical will faithfully optimise the wrong thing."},
+ {"id":"P5","name":"Causal test","when":"prove it, do not assert it","exit":"pre/post or A/B on spec completeness, reported with the within-topic control",
+  "why":"A falling correction rate proves improvement only if you rule out that the questions got easier. That needs a controlled comparison, not a trend line."}
+],
+"tickets": "__TICKETS__",
+"pitfalls":[
+ ["P1","The portal becomes a fourth record system","three ticket-record systems already disagree","Portal mirrors; the record stays docs/evidence/&lt;TICKET&gt;.md in git"],
+ ["P2","A learning metric that measures repetition","an 18-point gap collapsed to ~0 within-topic","every improvement claim uses the within-topic fair test"],
+ ["P3","Popular-but-wrong knowledge amplified","rank currently ∝ retrieval_count alone","guarded helpfulness before any ranking boost"],
+ ["P4","A gate that cannot fail","a guard exited 127, blocked nothing for months","every gate ships with a negative control"],
+ ["P5","A generic questionnaire","70–80% vs 30–40% on question quality alone","questions target the four dimensions and each maps to a check"],
+ ["P6","Research that never lands","AB-01…AB-19 unabsorbed; one answer cited 7×, zero conclusions taken","no new lane without naming the answer that failed to cover it"],
+ ["P7","Client fatigue kills the form","20–30 questions is the stated design point","probe the schema and ask them to confirm; never ask what we can measure"],
+ ["P8","Correlation sold as improvement","the research note names A/B or pre/post as the final gate","the causal test is a phase exit criterion"],
+ ["P9","Building on an unbuilt tracker","data/tracker/ holds one PBI-EVAL file","tickets live in .data/tasks.jsonl until Part A ships"],
+ ["P10","Concurrent sessions clobbering each other","five sessions in one repo; a peer pushed commits mid-session","worktree per lane before this scales"]
+],
+"tradeoffs":[
+ {"q":"Where the spec lives","rows":[
+   ["Git markdown + frontmatter","already built, diffable, CI-checkable, no new store","not pretty for clients on its own","TAKE — the portal renders it"],
+   ["Database-backed portal","rich queries, workflow states","fourth record system; needs migrations","later, if ever"],
+   ["Ticket custom fields","client already sees the ticket","schema rigid; no CI hook","no"]]},
+ {"q":"How the questionnaire is delivered","rows":[
+   ["Static form → git PR","trivial, auditable, zero infra","clunky for non-technical clients","PoC"],
+   ["Portal page on existing auth","RLS and per-client auth already provisioned","some build","v2 — the target"],
+   ["Conversational intake","highest completion; adapts","free text must still land in frontmatter; hallucination risk","v3, behind a write gate"]]},
+ {"q":"How much to auto-derive","rows":[
+   ["Ask everything","complete","fatigue; 30–40% yield","no"],
+   ["Probe, ask to confirm","fastest, highest quality","needs source access at kickoff","TAKE"],
+   ["Derive from transcripts","zero client effort","research says it needs curation","supplement, not source"]]},
+ {"q":"The learning signal","rows":[
+   ["Outcome metric only","true outcome axis","no data yet; blind to gaps never retrieved","primary, once instrumented"],
+   ["Coverage only","finds gaps; offline and cheap","availability ≠ helpfulness","secondary"],
+   ["Both, separate axes","complementary by construction","two pipelines","TAKE"],
+   ["Original similarity metric","already built","measures repetition","REJECTED, in writing"]]}
+]
+}
+</script>
+
+<script id="app">
+(function(){
+"use strict";
+document.documentElement.classList.add("js");
+var STILL=false; try{STILL=matchMedia("(prefers-reduced-motion: reduce)").matches;}catch(e){}
+var D=JSON.parse(document.getElementById("data").textContent);
+var STATE=(function(){try{var s=document.getElementById("saved");return s?JSON.parse(s.textContent):{};}catch(e){return {};}})();
+var dirty=false, ns=null, TAB="board", FILTER="all";
+function esc(s){return String(s).replace(/[&<>]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c];});}
+var STATES=[["todo","To do"],["doing","Doing"],["blocked","Blocked"],["done","Done"]];
+function st(id){return STATE[id]||"todo";}
+function counts(){
+  var c={todo:0,doing:0,blocked:0,done:0};
+  D.tickets.forEach(function(t){c[st(t.id)]++;});
+  return c;
+}
+function phaseCounts(p){
+  var ts=D.tickets.filter(function(t){return t.p===p;});
+  return {n:ts.length, done:ts.filter(function(t){return st(t.id)==="done";}).length};
+}
+function depBlocked(t){
+  return (t.dep||[]).filter(function(d){return st(d)!=="done";});
+}
+
+function pBoard(){
+  var c=counts();
+  var h='<p class="lede">Twenty tickets across six phases. <strong>Move a ticket and the board remembers</strong> — state persists on this page, so it survives the session that made it. The same twenty already exist in <span class="mono">.data/tasks.jsonl</span>, so nothing here is a parallel record.</p>';
+  h+='<div class="prog">';
+  D.phases.forEach(function(p){
+    var pc=phaseCounts(p.id), pct=pc.n?Math.round(100*pc.done/pc.n):0;
+    h+='<div><div class="ph">'+p.id+' · '+esc(p.name)+'</div><div class="ct">'+pc.done+'<span style="color:var(--mute);font-size:14px">/'+pc.n+'</span></div>'+
+       '<div class="bar"><i style="width:'+pct+'%"></i></div></div>';
+  });
+  h+='</div>';
+  h+='<div class="filters"><span class="lbl">Show</span>'+
+     '<button class="chip" data-f="all" aria-pressed="'+(FILTER==="all")+'">All 20</button>'+
+     '<button class="chip" data-f="todo" aria-pressed="'+(FILTER==="todo")+'">To do '+c.todo+'</button>'+
+     '<button class="chip" data-f="doing" aria-pressed="'+(FILTER==="doing")+'">Doing '+c.doing+'</button>'+
+     '<button class="chip" data-f="blocked" aria-pressed="'+(FILTER==="blocked")+'">Blocked '+c.blocked+'</button>'+
+     '<button class="chip" data-f="done" aria-pressed="'+(FILTER==="done")+'">Done '+c.done+'</button>'+
+     '<button class="chip" data-f="ready" aria-pressed="'+(FILTER==="ready")+'">Ready to start</button></div>';
+
+  D.phases.forEach(function(p){
+    var ts=D.tickets.filter(function(t){
+      if(t.track!=="platform") return false;
+      if(t.p!==p.id) return false;
+      if(FILTER==="all") return true;
+      if(FILTER==="ready") return st(t.id)==="todo" && depBlocked(t).length===0;
+      return st(t.id)===FILTER;
+    });
+    if(!ts.length) return;
+    h+='<section class="phase-group"><div class="phase-hd"><span class="tag">'+p.id+'</span><h3>'+esc(p.name)+'</h3>'+
+       '<span class="exit">'+esc(p.when)+'</span></div>'+
+       '<p class="phase-why">'+p.why+'</p>';
+    ts.forEach(function(t){
+      var s=st(t.id), blocked=depBlocked(t);
+      h+='<article class="tk '+s+'"><div class="tk-top"><span class="tk-id">'+t.id+'</span>'+
+        '<h4>'+esc(t.t)+'</h4><span class="pill '+s+'">'+s+'</span><span class="pill eff">'+t.e+'</span></div>'+
+        '<p class="why">'+t.why+'</p>'+
+        '<dl><dt>acceptance</dt><dd>'+t.acc+'</dd>'+
+        '<dt>evidence</dt><dd class="mono" style="font-size:11.5px">'+t.ev+'</dd>'+
+        '<dt>depends on</dt><dd>'+(t.dep.length
+            ? t.dep.map(function(d){return '<span class="dep'+(st(d)!=="done"?" unmet":"")+'">'+d+'</span>';}).join(" · ")
+            : '<span style="color:var(--mute)">nothing — can start now</span>')+
+          (blocked.length&&s!=="done"?' <span style="color:var(--blocked);font-size:12px">('+blocked.length+' unmet)</span>':'')+'</dd></dl>'+
+        '<div class="states"><span class="lbl" style="font-family:\'DM Mono\',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);align-self:center;margin-right:4px">state</span>';
+      STATES.forEach(function(x){
+        h+='<button type="button" data-set="'+t.id+'" data-v="'+x[0]+'" aria-pressed="'+(s===x[0])+'">'+x[1]+'</button>';
+      });
+      h+='</div></article>';
+    });
+    h+='</section>';
+  });
+
+  // Second track. CIP-21+ came from the external review and harden agent-factory
+  // itself; they are mis-prefixed and their P-labels mean something different from
+  // the platform's. Shown separately rather than silently interleaved.
+  var fac=D.tickets.filter(function(t){
+    if(t.track!=="factory") return false;
+    if(FILTER==="all") return true;
+    if(FILTER==="ready") return st(t.id)==="todo" && depBlocked(t).length===0;
+    return st(t.id)===FILTER;
+  });
+  if(fac.length){
+    var fdone=D.tickets.filter(function(t){return t.track==="factory"&&st(t.id)==="done";}).length;
+    var ftot=D.tickets.filter(function(t){return t.track==="factory";}).length;
+    h+='<section class="phase-group"><div class="phase-hd"><span class="tag" style="background:var(--doing)">TRACK 2</span>'+
+       '<h3>agent-factory hardening</h3><span class="exit">'+fdone+' of '+ftot+' done</span></div>'+
+       '<div class="note"><b>These are mis-prefixed and pending rename.</b> CIP-21 upward came from the external review and harden the factory itself &mdash; a different job from CIP-01&ndash;20, which build the intake platform. Their <span class="mono">P</span> labels mean something different from the platform&rsquo;s, which is why they are not interleaved above. The corrected ticket-generation prompt renames them to <span class="mono">AF-*</span> on the <span class="mono">F0&ndash;F8</span> axis.</div>';
+    fac.forEach(function(t){
+      var s2=st(t.id), blocked=depBlocked(t);
+      h+='<article class="tk '+s2+'"><div class="tk-top"><span class="tk-id">'+t.id+'</span>'+
+        '<h4>'+esc(t.t)+'</h4><span class="pill '+s2+'">'+s2+'</span><span class="pill eff">'+t.e+'</span></div>'+
+        (t.why?'<p class="why">'+t.why+'</p>':'')+
+        '<dl><dt>acceptance</dt><dd>'+t.acc+'</dd>'+
+        '<dt>source</dt><dd class="mono" style="font-size:11.5px">'+esc(t.ev)+'</dd>'+
+        '<dt>depends on</dt><dd>'+(t.dep.length
+            ? t.dep.map(function(d){return '<span class="dep'+(st(d)!=="done"?" unmet":"")+'">'+esc(d)+'</span>';}).join(" · ")
+            : '<span style="color:var(--mute)">nothing &mdash; can start now</span>')+'</dd></dl>'+
+        '<div class="states"><span class="lbl" style="align-self:center;margin-right:4px">state</span>';
+      STATES.forEach(function(x){
+        h+='<button type="button" data-set="'+t.id+'" data-v="'+x[0]+'" aria-pressed="'+(s2===x[0])+'">'+x[1]+'</button>';
+      });
+      h+='</div></article>';
+    });
+    h+='</section>';
+  }
+  return h;
+}
+
+function figFlow(){
+  var st=[["client answers","questionnaire"],["contract","intake frontmatter"],["execution","connector runs"],["assurance","certify A1–A12"],["learning","coverage + helpfulness"]];
+  var s='',x0=18,w=124,gap=14;
+  st.forEach(function(p,i){
+    var x=x0+i*(w+gap), hot=(i===0||i===4);
+    s+='<rect x="'+x+'" y="52" width="'+w+'" height="54" fill="none" stroke="'+(hot?"var(--accent)":"currentColor")+'" stroke-width="'+(hot?2:1.4)+'"/>'+
+       '<text x="'+(x+w/2)+'" y="76" text-anchor="middle" font-size="12.5" font-weight="600" fill="'+(hot?"var(--accent)":"currentColor")+'">'+p[0]+'</text>'+
+       '<text x="'+(x+w/2)+'" y="93" text-anchor="middle" font-size="10.5" fill="currentColor" opacity=".62">'+p[1]+'</text>';
+    if(i<st.length-1) s+='<line x1="'+(x+w)+'" y1="79" x2="'+(x+w+gap-3)+'" y2="79" stroke="currentColor" stroke-width="1.4" marker-end="url(#a)"/>';
+  });
+  return '<figure><div class="box"><svg viewBox="0 0 720 170" role="img" aria-label="A client questionnaire becomes a contract, which execution satisfies, which assurance certifies, which feeds a learning loop that improves the next questionnaire.">'+
+   '<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker>'+
+   '<marker id="ac" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/></marker></defs>'+
+   '<text x="18" y="28" font-size="12" font-weight="600" fill="currentColor">The loop, and the one edge that makes it compound</text>'+s+
+   '<polyline points="662,106 662,140 80,140 80,110" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#ac)"/>'+
+   '<text x="371" y="156" text-anchor="middle" font-size="11" fill="var(--accent)">ranked gap list improves the next questionnaire</text>'+
+   '</svg></div><figcaption><b>Every box but the first and last already exists.</b> Execution and assurance run today; the contract schema shipped this week. The two accented boxes are the build — and the dashed edge between them is what turns four working stages into a loop that compounds rather than repeats.</figcaption></figure>';
+}
+function figMap(){
+  var rows=[["“What is one row of this feed?”","business key","A10 source-agreement"],
+            ["“Which fields must never be null?”","semantic invariant","A9 semantic invariants"],
+            ["“How fresh must it be?”","freshness bound","freshness tripwire"],
+            ["“How many rows per day?”","volume range","volume tripwire"],
+            ["“Which report will you judge this on?”","consumer surface","consumer-layer validation"],
+            ["“What must be true for done?”","acceptance assertion","check_intake.py"]];
+  var s='',y=64;
+  rows.forEach(function(r,i){
+    s+='<text x="18" y="'+y+'" font-size="11.5" fill="currentColor">'+r[0]+'</text>'+
+       '<line x1="268" y1="'+(y-4)+'" x2="300" y2="'+(y-4)+'" stroke="currentColor" stroke-width="1.2" opacity=".5" marker-end="url(#a)"/>'+
+       '<text x="310" y="'+y+'" font-size="11.5" font-weight="600" fill="var(--accent)">'+r[1]+'</text>'+
+       '<line x1="470" y1="'+(y-4)+'" x2="502" y2="'+(y-4)+'" stroke="currentColor" stroke-width="1.2" opacity=".5" marker-end="url(#a)"/>'+
+       '<text x="512" y="'+y+'" font-size="11.5" fill="currentColor" opacity=".75">'+r[2]+'</text>';
+    y+=30;
+  });
+  return '<figure><div class="box"><svg viewBox="0 0 720 250" role="img" aria-label="Each client question maps to a contract field and to the specific assertion that checks it.">'+
+   '<text x="18" y="26" font-size="12" font-weight="600" fill="currentColor">Question → contract field → the check that settles it</text>'+
+   '<text x="18" y="42" font-size="10.5" fill="currentColor" opacity=".6">nothing is asked that does not become checkable</text>'+s+
+   '</svg></div><figcaption><b>This is the whole design in one figure.</b> A field the client declares becomes an assertion; a field they never declare cannot silently appear in week six, because an undeclared field fails the contract on the first run. The questionnaire and the acceptance test are the same artefact.</figcaption></figure>';
+}
+function figLearn(){
+  return '<figure><div class="box"><svg viewBox="0 0 720 300" role="img" aria-label="The learning loop with the evaluator outside it: the loop may read across the boundary but never write to it.">'+
+   '<text x="18" y="26" font-size="12" font-weight="600" fill="currentColor">The learning loop, and the boundary that keeps it honest</text>'+
+   '<rect x="18" y="58" width="132" height="46" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="84" y="80" text-anchor="middle" font-size="12" fill="currentColor">capture</text><text x="84" y="95" text-anchor="middle" font-size="10" fill="currentColor" opacity=".6">client corrects</text>'+
+   '<rect x="182" y="58" width="132" height="46" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-dasharray="5 4"/><text x="248" y="80" text-anchor="middle" font-size="12" fill="var(--accent)">write gate</text><text x="248" y="95" text-anchor="middle" font-size="10" fill="currentColor" opacity=".6">rejects low grounding</text>'+
+   '<rect x="346" y="58" width="132" height="46" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="412" y="80" text-anchor="middle" font-size="12" fill="currentColor">store</text>'+
+   '<rect x="510" y="58" width="132" height="46" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-dasharray="5 4"/><text x="576" y="80" text-anchor="middle" font-size="12" fill="var(--accent)">rank by helpfulness</text><text x="576" y="95" text-anchor="middle" font-size="10" fill="currentColor" opacity=".6">not by popularity</text>'+
+   '<line x1="150" y1="81" x2="177" y2="81" stroke="currentColor" stroke-width="1.4" marker-end="url(#a)"/>'+
+   '<line x1="314" y1="81" x2="341" y2="81" stroke="currentColor" stroke-width="1.4" marker-end="url(#a)"/>'+
+   '<line x1="478" y1="81" x2="505" y2="81" stroke="currentColor" stroke-width="1.4" marker-end="url(#a)"/>'+
+   '<polyline points="576,104 576,132 84,132 84,106" fill="none" stroke="currentColor" stroke-width="1.4" marker-end="url(#a)"/>'+
+   '<text x="330" y="148" text-anchor="middle" font-size="10.5" fill="currentColor" opacity=".6">retrieved and used in the next session</text>'+
+   '<line x1="18" y1="196" x2="702" y2="196" stroke="currentColor" stroke-width="1.2" stroke-dasharray="6 5" opacity=".6"/>'+
+   '<text x="18" y="190" font-size="10.5" fill="currentColor" opacity=".65">the loop may READ across this line — never WRITE</text>'+
+   '<rect x="200" y="216" width="320" height="52" fill="none" stroke="var(--done)" stroke-width="1.8"/>'+
+   '<text x="360" y="238" text-anchor="middle" font-size="12" font-weight="600" fill="var(--done)">FROZEN evaluator + corpus</text>'+
+   '<text x="360" y="255" text-anchor="middle" font-size="10.5" fill="currentColor" opacity=".7">checksum manifest · today n=1</text>'+
+   '<polyline points="660,104 660,242 524,242" fill="none" stroke="var(--accent)" stroke-width="1.5" marker-end="url(#ac)"/>'+
+   '<text x="672" y="176" text-anchor="end" font-size="10.5" fill="var(--accent)">scored against</text>'+
+   '<line x1="120" y1="170" x2="120" y2="188" stroke="var(--blocked)" stroke-width="1.6"/><line x1="106" y1="190" x2="134" y2="190" stroke="var(--blocked)" stroke-width="3"/>'+
+   '<text x="98" y="182" font-size="10.5" fill="var(--blocked)" text-anchor="end">cannot write</text>'+
+   '</svg></div><figcaption><b>A system that can edit its own scorer will improve its score and nothing else.</b> Both accented boxes are unbuilt: the write gate (the store currently accepts ~100% of writes) and helpfulness ranking (rank scales with retrieval count alone, so a wrong-but-popular memory climbs and spreads its mistake). The corpus is frozen behind a manifest and holds one recorded run — <b>which is why CIP-06 comes before any of this.</b></figcaption></figure>';
+}
+
+function pPlan(){
+  var h='<p class="lede">The full plan. Six phases, ordered so each rests on the one before, with an exit criterion that <strong>can fail</strong> — a phase whose exit cannot fail has not ended, it has been declared over.</p>';
+  h+=figFlow()+figMap();
+  h+='<h2 class="sec">The convergence — why this is mostly wiring</h2>'+
+     '<div class="tw"><table><thead><tr><th>Corpus</th><th>Contributes</th><th>State</th></tr></thead><tbody>'+
+     '<tr><td><b>agent-factory</b><br><span class="mono" style="font-size:11px">80 docs · R1–R18 · F20–F76</span></td><td>the contract, certification, and the negative-control discipline</td><td class="g">built, 304 tests green</td></tr>'+
+     '<tr><td><b>Ontology research</b></td><td>how to elicit a domain model from a stakeholder — the four dimensions</td><td class="w">method, not yet applied</td></tr>'+
+     '<tr><td><b>Compounding research</b></td><td>how to know the system is learning, and the confound that fakes it</td><td class="w">instruments designed, no readings</td></tr>'+
+     '<tr><td><b>workflow-kit</b></td><td>the four gates that make the above fire</td><td class="g">installed, negative control passes</td></tr>'+
+     '</tbody></table></div>'+
+     '<div class="note ok"><b>The insight worth defending.</b> The questionnaire and the acceptance test are the same artefact. That is what makes this cheap: no new data model, no second source of truth, and the client&rsquo;s own words become the thing CI checks.</div>';
+  h+='<h2 class="sec">Phases, in order</h2>';
+  D.phases.forEach(function(p){
+    var pc=phaseCounts(p.id);
+    h+='<section class="phase-group"><div class="phase-hd"><span class="tag">'+p.id+'</span><h3>'+esc(p.name)+'</h3>'+
+       '<span class="exit">'+pc.done+' of '+pc.n+' done</span></div><p class="phase-why">'+p.why+'</p>'+
+       '<div class="note"><b>Exit criterion.</b> '+p.exit+'</div></section>';
+  });
+  h+='<div class="note bad"><b>The sequence rule.</b> P4 must not start before P1 and P2. An optimiser pointed at gates that are not yet mechanical will faithfully optimise the wrong thing — the same error as pointing a review agent at prose it cannot check.</div>';
+  return h;
+}
+function pArch(){
+  return '<p class="lede">Five layers. Solid means built and measured; dashed means recommended and not yet built. <strong>That distinction is the point</strong> — a diagram is persuasive, and drawn alike a proposal becomes a thing that exists.</p>'+
+    figLearn()+
+    '<div class="key"><span><i style="border-color:var(--done)"></i> built &amp; measured</span>'+
+    '<span><i style="border-color:var(--accent);border-top-style:dashed"></i> recommended, not built</span></div>'+
+    '<h2 class="sec">The five layers</h2>'+
+    '<div class="tw"><table><thead><tr><th>Layer</th><th>What it is</th><th>Status</th></tr></thead><tbody>'+
+    '<tr><td class="n">L1 Elicitation</td><td>the questionnaire; schema-probing, four dimensions, every question mapped to a check</td><td class="r">not built</td></tr>'+
+    '<tr><td class="n">L2 Contract</td><td>intake frontmatter + blueprint; DRAFT → AGREED → CERTIFIED → SUPERSEDED</td><td class="w">schema exists, states do not</td></tr>'+
+    '<tr><td class="n">L3 Execution</td><td>connector → storage → warehouse → model, with the client boundary as a real line</td><td class="g">built</td></tr>'+
+    '<tr><td class="n">L4 Assurance</td><td>twelve assertions, four gates, CI — including any path that bypasses a gate</td><td class="g">built</td></tr>'+
+    '<tr><td class="n">L5 Learning</td><td>coverage + helpfulness, write gate as a valve on Store, evaluator outside the loop</td><td class="r">designed, not built</td></tr>'+
+    '</tbody></table></div>'+
+    '<div class="note"><b>Cross-cutting: one status vocabulary.</b> Live / Partial / Awaiting / Pending / Not-in-scope — the set already proven on a client delivery report. Do not invent a sixth term for the portal.</div>';
+}
+function pRisk(){
+  var h='<p class="lede">Ten pitfalls, each with the evidence that makes it real rather than cautious. <strong>None of these is hypothetical</strong> — every one has already happened here or in the research.</p>';
+  h+='<div class="tw"><table><thead><tr><th>#</th><th>Pitfall</th><th>Evidence it is real</th><th>Guard</th></tr></thead><tbody>';
+  D.pitfalls.forEach(function(r){
+    h+='<tr><td class="n">'+r[0]+'</td><td><b>'+r[1]+'</b></td><td>'+r[2]+'</td><td>'+r[3]+'</td></tr>';
+  });
+  h+='</tbody></table></div>';
+  h+='<h2 class="sec">The two that will actually bite</h2>'+
+     '<div class="note bad"><b>P5 — the questionnaire.</b> The entire value of this platform turns on one variable the research measured: question quality moves spec completeness from <b>30–40%</b> to <b>70–80%</b>. Everything else here is plumbing around that number. Spend the time on CIP-07 and CIP-08.</div>'+
+     '<div class="note bad"><b>P2 — the confound.</b> An 18-point learning signal already collapsed to ~0 once the fair test was run. If we build a metric and it shows improvement, the first question is not &ldquo;how much&rdquo; — it is <b>&ldquo;what would produce this reading if nothing were learned?&rdquo;</b></div>';
+  return h;
+}
+function pTrade(){
+  var h='<p class="lede">Four decisions, each with what the option <strong>costs and forecloses</strong>, not just what it offers. A recommendation with no downside listed is one that was not considered.</p>';
+  D.tradeoffs.forEach(function(t){
+    h+='<h2 class="sec">'+esc(t.q)+'</h2><div class="tw"><table><thead><tr><th>Option</th><th>For</th><th>Against</th><th>Verdict</th></tr></thead><tbody>';
+    t.rows.forEach(function(r){
+      var v=r[3], cls = /TAKE/.test(v)?'g':(/REJECT|^no$/.test(v)?'r':'');
+      h+='<tr><td><b>'+r[0]+'</b></td><td>'+r[1]+'</td><td>'+r[2]+'</td><td class="'+cls+'">'+v+'</td></tr>';
+    });
+    h+='</tbody></table></div>';
+  });
+  h+='<div class="note"><b>A rejected option is evidence, not clutter.</b> The similarity-based learning metric is kept on this page with the reason it was rejected, so nobody rebuilds it in six months having forgotten why it went.</div>';
+  return h;
+}
+function pMethod(){
+  return '<p class="lede">What this plan knows, how it knows it, and what it does not know. <strong>Every figure here was measured or is labelled as not measured</strong> — there are almost no numbers on this page for that reason.</p>'+
+    '<h2 class="sec">Basis</h2>'+
+    '<div class="tw"><table><thead><tr><th>Claim</th><th>Basis</th></tr></thead><tbody>'+
+    '<tr><td>agent-factory test and certification state</td><td class="g">MEASURED — 304 tests, certify A1–A12, run 2026-08-29</td></tr>'+
+    '<tr><td>Corpus holds one recorded run</td><td class="g">MEASURED — evals/MANIFEST.sha256</td></tr>'+
+    '<tr><td>Tracker approved but unbuilt</td><td class="g">MEASURED — data/tracker/ holds one PBI-EVAL file</td></tr>'+
+    '<tr><td>70–80% vs 30–40% question quality</td><td class="w">EXTERNAL — the ontology assessment&rsquo;s stated design point, not an ALDC measurement</td></tr>'+
+    '<tr><td>The 18-point signal collapsed within-topic</td><td class="w">EXTERNAL — six tests against 4,518 memories, reported in the compounding note</td></tr>'+
+    '<tr><td>Effort sizes S / M / L</td><td class="r">ESTIMATED — one engineer, uninterrupted, not measured</td></tr>'+
+    '<tr><td>Timeline to first value</td><td class="r">NOT-SUPPLIED — no ALDC figure exists; the 8–12 week figure is for a full domain ontology</td></tr>'+
+    '</tbody></table></div>'+
+    '<h2 class="sec">Where the tickets live</h2>'+
+    '<pre class="code">agent-factory/.data/tasks.jsonl        CIP-01 … CIP-20, append-only event log\nagent-factory/docs/CLIENT-INTAKE-PLATFORM-PLAN.md   the written plan\nagent-factory/docs/reviews/external/   external review responses, before promotion</pre>'+
+    '<div class="note"><b>This board mirrors; it does not own.</b> Moving a ticket here records your decision on this page. The tasks themselves live in the append-only store, and when the Engineering Tracker ships they move across unchanged. Killing this artifact loses a view, not a record.</div>'+
+    '<h2 class="sec">Outstanding</h2>'+
+    '<div class="note bad"><b>The external review has not landed.</b> A pass was sent to an outside model; what came back was an acknowledgement, not the deliverables — no divergence rows, no diagrams, no ticket JSON. Two of its checkable claims were verified: the corpus byte count was exact, and a regex defect it named was real <i>and had already been fixed six days earlier</i>. That second one is the shape of the risk: <b>a stale verdict pointing the wrong way</b>, because it read a decision record describing a state the code has moved past.</div>';
+}
+
+
+var DAGSEL=null;
+function ancestry(id){
+  var byId={},keep={};
+  D.tickets.forEach(function(t){byId[t.id]=t;});
+  keep[id]=1;
+  (function up(x){ ((byId[x]||{}).dep||[]).forEach(function(d){ if(!keep[d]){keep[d]=1;up(d);} }); })(id);
+  (function down(x){ D.tickets.forEach(function(t){ if((t.dep||[]).indexOf(x)>-1 && !keep[t.id]){keep[t.id]=1;down(t.id);} }); })(id);
+  return keep;
+}
+function figDeps(){
+  var ts=D.tickets.filter(function(t){return t.track==="platform";});
+  var cols={}; D.phases.forEach(function(p,i){cols[p.id]=i;});
+  var byCol={}; ts.forEach(function(t){(byCol[t.p]=byCol[t.p]||[]).push(t);});
+  var CW=178, RH=44, PAD=24, maxRows=0;
+  Object.keys(byCol).forEach(function(k){maxRows=Math.max(maxRows,byCol[k].length);});
+  var W=PAD*2+D.phases.length*CW, H=PAD+36+maxRows*RH+16;
+  var pos={};
+  D.phases.forEach(function(p){
+    (byCol[p.id]||[]).forEach(function(t,r){
+      pos[t.id]={x:PAD+cols[p.id]*CW, y:PAD+36+r*RH, w:CW-28, h:30};
+    });
+  });
+  var keep = DAGSEL ? ancestry(DAGSEL) : null;
+  var out='<svg class="dag" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Dependency graph of the twenty platform tickets by phase. Edges run left to right; a ticket cannot start until everything pointing at it is done.">';
+  out+='<defs><marker id="dg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>';
+  D.phases.forEach(function(p){
+    out+='<text x="'+(PAD+cols[p.id]*CW)+'" y="'+(PAD+14)+'" font-size="11" font-weight="600" fill="var(--accent)">'+p.id+" "+esc(p.name)+'</text>';
+  });
+  ts.forEach(function(t){
+    (t.dep||[]).forEach(function(d){
+      var a=pos[d], b=pos[t.id]; if(!a||!b) return;
+      var cls = keep ? ((keep[t.id]&&keep[d])?"ed hot":"ed dim") : "ed";
+      var mx=(a.x+a.w+b.x)/2;
+      out+='<path class="'+cls+'" d="M'+(a.x+a.w)+","+(a.y+15)+" C"+mx+","+(a.y+15)+" "+mx+","+(b.y+15)+" "+b.x+","+(b.y+15)+'" fill="none" stroke="currentColor" stroke-width="1.3" opacity=".45" marker-end="url(#dg)"/>';
+    });
+  });
+  ts.forEach(function(t){
+    var q=pos[t.id], stt=st(t.id);
+    var col = stt==="done"?"var(--done)":stt==="doing"?"var(--doing)":stt==="blocked"?"var(--blocked)":"var(--todo)";
+    var dim = (keep && !keep[t.id]) ? " dim" : "";
+    out+='<g class="nd'+dim+'" data-dag="'+t.id+'" tabindex="0" role="button" aria-label="'+esc(t.id+" "+t.t)+'">';
+    out+='<rect x="'+q.x+'" y="'+q.y+'" width="'+q.w+'" height="'+q.h+'" fill="var(--raise)" stroke="'+col+'" stroke-width="'+(DAGSEL===t.id?2.6:1.5)+'"/>';
+    out+='<text x="'+(q.x+8)+'" y="'+(q.y+19)+'" font-size="11" font-weight="600" fill="'+col+'">'+t.id+'</text>';
+    out+='<text x="'+(q.x+58)+'" y="'+(q.y+19)+'" font-size="10.5" fill="currentColor" opacity=".72">'+esc(t.t.slice(0,19))+(t.t.length>19?"\u2026":"")+'</text>';
+    out+='</g>';
+  });
+  out+='</svg>';
+  var cap = DAGSEL
+    ? ('Showing the chain through <b>'+DAGSEL+'</b> &mdash; click it again to clear.')
+    : 'Click any ticket to isolate its chain.';
+  return '<figure class="rv"><div class="box">'+out+'</div>'+
+    '<figcaption><b>Left to right is the only order this work can happen in.</b> Every edge is a real dependency from the ticket store and the columns are the phases, so a long horizontal run is a chain that cannot be parallelised. '+cap+'</figcaption>'+
+    '<p class="daghint">Node colour is live state: grey to do, amber doing, red blocked, green done. Nothing is positioned by hand &mdash; the layout is computed from the same edges the board filters on.</p></figure>';
+}
+function pDeps(){
+  var ready=D.tickets.filter(function(t){return t.track==="platform"&&st(t.id)==="todo"&&depBlocked(t).length===0;});
+  var names = ready.length ? ready.map(function(t){return '<span class="mono">'+t.id+'</span>';}).join(", ") : "none";
+  return '<p class="lede">The twenty platform tickets as a graph, laid out by phase. <strong>Click a ticket to isolate its chain</strong> &mdash; everything it waits on, and everything waiting on it.</p>'+
+    '<div class="note ok rv"><b>'+ready.length+' ticket'+(ready.length===1?"":"s")+' can start right now</b> &mdash; '+names+'. Everything else is waiting on something, and the graph shows exactly what.</div>'+
+    figDeps();
+}
+function reveal(){
+  var els=document.querySelectorAll(".rv");
+  Array.prototype.forEach.call(els,function(el,i){el.style.setProperty("--i",Math.min(i,8));});
+  if(STILL){Array.prototype.forEach.call(els,function(el){el.classList.add("in");});return;}
+  function sweep(){
+    Array.prototype.forEach.call(document.querySelectorAll(".rv:not(.in)"),function(el){
+      if(el.getBoundingClientRect().top<(window.innerHeight||800)*0.95) el.classList.add("in");
+    });
+  }
+  sweep();
+  if("IntersectionObserver" in window){
+    var io=new IntersectionObserver(function(en){
+      en.forEach(function(e){ if(e.isIntersecting){e.target.classList.add("in"); io.unobserve(e.target);} });
+    },{threshold:.12,rootMargin:"0px 0px -6% 0px"});
+    Array.prototype.forEach.call(els,function(el){io.observe(el);});
+  }
+  setTimeout(function(){Array.prototype.forEach.call(els,function(el){el.classList.add("in");});},2600);
+}
+
+var TABS=[["board","Board",1],["deps","Dependencies",0],["plan","The plan",0],["arch","Architecture",0],["risk","Pitfalls",2],["trade","Trade-offs",0],["method","Method",0]];
+function render(){
+  var c=counts();
+  document.getElementById("tabs").innerHTML=TABS.map(function(t){
+    var n="";
+    if(t[2]===1) n='<span class="n">'+(D.tickets.length-c.done)+' open</span>';
+    if(t[2]===2) n='<span class="n">'+D.pitfalls.length+'</span>';
+    return '<button role="tab" data-tab="'+t[0]+'" aria-selected="'+(TAB===t[0])+'">'+t[1]+n+'</button>';
+  }).join("");
+  var b= TAB==="board"?pBoard(): TAB==="deps"?pDeps(): TAB==="plan"?pPlan(): TAB==="arch"?pArch():
+         TAB==="risk"?pRisk(): TAB==="trade"?pTrade(): pMethod();
+  document.getElementById("root").innerHTML='<div class="panel">'+b+'</div>';
+  reveal();
+  document.getElementById("savemsg").innerHTML= dirty
+    ? 'Unsaved changes. <b>'+c.done+'</b> of '+D.tickets.length+' done.'
+    : '<b>'+c.done+'</b> of '+D.tickets.length+' done · '+c.doing+' in flight · '+c.blocked+' blocked';
+  document.getElementById("savebar").hidden=false;
+  var btn=document.getElementById("savebtn");
+  btn.disabled=!dirty||!ns;
+  btn.textContent= ns ? (dirty?"Save board":"Saved") : "Saving unavailable here";
+}
+document.addEventListener("click",function(e){
+  var g=e.target.closest?e.target.closest("[data-dag]"):null;
+  if(g){DAGSEL=(DAGSEL===g.dataset.dag)?null:g.dataset.dag; render(); return;}
+  var b=e.target.closest?e.target.closest("button"):null; if(!b)return;
+  if(b.dataset.tab){TAB=b.dataset.tab;render();window.scrollTo(0,0);return;}
+  if(b.dataset.f){FILTER=b.dataset.f;render();return;}
+  if(b.dataset.set){
+    var id=b.dataset.set,v=b.dataset.v;
+    if(STATE[id]===v) delete STATE[id]; else STATE[id]=v;
+    dirty=true;render();return;
+  }
+  if(b.id==="savebtn"){save();return;}
+});
+function docHTML(){
+  var css=document.getElementById("css").outerHTML, app=document.getElementById("app").outerHTML,
+      data=document.getElementById("data").outerHTML,
+      saved='<script type="application/json" id="saved">'+JSON.stringify(STATE)+'<\/script>',
+      fonts=Array.prototype.map.call(document.querySelectorAll('link[href*="fonts.g"]'),function(l){return l.outerHTML;}).join(""),
+      body=document.querySelector(".wrap").outerHTML+document.getElementById("savebar").outerHTML;
+  return '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'+
+    '<title>Intake Platform Board</title>'+fonts+css+'</head><body>'+body+data+saved+app+'</body></html>';
+}
+function save(){
+  if(!ns)return; var btn=document.getElementById("savebtn");
+  btn.disabled=true;btn.textContent="Saving…";
+  ns.publish(docHTML()).then(function(){dirty=false;render();}).catch(function(err){
+    var c=(err&&err.code)||"upstream_error";
+    if(c==="conflict")return;
+    if(c==="not_writer"||c==="not_granted"||c==="not_declared"||c==="capability_disabled"){
+      ns=null;render();document.getElementById("savemsg").textContent="Read-only view — changes stay in this browser only.";return;}
+    btn.disabled=false;btn.textContent="Save failed — retry";
+  });
+}
+render();
+if(window.claude&&window.claude.use){window.claude.use("artifact").then(function(n){ns=n;render();}).catch(function(){});}
+})();
+</script>

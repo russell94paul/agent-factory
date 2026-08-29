@@ -4,7 +4,8 @@
 **Goal of that session:** stop designing. Lock design, tracker, roadmap, dependencies, use-cases and
 diagrams into one artifact Paul can follow while he works, and leave nothing still "to be decided".
 
-`next:` **Start with the divergence pass (step 1). Do not re-plan.** The plan exists and is
+`next:` **Start with the divergence pass (step 1). Do not re-plan.** Then run the corrected
+ticket-generation prompt at `docs/TICKET-GENERATION-PROMPT.md` and build out the board UI. The plan exists and is
 published; what it lacks is a check against the code and a locked roadmap.
 
 ---
@@ -96,6 +97,62 @@ Republish to the **same URL** so Paul's saved ticket states survive. The board i
 follows while working — every section must answer "what do I do next" without a second document.
 
 ---
+
+## Parallelism — computed from the graph, not assigned
+
+`python scripts/build_board_artifact.py` then the Dependencies tab draws this; the numbers below
+come from the 18 real edges in the ticket store.
+
+```
+wave 0   15 tickets   CIP-01, CIP-03  +  ALL 13 factory tickets
+wave 1    2           CIP-02, CIP-04
+wave 2    2           CIP-05, CIP-07
+wave 3    3           CIP-06, CIP-08, CIP-14
+wave 4    4           CIP-09, CIP-10, CIP-16, CIP-17
+wave 5    1           CIP-11
+wave 6    3           CIP-12, CIP-13, CIP-15
+wave 7-9  1 each      CIP-18 -> CIP-19 -> CIP-20
+```
+
+**Critical path — 10 deep, the floor on elapsed time whatever the parallelism:**
+
+```
+CIP-03 -> CIP-04 -> CIP-07 -> CIP-08 -> CIP-10 -> CIP-11 -> CIP-15 -> CIP-18 -> CIP-19 -> CIP-20
+   S       M         M         M         M         L         L         M         L         M
+```
+
+Two things fall out of this that are **not** obvious from reading the plan:
+
+1. **All 13 factory-hardening tickets are wave 0 and none is on the critical path.** They have no
+   dependencies at all, on each other or on anything. They can run in any order, at any time, by
+   anyone — and finishing all of them moves the platform delivery date by zero days. Schedule them
+   as filler, never as a blocker.
+2. **P0 "Absorb" is not a prerequisite.** CIP-01 blocks only CIP-02; the pilot (CIP-03) can start
+   immediately in parallel. The phase *ordering* reads like a gate and the *graph* says otherwise —
+   trust the graph.
+
+The critical path runs through **CIP-07 → CIP-08 → CIP-10**, the questionnaire. That is also where
+the single highest-leverage number in the whole plan lives (70–80% vs 30–40% spec completeness).
+**Spend disproportionate care there and hurry elsewhere.**
+
+## Running it efficiently
+
+This session will be long. Cost is dominated by re-reading things that did not change.
+
+- **Read the generated board, not the corpus.** `docs/board/tickets.json` is 55 tasks in one file.
+  `SYNTHESIS.md` is 2,422 lines and you almost never need all of it — grep it for the section you
+  are checking and read that section.
+- **Do not re-read what a command can tell you.** `python scripts/export_board.py`,
+  `python -m factory.board`, `python -m pytest -q` each answer in a few lines what reading files
+  answers in thousands.
+- **Batch independent reads into one message.** Parallel tool calls, not a chain.
+- **Delegate mechanical lookups.** "Which file defines X", "how many Y are there" — a cheap subagent
+  or a single grep, never a full-file read into the main context.
+- **Verify a sample, not everything.** For an external answer's citations, check the load-bearing
+  ones and say how many you checked. `verification.md` checked six and said so.
+- **Write findings down as you go.** A finding re-derived in hour three because it was not recorded
+  in hour one is the most expensive thing in a long session.
+- **Do not re-plan.** The plan is written, published and committed. Divergence and lock, not design.
 
 ## Constraints
 

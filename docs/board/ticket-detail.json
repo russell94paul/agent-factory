@@ -1,0 +1,181 @@
+{
+  "_note": "Authored prose per ticket. Merged with .data/tasks.jsonl by scripts/build_board_artifact.py. Status and existence come from the store; this file only carries the writing.",
+  "detail": {
+    "CIP-01": {
+      "why": "Nineteen conclusions that named a mechanism and never reached the decision record. A written reject closes one as legitimately as a build does.",
+      "acc": "Every AB row carries DO / REJECT / MERGE and a one-line reason. Zero rows left unjudged.",
+      "ev": "docs/absorption-backlog.md, every row terminal",
+      "e": "L",
+      "dep": []
+    },
+    "CIP-02": {
+      "why": "A gap register judged against a stated objective, so \u201cmissing\u201d means missing relative to something.",
+      "acc": "Every gap names the answer that should have covered it, by file and section.",
+      "ev": "docs/corpus/GAPS.md",
+      "e": "M",
+      "dep": [
+        "CIP-01"
+      ]
+    },
+    "CIP-03": {
+      "why": "A pilot chosen for convenience proves nothing transferable. State the selection reason so a failure is interpretable.",
+      "acc": "One connector named, with the reason it is representative and what it will not prove.",
+      "ev": "docs/evidence/&lt;TICKET&gt;.md \u00a71",
+      "e": "S",
+      "dep": []
+    },
+    "CIP-04": {
+      "why": "The record is the artefact everything else checks. One real one beats a template nobody filled.",
+      "acc": "Passes check_intake.py --stage commit, then --stage deploy. Consumer route walked, not assumed.",
+      "ev": "docs/evidence/&lt;TICKET&gt;.md, all four sections",
+      "e": "M",
+      "dep": [
+        "CIP-03"
+      ]
+    },
+    "CIP-05": {
+      "why": "Closes the loop from what the client declared to what actually landed.",
+      "acc": "certify returns PASS on all twelve, and labels its own basis REPLAYED or LIVE.",
+      "ev": "certify output, committed",
+      "e": "M",
+      "dep": [
+        "CIP-04"
+      ]
+    },
+    "CIP-06": {
+      "why": "The corpus holds one file. A frozen evaluator scoring n=1 cannot tell a good version from a lucky replay.",
+      "acc": "Corpus count rises; MANIFEST.sha256 verifies; test_corpus.py green.",
+      "ev": "evals/MANIFEST.sha256",
+      "e": "S",
+      "dep": [
+        "CIP-05"
+      ]
+    },
+    "CIP-07": {
+      "why": "Entity types, relationships, roles, decision gates. The dimensions are the schema, not a style choice.",
+      "acc": "Every question maps to one of the four; count is 20\u201330; none is free text without a target field.",
+      "ev": "docs/specs/questionnaire.md",
+      "e": "M",
+      "dep": [
+        "CIP-04"
+      ]
+    },
+    "CIP-08": {
+      "why": "A question whose answer nothing checks is a question that produces a hope.",
+      "acc": "A table with three columns and no empty third cell.",
+      "ev": "the mapping table, in the spec",
+      "e": "M",
+      "dep": [
+        "CIP-07"
+      ]
+    },
+    "CIP-09": {
+      "why": "20\u201330 questions is at the edge of what a client will finish. Every field we can read is a field we must not ask.",
+      "acc": "Fields derivable from the source are pre-filled and marked as probed, not asserted.",
+      "ev": "a probe run against the pilot source",
+      "e": "M",
+      "dep": [
+        "CIP-08"
+      ]
+    },
+    "CIP-10": {
+      "why": "Any hand-editing step between the client's answer and the contract is where drift enters.",
+      "acc": "A filled form produces frontmatter that passes check_intake.py with zero edits.",
+      "ev": "round-trip test",
+      "e": "M",
+      "dep": [
+        "CIP-08"
+      ]
+    },
+    "CIP-11": {
+      "why": "The client sees their own declaration reflected back as Live / Partial / Awaiting / Pending / Not-in-scope.",
+      "acc": "Uses the existing five-term vocabulary. No sixth term invented.",
+      "ev": "rendered page, screenshot in docs/evidence/",
+      "e": "L",
+      "dep": [
+        "CIP-10"
+      ]
+    },
+    "CIP-12": {
+      "why": "Three ticket-record systems already disagree. A fourth that owns state is the failure, not the fix.",
+      "acc": "Portal has no write path to anything but a PR. Killing the portal loses no record.",
+      "ev": "the PR a submission produced",
+      "e": "M",
+      "dep": [
+        "CIP-11"
+      ]
+    },
+    "CIP-13": {
+      "why": "Per-client auth and row-level security are already provisioned in code. Inventing a second model is how isolation breaks.",
+      "acc": "No new auth code. Access provisioned by the existing CLI.",
+      "ev": "the provisioning run",
+      "e": "S",
+      "dep": [
+        "CIP-11"
+      ]
+    },
+    "CIP-14": {
+      "why": "Named as missing in the compounding research \u2014 the store currently accepts ~100% of writes.",
+      "acc": "A deliberately ungrounded write is refused in a test. Rejection rate is reported, not assumed.",
+      "ev": "the negative control",
+      "e": "M",
+      "dep": [
+        "CIP-05"
+      ]
+    },
+    "CIP-15": {
+      "why": "Retooled AOR. Compare the corpus to real demand, not to itself \u2014 comparing it to itself measures repetition.",
+      "acc": "Judged by relevance, not cosine similarity and not outcome. Output is a ranked gap list.",
+      "ev": "the first ranked gap list",
+      "e": "L",
+      "dep": [
+        "CIP-11"
+      ]
+    },
+    "CIP-16": {
+      "why": "Rank currently scales with retrieval_count alone, so a wrong-but-popular memory climbs and spreads its mistake.",
+      "acc": "max(0,(uses\u2212corrections+k)/(uses+2k)) with k\u22482. The naive ratio is not shipped.",
+      "ev": "the three worked cases from the research note",
+      "e": "M",
+      "dep": [
+        "CIP-14"
+      ]
+    },
+    "CIP-17": {
+      "why": "A guard blocked nothing for months because it depended on a binary that was not installed and exited the wrong code.",
+      "acc": "Each gate proves it blocks AND proves it lets legitimate work through.",
+      "ev": "the verify run",
+      "e": "M",
+      "dep": [
+        "CIP-14"
+      ]
+    },
+    "CIP-18": {
+      "why": "The decisive test that collapsed an 18-point signal to ~0. Without it, any improvement claim measures repetition.",
+      "acc": "Compares like with like inside one topic cluster. Reports the control alongside the result.",
+      "ev": "the harness, and its output on real data",
+      "e": "M",
+      "dep": [
+        "CIP-15"
+      ]
+    },
+    "CIP-19": {
+      "why": "A falling correction rate proves improvement only if the questions did not simply get easier.",
+      "acc": "A controlled comparison, pre-registered before the data is seen.",
+      "ev": "the design, then the result",
+      "e": "L",
+      "dep": [
+        "CIP-18"
+      ]
+    },
+    "CIP-20": {
+      "why": "The agreeing cases are the control; the divergent ones are the finding. Publishing only the wins is how a confound survives.",
+      "acc": "Every divergence investigated and reported, including the ones that weaken the claim.",
+      "ev": "the published reconciliation",
+      "e": "M",
+      "dep": [
+        "CIP-19"
+      ]
+    }
+  }
+}
