@@ -1,3 +1,9 @@
+> **Verbatim, with one redaction.** This is the external model's response exactly as returned,
+> except that the client identifier in the blueprint filename was replaced
+> (`windsorai_gep.yaml` → `windsorai_client_a.yaml`, 2 occurrences) to match the repository
+> redaction of 2026-08-29. The model read the pre-redaction branch. No substantive content was
+> altered — see `verification.md` for what was checked rather than edited.
+
 # D0 — Document/Code Divergence
 
 **Branch:** `feat/readiness-generator` (157 commits ahead of `main`). All citations below reference raw files from this branch.
@@ -10,7 +16,7 @@
 
 | Field | Value |
 |---|---|
-| **CLAIM** | `python -m factory.certify blueprints/windsorai_gep.yaml --calibrate` → `PASS (PASS=12)` |
+| **CLAIM** | `python -m factory.certify blueprints/windsorai_client_a.yaml --calibrate` → `PASS (PASS=12)` |
 | **SOURCE** | `README.md` L27-L33 |
 | **REALITY** | **CONFIRMED**. `factory/certify.py` implements `--calibrate` path via `CtxProbes` reading the corpus. `factory/connector_contract.py` defines A1–A12. `tests/test_connector_contract.py` enforces `test_every_assertion_has_been_proved_able_to_fail`. The README correctly distinguishes "REPLAYED, not a live measurement". |
 | **VERIFIED_AT** | `factory/certify.py:14-18`; `factory/connector_contract.py:3-6`; `tests/test_connector_contract.py:3-6` |
@@ -504,7 +510,7 @@ flowchart LR
   {"id":"CIP-23","phase":"P2","title":"Surface the needs field from ~/.claude/jobs/*/state.json","why":"4 agents blocked on written questions; no surface shows the needs field","depends_on":["CIP-22"],"acceptance":"A blocked agent's question appears on the Sessions tab, oldest-first, with taskbar flash","evidence":"factory/sessions.py:111-113; factory/sessions.py:252","effort":"M","tier":"OBSERVED","source":"factory/sessions.py § blocked()"},
   {"id":"CIP-24","phase":"P1","title":"Assert CLAUDE_CODE_SESSION_NAME reaches the spawned process","why":"5 of 12 live sessions share one name; the env var is set but no test proves it reaches the process","depends_on":[],"acceptance":"tests/test_session_naming.py passes — spawns through the real launcher, reads name from registry","evidence":"scripts/local_tracker.py:191-196","effort":"S","tier":"OBSERVED","source":"scripts/local_tracker.py § _launch_script"},
   {"id":"CIP-25","phase":"P2","title":"Fix finish.checks() dead ledger check — per-lane NOTHING TO REPORT","why":"nothing_to_report() counts the literal string globally, matching the ledger's own instruction sentence","depends_on":[],"acceptance":"A lane with no findings entry and no NOTHING TO REPORT is refused; finish.checks() can fail","evidence":"factory/finish.py:89-92; factory/findings.py:152-156","effort":"S","tier":"OBSERVED","source":"factory/finish.py § checks()"},
-  {"id":"CIP-26","phase":"P2","title":"Add tenancy-verified gate — confirm declared tenants against a live pull","why":"The declared list was verified 2026-05-29, ~12 weeks before the blueprint; tenancy declares a scope, it does not verify it","depends_on":["certified"],"acceptance":"python -m factory.readiness shows tenancy-verified: PASS when tenants match; FAIL when they do not","evidence":"factory/board.py:35-41; blueprints/windsorai_gep.yaml","effort":"M","tier":"OBSERVED","source":"factory/board.py § DEPENDS"},
+  {"id":"CIP-26","phase":"P2","title":"Add tenancy-verified gate — confirm declared tenants against a live pull","why":"The declared list was verified 2026-05-29, ~12 weeks before the blueprint; tenancy declares a scope, it does not verify it","depends_on":["certified"],"acceptance":"python -m factory.readiness shows tenancy-verified: PASS when tenants match; FAIL when they do not","evidence":"factory/board.py:35-41; blueprints/windsorai_client_a.yaml","effort":"M","tier":"OBSERVED","source":"factory/board.py § DEPENDS"},
   {"id":"CIP-27","phase":"P1","title":"Make CONNECTORS resolution unconditional (fix F72)","why":"The board's headline number depends on where you run it — 9 or 10 at the same commit","depends_on":[],"acceptance":"python -m factory.readiness returns the same headline from the primary and from every lane worktree","evidence":"factory/readiness.py:16-17; F72","effort":"S","tier":"OBSERVED","source":"factory/readiness.py § CONNECTORS"},
   {"id":"CIP-28","phase":"P2","title":"Move evidence packs to docs/research/.packs/","why":"Evidence packs are excluded by string-suffix guards; the guard is fragile and a rename would make a pack appear as a prompt","depends_on":[],"acceptance":"A pack never appears as a prompt in the Research tab; string-suffix guards are removed","evidence":"factory/dispatch.py:82-84; scripts/local_tracker.py:1205-1206","effort":"S","tier":"OBSERVED","source":"factory/dispatch.py § prompts()"},
   {"id":"CIP-29","phase":"P3","title":"Introduce Snapshot as the measurement scope object","why":"measure() is a free function; every consumer re-runs it. Flow runs measure() 5 times per page load","depends_on":[],"acceptance":"/flow drops from 5 measure() calls to 1; every rendered number carries its age as a property","evidence":"factory/schedule.py:35-37; factory/readiness.py:1052-1063","effort":"M","tier":"OBSERVED","source":"factory/schedule.py § Snapshot"},
