@@ -198,15 +198,76 @@ def test_a_run_id_that_shapes_a_path_is_refused(verdicts):
 
 # --------------------------------------------------------------------------- attribution
 
-def test_an_unattributed_verdict_is_not_believed():
-    """Anything on a socket can emit the string PASS. Only an attributed one counts."""
+#: A fully attributed block, to vary one field at a time against.
+_WHO = {"identity": "e", "bundle_sha256": "a" * 64}
+_WORLD = {"corpus": "c", "sha256": "b" * 64, "recorded": "2026-08-20"}
+
+
+@pytest.mark.parametrize("payload, why", [
+    ({"verdict": "PASS", "promotable": True, "run_id": "x"},
+     "the keys are absent"),
+    # ⛔ The case the old test could not reach: the keys are PRESENT and say nothing. Until
+    # 2026-08-29 this parsed, reported "PASS … by unidentified, bundle ?" with promotable=True,
+    # and `certify --remote` exited 0 on it. Key presence is not attribution.
+    ({"verdict": "PASS", "promotable": True, "run_id": "x",
+      "evaluator": None, "scored_against": None},
+     "the keys are present and null"),
+    ({"verdict": "PASS", "promotable": True, "run_id": "x",
+      "evaluator": {}, "scored_against": _WORLD},
+     "the evaluator block is empty"),
+    ({"verdict": "PASS", "promotable": True, "run_id": "x",
+      "evaluator": {"bundle_sha256": "a" * 64}, "scored_against": _WORLD},
+     "no identity"),
+    ({"verdict": "PASS", "promotable": True, "run_id": "x",
+      "evaluator": {"identity": "e"}, "scored_against": _WORLD},
+     "no bundle hash — two disagreeing verdicts could not be told apart"),
+    ({"verdict": "PASS", "promotable": True, "run_id": "x",
+      "evaluator": {"identity": "  ", "bundle_sha256": "a" * 64}, "scored_against": _WORLD},
+     "an identity of whitespace names nobody"),
+    ({"verdict": "PASS", "promotable": True, "run_id": "x",
+      "evaluator": "local-process", "scored_against": _WORLD},
+     "the evaluator is a string, not an attribution block"),
+    ({"verdict": "PASS", "promotable": True, "run_id": "x",
+      "evaluator": _WHO, "scored_against": None},
+     "a scored verdict that names no world"),
+    ({"verdict": "FAIL", "promotable": False, "run_id": "x",
+      "evaluator": _WHO, "scored_against": {"sha256": "b" * 64}},
+     "a scored_against block with no corpus in it"),
+])
+def test_an_unattributed_verdict_is_not_believed(payload, why):
+    """Anything on a socket can emit the string PASS. Only an attributed one counts.
+
+    Each case is a verdict that would otherwise have been believed AND marked promotable. The
+    null-keys case is the one the previous version of this test omitted the keys for, and
+    therefore pinned presence rather than content — a guarantee whose test cannot catch its own
+    violation.
+    """
     with pytest.raises(UnattributedVerdict):
-        RemoteVerdict.parse({"verdict": "PASS", "promotable": True, "run_id": "x"})
+        RemoteVerdict.parse(payload)
+
+
+def test_a_fully_attributed_verdict_still_parses():
+    """The positive control. Without it, every case above would also pass if parse() raised on
+    everything."""
+    v = RemoteVerdict.parse({"verdict": "PASS", "promotable": True, "run_id": "x",
+                             "evaluator": _WHO, "scored_against": _WORLD})
+    assert v.is_pass and v.promotable
+    assert "unidentified" not in v.summary()
+
+
+@pytest.mark.parametrize("verdict", ["REFUSED", "UNMEASURABLE", "NOT_RUN"])
+def test_an_honest_refusal_may_name_no_corpus(verdict):
+    """The service emits scored_against=None for these on purpose — nothing was scored. Refusing
+    to parse them would turn an honest refusal into an unusable one, and the caller would lose the
+    reason. They still have to say who refused."""
+    v = RemoteVerdict.parse({"verdict": verdict, "promotable": False, "run_id": "x",
+                             "evaluator": _WHO, "scored_against": None})
+    assert v.verdict == verdict and not v.is_pass and not v.promotable
 
 
 def test_promotable_cannot_outrun_the_verdict():
     payload = {"verdict": "FAIL", "promotable": True, "run_id": "x",
-               "evaluator": {"identity": "e"}, "scored_against": {"corpus": "c"}}
+               "evaluator": _WHO, "scored_against": _WORLD}
     assert RemoteVerdict.parse(payload).promotable is False
 
 

@@ -23,7 +23,16 @@ whose stage ended ``failed`` while its run closed ``succeeded``.
 
 **A verdict must say who produced it.** An unattributed ``{"verdict": "PASS"}`` is refused rather
 than believed: anything on a socket can emit that string. A verdict is accepted only if it names
-the evaluator identity, the evaluator bundle hash, and the corpus it was scored against.
+the evaluator identity and the evaluator bundle hash, and — for any verdict that was actually
+scored — the corpus it was scored against. REFUSED, UNMEASURABLE and NOT_RUN are exempt from the
+corpus requirement because nothing was scored; demanding one would turn an honest refusal into a
+parse error.
+
+That is checked by *content*, not by key presence. ``{"evaluator": None, "scored_against": None}``
+carries both keys and names nobody, and until 2026-08-29 this client believed it — reporting
+``PASS … by unidentified, bundle ?`` with ``promotable=True``, on which ``certify --remote``
+exits 0. A guarantee whose test pins key presence cannot catch its own violation, so the test now
+supplies the keys with null values.
 
 Known limit, stated rather than hidden: on one machine under one uid, a loopback endpoint is R3's
 rank 5. The *shape* here is rank 1, and the move to rank 1 is deployment plus a managed identity,
@@ -47,6 +56,13 @@ SUBMISSION_FIELDS = ("artifact_uri", "artifact_sha256", "run_id")
 
 #: A verdict is believed only if it carries all of these. See the module docstring.
 ATTRIBUTION_FIELDS = ("evaluator", "scored_against")
+
+#: … and carrying them is not enough: the evaluator block must actually state these, non-empty.
+EVALUATOR_IDENTITY_FIELDS = ("identity", "bundle_sha256")
+
+#: The verdicts that were never scored against a world, and so legitimately name no corpus.
+#: Everything else must say which world produced it.
+UNSCORED_VERDICTS = frozenset({"REFUSED", "UNMEASURABLE", "NOT_RUN"})
 
 
 class EvaluatorError(Exception):
@@ -106,6 +122,29 @@ class RemoteVerdict:
         verdict = str(payload.get("verdict", "")).upper()
         if not verdict:
             raise UnattributedVerdict("verdict payload carries no verdict")
+        # Attribution is checked by CONTENT, not by key presence. ``{"evaluator": None}`` satisfies
+        # ``f in payload`` and names nobody — and this class previously believed it, then reported
+        # "PASS … by unidentified, bundle ?" and set promotable=True. A guarantee enforced by key
+        # presence is a guarantee anything on a socket can satisfy.
+        who = payload.get("evaluator")
+        if not isinstance(who, dict):
+            raise UnattributedVerdict(
+                f"'evaluator' is {type(who).__name__}, not an attribution block — a verdict that "
+                "will not name its grader is refused, not believed")
+        blank = [f for f in EVALUATOR_IDENTITY_FIELDS if not str(who.get(f) or "").strip()]
+        if blank:
+            raise UnattributedVerdict(
+                f"evaluator block does not state {blank} — two verdicts that disagree cannot be "
+                "checked for whether the same grader produced them")
+        # A verdict that was SCORED must name the world it was scored against. REFUSED and
+        # UNMEASURABLE were never scored — the service emits a null corpus for those on purpose,
+        # and demanding one would turn an honest refusal into a parse error.
+        world = payload.get("scored_against")
+        if verdict not in UNSCORED_VERDICTS:
+            if not isinstance(world, dict) or not str(world.get("corpus") or "").strip():
+                raise UnattributedVerdict(
+                    f"a {verdict} verdict names no corpus in 'scored_against' — a verdict nobody "
+                    "can tie to a world is not evidence about that world")
         # Believe the service's promotability only where it agrees with the verdict it published.
         # A payload claiming promotable on a non-PASS is malformed, not permissive.
         promotable = bool(payload.get("promotable")) and verdict == "PASS"
