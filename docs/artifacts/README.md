@@ -23,9 +23,13 @@ republished, so the live page carries the old numbers too.
 
 ### Filed elsewhere on purpose
 
-**"The Fourth Verdict"** — the internal vision / USP / taxonomy orientation, published 2026-08-29 at
-https://claude.ai/code/artifact/2ff7c0ae-38bc-46dc-a98e-e2868a5d7c71 — lives in
-**`aldc-launchpad/docs/readouts/the-fourth-verdict.html`**, not here.
+**"The Fourth Verdict"** — the internal vision / USP / taxonomy orientation, published 2026-08-29 —
+lives in **`aldc-launchpad/docs/readouts/the-fourth-verdict.html`**, not here. Its URL is
+deliberately **not** repeated on this page: `aldc-launchpad/docs/artifacts/registry/build.py` locates
+an artifact's source by `git grep`-ing every repo for its URL, so a second repo mentioning it makes
+the measurement ambiguous — and on the first run it mis-attributed this page to `agent-factory`
+because of exactly that. **The link lives in the canonical registry**,
+`aldc-launchpad/docs/artifacts/REGISTRY.md`, which is generated and is the place to look.
 
 It is not read by any code in this package, and it spans agent-factory, prefect-connectors,
 aldc-launchpad, neurospect-learn, the Fusion92 tickets, `ccx` and the skills library. By the test in
