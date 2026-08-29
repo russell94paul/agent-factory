@@ -802,7 +802,13 @@ var STATE=(function(){try{var s=document.getElementById("saved");return s?JSON.p
 var dirty=false, ns=null, TAB="board", FILTER="all";
 function esc(s){return String(s).replace(/[&<>]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c];});}
 var STATES=[["todo","To do"],["doing","Doing"],["blocked","Blocked"],["done","Done"]];
-function st(id){return STATE[id]||"todo";}
+// The store is the record; this page is a view of it. An unclicked ticket
+// inherits the store's status, so work closed elsewhere shows up here.
+var STORE_MAP={open:"todo", claimed:"doing", blocked:"blocked", done:"done", abandoned:"done"};
+var STORE={};
+D.tickets.forEach(function(t){ STORE[t.id]=STORE_MAP[t.status]||"todo"; });
+function st(id){ return STATE[id] || STORE[id] || "todo"; }
+function fromStore(id){ return !STATE[id] && STORE[id] && STORE[id]!=="todo"; }
 function counts(){
   var c={todo:0,doing:0,blocked:0,done:0};
   D.tickets.forEach(function(t){c[st(t.id)]++;});
@@ -849,7 +855,9 @@ function pBoard(){
     ts.forEach(function(t){
       var s=st(t.id), blocked=depBlocked(t);
       h+='<article class="tk '+s+'"><div class="tk-top"><span class="tk-id">'+t.id+'</span>'+
-        '<h4>'+esc(t.t)+'</h4><span class="pill '+s+'">'+s+'</span><span class="pill eff">'+t.e+'</span></div>'+
+        '<h4>'+esc(t.t)+'</h4><span class="pill '+s+'">'+s+'</span>'+
+        (fromStore(t.id)?'<span class="pill eff" title="from .data/tasks.jsonl, not set on this page">from store</span>':'')+
+        '<span class="pill eff">'+t.e+'</span></div>'+
         '<p class="why">'+t.why+'</p>'+
         '<dl><dt>acceptance</dt><dd>'+t.acc+'</dd>'+
         '<dt>evidence</dt><dd class="mono" style="font-size:11.5px">'+t.ev+'</dd>'+
@@ -884,7 +892,9 @@ function pBoard(){
     fac.forEach(function(t){
       var s2=st(t.id), blocked=depBlocked(t);
       h+='<article class="tk '+s2+'"><div class="tk-top"><span class="tk-id">'+t.id+'</span>'+
-        '<h4>'+esc(t.t)+'</h4><span class="pill '+s2+'">'+s2+'</span><span class="pill eff">'+t.e+'</span></div>'+
+        '<h4>'+esc(t.t)+'</h4><span class="pill '+s2+'">'+s2+'</span>'+
+        (fromStore(t.id)?'<span class="pill eff" title="from .data/tasks.jsonl, not set on this page">from store</span>':'')+
+        '<span class="pill eff">'+t.e+'</span></div>'+
         (t.why?'<p class="why">'+t.why+'</p>':'')+
         '<dl><dt>acceptance</dt><dd>'+t.acc+'</dd>'+
         '<dt>source</dt><dd class="mono" style="font-size:11.5px">'+esc(t.ev)+'</dd>'+
@@ -918,7 +928,8 @@ function pBoard(){
     obs.forEach(function(t){
       var s3=st(t.id);
       h+='<article class="tk '+s3+'"><div class="tk-top"><span class="tk-id">'+t.id+'</span>'+
-        '<h4>'+esc(t.t)+'</h4><span class="pill '+s3+'">'+s3+'</span></div>'+
+        '<h4>'+esc(t.t)+'</h4><span class="pill '+s3+'">'+s3+'</span>'+
+        (fromStore(t.id)?'<span class="pill eff" title="from .data/tasks.jsonl, not set on this page">from store</span>':'')+'</div>'+
         (t.why?'<p class="why">'+esc(t.why)+'</p>':'')+
         '<dl><dt>promotes when</dt><dd>'+esc(t.acc)+'</dd></dl>'+
         '<div class="states"><span class="lbl" style="align-self:center;margin-right:4px">state</span>';
