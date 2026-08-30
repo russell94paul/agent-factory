@@ -1,14 +1,21 @@
 # Boot — split the execution plane, AFTER the loop is bounded
 
-**Written:** 2026-08-29, late. **For:** a session that comes after `run-the-loop-2026-08-30.md`.
-**Does NOT supersede it.** That brief leads with RUN-01…04 and it is still right; this one is what
-those four tickets make possible. Read the ⛔ below before deciding to start here anyway.
+**Written:** 2026-08-29, late. **Corrected:** 2026-08-29 ~21:40, after F78.
+**For:** a session that comes after `run-the-loop-2026-08-30.md`. **Does NOT supersede it.**
 
-`next:` **still RUN-01**, unless RUN-01…03 are done. Check first:
+⛔ **CORRECTED — this file said "that brief leads with RUN-01…04 and it is still right" and set
+`next:` to "still RUN-01". Both are now wrong.** `docs/findings.d/F78-*.md` measured which
+repository each gate probes: **`cap`, `ceiling`, `concurrency` and `reaper` all grep
+`prefect-connectors`**, so no agent-factory work moves them, and RUN-01/02 were chosen for verdicts
+they cannot shift. `run-the-loop` has been re-led accordingly.
 
-```bash
-python -m factory.launch            # cap / reaper / ceiling / concurrency still FAIL?
-```
+`next:` **read `run-the-loop-2026-08-30.md` and do what its `next:` line says** — currently: run one
+supervised lane and put the run in the corpus, to move gate `breadth` off *"1 case, 0 strata"*.
+
+⚠ **Do not use the check that used to be here.** It read
+`python -m factory.launch   # cap / reaper / ceiling / concurrency still FAIL?` — those four staying
+red says nothing about work done in this repo, which is exactly the trap F77 and F78 describe.
+`factory.launch` also takes ~9 minutes and prints nothing until it finishes.
 
 ---
 
@@ -30,9 +37,15 @@ wrong order today**, for three reasons that are measured, not stylistic:
    and neither can be verified independently. Bound first — each ticket is done when a **verdict
    moves**, which is falsifiable — then abstract.
 
-⭐ **The honest sequencing:** RUN-01 → RUN-02 → RUN-03 (a `TeamSpec` actually executes) → **then**
-this brief. By RUN-03 there is a live execution path with real callers, and the provider boundary
-stops being speculative because there is something on both sides of it.
+⭐ **The honest sequencing** (revised after F78): **one supervised run → RUN-03** (a `TeamSpec`
+actually executes) → **then** this brief. By RUN-03 there is a live execution path with real callers,
+and the provider boundary stops being speculative because there is something on both sides of it.
+
+⛔ This line previously read *"RUN-01 → RUN-02 → RUN-03 → then this brief"*. RUN-01 and RUN-02 are
+still worth doing — `RepoDeployer` has zero callers, so the launcher genuinely is unbounded — but
+they no longer gate this brief, because **the argument for putting them first was that a verdict
+would move, and F78 shows none will.** RUN-03 is unaffected: its acceptance is a real run, not a
+sibling-repo probe.
 
 **If you start here anyway**, say why in one sentence and record it — do not silently reorder.
 
