@@ -70,20 +70,32 @@ have no counterpart in it. Any Agent Army design must either adopt them or expla
 
 ### ⛔ …and the verdict model is one category coarser than the 1990s art
 
-Added 2026-08-30. An adversarial pass went looking for prior art on the four-verdict contract and
-found it in a maintained international standard. **TTCN-3** (ETSI ES 201 873-1; also ITU-T Z.161,
-descending from ISO/IEC 9646, 1991) defines five verdicts —
+Added 2026-08-30. Two independent passes went looking for prior art on the four-verdict contract
+and both found it in a maintained international standard. **Verified here against the primary
+standards text**, not a summary — ITU-T Z.140 (07/2001), TTCN-3 core language, clause 24.2
+"Verdict values and overwriting rules":
 
-```text
-none  ·  pass  ·  inconc  ·  fail  ·  error
-```
+> "The verdict can have five different values: **pass, fail, inconc, none and error** i.e., the
+> distinguished values of the `verdicttype`."
+> — ITU-T Z.140 §24.2. `NOTE: inconc means an inconclusive verdict.`
 
-— with **monotone overwriting**: a verdict may only get worse, so `inconc` can never be raised to
-`pass`. That is precisely the non-collapsing property `contract.py` exists to provide, and the
-mapping is one-to-one: `PASS↔pass`, `FAIL↔fail`, `UNMEASURABLE↔inconc`, `NOT_RUN↔none`.
+Table 20 gives the overwriting rules, and they are **monotone** — a verdict may only get worse.
+Current `inconc` with `pass` assigned stays **`inconc`**. That is precisely the non-collapsing
+property `contract.py` exists to provide, and the mapping is one-to-one: `PASS↔pass`, `FAIL↔fail`,
+`UNMEASURABLE↔inconc`, `NOT_RUN↔none`. The lineage runs back to ISO/IEC 9646 (1991); the current
+maintained edition is ETSI ES 201 873-1 (where the same material sits at clause 24.1 / Table 30 —
+clause and table numbering drifted between editions, so cite the edition you read).
 
-**The fifth is the one we are missing.** TTCN-3's `error` means a failure *of the test apparatus
-itself*, and nothing can override it. We fold that case into `UNMEASURABLE`:
+**The fifth is the one we are missing**, and the standard is explicit about why it is separate:
+
+> "The **error** verdict is special in that it is **set by the test system** to indicate that a test
+> case (i.e., run-time) error has occurred. It **shall not be set by the set operation**. **No other
+> verdict value can override an error verdict.**"
+> — ITU-T Z.140 §24.2.1
+
+Three properties, all of which we lack: it is raised by the *harness* rather than by the check, it
+cannot be asserted by the thing being tested, and it **dominates everything**. We fold that case
+into `UNMEASURABLE`:
 
 ```python
 except Unmeasurable as exc:                       # contract.py:55 — the instrument says it cannot look
@@ -101,6 +113,11 @@ with **us**, not with the thing under test.
 At `contract.py:57` it collapses two kinds of not-knowing.** That is not a research point; it is a
 defect in the control, and the fix is small — a fifth `Verdict` member and one `except` clause,
 with the aggregation rule in `ContractResult.verdict` (`:73-85`) extended to rank it worst.
+
+Follow the standard's shape rather than inventing one: the new member should be settable **only by
+the harness** (an `Assertion.check` must not be able to return it), and should **dominate** every
+other verdict in the fold — `FAIL` currently wins, and an instrument that crashed should outrank a
+test that legitimately failed, because it means the run itself is not trustworthy.
 
 **Filed, not fixed.** `contract.py` is the root object seven modules import; changing the enum is a
 product decision with real blast radius and belongs to whoever owns it. Recorded here because it is
