@@ -68,6 +68,46 @@ have no counterpart in it. Any Agent Army design must either adopt them or expla
 | **Grader separation** | `factory/corpus.py` (corpus is hashed JSON under `evals/`, verified on load, not executable Python); `evaluator_service/` + `factory/evaluator.py` (three routes, no fourth); `factory/certify.py:15-17` (the stated distinction) and `:79,82` (the flags) `--calibrate` vs `--remote` | An agent that can edit its own grader is not graded. `--calibrate` scores in-process and is explicitly *"worthless as evidence that an agent did not grade itself"*. `corpus.py` names the remaining gap honestly: separation is evident and attributed, not yet *enforced*. |
 | **Evidence-gated close** | `factory/evidence.py` + `factory/tasks.py:163` | Refusal lives in the **store**, not in a convention an agent can forget. |
 
+### ⛔ …and the verdict model is one category coarser than the 1990s art
+
+Added 2026-08-30. An adversarial pass went looking for prior art on the four-verdict contract and
+found it in a maintained international standard. **TTCN-3** (ETSI ES 201 873-1; also ITU-T Z.161,
+descending from ISO/IEC 9646, 1991) defines five verdicts —
+
+```text
+none  ·  pass  ·  inconc  ·  fail  ·  error
+```
+
+— with **monotone overwriting**: a verdict may only get worse, so `inconc` can never be raised to
+`pass`. That is precisely the non-collapsing property `contract.py` exists to provide, and the
+mapping is one-to-one: `PASS↔pass`, `FAIL↔fail`, `UNMEASURABLE↔inconc`, `NOT_RUN↔none`.
+
+**The fifth is the one we are missing.** TTCN-3's `error` means a failure *of the test apparatus
+itself*, and nothing can override it. We fold that case into `UNMEASURABLE`:
+
+```python
+except Unmeasurable as exc:                       # contract.py:55 — the instrument says it cannot look
+    return AssertionResult(self.name, Verdict.UNMEASURABLE, str(exc))
+except Exception as exc:                          # contract.py:57 — the instrument BROKE
+    return AssertionResult(self.name, Verdict.UNMEASURABLE,
+                           f"instrument raised {type(exc).__name__}: {exc}")
+```
+
+Two different situations, one verdict. *"The instrument correctly reports it cannot measure"* and
+*"the instrument crashed"* are not the same fact, and the second usually means something is wrong
+with **us**, not with the thing under test.
+
+⭐ **This repository's founding principle is that you must never collapse two kinds of not-knowing.
+At `contract.py:57` it collapses two kinds of not-knowing.** That is not a research point; it is a
+defect in the control, and the fix is small — a fifth `Verdict` member and one `except` clause,
+with the aggregation rule in `ContractResult.verdict` (`:73-85`) extended to rank it worst.
+
+**Filed, not fixed.** `contract.py` is the root object seven modules import; changing the enum is a
+product decision with real blast radius and belongs to whoever owns it. Recorded here because it is
+exactly the class of thing this document exists to surface.
+
+Full analysis: `agent-army-research/research/sources/W0-adversarial-refutation-novelty-claim.md`.
+
 ---
 
 ## The finding that matters most
