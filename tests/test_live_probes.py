@@ -15,7 +15,8 @@ import pytest
 from factory.connector_contract import Probes, build_contract
 from factory.contract import Verdict, Unmeasurable
 from factory.live_probes import (
-    WindsorAiGepProbes, _BlindWindsorAiProbes, _default_connectors_root, _repo_root, probes_for,
+    LIVE_CLIENTS, WindsorAiGepProbes, _BlindWindsorAiProbes, _default_connectors_root,
+    _repo_root, probes_for,
 )
 from factory.targets import load_target
 from factory.calibration import BLUEPRINT
@@ -236,3 +237,47 @@ def test_revision_is_marked_dirty_when_the_checkout_has_uncommitted_changes():
         assert rev.endswith("-dirty"), rev
     else:
         assert not rev.endswith("-dirty"), rev
+
+
+def test_shipped_blueprint_resolves_to_a_live_instrument():
+    """⭐ The control for the defect F79 records: a rename that silently disconnects the instrument.
+
+    `6d60a6b` wired the instrument for `windsorai@GEP`. The later `62597d8` ("redact client
+    identifiers from the public repo") renamed the shipped blueprint's client to `CLIENT-A` and
+    did NOT update `probes_for`'s match, so it fell through to the base `Probes()` and every
+    assertion reported "no instrument configured" — **byte-identical to the pre-wiring baseline**.
+    Nothing failed. `factory/live_probes.py` had no importer but its own test, so no gate and no
+    caller noticed the instrument had been unplugged.
+
+    This asserts the wiring end to end: the blueprint we actually ship must select something other
+    than the refusing base class. It fails if either side of the match is renamed again, which is
+    the only thing that would have caught the original regression.
+
+    Deliberately NOT asserted: which verdict A1/A5 return. A blueprint whose declared classes are
+    wrong, or a sibling suite with a failing test, SHOULD report FAIL — that is the instrument
+    working. Pinning a verdict here would make this test fail for the right reasons and get
+    "fixed" by loosening it.
+    """
+    target = load_target(BLUEPRINT)
+    selected = probes_for(target)
+
+    assert type(selected) is not Probes, (
+        f"the shipped blueprint {BLUEPRINT} selects the refusing base Probes() — the live "
+        f"instrument is disconnected. Its client is {target.client!r}; probes_for matches "
+        f"{sorted(LIVE_CLIENTS)}. If the client was renamed, add the new name to LIVE_CLIENTS."
+    )
+    assert isinstance(selected, (WindsorAiGepProbes, _BlindWindsorAiProbes)), type(selected)
+
+
+def test_live_clients_covers_the_shipped_blueprints_client():
+    """Derived, not enumerated: the allow-list must contain the client the blueprint declares.
+
+    `lanes.LANES`, `TeamSpec.version`, `synthesis.session_prompt` and `local_tracker._HOT` have
+    each under-covered silently in this repo. A hand-maintained set is only safe if something
+    fails when the thing it tracks moves out from under it.
+    """
+    target = load_target(BLUEPRINT)
+    assert target.client in LIVE_CLIENTS, (
+        f"blueprint client {target.client!r} is not in LIVE_CLIENTS {sorted(LIVE_CLIENTS)} — "
+        f"probes_for will silently return the refusing base class"
+    )

@@ -27,6 +27,7 @@ import pathlib
 import sys
 
 from .connector_contract import CtxProbes, Probes, build_contract
+from .live_probes import probes_for
 from .contract import Verdict
 from .targets import load_target
 
@@ -102,7 +103,12 @@ def main(argv: list[str] | None = None) -> int:
         result = build_contract(target, CtxProbes()).run(known_good_world())
     else:
         target = load_target(args.blueprint)
-        result = build_contract(target, Probes()).run({})
+        # ⭐ The live path asks for the best instrument this target actually has, rather than
+        # hard-coding the refusing base class. `probes_for` returns `Probes()` for anything
+        # unwired, so an unwired target still reports "no instrument configured" — the refusal
+        # semantics are unchanged. What changes is that a target WITH an instrument now uses it.
+        # Before this, `factory/live_probes.py` was imported by nothing but its own test.
+        result = build_contract(target, probes_for(target)).run({})
 
     payload = {
         "contract": result.contract,

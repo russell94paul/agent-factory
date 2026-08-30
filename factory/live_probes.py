@@ -239,16 +239,33 @@ class _BlindWindsorAiProbes(Probes):
         raise Unmeasurable(self._reason)
 
 
+#: The client identifiers that name the one target with a live instrument.
+#:
+#: ⚠ TWO names, and the second is why. `6d60a6b` wired the instrument for `windsorai@GEP`; the
+#: later `62597d8` ("redact client identifiers from the public repo") renamed the shipped
+#: blueprint's client to `CLIENT-A` and did NOT update this match — so `probes_for` fell through
+#: to the base `Probes()` and every assertion reported "no instrument configured", which is
+#: **byte-identical to the pre-wiring baseline**. That is exactly the loss `_BlindWindsorAiProbes`
+#: exists to prevent, arriving by a route it does not guard: not a checkout that vanished, but an
+#: identifier that was renamed underneath the selector. Nothing failed, because "returns the
+#: honest unwired message" is indistinguishable from "is genuinely unwired".
+#:
+#: `test_shipped_blueprint_resolves_to_a_live_instrument` is the control: it fails if the shipped
+#: blueprint stops matching this set, so the next rename cannot silently disconnect the instrument.
+LIVE_CLIENTS = frozenset({"GEP", "CLIENT-A"})
+
+
 def probes_for(target: ConnectorTarget) -> Probes:
     """Return the best available live instrument for this target.
 
-    Only windsorai@GEP has one today. Every other target gets the base `Probes()`, which refuses
-    and reports UNMEASURABLE with "no instrument configured" — the honest message for "nobody has
-    wired this yet". windsorai@GEP with an unreachable checkout gets `_BlindWindsorAiProbes`
-    instead, which raises the SPECIFIC reason (e.g. which path was missing) rather than the
-    generic unwired message, on A1/A5 only.
+    Only windsorai@{GEP,CLIENT-A} — the same client under its real and redacted names — has one
+    today. Every other target gets the base `Probes()`, which refuses and reports UNMEASURABLE with
+    "no instrument configured" — the honest message for "nobody has wired this yet". A matching
+    target with an unreachable checkout gets `_BlindWindsorAiProbes` instead, which raises the
+    SPECIFIC reason (e.g. which path was missing) rather than the generic unwired message, on
+    A1/A5 only.
     """
-    if target.connector == "windsorai" and target.client == "GEP":
+    if target.connector == "windsorai" and target.client in LIVE_CLIENTS:
         try:
             return WindsorAiGepProbes()
         except Unmeasurable as exc:
