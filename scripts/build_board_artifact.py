@@ -19,6 +19,7 @@ Run:
 Then publish `docs/board/index.html` to the existing artifact URL, so saved
 ticket states survive.
 """
+import collections
 import io
 import json
 import pathlib
@@ -88,7 +89,8 @@ def build():
             sm = AB_SOURCE_RE.match(title)
             phase = sm.group(1) if sm else "R?"
         num = int(tid.split("-")[1])
-        track = ("absorption" if tid.startswith("AB")
+        track = ("run" if tid.startswith("RUN")
+         else "absorption" if tid.startswith("AB")
          else "observed" if tid.startswith("OBS")
          else "platform" if (tid.startswith("CIP") and num <= PLATFORM_MAX)
          else "factory")
@@ -121,7 +123,7 @@ def build():
             "status": t.get("status", "open"),
         })
 
-    ORDER = {"platform": 0, "factory": 1, "absorption": 2, "observed": 3}
+    ORDER = {"run": 0, "platform": 1, "factory": 2, "absorption": 3, "observed": 4}
     tickets.sort(key=lambda x: (ORDER.get(x["track"], 9), int(x["id"].split("-")[1])))
 
     tmpl = (BOARD / "template.html").read_text(encoding="utf-8")
@@ -132,14 +134,17 @@ def build():
     dest = BOARD / "index.html"
     io.open(dest, "w", encoding="utf-8", newline="\n").write(out)
 
-    plat = sum(1 for x in tickets if x["track"] == "platform")
-    obs = sum(1 for x in tickets if x["track"] == "observed")
+    # Count every track. Do NOT derive one by subtracting the others: that silently
+    # absorbs any track nobody remembered to name, which is how 4 RUN tickets were
+    # reported as factory. Third time this shape has appeared, so it goes away for good.
+    counts = collections.Counter(x["track"] for x in tickets)
     noacc = sum(1 for x in tickets if "No acceptance criterion" in x["acc"])
     print("wrote %s" % dest.relative_to(ROOT))
-    absn = sum(1 for x in tickets if x["track"] == "absorption")
-    fac = len(tickets) - plat - obs - absn
-    print("  tickets: %d  (platform %d · factory %d · absorption %d · observed %d)"
-          % (len(tickets), plat, fac, absn, obs))
+    named = " · ".join("%s %d" % (k, counts[k]) for k in ORDER if counts.get(k))
+    print("  tickets: %d  (%s)" % (len(tickets), named))
+    unknown = {k: v for k, v in counts.items() if k not in ORDER}
+    if unknown:
+        print("  ⚠ unrecognised track(s), shown rather than absorbed: %s" % dict(unknown))
     print("  without an acceptance criterion: %d" % noacc)
     if skipped:
         print("  tasks skipped (title not ID - PHASE title): %d" % skipped)

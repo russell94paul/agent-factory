@@ -7,7 +7,7 @@
   --paper:#F7F6F4; --raise:#FFFFFF; --sink:#EFEDE9;
   --ink:#17161C; --ink-2:#403D4A; --mute:#6F6B7A;
   --rule:#DCD8D2; --rule-2:#E9E6E1;
-  --accent:#4C3A8C; --accent-2:#EDE9F6; --accent-3:#372868;
+  --accent:#4C3A8C; --accent-2:#EDE9F6; --accent-3:#372868; --on-accent:#FFFFFF;
   --todo:#6F6B7A; --todo-2:#EFEDE9;
   --doing:#8A5A12; --doing-2:#F7EEDF;
   --blocked:#9B2F35; --blocked-2:#F8E5E6;
@@ -19,7 +19,7 @@
   --paper:#131218; --raise:#1A1922; --sink:#211F2A;
   --ink:#EEEBE6; --ink-2:#C0BCC8; --mute:#8C8899;
   --rule:#2B2934; --rule-2:#211F2A;
-  --accent:#A594E8; --accent-2:#231C3B; --accent-3:#C4B8F2;
+  --accent:#A594E8; --accent-2:#231C3B; --accent-3:#C4B8F2; --on-accent:#131218;
   --todo:#8C8899; --todo-2:#211F2A;
   --doing:#D8A85A; --doing-2:#2A2113;
   --blocked:#E4868B; --blocked-2:#2E1719;
@@ -31,7 +31,7 @@
   --paper:#131218; --raise:#1A1922; --sink:#211F2A;
   --ink:#EEEBE6; --ink-2:#C0BCC8; --mute:#8C8899;
   --rule:#2B2934; --rule-2:#211F2A;
-  --accent:#A594E8; --accent-2:#231C3B; --accent-3:#C4B8F2;
+  --accent:#A594E8; --accent-2:#231C3B; --accent-3:#C4B8F2; --on-accent:#131218;
   --todo:#8C8899; --todo-2:#211F2A;
   --doing:#D8A85A; --doing-2:#2A2113;
   --blocked:#E4868B; --blocked-2:#2E1719;
@@ -92,7 +92,7 @@ h2.sec:first-of-type{margin-top:0}
 .phase-group{margin-bottom:30px}
 .phase-hd{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:4px}
 .phase-hd h3{font-size:24px;letter-spacing:-.01em}
-.phase-hd .tag{font-family:"DM Mono",monospace;font-size:11px;background:var(--accent);color:#fff;padding:3px 9px}
+.phase-hd .tag{font-family:"DM Mono",monospace;font-size:11px;background:var(--accent);color:var(--on-accent);padding:3px 9px}
 .phase-hd .exit{font-size:12.5px;color:var(--mute)}
 .phase-why{margin:6px 0 14px;font-size:13.5px;color:var(--ink-2);max-width:76ch}
 
@@ -154,7 +154,7 @@ pre.code{font-family:"DM Mono",monospace;font-size:12.5px;line-height:1.65;backg
 .savebar[hidden]{display:none}
 .savebar .msg{font-size:13px;color:var(--ink-2)} .savebar .msg b{color:var(--ink);font-variant-numeric:tabular-nums}
 .savebar button{appearance:none;cursor:pointer;font:inherit;font-size:13px;font-weight:500;padding:8px 18px;
-  background:var(--accent);color:#fff;border:0;margin-left:auto}
+  background:var(--accent);color:var(--on-accent);border:0;margin-left:auto}
 .savebar button:disabled{opacity:.5;cursor:default}
 footer{margin-top:50px;padding-top:22px;border-top:1px solid var(--rule);font-size:12.5px;color:var(--mute);max-width:80ch}
 footer b{color:var(--ink-2)}
