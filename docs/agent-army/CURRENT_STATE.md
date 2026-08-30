@@ -130,10 +130,27 @@ migration is sequential shared-state work — the −70.0% pole, named in the pa
 And "no centralized verification propagates errors" is an independent argument for the
 non-LLM authoritative verifier this repository already built (`evaluator_service/`).
 
-⚠ **Unverified claim, recorded so it is not repeated:** R01 reported that this work "landed in
-Nature MI 2026" and was paywalled. **The arXiv record shows no journal reference.** Treat the
-Nature attribution as `NOT-VERIFIED` until someone produces the DOI. The expanded version is not
-paywalled — it is arXiv v3, free.
+### It was peer-reviewed, and the journal title is itself the finding
+
+An earlier revision of this document said R01's "landed in Nature MI 2026" claim was unsupported
+because the arXiv record shows no journal reference. **That was wrong, and the error was mine.**
+Absence of a `journal-ref` field is not absence of a journal version — I inferred a negative from
+an instrument I had not shown could see the thing.
+
+The DOI resolves. Verified against Crossref:
+
+> **`10.1038/s42256-026-01268-y`** — *"Capable language models can outgrow the benefits of
+> collaboration"*, **Nature Machine Intelligence 8(7):1157–1172**, 24 July 2026, 20 authors.
+
+It is **retitled**, which is why arXiv carries no journal-ref and why it is hard to find under the
+preprint name. The Nature version is paywalled; arXiv v3 is not.
+
+⭐ **The retitle matters more than the correction.** The preprint was called *Towards a Science of
+Scaling Agent Systems* — neutral. What survived peer review is called **"Capable language models
+can outgrow the benefits of collaboration."** The capability-saturation effect, not the aggregate
+mean, is what the reviewed literature chose to lead with — and it is a direct argument that
+multi-agent structure buys less as the underlying model gets better. Anyone weighing a supervisor
+tier here should read that title as the finding.
 
 Stated plainly because this document exists to be trusted: the argument as previously written here
 was **stronger than the evidence supporting it**. The conclusion did not change; the reason did.
