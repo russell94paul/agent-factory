@@ -1,0 +1,570 @@
+<title>Control Room &amp; Intake</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --bg:#faf8f3; --surface:#fffefb; --raise:#f2efe8;
+  --ink:#1c1b17; --ink2:#4a4740; --ink3:#7d7a6e; --rule:#e3ded2;
+  --pass:#1f7a4d; --fail:#b3341f; --unmeas:#a06a12; --notrun:#84806f; --accent:#2b4c9b;
+  --shadow:0 1px 2px rgba(28,27,23,.05),0 4px 14px rgba(28,27,23,.05);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#131210; --surface:#1b1a16; --raise:#23211c;
+  --ink:#eae6da; --ink2:#b5b0a2; --ink3:#7d7a6e; --rule:#2b2a24;
+  --pass:#5cc38a; --fail:#f2795e; --unmeas:#e0aa4a; --notrun:#7d7a6e; --accent:#7ba0f0;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 18px rgba(0,0,0,.35);
+}}
+:root[data-theme="dark"]{
+  --bg:#131210; --surface:#1b1a16; --raise:#23211c;
+  --ink:#eae6da; --ink2:#b5b0a2; --ink3:#7d7a6e; --rule:#2b2a24;
+  --pass:#5cc38a; --fail:#f2795e; --unmeas:#e0aa4a; --notrun:#7d7a6e; --accent:#7ba0f0;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 18px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Source Serif 4",Georgia,serif;font-size:17px;line-height:1.62;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:0 28px 120px}
+.col{max-width:660px}
+h1,h2,h3,.dsp{font-family:Archivo,"Helvetica Neue",Arial,sans-serif;text-wrap:balance}
+code,.mono,kbd{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace}
+
+/* ---- masthead ---- */
+header{padding:76px 0 44px;border-bottom:1px solid var(--rule);margin-bottom:52px}
+.eyebrow{font-family:"JetBrains Mono",monospace;font-size:11.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--ink3);margin:0 0 18px}
+h1{font-size:clamp(34px,5.4vw,54px);line-height:1.04;letter-spacing:-.021em;font-weight:700;margin:0 0 20px}
+.stand{font-size:20px;line-height:1.5;color:var(--ink2);margin:0;max-width:640px}
+.meta{margin-top:30px;display:flex;flex-wrap:wrap;gap:8px}
+
+/* ---- structure ---- */
+section{margin:0 0 84px;scroll-margin-top:20px}
+.qnum{display:flex;align-items:baseline;gap:14px;margin:0 0 8px}
+.qnum b{font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:600;color:var(--accent);
+  letter-spacing:.08em;border:1px solid var(--accent);border-radius:3px;padding:3px 7px;flex:none}
+h2{font-size:clamp(25px,3.3vw,34px);line-height:1.14;letter-spacing:-.016em;font-weight:700;margin:0}
+h3{font-size:19px;line-height:1.3;font-weight:600;margin:42px 0 12px;letter-spacing:-.008em}
+p{margin:0 0 18px}
+.lead{font-size:18.5px;color:var(--ink2)}
+ul,ol{margin:0 0 18px;padding-left:22px}li{margin:0 0 9px}
+strong{font-weight:600}
+a{color:var(--accent)}
+
+/* ---- chips ---- */
+.chip{display:inline-flex;align-items:center;gap:6px;font-family:"JetBrains Mono",monospace;
+  font-size:11px;font-weight:600;letter-spacing:.055em;text-transform:uppercase;
+  padding:4px 9px;border-radius:3px;border:1px solid;white-space:nowrap}
+.c-pass{color:var(--pass);border-color:var(--pass);background:color-mix(in srgb,var(--pass) 8%,transparent)}
+.c-fail{color:var(--fail);border-color:var(--fail);background:color-mix(in srgb,var(--fail) 8%,transparent)}
+.c-un{color:var(--unmeas);border-color:var(--unmeas);background:color-mix(in srgb,var(--unmeas) 9%,transparent)}
+.c-nr{color:var(--notrun);border-color:var(--notrun);background:color-mix(in srgb,var(--notrun) 9%,transparent)}
+.c-ac{color:var(--accent);border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
+
+/* ---- callouts ---- */
+.note{border-left:3px solid var(--rule);padding:2px 0 2px 20px;margin:26px 0;color:var(--ink2);font-size:16.5px}
+.note.key{border-color:var(--accent)}
+.note.warn{border-color:var(--unmeas)}
+.note.stop{border-color:var(--fail)}
+.note b{color:var(--ink)}
+
+/* ---- figures ---- */
+figure{margin:38px 0;max-width:100%}
+.bleed{max-width:960px}
+.fig-in{background:var(--surface);border:1px solid var(--rule);border-radius:8px;
+  padding:26px 24px 20px;box-shadow:var(--shadow);overflow-x:auto}
+figcaption{font-size:14.5px;line-height:1.5;color:var(--ink2);margin-top:13px;max-width:660px}
+figcaption b{color:var(--ink);font-weight:600}
+svg{max-width:100%;height:auto;display:block}
+.svg-t{font-family:"JetBrains Mono",monospace;font-size:11px;fill:var(--ink)}
+.svg-s{font-family:"JetBrains Mono",monospace;font-size:9.5px;fill:var(--ink3)}
+.svg-l{font-family:Archivo,sans-serif;font-size:12.5px;font-weight:600;fill:var(--ink)}
+
+/* ---- basis tag ---- */
+.basis{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--ink3);font-weight:600}
+
+/* ---- tables ---- */
+.tw{overflow-x:auto;margin:26px 0;border:1px solid var(--rule);border-radius:8px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14.5px;
+  font-family:Archivo,sans-serif;min-width:520px}
+th{text-align:left;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);
+  font-weight:600;padding:12px 15px;border-bottom:1px solid var(--rule);white-space:nowrap}
+td{padding:11px 15px;border-bottom:1px solid var(--rule);vertical-align:top;color:var(--ink2)}
+tr:last-child td{border-bottom:0}
+td b{color:var(--ink);font-weight:600}
+td code{font-size:12.5px;color:var(--ink)}
+
+/* ---- wireframe ---- */
+.wf{display:grid;grid-template-columns:150px 1fr 230px;gap:9px;min-width:600px}
+.pane{border:1px solid var(--rule);border-radius:6px;background:var(--raise);padding:11px 12px;min-height:62px}
+.pane.sel{border-color:var(--accent);border-width:1.5px;background:color-mix(in srgb,var(--accent) 5%,var(--surface))}
+.pane.prop{border-style:dashed;background:transparent}
+.pane h4{font-family:Archivo,sans-serif;font-size:11.5px;font-weight:600;margin:0 0 5px;
+  letter-spacing:.02em;color:var(--ink)}
+.pane p{font-size:11.5px;line-height:1.45;color:var(--ink3);margin:0;font-family:Archivo,sans-serif}
+.stack{display:flex;flex-direction:column;gap:9px}
+
+/* ---- bars ---- */
+.bar-row{display:flex;align-items:center;gap:13px;margin:0 0 11px;font-family:Archivo,sans-serif;font-size:13px}
+.bar-lab{width:180px;flex:none;color:var(--ink2);text-align:right}
+.bar-track{flex:1;height:22px;background:var(--raise);border-radius:3px;overflow:hidden;min-width:90px}
+.bar-fill{height:100%;border-radius:3px;width:var(--w)}
+.js .bar-fill{width:0;transition:width .95s cubic-bezier(.16,.84,.44,1)}
+.js .in .bar-fill{width:var(--w)}
+.bar-val{width:74px;flex:none;font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--ink)}
+
+/* ---- legend ---- */
+.legend{display:flex;flex-wrap:wrap;gap:18px;padding:14px 16px;background:var(--raise);
+  border-radius:6px;margin:0 0 22px;font-family:Archivo,sans-serif;font-size:12.5px;color:var(--ink2)}
+.legend span{display:flex;align-items:center;gap:8px}
+.lk{width:26px;height:0;border-top:2px solid var(--ink2);flex:none}
+.lk.d{border-top-style:dashed}
+.lk.g{border-top-color:var(--notrun)}
+
+/* ---- reveal ---- */
+.rv{opacity:1;transform:none}
+.js .rv{opacity:0;transform:translateY(9px);
+  transition:opacity .55s cubic-bezier(.22,.61,.36,1),transform .55s cubic-bezier(.22,.61,.36,1)}
+.js .rv.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){
+  .js .rv,.js .rv.in{opacity:1!important;transform:none!important;transition:none!important}
+  .js .bar-fill{width:var(--w)!important;transition:none!important}
+  *{animation-duration:.001ms!important;transition-duration:.001ms!important}
+}
+@media(max-width:720px){
+  .wf{grid-template-columns:1fr}
+  .bar-lab{width:118px;font-size:12px}
+  body{font-size:16px}
+}
+</style>
+
+<div class="wrap">
+
+<header class="rv">
+  <p class="eyebrow">Agent Factory · design note · 2026-08-29</p>
+  <h1>The control room, and the funnel that feeds it</h1>
+  <p class="stand">Three questions: what a session-monitoring UI must show, how a vague client
+  request becomes a hard spec, and whether the build can resume itself when a client answers.
+  The third one already has an answer, and it is not a UI answer.</p>
+  <div class="meta">
+    <span class="chip c-ac"><span class="dot"></span>grep-first</span>
+    <span class="chip c-pass"><span class="dot"></span>built today</span>
+    <span class="chip c-un"><span class="dot"></span>designed, unbuilt</span>
+    <span class="chip c-fail"><span class="dot"></span>blocked on RUN-01/02</span>
+  </div>
+</header>
+
+<section class="col rv">
+  <p class="lead">Most of this is already specified in the repo. Before designing anything I checked
+  what exists, because two proposals this week duplicated working code. The honest split:</p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>You asked for</th><th>State</th><th>Where</th></tr></thead>
+      <tbody>
+        <tr><td><b>Session monitoring UI</b></td><td><span class="chip c-un">partial</span></td>
+          <td>state model + question inbox <b>built</b>; layout is the open question</td></tr>
+        <tr><td><b>Vague request → hard spec</b></td><td><span class="chip c-ac">specified</span></td>
+          <td><code>CIP-07…10</code> — four tickets, all blocked</td></tr>
+        <tr><td><b>Client portal</b></td><td><span class="chip c-ac">specified</span></td>
+          <td><code>CIP-11…13</code> — auth prerequisite exists</td></tr>
+        <tr><td><b>Auto-continue on answer</b></td><td><span class="chip c-fail">gated</span></td>
+          <td>it <i>is</i> unattended execution — see §3</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ 1 ============ -->
+<section>
+  <div class="col rv">
+    <div class="qnum"><b>01</b><h2>What a session monitor must never collapse</h2></div>
+    <p class="lead">The hard part of this UI is not layout. It is refusing to simplify a state
+    model that the codebase has already been careful about.</p>
+    <p><code>factory/sessions.py</code> defines <strong>six</strong> session states, and two of them
+    exist specifically to stop a dashboard from lying:</p>
+  </div>
+
+  <figure class="bleed rv">
+    <div class="fig-in">
+      <svg viewBox="0 0 900 260" role="img" aria-label="Six session states. RUNNING-ATTACHED and RUNNING-ORPHANED are live; EXITED-RESUMABLE can be brought back with claude --resume; EXITED-GONE cannot; UNKNOWN-INSTRUMENT-BLIND and NO-SESSION are absence-of-measurement states, not absence of work.">
+        <defs>
+          <marker id="ah" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+            <polygon points="0 0, 9 3.5, 0 7" fill="currentColor"/></marker>
+        </defs>
+        <text x="8" y="16" class="svg-l" fill="var(--pass)">LIVE</text>
+        <rect x="8" y="26" width="200" height="46" rx="5" fill="none" stroke="var(--pass)" stroke-width="1.6"/>
+        <text x="20" y="46" class="svg-t" fill="var(--pass)">RUNNING-ATTACHED</text>
+        <text x="20" y="62" class="svg-s">a human can see it</text>
+        <rect x="8" y="86" width="200" height="46" rx="5" fill="none" stroke="var(--unmeas)" stroke-width="1.6"/>
+        <text x="20" y="106" class="svg-t" fill="var(--unmeas)">RUNNING-ORPHANED</text>
+        <text x="20" y="122" class="svg-s">running, nobody watching</text>
+
+        <text x="330" y="16" class="svg-l" fill="var(--notrun)">ENDED</text>
+        <rect x="330" y="26" width="200" height="46" rx="5" fill="none" stroke="var(--accent)" stroke-width="1.6"/>
+        <text x="342" y="46" class="svg-t" fill="var(--accent)">EXITED-RESUMABLE</text>
+        <text x="342" y="62" class="svg-s">transcript on disk</text>
+        <rect x="330" y="86" width="200" height="46" rx="5" fill="none" stroke="var(--notrun)" stroke-width="1.6"/>
+        <text x="342" y="106" class="svg-t" fill="var(--notrun)">EXITED-GONE</text>
+        <text x="342" y="122" class="svg-s">nothing to resume</text>
+
+        <text x="652" y="16" class="svg-l" fill="var(--fail)">NOT A STATE OF THE WORK</text>
+        <rect x="652" y="26" width="238" height="46" rx="5" fill="none" stroke="var(--fail)" stroke-width="1.6" stroke-dasharray="5 3"/>
+        <text x="664" y="46" class="svg-t" fill="var(--fail)">UNKNOWN-INSTRUMENT-BLIND</text>
+        <text x="664" y="62" class="svg-s">we could not read the table</text>
+        <rect x="652" y="86" width="238" height="46" rx="5" fill="none" stroke="var(--fail)" stroke-width="1.6" stroke-dasharray="5 3"/>
+        <text x="664" y="106" class="svg-t" fill="var(--fail)">NO-SESSION</text>
+        <text x="664" y="122" class="svg-s">a job nobody is watching</text>
+
+        <g color="var(--accent)">
+          <path d="M430 78 L430 96 L200 96" fill="none" stroke="currentColor" stroke-width="0" />
+        </g>
+        <g color="var(--ink3)">
+          <line x1="208" y1="49" x2="322" y2="49" stroke="currentColor" stroke-width="1.3" marker-end="url(#ah)"/>
+          <text x="224" y="42" class="svg-s">process ends</text>
+        </g>
+        <g color="var(--accent)">
+          <path d="M430 76 Q430 160 300 160 L120 160 L120 78" fill="none" stroke="currentColor"
+                stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#ah)"/>
+          <text x="196" y="176" class="svg-t" fill="var(--accent)">claude --resume &lt;id&gt;</text>
+          <text x="196" y="190" class="svg-s">from its own cwd — this is the auto-continue hook</text>
+        </g>
+        <line x1="8" y1="222" x2="890" y2="222" stroke="var(--rule)" stroke-width="1"/>
+        <text x="8" y="242" class="svg-s">Solid = a fact about the work.  Dashed red = a fact about our instrument. A UI that renders these the same is the failure this vocabulary exists to prevent.</text>
+      </svg>
+    </div>
+    <figcaption><b>Six states, two of which are about us, not about the agent.</b>
+    <span class="basis">measured</span> — read from <code>factory/sessions.py:121-134</code>.
+    <code>UNKNOWN-INSTRUMENT-BLIND</code> is <i>"NOT the same as nothing is running"</i>, in the
+    source's own words. Collapse it to "idle" and the dashboard reports a green field while agents
+    burn tokens unseen.</figcaption>
+  </figure>
+
+  <div class="col rv">
+    <h3>The inbox must be keyed to the job, not the session</h3>
+    <p>This is the single most valuable thing already in the codebase, and it was paid for the hard
+    way. <code>sessions.blocked()</code> used to filter questions through the live session registry.
+    On 2026-08-23 that meant:</p>
+  </div>
+
+  <figure class="bleed rv">
+    <div class="fig-in">
+      <div class="bar-row"><div class="bar-lab">agents actually blocked</div>
+        <div class="bar-track"><div class="bar-fill" style="--w:100%;background:var(--unmeas)"></div></div>
+        <div class="bar-val">5</div></div>
+      <div class="bar-row"><div class="bar-lab">shown in the UI</div>
+        <div class="bar-track"><div class="bar-fill" style="--w:40%;background:var(--fail)"></div></div>
+        <div class="bar-val">2</div></div>
+      <div class="bar-row"><div class="bar-lab">hidden — and both were credential requests</div>
+        <div class="bar-track"><div class="bar-fill" style="--w:60%;background:var(--notrun)"></div></div>
+        <div class="bar-val">3</div></div>
+    </div>
+    <figcaption><b>A session-keyed inbox hides the questions that have waited longest.</b>
+    <span class="basis">measured</span> — 2026-08-23, recorded in <code>factory/sessions.py:284-301</code>.
+    Bar widths are the counts (5 / 2 / 3) as a share of 5. The bias is directional, not random: the
+    longer a question waits, the likelier its session has exited, so exactly the oldest questions
+    fall out of view. Now fixed — questions are read from <code>JOBS/*/state.json</code> and
+    <b>outlive the process that asked them</b>.</figcaption>
+  </figure>
+
+  <div class="col rv">
+    <p>Two rules fall out of that, and they should be load-bearing in any UI you build:</p>
+    <ul>
+      <li><strong>Liveness is metadata about <em>how to answer</em>, never a filter on whether to
+      show.</strong> Attach, resume, or accept nobody is there — but the question renders either way.</li>
+      <li><strong>Oldest first.</strong> Not newest, not grouped by session. The whole failure was
+      old questions going unseen.</li>
+    </ul>
+
+    <h3>The layout</h3>
+    <p>A control room, not a card grid. Three zones, because there are exactly three things you do:
+    scan for what needs you, watch one thing closely, and act on it.</p>
+  </div>
+
+  <figure class="bleed rv">
+    <div class="fig-in">
+      <div class="wf">
+        <div class="stack">
+          <div class="pane" style="border-color:var(--unmeas)">
+            <h4>⚠ Needs you · 5</h4><p>oldest first, across every session — alive or dead</p></div>
+          <div class="pane sel"><h4>▸ judgement</h4><p>RUNNING-ATTACHED · 14m · RUN-01</p></div>
+          <div class="pane"><h4>control-plane</h4><p>EXITED-RESUMABLE · RUN-02</p></div>
+          <div class="pane"><h4>certify</h4><p>NO-SESSION</p></div>
+          <div class="pane prop"><h4>+ from ticket</h4><p>RUN-04 · dashed = not built</p></div>
+        </div>
+        <div class="stack">
+          <div class="pane sel" style="min-height:150px">
+            <h4>Transcript — judgement</h4>
+            <p>live tail, streaming. The one thing that must never be behind a click.
+            Search, and a jump-to-question anchor.</p></div>
+          <div class="pane" style="min-height:96px">
+            <h4>Reply to this session</h4>
+            <p>a text box that writes the answer where the agent is already looking
+            (<code>JOBS/&lt;id&gt;/state.json</code>) — not a chat clone</p></div>
+          <div class="pane prop"><h4>Diff so far</h4><p>files this session has touched</p></div>
+        </div>
+        <div class="stack">
+          <div class="pane"><h4>Verdict</h4><p>SUPERVISED-OK<br>UNATTENDED-BLOCKED<br>OUTPUT-UNCERTIFIED</p></div>
+          <div class="pane"><h4>Bounds</h4><p>turns · spend · elapsed<br><b>all unenforced today</b></p></div>
+          <div class="pane"><h4>Ticket</h4><p>RUN-01 · gate <code>ceiling</code><br>acceptance is a gate id</p></div>
+          <div class="pane prop"><h4>Eligible set</h4><p>configs not chosen — R19</p></div>
+        </div>
+      </div>
+    </div>
+    <figcaption><b>Solid = buildable from what exists. Dashed = needs a ticket first.</b>
+    The left rail is sorted by <i>demand on you</i>, not by session age — a blocked question outranks
+    a running agent. The centre is a transcript, because the honest answer to "how do I talk to a
+    session" is that you read it and write back to the file it is watching. The right rail answers
+    "may I walk away", which is a different question from "is it running".</figcaption>
+  </figure>
+
+  <div class="col rv">
+    <div class="note key"><p><b>What to build first, and it is small:</b> the left rail. The question
+    inbox already exists in <code>sessions.blocked()</code> and is already correct. Rendering it as
+    the primary surface — above the lane list, above everything — is a UI change with no new
+    machinery behind it.</p></div>
+  </div>
+</section>
+
+<!-- ============ 2 ============ -->
+<section>
+  <div class="col rv">
+    <div class="qnum"><b>02</b><h2>Vague request → hard spec</h2></div>
+    <p class="lead">Already designed, as four tickets. The mechanism is better than "ask the client
+    more questions", and worth stating plainly because it is the part that makes the output
+    checkable.</p>
+  </div>
+
+  <figure class="bleed rv">
+    <div class="fig-in">
+      <svg viewBox="0 0 900 200" role="img" aria-label="Intake pipeline: a vague request becomes a questionnaire, each question maps to one frontmatter field and one automated check, the client confirms schema-probed values rather than typing them, and a form emits frontmatter with no manual editing.">
+        <defs><marker id="ah2" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+          <polygon points="0 0, 9 3.5, 0 7" fill="currentColor"/></marker></defs>
+        <g color="var(--ink3)">
+          <rect x="4" y="46" width="150" height="62" rx="5" fill="var(--raise)" stroke="var(--rule)"/>
+          <text x="16" y="70" class="svg-l">Vague ask</text>
+          <text x="16" y="88" class="svg-s">"we need reporting"</text>
+          <line x1="158" y1="77" x2="184" y2="77" stroke="currentColor" stroke-width="1.3" marker-end="url(#ah2)"/>
+        </g>
+        <g color="var(--accent)">
+          <rect x="188" y="46" width="152" height="62" rx="5" fill="none" stroke="var(--accent)" stroke-width="1.6"/>
+          <text x="200" y="66" class="svg-t" fill="var(--accent)">CIP-07</text>
+          <text x="200" y="82" class="svg-s">20–30 questions on</text>
+          <text x="200" y="95" class="svg-s">4 ontology dimensions</text>
+          <line x1="344" y1="77" x2="370" y2="77" stroke="currentColor" stroke-width="1.3" marker-end="url(#ah2)"/>
+        </g>
+        <g color="var(--accent)">
+          <rect x="374" y="30" width="164" height="94" rx="5" fill="none" stroke="var(--accent)" stroke-width="1.6"/>
+          <text x="386" y="50" class="svg-t" fill="var(--accent)">CIP-08</text>
+          <text x="386" y="68" class="svg-s">every question maps to</text>
+          <text x="386" y="81" class="svg-s">1 frontmatter field</text>
+          <text x="386" y="94" class="svg-s">+ 1 automated check</text>
+          <text x="386" y="112" class="svg-t" fill="var(--fail)">unmapped = 0</text>
+          <line x1="542" y1="77" x2="568" y2="77" stroke="currentColor" stroke-width="1.3" marker-end="url(#ah2)"/>
+        </g>
+        <g color="var(--accent)">
+          <rect x="572" y="46" width="150" height="62" rx="5" fill="none" stroke="var(--accent)" stroke-width="1.6"/>
+          <text x="584" y="66" class="svg-t" fill="var(--accent)">CIP-09</text>
+          <text x="584" y="82" class="svg-s">schema-probe: client</text>
+          <text x="584" y="95" class="svg-s">confirms, never types</text>
+          <line x1="726" y1="77" x2="752" y2="77" stroke="currentColor" stroke-width="1.3" marker-end="url(#ah2)"/>
+        </g>
+        <g color="var(--pass)">
+          <rect x="756" y="46" width="140" height="62" rx="5" fill="none" stroke="var(--pass)" stroke-width="1.6"/>
+          <text x="768" y="66" class="svg-t" fill="var(--pass)">CIP-10</text>
+          <text x="768" y="82" class="svg-s">form → frontmatter</text>
+          <text x="768" y="95" class="svg-s">no manual editing</text>
+        </g>
+        <line x1="4" y1="152" x2="896" y2="152" stroke="var(--rule)"/>
+        <text x="4" y="172" class="svg-s">The gate is CIP-08's "unmapped = 0": a question that maps to no field and no check is a question whose answer nothing can verify — so it does not ship.</text>
+        <text x="4" y="188" class="svg-s">All four tickets are currently BLOCKED behind CIP-03 (pick the pilot client) and CIP-04 (author one real intake record end to end).</text>
+      </svg>
+    </div>
+    <figcaption><b>The mechanism that makes a spec hard is the mapping, not the questionnaire.</b>
+    <span class="basis">measured</span> — ticket titles read from <code>.data/tasks.jsonl</code>.
+    A question earns its place only if its answer lands in a named field <i>and</i> a check can later
+    say whether the delivery satisfied it. <b>CIP-09 is the quiet winner</b>: probing the client's
+    actual schema and asking them to confirm turns a memory test into a verification step.</figcaption>
+  </figure>
+
+  <div class="col rv">
+    <div class="note warn"><p><b>One caution before you invest here.</b> The claim that structured
+    intake lifts spec completeness from 30–40% to 70–80% is <span class="basis">basis-absent</span> —
+    it traces to an unsourced projection in a food-waste ontology feasibility study, a different
+    domain. It is logged as <b>D-4, still open</b>. The intake critical path was prioritised on that
+    number. The design is sound on its own merits; the <i>priority</i> is what rests on an unchecked
+    figure.</p></div>
+  </div>
+</section>
+
+<!-- ============ 3 ============ -->
+<section>
+  <div class="col rv">
+    <div class="qnum"><b>03</b><h2>The portal, and why auto-continue is not a portal feature</h2></div>
+    <p class="lead">This is the finding. You asked whether the build could continue automatically
+    once a client answers. The mechanism for that already exists — and the thing standing in its way
+    is not the portal.</p>
+    <p>The portal itself is specified and its hardest prerequisite is already met:</p>
+  </div>
+
+  <div class="col tw rv">
+    <table>
+      <thead><tr><th>Ticket</th><th>What it says</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td><b>CIP-11</b></td><td>Portal renders the intake with per-field status, 5-term vocabulary</td>
+          <td>same discipline as the session states — no collapsing</td></tr>
+        <tr><td><b>CIP-12</b></td><td>Submit → PR → Jira. <b>The portal mirrors and owns nothing.</b></td>
+          <td>the key architectural call</td></tr>
+        <tr><td><b>CIP-13</b></td><td>Reuse <code>portal_provision.py</code> auth + RLS; no new auth model</td>
+          <td><span class="chip c-pass">exists</span> <code>aldc-launchpad/cli/</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="col rv">
+    <p><strong>CIP-12 is the one to hold onto.</strong> A portal that owns state becomes a fourth
+    ticket-record system, and three already disagree in this estate. Client answers land as a PR and
+    a Jira update; the portal is a view. That also makes the automation question tractable, because
+    an answer arriving is then just a commit.</p>
+
+    <h3>The loop you are describing, drawn honestly</h3>
+  </div>
+
+  <figure class="bleed rv">
+    <div class="fig-in">
+      <svg viewBox="0 0 900 300" role="img" aria-label="The auto-continue loop: an agent blocks with a question, the portal shows it to the client, the client answers, the answer is written to the job state file, and the session resumes. The resume step crosses a boundary into unattended execution, which is currently blocked by five failing gates.">
+        <defs><marker id="ah3" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+          <polygon points="0 0, 9 3.5, 0 7" fill="currentColor"/></marker></defs>
+
+        <g color="var(--pass)">
+          <rect x="6" y="40" width="150" height="56" rx="5" fill="none" stroke="var(--pass)" stroke-width="1.6"/>
+          <text x="18" y="62" class="svg-t" fill="var(--pass)">agent blocks</text>
+          <text x="18" y="78" class="svg-s">writes `needs`</text>
+          <line x1="160" y1="68" x2="186" y2="68" stroke="currentColor" stroke-width="1.3" marker-end="url(#ah3)"/>
+        </g>
+        <g color="var(--pass)">
+          <rect x="190" y="40" width="150" height="56" rx="5" fill="none" stroke="var(--pass)" stroke-width="1.6"/>
+          <text x="202" y="62" class="svg-t" fill="var(--pass)">inbox surfaces it</text>
+          <text x="202" y="78" class="svg-s">sessions.blocked()</text>
+          <line x1="344" y1="68" x2="370" y2="68" stroke="currentColor" stroke-width="1.3" marker-end="url(#ah3)"/>
+        </g>
+        <g color="var(--unmeas)">
+          <rect x="374" y="40" width="150" height="56" rx="5" fill="none" stroke="var(--unmeas)" stroke-width="1.6" stroke-dasharray="5 3"/>
+          <text x="386" y="62" class="svg-t" fill="var(--unmeas)">client answers</text>
+          <text x="386" y="78" class="svg-s">CIP-11/12 portal</text>
+          <line x1="528" y1="68" x2="554" y2="68" stroke="currentColor" stroke-width="1.3" marker-end="url(#ah3)"/>
+        </g>
+        <g color="var(--pass)">
+          <rect x="558" y="40" width="150" height="56" rx="5" fill="none" stroke="var(--pass)" stroke-width="1.6"/>
+          <text x="570" y="62" class="svg-t" fill="var(--pass)">answer on disk</text>
+          <text x="570" y="78" class="svg-s">JOBS/&lt;id&gt;/state.json</text>
+        </g>
+
+        <line x1="760" y1="18" x2="760" y2="282" stroke="var(--fail)" stroke-width="2" stroke-dasharray="7 4"/>
+        <text x="772" y="32" class="svg-t" fill="var(--fail)">UNATTENDED</text>
+
+        <g color="var(--fail)">
+          <line x1="712" y1="68" x2="752" y2="68" stroke="currentColor" stroke-width="1.6" marker-end="url(#ah3)"/>
+          <circle cx="760" cy="68" r="9" fill="none" stroke="var(--fail)" stroke-width="2"/>
+          <line x1="754" y1="62" x2="766" y2="74" stroke="var(--fail)" stroke-width="2"/>
+          <line x1="766" y1="62" x2="754" y2="74" stroke="var(--fail)" stroke-width="2"/>
+        </g>
+        <text x="776" y="72" class="svg-t" fill="var(--fail)">resume</text>
+        <text x="776" y="86" class="svg-s">nobody watching</text>
+
+        <text x="6" y="140" class="svg-l" fill="var(--fail)">The five gates that stand in the way — all FAIL, measured 2026-08-29 21:00</text>
+        <g class="svg-s">
+          <rect x="6" y="152" width="176" height="30" rx="4" fill="none" stroke="var(--fail)" stroke-width="1.3"/>
+          <text x="16" y="164" class="svg-t" fill="var(--fail)">ceiling</text>
+          <text x="16" y="177" class="svg-s">no spend cap pre-dispatch</text>
+          <rect x="190" y="152" width="176" height="30" rx="4" fill="none" stroke="var(--fail)" stroke-width="1.3"/>
+          <text x="200" y="164" class="svg-t" fill="var(--fail)">reaper</text>
+          <text x="200" y="177" class="svg-s">no lease or timeout</text>
+          <rect x="374" y="152" width="176" height="30" rx="4" fill="none" stroke="var(--fail)" stroke-width="1.3"/>
+          <text x="384" y="164" class="svg-t" fill="var(--fail)">cap</text>
+          <text x="384" y="177" class="svg-s">cap on a path that ran</text>
+          <rect x="558" y="152" width="150" height="30" rx="4" fill="none" stroke="var(--fail)" stroke-width="1.3"/>
+          <text x="568" y="164" class="svg-t" fill="var(--fail)">concurrency</text>
+          <text x="568" y="177" class="svg-s">per wave, not dispatch</text>
+          <rect x="716" y="152" width="180" height="30" rx="4" fill="none" stroke="var(--fail)" stroke-width="1.3"/>
+          <text x="726" y="164" class="svg-t" fill="var(--fail)">bounded</text>
+          <text x="726" y="177" class="svg-s">no attempt cap on restart</text>
+        </g>
+
+        <line x1="6" y1="206" x2="896" y2="206" stroke="var(--rule)"/>
+        <text x="6" y="228" class="svg-t" fill="var(--ink2)">Everything left of the red line is buildable now and safe: a human sees the answer and presses resume.</text>
+        <text x="6" y="248" class="svg-s">Crossing it means a client's reply — at 2am, unwatched — starts an agent with no spend ceiling, no turn cap and no attempt cap on restart.</text>
+        <text x="6" y="268" class="svg-s">That is the exact shape of the incident already in this repo's history: a fresh budget was staged and the loop re-dispatched all night.</text>
+      </svg>
+    </div>
+    <figcaption><b>Auto-continue is not a portal feature. It is unattended execution wearing a
+    friendlier name.</b> <span class="basis">measured</span> — gate verdicts from
+    <code>python -m factory.launch</code>, 2026-08-29 21:00, exit 0. The whole left side of this
+    diagram already works or is specified; the single step that makes it "automatic" is the one
+    RUN-01 and RUN-02 exist to unblock.</figcaption>
+  </figure>
+
+  <div class="col rv">
+    <div class="note key"><p><b>So the sequencing answers itself.</b> Build the loop with a human at
+    the resume step — that is <span class="chip c-pass">SUPERVISED-OK</span> today, and it is the only
+    way to measure the loop at all. Make it automatic the moment <code>ceiling</code>,
+    <code>cap</code> and <code>reaper</code> go green. The feature you want ships as a
+    <i>consequence</i> of RUN-01/02, not as a separate build.</p></div>
+
+    <h3>The one thing worth designing now that has no ticket</h3>
+    <p>A client answer and an agent question are the same object seen from two ends, and nothing in
+    the repo says so. <code>JOBS/&lt;id&gt;/state.json</code> holds <code>needs</code>; the portal
+    will hold a per-field status in a five-term vocabulary. If those two are designed separately they
+    will disagree — the same way the lanes and the tickets now describe one body of work in two
+    vocabularies, and the same way three ticket-record systems already drift.</p>
+    <p><strong>Design the question record once</strong>, with: who is being asked (agent / internal /
+    client), what field it resolves, what check the answer unblocks, when it was asked, and — per
+    R19 — what the agent was going to do either way. That is a spec you can write today without
+    touching a file another session owns.</p>
+  </div>
+</section>
+
+<section class="col rv">
+  <h2 style="font-size:24px">If you want to spend the wait well</h2>
+  <ol>
+    <li><strong>Write the question-record spec</strong> — the one gap above with no ticket, and the
+    join between §1 and §3. New file, no collisions.</li>
+    <li><strong>Draft CIP-07's 20–30 questions</strong> against the four ontology dimensions. Blocked
+    for <i>building</i>, not for <i>drafting</i> — and CIP-08 will force each one to earn a field and
+    a check, so a rough list is genuinely useful input.</li>
+    <li><strong>Settle D-4</strong> — put a basis label on the 70–80% figure, including its "how it
+    dies" condition. It is currently deciding priority.</li>
+    <li><strong>Leave the layout unbuilt until the left rail is.</strong> The inbox is the only part
+    with working machinery underneath; everything else in the wireframe needs RUN-03 first.</li>
+  </ol>
+  <div class="note"><p>Every number on this page is read from the repo or from
+  <code>factory.launch</code> at 21:00 tonight, except the 70–80% figure, which is labelled
+  basis-absent because that is what it is.</p></div>
+</section>
+
+</div>
+
+<script>
+document.documentElement.classList.add('js');
+(function(){
+  var els=[].slice.call(document.querySelectorAll('.rv, figure'));
+  function show(el){ if(el.classList.contains('in'))return; el.classList.add('in'); }
+  function sweep(){
+    var vh=window.innerHeight||800;
+    for(var i=0;i<els.length;i++){
+      var r=els[i].getBoundingClientRect();
+      if(r.top<vh*0.92) show(els[i]);
+    }
+  }
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){
+      es.forEach(function(e){ if(e.isIntersecting){ show(e.target); io.unobserve(e.target); } });
+    },{threshold:.12,rootMargin:'0px 0px -6% 0px'});
+    els.forEach(function(el){ io.observe(el); });
+  }
+  var t=null;
+  addEventListener('scroll',function(){ if(t)return; t=setTimeout(function(){t=null;sweep();},120);},{passive:true});
+  addEventListener('resize',sweep,{passive:true});
+  sweep();
+  setTimeout(function(){ els.forEach(show); },1600);
+})();
+</script>
