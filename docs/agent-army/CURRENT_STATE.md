@@ -84,9 +84,40 @@ same authoritative verifier showing **≥10pp absolute terminal-success gain**, 
 at indistinguishable success**, with no increase in side effects and every mandatory handoff
 **≥99% accepted-and-correctly-consumed**.
 
-This is the single most important input this repository has for the research programme, and the
-research corpus does not currently contain it. See
+### ⚠ Correction — the −3.5% is not what the summary makes it sound like
+
+Added 2026-08-30 after R01 checked the figure back to its source. **The blueprint header, and the
+first version of this document, both quoted the mean without its interval.** The underlying answer,
+`docs/research/answers/R2-answer-topology.md:15`, does carry it:
+
+> "Multi-agent systems averaged **−3.5%** performance relative to single-agent baselines across the
+> study, **with a very wide 95% interval of −18.6% to +25.7%**."
+
+A mean whose confidence interval spans zero is **not** evidence that multi-agent coordination hurts
+on average. It is evidence of very high variance and no detectable average effect. Two further
+qualifiers are in `R2-answer-topology.md` and in neither downstream summary:
+
+- the same study found a centralised system **improved** a parallelisable financial task by
+  **+80.9%** — the effect is strongly task-structure dependent, in both directions;
+- the answer explicitly labels this **"OPEN RESEARCH, not production infrastructure evidence"** —
+  controlled agentic benchmarks, not systems that deploy containers or write to a warehouse.
+
+**The decision to reject the three-agent blueprint still stands, but not on the −3.5%.** It stands
+on the two things that survive scrutiny: the **sequential-task degradation of 39–70%**, which is
+the task class connector migration actually belongs to, and **our own measured failures, which were
+all at seams** — so adding two mandatory LLM-to-LLM handoffs treats the wrong variable.
+
+Stated plainly because this document exists to be trusted: the argument as previously written here
+was **stronger than the evidence supporting it**. The conclusion did not change; the reason did.
+
+This remains an important input for the research programme — it is the one place we hold real
+evidence bearing on the Agent Army thesis — but it should be carried forward *with its interval*.
+See `agent-army-research/research/answers/R01-answer-prior-art-and-novelty-boundary.md` and
 `agent-army-research/migration/MIGRATION-REPORT.md` §"Product discoveries".
+
+⛔ **`blueprints/orchestrator_team.yaml:18` still states the mean without the interval.** That is a
+product artefact and a deliberate record, so it is flagged here rather than edited — but anyone
+quoting it forward should quote the answer file, not the header.
 
 ## Why so little is implemented
 
