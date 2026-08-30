@@ -16,10 +16,19 @@ conclusions.
 | D2 diagrams | ✅ 5 Mermaid blocks, L1–L5 |
 | D3 optimisations | ✅ 26 items |
 | D4 ticket JSON | ✅ **valid JSON**, 15 items CIP-21…CIP-35, exact schema, no id collisions |
-| D5 what I could not judge | ❌ **missing** |
+| D5 what I could not judge | ✅ **DELIVERED** — `deepseek.md:528-541`, a seven-row table |
 
-D5's absence matters more than it looks: it is the section that would have said where the model was
-guessing. Its absence is consistent with the labelling problem below.
+⚠ **This file originally recorded D5 as missing. That was wrong, and the way it was wrong matters
+more than the correction.** The check was `grep 'could not judge'` — case-sensitive, against a
+heading reading *"What I Could Not Judge"*. It returned zero and the zero was published as a finding.
+
+That is the exact failure this estate's own rule names: *a zero from an instrument you have not
+proved can still see is not a measurement*. The instrument could not see the thing it was looking
+for, and nothing in the pass distinguished **absent** from **not-visible**.
+
+Caught 2026-08-29 by the in-repo divergence pass (`docs/reviews/divergence-2026-08-29.md` D-2),
+which re-derived the claim from the file rather than from this document. **Two of D5's seven rows
+are already tickets; the other five are not** and want triage.
 
 **It read the right ref.** D0 opens *"Branch: `feat/readiness-generator` (157 commits ahead of
 `main`)"* — the follow-up correcting it away from the skeleton `main` landed.
