@@ -2,7 +2,7 @@
   "_generated_by": "python scripts/export_board.py",
   "_authoritative_source": ".data/tasks.jsonl (append-only, gitignored)",
   "_note": "DERIVED snapshot for recovery and for rendering the board. Never hand-edit.",
-  "count": 67,
+  "count": 71,
   "tasks": [
     {
       "id": "253d7fa9",
@@ -2516,6 +2516,210 @@
           "data": {
             "kind": "note",
             "ref": "local_tracker.py already renders '15 can run in parallel right now \u2014 computed from the dependency graph, not judged' and 'Longest dependency chain \u2014 the part that cannot be parallelised away'. The Flow tab added to the board on 2026-08-29 computes the same two things over a different population (CIP tickets rather than readiness gates). Same algorithm, two surfaces, and the duplication was introduced AFTER writing the grep-first rule that exists to prevent exactly this \u2014 the rule was not applied to the person writing it.",
+            "basis": "MEASURED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "58e62ed4",
+      "title": "RUN-01 - R1 Enforce a spend ceiling before dispatch",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [
+        {
+          "kind": "citation",
+          "ref": "python -m factory.launch | acceptance: python -m factory.launch shows gate `ceiling` no longer FAIL. Falsified by: the gate still reports 'no spend ceiling enforced before dispatch' after the change, or the ceiling is enforced on a path the live launcher does not take \u2014 which is the defect deploy.py already has, so check the launcher, not the module.",
+          "basis": "MEASURED"
+        },
+        {
+          "kind": "note",
+          "ref": "SYNTHESIS \u00a75 step 1, called non-negotiable, and the first thing launch.py reports blocking unattended running. deploy.py already implements it \u2014 AttemptLedger exists because a run 'staged a fresh budget and re-dispatched all night' \u2014 and RepoDeployer has ZERO callers. This is a wire ticket, not a build ticket.",
+          "basis": "MEASURED"
+        }
+      ],
+      "events": [
+        {
+          "ts": 1788050321.0783498,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "RUN-01 - R1 Enforce a spend ceiling before dispatch",
+            "parent": null
+          }
+        },
+        {
+          "ts": 1788050321.0787363,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "citation",
+            "ref": "python -m factory.launch | acceptance: python -m factory.launch shows gate `ceiling` no longer FAIL. Falsified by: the gate still reports 'no spend ceiling enforced before dispatch' after the change, or the ceiling is enforced on a path the live launcher does not take \u2014 which is the defect deploy.py already has, so check the launcher, not the module.",
+            "basis": "MEASURED"
+          }
+        },
+        {
+          "ts": 1788050321.0789618,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "note",
+            "ref": "SYNTHESIS \u00a75 step 1, called non-negotiable, and the first thing launch.py reports blocking unattended running. deploy.py already implements it \u2014 AttemptLedger exists because a run 'staged a fresh budget and re-dispatched all night' \u2014 and RepoDeployer has ZERO callers. This is a wire ticket, not a build ticket.",
+            "basis": "MEASURED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "620df62f",
+      "title": "RUN-02 - R1 Cap turns and reap dispatched work on the path that actually runs",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [
+        {
+          "kind": "citation",
+          "ref": "python -m factory.launch | acceptance: python -m factory.launch shows gates `cap` AND `reaper` no longer FAIL. Falsified by: a run that exceeds the cap without being stopped, or a dispatched item that stays dispatched after its lease expires.",
+          "basis": "MEASURED"
+        },
+        {
+          "kind": "note",
+          "ref": "launch.py: `cap` FAIL \u2014 'a cap exists on a path that did not run'. That wording is the whole finding: a cap exists, and the live path does not use it. `reaper` FAIL \u2014 nothing releases dispatched work that never terminates. \u00a75 step 2. Together with RUN-01 these are the three controls Paul is personally standing in for right now, which launch.py says explicitly: 'You are the cap, the reaper and the spend ceiling.'",
+          "basis": "MEASURED"
+        }
+      ],
+      "events": [
+        {
+          "ts": 1788050321.0792367,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "RUN-02 - R1 Cap turns and reap dispatched work on the path that actually runs",
+            "parent": null
+          }
+        },
+        {
+          "ts": 1788050321.079436,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "citation",
+            "ref": "python -m factory.launch | acceptance: python -m factory.launch shows gates `cap` AND `reaper` no longer FAIL. Falsified by: a run that exceeds the cap without being stopped, or a dispatched item that stays dispatched after its lease expires.",
+            "basis": "MEASURED"
+          }
+        },
+        {
+          "ts": 1788050321.079594,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "note",
+            "ref": "launch.py: `cap` FAIL \u2014 'a cap exists on a path that did not run'. That wording is the whole finding: a cap exists, and the live path does not use it. `reaper` FAIL \u2014 nothing releases dispatched work that never terminates. \u00a75 step 2. Together with RUN-01 these are the three controls Paul is personally standing in for right now, which launch.py says explicitly: 'You are the cap, the reaper and the spend ceiling.'",
+            "basis": "MEASURED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "47113a09",
+      "title": "RUN-03 - R2 Execute a TeamSpec \u2014 the missing middle",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [
+        {
+          "kind": "citation",
+          "ref": "python -m factory.launch | acceptance: One preset runs one real ticket end to end and the outcome appends to .data/runs.jsonl, with python -m factory.launch still SUPERVISED-OK afterwards. Falsified by: the run completing without a ledger row, or completing while any RUN-01/02 gate has regressed to FAIL.",
+          "basis": "MEASURED"
+        },
+        {
+          "kind": "note",
+          "ref": "The configurator exists (presets.py: 5 baseline presets with model, effort, caps, escalation and refusals, chosen by ticket type). The certifier exists (A1-A12). Nothing runs a TeamSpec: grep for TeamSpec or load_team outside blueprint.py returns nothing, and SYNTHESIS \u00a711.5 found the same independently. Sequenced AFTER RUN-01/02 deliberately: an executor built before the bounds is an unbounded executor, which is the thing that re-dispatched all night.",
+          "basis": "MEASURED"
+        }
+      ],
+      "events": [
+        {
+          "ts": 1788050321.0798395,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "RUN-03 - R2 Execute a TeamSpec \u2014 the missing middle",
+            "parent": null
+          }
+        },
+        {
+          "ts": 1788050321.0802152,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "citation",
+            "ref": "python -m factory.launch | acceptance: One preset runs one real ticket end to end and the outcome appends to .data/runs.jsonl, with python -m factory.launch still SUPERVISED-OK afterwards. Falsified by: the run completing without a ledger row, or completing while any RUN-01/02 gate has regressed to FAIL.",
+            "basis": "MEASURED"
+          }
+        },
+        {
+          "ts": 1788050321.0805938,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "note",
+            "ref": "The configurator exists (presets.py: 5 baseline presets with model, effort, caps, escalation and refusals, chosen by ticket type). The certifier exists (A1-A12). Nothing runs a TeamSpec: grep for TeamSpec or load_team outside blueprint.py returns nothing, and SYNTHESIS \u00a711.5 found the same independently. Sequenced AFTER RUN-01/02 deliberately: an executor built before the bounds is an unbounded executor, which is the thing that re-dispatched all night.",
+            "basis": "MEASURED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "18b4e7a1",
+      "title": "RUN-04 - R3 Add the ticket-to-team entry point, then the UI button",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [
+        {
+          "kind": "citation",
+          "ref": "python -m factory.launch | acceptance: A single command takes a ticket id and produces a claimed lane running the matched preset, visible on the tracker's Sessions tab. Falsified by: the command needing a human to choose the preset, or the launched agent running without the preset's caps and refusals applied.",
+          "basis": "MEASURED"
+        },
+        {
+          "kind": "note",
+          "ref": "The question that started this: 'how do I pass a ticket into the factory?' There is no answer today \u2014 presets.py decides the config and nothing consumes the decision. This is the seam: ticket in, preset matched, TeamSpec built, RUN-03 executes it. The UI button comes last because until RUN-03 exists it has nothing to call, and a button onto a missing runtime is how a demo becomes a promise.",
+          "basis": "MEASURED"
+        }
+      ],
+      "events": [
+        {
+          "ts": 1788050321.080955,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "RUN-04 - R3 Add the ticket-to-team entry point, then the UI button",
+            "parent": null
+          }
+        },
+        {
+          "ts": 1788050321.0813088,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "citation",
+            "ref": "python -m factory.launch | acceptance: A single command takes a ticket id and produces a claimed lane running the matched preset, visible on the tracker's Sessions tab. Falsified by: the command needing a human to choose the preset, or the launched agent running without the preset's caps and refusals applied.",
+            "basis": "MEASURED"
+          }
+        },
+        {
+          "ts": 1788050321.0815926,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "note",
+            "ref": "The question that started this: 'how do I pass a ticket into the factory?' There is no answer today \u2014 presets.py decides the config and nothing consumes the decision. This is the seam: ticket in, preset matched, TeamSpec built, RUN-03 executes it. The UI button comes last because until RUN-03 exists it has nothing to call, and a button onto a missing runtime is how a demo becomes a promise.",
             "basis": "MEASURED"
           }
         }

@@ -319,6 +319,42 @@ function pBoard(){
      (c.rejected?'<button class="chip" data-f="rejected" aria-pressed="'+(FILTER==="rejected")+'">Rejected '+c.rejected+'</button>':'')+
      '<button class="chip" data-f="ready" aria-pressed="'+(FILTER==="ready")+'">Ready to start</button></div>';
 
+  // The path from "I have a ticket" to "a team ran it". First, because every other
+  // lane is downstream of a runtime that does not exist yet, and because each of
+  // these is done when an instrument says so — not when someone decides it is.
+  var runs=D.tickets.filter(function(t){
+    if(t.track!=="run") return false;
+    if(FILTER==="all") return true;
+    if(FILTER==="ready") return st(t.id)==="todo" && depBlocked(t).length===0;
+    return st(t.id)===FILTER;
+  });
+  if(runs.length){
+    var rdone=D.tickets.filter(function(t){return t.track==="run"&&st(t.id)==="done";}).length;
+    var rtot=D.tickets.filter(function(t){return t.track==="run";}).length;
+    h+='<section class="phase-group"><div class="phase-hd"><span class="tag">THE PATH</span>'+
+       '<h3>Ticket in, team runs it</h3><span class="exit">'+rdone+' of '+rtot+' done</span></div>'+
+       '<div class="note ok"><b>Every acceptance here is a gate in <span class="mono">python -m factory.launch</span>, by id.</b> '+
+       'Done is a state change in an instrument that already reports these exact gates as failing &mdash; not a judgement. '+
+       'Measured 2026-08-29: <span class="mono">SUPERVISED-OK</span>, <span class="mono">UNATTENDED-BLOCKED</span> '+
+       '(cap, reaper, ceiling, concurrency, bounded), <span class="mono">OUTPUT-UNCERTIFIED</span> '+
+       '(certified, corpus, version, breadth). Run it and the board is wrong the moment the verdicts move.</div>';
+    runs.forEach(function(t){
+      var s4=st(t.id);
+      h+='<article class="tk '+s4+'"><div class="tk-top"><span class="tk-id">'+t.id+'</span>'+
+        '<h4>'+esc(t.t)+'</h4><span class="pill '+s4+'">'+s4+'</span>'+
+        (fromStore(t.id)?'<span class="pill eff" title="from .data/tasks.jsonl">from store</span>':'')+'</div>'+
+        (t.why?'<p class="why">'+esc(t.why)+'</p>':'')+
+        '<dl><dt>done when</dt><dd>'+esc(t.acc)+'</dd></dl>'+
+        '<div class="states"><span class="lbl" style="align-self:center;margin-right:4px">state</span>';
+      STATES.forEach(function(x){
+        h+='<button type="button" data-set="'+t.id+'" data-v="'+x[0]+'" aria-pressed="'+(s4===x[0])+'">'+x[1]+'</button>';
+      });
+      h+='</div></article>';
+    });
+    h+='</section>';
+  }
+
+
   D.phases.forEach(function(p){
     var ts=D.tickets.filter(function(t){
       if(t.track!=="platform") return false;
