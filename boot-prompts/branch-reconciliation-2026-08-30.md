@@ -4,6 +4,8 @@
 **Companions:** `phase-0-event-ledger-2026-08-30.md` (what comes after this),
 `build-vs-adopt-2026-08-29.md` (the decision record).
 
+✅ **CLOSED 2026-08-30 — both branches resolved; see the -b file for what actually happened to `lane/certify`.**
+
 ⛔ **SUPERSEDED 2026-08-30 01:40 by `branch-reconciliation-2026-08-30b.md`.** Three merges landed
 after this file was written and its conflict figures are now wrong in BOTH directions —
 `lane/certify` went 5 -> 7 conflicts, `lane/control-plane-renamed` 2 -> 4, and its corpus table is

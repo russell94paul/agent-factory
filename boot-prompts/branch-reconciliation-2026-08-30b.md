@@ -1,5 +1,38 @@
 # Boot — the last two branches, re-measured after main moved
 
+✅ **CLOSED 2026-08-30 06:10. Both halves are done and this workstream is finished — but ONE OF THEM DID NOT GO THE WAY THIS FILE PLANNED. Read the second bullet before acting on anything below.**
+
+1. **`lane/control-plane-renamed` — MERGED** (`6bd12f3`). Branch and worktree deleted after verifying
+   full containment in main.
+
+2. ⛔ **`lane/certify` — DECLINED, NOT MERGED. Branch and `.worktrees/certify` are DELETED.**
+   This file's own banner said *"do not delete that branch or worktree until it merges."* It was
+   deleted on Paul's explicit approval, and the reason is that **merging it would have done damage**,
+   not merely been redundant. Measured before deciding:
+
+   | what the merge would have done | evidence |
+   |---|---|
+   | re-added the **un-redacted** `blueprints/windsorai_gep.yaml` | main renamed it to `windsorai_client_a.yaml` in the client-name redaction (`62597d8`). This repo is public. |
+   | reverted the corpus re-pin done hours earlier (`485ad12`) | main's `evals/MANIFEST.sha256` carries the corrected hash **and** the `HISTORY IS LOAD-BEARING` warning restored after `pin_corpus.py` ate it (F82). The lane's is the old bare hash. |
+   | downgraded `factory/live_probes.py` | main's version defines **every** function the lane's does, plus the `probes_for` fix from `8dc4eac`. Checked with `comm` on the two symbol lists — the lane-only set is **empty**. |
+
+   Its substance already reached main by a better route (wave0-rescue, plus the peer's fixes):
+   findings **F30/F31 are already in `docs/findings.md`** and
+   `docs/evidence/live-probes-a1-a5-2026-08-22.md` **already exists on main**. The branch was stale,
+   not pending. **Nothing was lost — but if you were relying on that worktree, it is gone.**
+
+**Everything in §2 below about resolving `lane/certify`'s seven conflicts is now moot.** The corpus
+reasoning in it is still good reading; the plan is not to be executed.
+
+**Where the estate actually stands now:** no `lane/*` branches remain in either repo except
+`trial/wave0-rescue`, which is already merged and left alone only because another session has it
+checked out. `prefect-connectors main` is `0195e59`; `agent-factory main` is `6bd12f3`.
+
+---
+
+
+⚠ **HALF DONE, 2026-08-30 05:25.** `lane/control-plane-renamed` **landed** (`6bd12f3`, 05:22) — its figures here are spent. **`lane/certify` is still out**: 4 commits, worktree at `.worktrees/certify`. Read this file only for that half, and do not delete that branch or worktree until it merges. See `README.md` in this folder.
+
 **Written:** 2026-08-30, 01:40. **Supersedes `branch-reconciliation-2026-08-30.md`**, whose conflict
 figures were measured before three merges landed and are now wrong in both directions. That file is
 kept for its reasoning; **this one has the numbers.**
