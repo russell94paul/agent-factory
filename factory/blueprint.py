@@ -33,6 +33,12 @@ class AgentSpec:
         return hashlib.sha256(blob).hexdigest()[:12]
 
 
+#: The ONLY `TeamSpec` fields outside the version hash. Deny-list on purpose — see
+#: `TeamSpec.version`. Adding a name here removes a field from the team's identity and must be
+#: argued for; `tests/test_blueprint.py` fails the moment this list and the dataclass disagree.
+NOT_IDENTITY = ("purpose", "agents")
+
+
 @dataclass
 class TeamSpec:
     name: str
@@ -45,11 +51,25 @@ class TeamSpec:
 
     @property
     def version(self) -> str:
-        blob = json.dumps(
-            {"team": self.name, "topology": self.topology, "contract": self.contract,
-             "agents": sorted(a.version for a in self.agents)},
-            sort_keys=True).encode()
-        return hashlib.sha256(blob).hexdigest()[:12]
+        """Every field except `purpose` and the agent list, plus the agents by their own version.
+
+        ⚠ **This was wrong until 2026-08-29 and the wrongness was the dangerous kind.** The hash
+        enumerated four keys by hand — team, topology, contract, agents — so `repo` and the
+        team-level `prohibition` were outside it. A team certified against `prefect-connectors`
+        under *"must not deploy to production"* kept the **identical** version when repointed at
+        another repo with the prohibition deleted. Those are precisely the two edits that change
+        blast radius, and the module whose docstring is "the config that IS the version" could not
+        see either. Proven by discriminating test, result predicted before it ran (R19 §6.1).
+
+        So the list is now a **deny-list, not an allow-list**: a new field is identity by default
+        and must be argued out, because the failure mode of forgetting to add one is a
+        certification that transfers silently. `purpose` is out because it is prose written for a
+        human — changing it does not change what the team does. `agents` is out only because it is
+        replaced by the agents' own version hashes on the next line.
+        """
+        rest = {k: v for k, v in asdict(self).items() if k not in NOT_IDENTITY}
+        rest["agents"] = sorted(a.version for a in self.agents)
+        return hashlib.sha256(json.dumps(rest, sort_keys=True).encode()).hexdigest()[:12]
 
     def pinned(self) -> Dict[str, str]:
         """The exact agent versions this team's certification is valid for."""
