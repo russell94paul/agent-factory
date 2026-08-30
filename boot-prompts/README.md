@@ -7,7 +7,7 @@ because it is confidently wrong and sits further from the reader's eye than the 
 So: this file is the router. It is the only file here that is maintained. Everything else is dated
 and frozen at its moment.
 
-**Measured 2026-08-30 05:25.** `main` at `6bd12f3`.
+**Measured 2026-08-30 06:10.** agent-factory `main` at `6bd12f3`; **prefect-connectors `main` at `0195e59`** — the bounding controls are merged there now, which changes what the readiness board says (see the new gotcha at the bottom).
 
 ---
 
@@ -24,18 +24,21 @@ tickets) and explicitly rules out the branch merges as tidying that moves no ver
 
 ---
 
-## Still live, but narrower than it says
+## Closed 2026-08-30 06:10
 
-### `branch-reconciliation-2026-08-30b.md` — **HALF DONE**
+### `branch-reconciliation-2026-08-30b.md` — **DONE, and one half went the other way**
 
-Scope was two merges into `main`: `lane/control-plane-renamed` (31 commits) and `lane/certify` (4).
+- ✅ **`lane/control-plane-renamed` landed** — `6bd12f3`.
+- ⛔ **`lane/certify` was DECLINED, not merged. Its branch and `.worktrees/certify` are deleted.**
+  This README said *"do not delete that worktree or branch until this merges"*; that instruction is
+  retired. Merging it would have **re-added the un-redacted `blueprints/windsorai_gep.yaml`** to a
+  public repo, **reverted the corpus re-pin** from `485ad12` along with the `HISTORY IS LOAD-BEARING`
+  warning (F82), and **downgraded `live_probes.py`** — main defines every function the lane did, plus
+  `8dc4eac`'s `probes_for` fix. Its findings F30/F31 and its evidence file are already on main. The
+  branch was stale, not pending. Full reasoning in the file's own banner.
 
-- ✅ **`lane/control-plane-renamed` landed** — `6bd12f3`, 2026-08-30 05:22.
-- ❌ **`lane/certify` is still out** — 4 commits, oldest 2026-08-22, including *"fix six real defects
-  an opus review found in the probe."* Its worktree is at `.worktrees/certify`. **Do not delete that
-  worktree or branch until this merges.**
-
-Read it only for the `lane/certify` half. Its `lane/control-plane-renamed` figures are spent.
+**No `lane/*` branches remain in either repo** except `trial/wave0-rescue`, already merged and left
+only because another session has it checked out.
 
 ---
 
@@ -59,6 +62,13 @@ thing a fresh session re-derives wrongly:
 
 - **`docs/findings.d/F77`** — RUN-01's acceptance criterion measures a different repository from
   RUN-01's work.
+- **`docs/findings.d/F80`** — the board was measuring the wrong **branch**. The bounding controls
+  existed the whole time on `lane/control-plane`; `CONNECTORS` pointed at a checkout that did not
+  have them. Now merged, and `readiness.revision()` stamps every board with `branch@sha` so this
+  cannot recur silently.
+- **`docs/findings.d/F81`** — three probes that could not see (two with a single `_fail` return path
+  since 2026-08-22, one case-sensitive grep), plus a fourth blind spot in the checker that catches
+  them. All fixed; the probes now drive the controls.
 - **`docs/findings.d/F78`** — it is four gates, not one. `cap`, `ceiling`, `concurrency` and `reaper`
   all grep `prefect-connectors`, so **no agent-factory work moves them**; and all five
   `OUTPUT-UNCERTIFIED` gates are local, so that is the verdict this repo can actually move.
@@ -72,6 +82,15 @@ thing a fresh session re-derives wrongly:
 - **The git index is shared between concurrent sessions.** Staging by path does *not* protect you —
   another session's `git commit` takes whatever you have staged. Proven 2026-08-29 21:00.
 - **`main` may be checked out in another session's worktree.** `git worktree list` before assuming.
+- ⚠ **`python -m factory.launch` will still report the five bounding gates FAIL** until someone moves
+  `repos/prefect-connectors` off `chore/artefact-homes` (29 dirty files, another session's) onto
+  `main`. That is truthful about the revision it reads, and wrong about the estate. Point
+  `$PREFECT_CONNECTORS` at a checkout on `main` and five of six pass. `readiness.revision()` prints
+  which revision was measured — read it before quoting any gate.
+- **Gate `ceiling` is the only real red, and must not be faked.** The engine's only budget symbol is
+  `TERMINATION_BUDGET_SEC`, a *time* budget for the reap sweep. Cost is recorded only on
+  `stage_completed`, so an accrued figure is blind to every failure — **fix the accounting before
+  adding the comparison**, or the gate goes green over a ceiling that cannot hold.
 
 ## When you add a prompt here
 
