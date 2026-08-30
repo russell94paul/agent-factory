@@ -22,8 +22,8 @@
         "9876543210"
       ],
       "constructed": [
-        "WindsorAiConnection",
-        "WindsorAiOptions"
+        "WindsorAIConnection",
+        "WindsorAIOptions"
       ]
     },
     "credential": {
