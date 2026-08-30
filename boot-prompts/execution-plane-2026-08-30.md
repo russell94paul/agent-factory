@@ -119,23 +119,46 @@ R2's unlock threshold is stated in that file; clear it or stay single-worker. `f
 is the selector that exists — five presets, **one** with a `WIRED` verifier — and **nothing consumes
 its decision.** Wiring that (RUN-03/04) beats designing a new planner.
 
-### ⭐ Adopt before you abstract — and the question is already written
+### ⛔ CORRECTED 2026-08-29 — "adopt before you abstract" was FALSIFIED. Build the runner.
 
-`docs/BUILD-VS-ADOPT-PROMPT.md` (277 lines, 2026-08-29) frames this exact decision component by
-component and **has never been run.** Do not answer it ad hoc inside an implementation session.
-Its Part 4 already reaches the conclusion that matters here:
+**This section previously argued that because `RepoDeployer` has zero callers, adopting a maintained
+runner "gets the interface *and* the implementation." That was wrong.** The question has now been
+run — six lenses, `/prospect`, output at `docs/reviews/build-vs-adopt-2026-08-29.md` (491 lines) —
+and the verdict on agent orchestration is **BUILD**, adopting only the Claude Agent SDK as transport.
 
-> **Agent orchestration** — LangGraph, AutoGen, CrewAI, OpenHands, SWE-agent, Aider. *"Cheapest
-> place to adopt, since `deploy.py` is unwired today."*
+The measurements that killed it:
 
-That is the same fact this brief uses in §⛔(1) — `RepoDeployer` has no callers — pointing the other
-way, and the other way is better. **Unwired code is cheap to replace and expensive to abstract.**
-Writing `AgentProvider` around a hand-rolled Claude subprocess buys an interface over something
-nobody runs; adopting a maintained runner gets the interface *and* the implementation, and the
-provider boundary then falls out of having two real things rather than being designed in advance.
+- **The frameworks cover 3 of 8 requirements.** Worktree isolation, lane claiming, the persisted
+  retry ledger, the event ledger and the verdict model are **ABSENT from all six**. You build those
+  either way, so adoption buys an interface and *most of* the implementation is still yours.
+- **~370–510 new lines hand-rolled** (~310–420 with the SDK), on top of **1,682 lines that already
+  exist and work**. LangGraph alone costs **150–300 lines of event-model adaptation** *plus* the
+  framework, *plus* `langsmith` — a hosted telemetry client — as the first entry of `langchain-core`'s
+  **mandatory** `dependencies`.
+- **AutoGen is in maintenance mode.** Its README, verbatim: *"AutoGen is now in maintenance mode. It
+  will not receive new features or enhancements and is community managed going forward."*
+- **CrewAI's core abstraction is the topology R2 rejected** — `role`/`goal`/`backstory`, hierarchical
+  process that *"automatically assigns a manager to the defined crew."* It cannot be layered below
+  `GreenContract` because it owns the control flow.
+- **SWE-agent** (v1.1.0, 2025-05-22) and **Aider** (v0.86.0, 2025-08-09) fail on release staleness.
+  **OpenHands** is now a web application with a server, not an embeddable library.
 
-⚠ Its Part 4 is labelled `RECALLED / UNVERIFIED` in its own text — *"my prior knowledge, not a
-search result"*. Every row is a lead to check, not a finding. That applies to Sandcastle too.
+**And the zero-callers premise itself drew the wrong conclusion.** Of `deploy.py`'s 265 lines,
+**140 are `AttemptLedger`** — a cap that survives restart. Every framework's budget control is
+per-invocation and resets on the next call, **which is precisely the bug `AttemptLedger` was written
+to fix.** "Unwired code is cheap to replace" is true of 86 lines and false of 140.
+
+**What IS worth adopting:** the **Claude Agent SDK** (MIT, `v0.2.148` 2026-08-28, `windows-latest`
+CI, 5 runtime deps). Its cost is *negative* — `deploy.py:230-234` already hard-codes `--max-turns`,
+`--max-budget-usd`, `--output-format stream-json`, `--model` against an **undocumented, unversioned,
+unpinned argv surface**. The SDK does not add a vendor coupling; it makes an existing invisible one
+typed and pinnable. It has no verdict model, so it sits cleanly below `GreenContract`.
+
+⚠ Part 4 of `BUILD-VS-ADOPT-PROMPT.md` is labelled `RECALLED / UNVERIFIED` in its own text — *"my
+prior knowledge, not a search result"* — and **six of its rows are now corrected** (see the review's
+§6). Its "cheapest place to adopt" line, quoted approvingly above before this correction, was one of
+them. The actual cheapest adopt is **`filelock`** in `claims.py`, a category Part 4 has no row for.
+Sandcastle remains unread and therefore still `MARKETED`.
 
 The two components its author judged strongest to **build**, not adopt, are the ones to protect in
 any adoption: **`UNMEASURABLE` as a first-class verdict, and evidence-basis enforced in code.** If a
