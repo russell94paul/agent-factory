@@ -30,6 +30,47 @@
   verdict on the record's health**, and their combined blind spot is unbounded: a document can
   discuss every filed id, in any tense, and be edited daily, while absorbing nothing.
 
+- ⛔ **RECURRED 2026-08-29, on the same two answers, and this time it was predicted before it
+  happened.** The R19 reconciliation was dispatched from the tracker. Measured at 19:05, before it
+  wrote:
+
+  ```
+  unsynthesised: ['R19']                 unreconciled: ['R14', 'R18', 'R19']
+  gap the launched session was given:    ['R19']          <- R14 and R18 never named to it
+  ```
+
+  **Cause, now located** — `session_prompt()` computed `gap = unsynthesised() or unreconciled()`.
+  An `or`, so the stronger check was consulted only when the weaker one was already clean; and
+  `prompt()` read `unsynthesised()` alone. The session was therefore *instructed* to write a
+  partial reconciliation, and the write at 19:24:08 (+12 lines) cleared `unreconciled()` for all
+  three. Post-write both checks read `[]`.
+
+  ⭐ **R14 and R18 have now been swept twice — once by the R17 reconcile on 2026-08-23, once by the
+  R19 reconcile on 2026-08-29 — and remain unabsorbed.** Their answer files' **mtimes** were
+  2026-08-29 14:32 (mtime is last-written, not first-filed — but mtime is exactly what
+  `unreconciled()` compares, so it is the right clock for this claim); every one of the 33 `R14`
+  and 25 `R18` mentions in `SYNTHESIS.md` predates that. The instrument can no longer report this:
+  it is recorded here because after the write there is nowhere else it survives.
+
+  ✅ **Corroborated independently.** The R19 session went on to write ~425 lines and reached the
+  same conclusion from the other direction, unprompted: *"the newest answer now has a section while
+  R14 and R18 still do not"*, and *"R14 (1,389 lines, filed 08-23) and R18 (614 lines, filed 08-23)
+  still have no section."* Two instruments, one mechanical and one an agent reading the documents,
+  agreeing that the two swept answers are unabsorbed — which is as close to confirmation as this
+  finding's subject allows, since F75's whole point is that absorption is not mechanically
+  detectable.
+
+  **Partial fix applied 2026-08-29** — `factory/synthesis.py::outstanding()` now returns the union
+  of both checks and both prompts name every outstanding id, with a stated refusal to fold in a
+  subset. That closes the *dispatch* mechanism: a session can no longer be told to write partially.
+  ⚠ **It does not close this finding.** The blind spot F75 is actually about — mention and mtime
+  are not absorption — is untouched, and a session that reads all three and writes one sentence
+  each still clears both checks. This is not option (a), (b) or (c) below; it removes one way the
+  gap gets *created*, not the gap. Regression: `tests/test_synthesis_current.py
+  ::test_union_is_proved_on_a_synthetic_record`, proved against a synthetic record because the live
+  one closed to empty mid-fix — which is itself the reason the earlier live-state tests were
+  vacuous.
+
 - **MEASURED BY** — `python -c "from factory import synthesis as s; print(s.unsynthesised(),
   s.unreconciled())"` → `[] ['R18']` at 18:04 on 2026-08-23, with `test_synthesis_current` green.
   The contradicting evidence is the reconcile session's own reading of `docs/research/answers/`

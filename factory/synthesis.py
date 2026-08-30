@@ -58,17 +58,71 @@ def unsynthesised() -> List[str]:
     return sorted(rid for rid in filed() if rid not in seen)
 
 
+def _num(rid: str) -> int:
+    return int(rid[1:])
+
+
+def outstanding() -> Dict[str, List[str]]:
+    """The two reasons an answer is unbanked, kept apart because they are different claims.
+
+    ⛔ **Both must drive the prompt, and until 2026-08-29 only the first did.** `prompt()` used
+    `unsynthesised()` alone and `session_prompt()` used ``unsynthesised() or unreconciled()`` —
+    an `or`, so the *stronger* check was consulted only when the weaker one was already satisfied.
+    On 2026-08-29 that produced a reconciliation session told to fold in R19 while the page beside
+    it reported R14, R18 and R19 outstanding.
+
+    That is worse than merely incomplete, because `unreconciled()` is a modification-time check:
+    **any** write to SYNTHESIS.md clears it for **every** id, so a partial reconciliation marks
+    the answers it never read as banked. R14 and R18 would have gone green having been read by
+    nobody — the exact vacuous-verification failure `unreconciled()` was added to prevent, one
+    level up and in the same file.
+
+    The two lists are disjoint by construction: an id that was never mentioned is reported once,
+    under the stronger reason.
+    """
+    never = sorted(unsynthesised(), key=_num)
+    late = sorted((r for r in unreconciled() if r not in never), key=_num)
+    return {"never_mentioned": never, "filed_after": late}
+
+
 def prompt() -> str:
     """The paste text for actually doing the reconciling. Generated so it always names the real
     gap rather than whatever was outstanding when someone last wrote instructions down."""
-    gap = unsynthesised()
+    o = outstanding()
+    never, late = o["never_mentioned"], o["filed_after"]
+    gap = never + late
     if not gap:
-        return ("SYNTHESIS.md mentions every filed answer. Nothing to reconcile — but note that "
-                "this only checks mentions, not engagement.")
-    listing = "\n".join(f"  - {rid}: docs/research/answers/{filed()[rid].name} "
-                        f"({filed()[rid].stat().st_size:,} bytes)" for rid in gap)
+        return ("SYNTHESIS.md mentions every filed answer, and none was filed after it was last "
+                "written. Nothing to reconcile — but note that this only checks mentions and "
+                "timestamps, not engagement.")
+
+    def _row(rid: str, why: str) -> str:
+        f = filed().get(rid)
+        if f is None:
+            return f"  - {rid}: (answer file not found under docs/research/answers/) — {why}"
+        return (f"  - {rid}: docs/research/answers/{f.name} "
+                f"({f.stat().st_size:,} bytes) — {why}")
+
+    listing = "\n".join(
+        [_row(r, "NEVER MENTIONED in the synthesis") for r in never]
+        + [_row(r, "mentioned, but FILED AFTER the synthesis was last written — whatever the "
+                   "record says about it predates the answer") for r in late])
+
+    if never and late:
+        why = (f"It has never mentioned {', '.join(never)}, and it was last written before "
+               f"{', '.join(late)} landed.")
+    elif never:
+        why = f"It does not mention {', '.join(never)} at all."
+    else:
+        why = (f"It was last written before {', '.join(late)} landed, so anything it says about "
+               "them predates the answers.")
+
     return f"""Update docs/research/SYNTHESIS.md, which is the decision record for this programme's
-research. It currently does not mention {', '.join(gap)} at all.
+research. {why}
+
+⛔ Fold in ALL of them in one pass. Writing this file updates its modification time, which clears
+the "filed after" check for every id at once — so an answer left out of this pass is not merely
+skipped, it is marked reconciled without having been read.
 
 Answers to fold in:
 {listing}
@@ -104,9 +158,19 @@ def unreconciled() -> List[str]:
     this repo exists to prevent.
 
     Modification time is a blunt instrument and deliberately so: it cannot be satisfied by writing
-    the id anywhere, only by editing the synthesis after the answer landed. It over-reports (a
-    whitespace edit clears it) rather than under-reports, which is the correct direction for a
-    check — a false alarm costs a glance, a false pass costs the record.
+    the id anywhere, only by editing the synthesis after the answer landed.
+
+    ⛔ **CORRECTION 2026-08-29.** This docstring claimed the check "over-reports (a whitespace edit
+    clears it) rather than under-reports, which is the correct direction for a check — a false
+    alarm costs a glance, a false pass costs the record." **That was true only while the sole
+    actor was a human making an edit by hand, and the button 60 lines below falsifies it.** A
+    dispatched reconciliation writes this file as part of a PARTIAL pass, which clears the check
+    for every id including the ones it never opened. In the presence of that button the check
+    under-reports systematically, in exactly the direction the docstring called unacceptable.
+
+    It is not the timestamp that was wrong — it is that a partial write must never happen. So the
+    guard now lives in `outstanding()`, which forces every unbanked id into the same pass. Read
+    this check as "nothing landed after the last write", never as "each of these was read".
     """
     syn = SYNTHESIS if isinstance(SYNTHESIS, pathlib.Path) else pathlib.Path(SYNTHESIS)
     if not syn.is_file() or not ANSWERS.is_dir():
@@ -148,7 +212,8 @@ def session_prompt() -> str:
     Wraps :func:`prompt` — which already names the real gap — with the three rules a session
     working in a shared checkout needs, and the run-provenance stamp.
     """
-    gap = unsynthesised() or unreconciled()
+    o = outstanding()
+    gap = o["never_mentioned"] + o["filed_after"]
     return f"""Reconcile the research record.
 
 {prompt()}
