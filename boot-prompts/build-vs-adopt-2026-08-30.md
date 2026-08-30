@@ -6,47 +6,33 @@
 
 ---
 
-## `next:` **RUN-01, agent-factory half — wire the live launcher to the ceiling `deploy.py` already has.**
+## `next:` **Run one supervised lane and put the run in the corpus** — defer to `run-the-loop-2026-08-30.md`.
 
-Concretely: `scripts/local_tracker.py`'s `_launch_script()` generates a `.ps1` that shells out to a
-bare `claude` with **no `--max-budget-usd`, no `--max-turns`, no retry ledger and no run record**.
-`RepoDeployer.run_agent` (`factory/deploy.py:229-265`) already passes all of it and has zero
-production callers. Route the launcher through it.
+⛔ **CORRECTED 2026-08-29 ~21:40, after F78.** An earlier version of this file said `next:` was
+*"RUN-01, agent-factory half"*. **That is now retired.** Do not do it.
 
-⚠ **This will NOT move the `ceiling` gate, and that is expected — do not treat it as failure.**
-A concurrent session filed **`docs/findings.d/F77`** on 2026-08-29 and it qualifies this ticket:
+`docs/findings.d/F78-the-unattended-verdict-is-about-the-other-repo.md` extends F77 from one gate to
+four: **`cap`, `ceiling`, `concurrency` and `reaper` all grep `prefect-connectors`** — `_src`/`_grep`
+resolve every path against `CONNECTORS` (`readiness.py:723-727`). **No agent-factory work moves any
+of them**, so RUN-01 *and* RUN-02 were both accepted on verdicts they cannot shift.
 
-> *"RUN-01's acceptance criterion measures a different repository from RUN-01's work."*
-> `readiness.g_spend_ceiling_survives_restart` calls `_src("orchestrator/pipelines.py")`, and `_src`
-> resolves against `CONNECTORS = C:\Users\PaulRussell\repos\prefect-connectors`
-> (`readiness.py:723-727`). **Wiring agent-factory's launcher to its own budget changes nothing the
-> probe reads.**
+**The live `next:` lives in `run-the-loop-2026-08-30.md` and currently reads:**
 
-**So RUN-01 is really two tickets** and only one of them is startable today:
+> **Run one supervised lane, and put the run in the corpus.**
+> `python scripts/local_tracker.py --serve --port 8099`, launch the `certify` lane, watch it, answer
+> it if it blocks. Done when gate `breadth` reads **2 cases** instead of *"1 case, 0 strata"*.
 
-| Half | Repo | Moves the gate? | State |
-|---|---|---|---|
-| Wire the launcher to the existing ceiling | `agent-factory` | **No** | ✅ **Start here** — genuine bounding work, "wire not build", no blockers |
-| Make `pipelines.py` compare accrued spend to a budget before dispatch | `prefect-connectors` | **Yes** | ⛔ **Blocked** — see below |
+⭐ **This converges with §0 of the build-vs-adopt review rather than replacing it.** That review's
+sequencing constraint was already *"nothing should be adopted before one connector is certified end
+to end"* — `breadth FAIL — 1 case(s), 0 strata` and `certified NOT_RUN` are the same hole seen from
+two sides. The re-led ticket is the cheapest move against it, and it is in this repo.
 
-⛔ **Do not chase the gate instead.** Two reasons from F77, both binding:
-1. The gate's own evidence line says *"cost is recorded only on `stage_completed`, so the accrued
-   figure a ceiling would read is itself blind to every failure."* **Adding a comparison that reads
-   a failure-blind number turns the gate green over a ceiling that cannot hold** — gaming the
-   instrument, which is the worst available outcome in this repo.
-2. **The negative control is unavailable.** `prefect-connectors/tests/orchestrator/
-   mutate_control_plane.py` does not exist in that checkout (it is why 21 tests fail here). Until it
-   is back, a gate turned green **cannot be shown still able to refuse**, and the standing rule is
-   that a mechanism nobody has watched refuse is not a control.
+### What the build-vs-adopt pass settles, whatever you pick up
 
-**What the build-vs-adopt pass contributes to this:** it closed the question that might have
-displaced RUN-01 entirely. The pass asked whether to adopt an agent-orchestration framework instead
-of building the runner, and the answer is **build**.
-
-⛔ **Do NOT start by adopting LangGraph / CrewAI / AutoGen / OpenHands / SWE-agent / Aider.** That
-plan is retired on evidence, not taste. They cover **3 of 8** of our requirements; worktree
-isolation, lane claiming, the persisted retry ledger, the event ledger and the verdict model are
-absent from every one of them, so you build those either way. Two are disqualified outright:
+⛔ **Do NOT adopt LangGraph / CrewAI / AutoGen / OpenHands / SWE-agent / Aider.** Retired on
+evidence, not taste. They cover **3 of 8** of our requirements; worktree isolation, lane claiming,
+the persisted retry ledger, the event ledger and the verdict model are absent from every one, so you
+build those either way. Two are disqualified outright:
 
 - **AutoGen** README, verbatim: *"AutoGen is now in maintenance mode. It will not receive new
   features or enhancements and is community managed going forward."*
@@ -55,10 +41,15 @@ absent from every one of them, so you build those either way. Two are disqualifi
   `blueprints/orchestrator_team.yaml` opens `⛔ SUPERSEDED BY EVIDENCE` on a 180-configuration study.
 
 ⛔ **Do NOT start with an adoption ticket of any kind.** `CIP-05` (certify one connector) and
-`BVA-01` (the dependency gate) gate all of them — both are in the ledger — and neither is RUN-01.
+`BVA-01` (the dependency gate) gate all of them — both are in the ledger.
 
-**Read first:** `docs/findings.d/F77-run-01-cannot-move-the-gate-it-names.md` (it rewrites this
-ticket), then `docs/reviews/build-vs-adopt-2026-08-29.md` (491 lines) — §0, §1, §4, §5.
+⚠ **And do not use gate movement as your definition of done in this repo without checking which
+repository the gate reads first.** That is the whole lesson of F77/F78, and it is the second time in
+two days that a plan was aimed at a verdict it could not move.
+
+**Read first:** `docs/findings.d/F77-*.md` and `F78-*.md` (they rewrite the RUN sequence), then
+`run-the-loop-2026-08-30.md`, then `docs/reviews/build-vs-adopt-2026-08-29.md` (491 lines) —
+§0, §1, §4, §5.
 
 ---
 
@@ -112,9 +103,10 @@ May I TRUST what it produced?
     - breadth      FAIL         1 case(s), 0 strata — below any calibration threshold
 ```
 
-**None of the five bounding gates has moved.** ⚠ But per **F77**, `ceiling` cannot be moved from
-this repo at all — it greps `prefect-connectors/orchestrator/pipelines.py`. Expect the agent-factory
-half of RUN-01 to leave all five FAIL, and say so rather than reporting it as no progress.
+**None of the five bounding gates has moved — and per F78, four of them cannot be moved from this
+repo at all** (`cap`, `ceiling`, `concurrency`, `reaper` all grep `prefect-connectors`). Their
+staying red says nothing about work done here. Use `breadth` and `certified` as the movable
+verdicts instead; both are about this repo, and both are the same hole §3 of the review names.
 
 **⭐ The 21 failures are NOT a regression — they are the sibling checkout.** Measured at the same
 moment:
