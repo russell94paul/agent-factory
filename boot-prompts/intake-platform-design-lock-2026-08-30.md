@@ -2,6 +2,11 @@
 
 **Written:** 2026-08-29 late. **For:** the next session.
 **Goal of that session:** stop designing. Lock design, tracker, roadmap, dependencies, use-cases and
+> ⚠ **SUPERSEDED for sequencing by `run-the-loop-2026-08-30.md`.** The divergence pass this
+> brief asked for was run — see `docs/reviews/divergence-2026-08-29.md`. Its findings and the
+> reading list below are still current; its ORDER is not. Start from the RUN tickets.
+
+
 diagrams into one artifact Paul can follow while he works, and leave nothing still "to be decided".
 
 `next:` **Start with the divergence pass (step 1). Do not re-plan.** Then run the corrected
