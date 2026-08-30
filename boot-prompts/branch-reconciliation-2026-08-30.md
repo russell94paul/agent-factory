@@ -4,8 +4,10 @@
 **Companions:** `phase-0-event-ledger-2026-08-30.md` (what comes after this),
 `build-vs-adopt-2026-08-29.md` (the decision record).
 
-**Scope:** two unmerged branches and one data defect. They are **one sitting, not three**, because
-`lane/certify` already contains the fix for the data defect — see §2.
+**Scope:** two unmerged branches. ⭐ **UPDATED 2026-08-30 01:20 — the data defect this file was
+written around is FIXED and merged to main** (`485ad12`, `0b03c2e`). §2 is kept because it explains
+*why* `lane/certify`'s remaining conflict is now small, and because the reasoning is the evidence for
+the re-pin.
 
 ---
 
@@ -23,9 +25,14 @@ side is right about something and wrong about something else, and the wrong choi
 ## 0. State, measured 2026-08-30 00:40
 
 ```
-main                        7684f7e   local == personal/main   ✅ pushed
-feat/readiness-generator    8dc4eac   0 ahead / 1 BEHIND main
+main                        0b03c2e   local == personal/main   ✅ pushed   (was 7684f7e at 00:40)
+feat/readiness-generator    bc957f4   merged into main
 ```
+
+**Landed since this file was first written:**
+`485ad12` blueprint + corpus + manifest, re-pinned via `pin_corpus.py --why` ·
+`bc957f4` restored the manifest history that re-pin deleted, and filed **F82** ·
+`0b03c2e` merged to main.
 
 ⚠ **`main` moved past `feat/readiness-generator` tonight.** Main was a **one-commit skeleton from
 2026-08-20** until 00:30, when it took 199 commits by fast-forward plus a merge of `lane/artifact`.
@@ -112,13 +119,22 @@ CONFLICT (add/add):  tests/test_live_probes.py
 (6,762 bytes vs 6,534, both LF). **With `--ignore-all-space` the real difference is 5 lines, and
 each side is right about a different half:**
 
+⭐ **UPDATED — it is now THREE lines, not five.** The two class-name rows were resolved on main in
+`485ad12`, so main and `lane/certify` already agree on them. Only the redaction rows remain, and
+**main is right about all three**:
+
 | Line | main | lane/certify | **TAKE** |
 |---|---|---|---|
 | `"client"` | `CLIENT-A` | `GEP` | ⬅ **main** — the redaction was deliberate |
 | `"table"` | `QA_DG1_CLIENT-A_…` | `QA_DG1_GEP_…` | ⬅ **main** |
 | `"id"` | `dep-windsorai-client-a` | `dep-windsorai-gep` | ⬅ **main** |
-| `constructed[0]` | `WindsorAiConnection` | **`WindsorAIConnection`** | ➡ **lane** — the real class |
-| `constructed[1]` | `WindsorAiOptions` | **`WindsorAIOptions`** | ➡ **lane** |
+| ~~`constructed[0]`~~ | `WindsorAIConnection` | `WindsorAIConnection` | ✅ **agree** — fixed in `485ad12` |
+| ~~`constructed[1]`~~ | `WindsorAIOptions` | `WindsorAIOptions` | ✅ **agree** |
+
+⛔ **After resolving, re-pin — and then restore the manifest's comment history by hand.**
+`pin_corpus.py` rebuilds `MANIFEST.sha256` from `rglob` and **drops every `#` line**, deleting the
+audit chain the file exists to keep. It did exactly that on 2026-08-30 and the entries were restored
+manually. See **F82**, and the warning now at the top of the manifest.
 
 Reproduce it before trusting this table:
 
@@ -127,9 +143,14 @@ git diff --ignore-all-space main:evals/corpus/windsorai-2026-08-20.json \
                             lane/certify:evals/corpus/windsorai-2026-08-20.json
 ```
 
-### ⭐ Why the class-name half matters — this is the defect that is live on main right now
+### ✅ RESOLVED 2026-08-30 — kept because it is the evidence behind the re-pin
 
-**`main`'s corpus records class names that do not exist.** The real classes capitalise the
+⭐ **This section described a defect that was live on main when this file was written. It is fixed**
+(`485ad12`, merged at `0b03c2e`). Main's blueprint and corpus now both carry `WindsorAIConnection` /
+`WindsorAIOptions`, basis `MEASURED`. **Do not re-derive it; do not "fix" it again.** What follows is
+the reasoning, retained because it is the justification recorded for the re-pin.
+
+**Main's corpus used to record class names that do not exist.** The real classes capitalise the
 initialism: `WindsorAIConnection`, `WindsorAIOptions`. Proven by running the instrument:
 
 ```bash
@@ -147,7 +168,7 @@ not measured** — so the corpus carries a fabricated-by-inheritance value under
 `lane/certify` already has it right. Say so explicitly in the re-pin `--why`, labelled as the
 inference it is.
 
-### The blueprint half — do NOT just fix it on its own
+### ✅ The blueprint half — DONE 2026-08-30, and here is why it could not be done alone
 
 Correcting `blueprints/windsorai_client_a.yaml` to the real class names **turns A1 green and breaks
 5 calibration tests**, because main's corpus records the wrong names and `calibration_target()` reads
@@ -292,18 +313,70 @@ git -C ../prefect-connectors status --porcelain | wc -l # was: 29
 python -c "from factory.readiness import CONNECTORS; print((CONNECTORS/'tests'/'orchestrator'/'mutate_control_plane.py').is_file())"   # was: False
 ```
 
-The 21 failures seen on 2026-08-29 were **that missing file**, not a regression. Do not "fix" them.
+⭐ **CORRECTED 2026-08-30 after F80 — the earlier version of this line was incomplete.** It said the
+21 failures were "that missing file, not a regression. Do not fix them." True, but it stops one step
+short: **the board has been measuring the wrong BRANCH, not just the wrong repo.** F78 established
+which repository each gate reads; **F80 establishes which *revision* of it.**
+
+`tests/orchestrator/mutate_control_plane.py` **exists** — on `prefect-connectors`'
+`lane/control-plane`, which is **147 commits ahead of its main, 0 behind, and already on origin**.
+`CONNECTORS` points at `repos/prefect-connectors` sitting on `chore/artefact-homes`, where the file
+is absent. Verified independently 2026-08-30:
+
+```bash
+python -c "from factory.readiness import CONNECTORS; print(CONNECTORS, (CONNECTORS/'tests'/'orchestrator'/'mutate_control_plane.py').is_file())"
+#   ...\repos\prefect-connectors  False
+git -C ../prefect-connectors ls-tree --name-only lane/control-plane tests/orchestrator/ | grep mutate
+#   tests/orchestrator/mutate_control_plane.py     <- present
+git -C ../prefect-connectors rev-list --count main..lane/control-plane
+#   147
+```
+
+**So the failures are an artefact of the revision under measurement, and four gates flip when you
+point at the right one.** Measured by `agent-factory-25`, both columns revision-stamped:
+
+| gate | `chore/artefact-homes@8b7c68d` | `lane/control-plane@7f10752` |
+|---|---|---|
+| `cap` | FAIL | **PASS** |
+| `bounded` | UNMEASURABLE | **PASS** |
+| `concurrency` | FAIL | **PASS** |
+| `reaper` | FAIL | **PASS** |
+| `from-history` | UNMEASURABLE | **PASS** |
+| `ceiling` | FAIL | FAIL |
+
+⛔ **Still do not "fix" the failing tests** — but for the corrected reason: they are measuring a
+branch that does not contain the work. **Set `$PREFECT_CONNECTORS` deliberately, or record the
+`branch@sha` beside any number you quote.** `readiness.revision()` now exists for exactly that.
+
+⚠ **`ceiling` is real on every branch and does not flip.** The only budget symbol in the engine is
+`TERMINATION_BUDGET_SEC`, a *time* budget for the reap sweep — and cost is recorded only on
+`stage_completed`, so the accrued figure a ceiling would read is blind to every failure. **Fix the
+accounting before building the comparison**, or the gate goes green over a ceiling that cannot hold.
+Same conclusion F77 reached from this side, independently.
+
+⛔ **Do not merge `prefect-connectors`' `lane/control-plane` to satisfy a gate.** 147 commits into a
+production orchestrator's main is Paul's call, not a session's.
+
+⚠ **`tests/test_roadmap.py` hangs** — >200s, `rc=124`. Measured pre-existing on both sides of another
+session's changes (201s with them stashed), so it is neither this branch work nor theirs.
 
 ---
 
 ## 4. What is NOT done, plainly
 
 - **Neither merge is started.** Both branches are exactly as they were.
-- **The blueprint is still wrong on main.** `windsorai_client_a.yaml:23-25` declares
-  `WindsorAiConnection`/`WindsorAiOptions`; A1 correctly reports `FAIL` because of it. It was
-  corrected on 2026-08-29 and **deliberately reverted** because it breaks 5 calibration tests until
-  the corpus moves with it.
-- **The corpus on main still carries the wrong class names** under a `MEASURED` provenance label.
+- ✅ ~~The blueprint is still wrong on main~~ **FIXED 2026-08-30** (`485ad12`). Blueprint and corpus
+  moved together; re-pinned `f7cd15c2` → `5c0d63ea` via `pin_corpus.py --why`. **A1 now reports
+  `PASS`** — *"constructed 2 classes, 6 account(s)"* — the first assertion in this contract to pass
+  against reality rather than a recorded world. Aggregate stays `FAIL`, 10 `UNMEASURABLE`, exit 1,
+  which is correct.
+- ⛔ **`pin_corpus.py` still deletes the manifest's comment history on every run** (F82). The entries
+  were restored by hand; the script is unfixed. **Re-add them after any future re-pin**, or fix the
+  script: keep every `#` line, demote the outgoing hash to a comment carrying its `--why`, append the
+  new active line.
+- **Not measured (F82):** whether an earlier re-pin already lost history nobody restored. The
+  2026-08-29 entry survived only by being most recent. `git log -p -- evals/MANIFEST.sha256` is the
+  only place older records could still exist and it has not been read.
 - **`factory/events.py` does not exist.** Phase 0 has not started — see
   `phase-0-event-ledger-2026-08-30.md`. This branch work is its predecessor, not a substitute.
 - **No connector has been certified.** `certified NOT_RUN`, `breadth 1 case, 0 strata`. A1/A5 now
