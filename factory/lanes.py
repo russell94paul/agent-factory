@@ -84,12 +84,42 @@ class Lane:
     model: str = "sonnet"
     model_why: str = ""
 
+    def context(self):
+        """This lane's context as a typed :class:`factory.context.ContextPack`, not a string.
+
+        ⭐ The four blocks that used to be concatenated are now four refs, each naming the file
+        and symbol it came from. Nothing about what the agent reads changes — `render()` joins
+        them in the same order with no separators — but the pack can now be inspected, filtered
+        by kind, and asked where its content came from. That is the seam the factory-wiki
+        projection plugs into later; today it simply stops context being a blob by default.
+
+        Every ref is `STATED / UNVERIFIED`: this prose is authored here and nothing has checked it
+        against anything, which is the honest label. Claiming CURRENT would be inventing a
+        freshness measurement nobody took.
+        """
+        from . import context as _ctx
+        from .operator import block
+        p = _ctx.ContextPack(name=f"lane:{self.id}")
+        p.add(_ctx.literal(_ctx.COMPANY, "lane-preamble", "factory/lanes.py:PREAMBLE", PREAMBLE))
+        p.add(_ctx.literal(_ctx.TASK, self.id, f"factory/lanes.py:LANES[{self.id}].prompt",
+                           self.prompt))
+        p.add(_ctx.literal(_ctx.COMPANY, "lane-postamble", "factory/lanes.py:POSTAMBLE", POSTAMBLE))
+        answer = block(self)
+        if answer:
+            p.add(_ctx.literal(_ctx.OPERATOR, f"{self.id}-answer",
+                               f".data/operator/{self.id}.json", answer,
+                               confidence=_ctx.STATED))
+        return p
+
     @property
     def full_prompt(self) -> str:
         """What actually gets copied or launched: shared guidance, this lane's specifics, and any
-        operator answer to its declared blocker."""
-        from .operator import block
-        return PREAMBLE + self.prompt + POSTAMBLE + block(self)
+        operator answer to its declared blocker.
+
+        Byte-identical to the concatenation this replaced — see `context()` for why it now goes
+        through a pack.
+        """
+        return self.context().render()
 
 
 LANES: List[Lane] = [

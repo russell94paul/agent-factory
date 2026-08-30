@@ -134,18 +134,41 @@ def cost(cwd) -> dict:
 # The ledger.
 
 def record(lane: str, outcome: str, detail: str = "", problems: Optional[List[str]] = None,
-           branch: str = "", commits: Optional[int] = None, cwd=None) -> dict:
+           branch: str = "", commits: Optional[int] = None, cwd=None,
+           job: Optional[str] = None, team: Optional[str] = None,
+           team_version: Optional[str] = None,
+           agent_versions: Optional[dict] = None) -> dict:
     """Append one run. Called by `finish()` on BOTH success and refusal.
 
     A refusal is the row you most want later. "control-plane refused to finish: worktree dirty"
     is the issue the UI is asked to surface, and it is precisely the event that leaves no trace
     today — `NotFinished` raises, the operator fixes it or does not, and nothing remembers.
+
+    ⭐ **The four attribution fields are written even when nobody can fill them.** `job`, `team`,
+    `team_version` and `agent_versions` answer *which work item, and which configuration* — the
+    join every later question needs: did this team get faster, did this model choice help, which
+    configuration produced the defect the validator caught. R19 measured the cost of not having
+    them: two run ledgers counting different populations, **neither recording which configuration
+    ran**, and the fields are missing *at write time*, so no amount of waiting recovers them.
+
+    ⚠ They record ``NOT-RECORDED``, never omission. An absent key reads as *"this ledger does not
+    ask that question"*; an explicit `NOT-RECORDED` reads as *"nobody answered it"*, which is the
+    true state today — nothing executes a `TeamSpec` (that is RUN-03) and no `Job` object exists
+    (that is RUN-04). Same distinction this module already draws between a lane that did not run
+    and a lane whose run was never recorded.
     """
+    attribution = {
+        "job": job or NOT_RECORDED,
+        "team": team or NOT_RECORDED,
+        "team_version": team_version or NOT_RECORDED,
+        "agent_versions": agent_versions if agent_versions else NOT_RECORDED,
+    }
     rec = {
         "at": _now(), "lane": lane, "outcome": outcome, "basis": RECORDED,
         "detail": detail, "problems": list(problems or []),
         "branch": branch, "commits": commits,
         "cost": cost(cwd) if cwd is not None else {"basis": NOT_RECORDED},
+        **attribution,
     }
     p = path()
     p.parent.mkdir(parents=True, exist_ok=True)
@@ -215,8 +238,13 @@ def reconstruct(lane: str) -> dict:
             pass
     c = cost(cwd)
     basis = RECONSTRUCTED if (commits or c["basis"] == MEASURED) else NOT_RECORDED
+    # Attribution is NEVER reconstructible: git and the transcripts can say what was committed and
+    # what it cost, and neither can say which team spec or which agent versions produced it. So
+    # these stay NOT-RECORDED here by construction, not by omission.
     return {"lane": lane, "outcome": None, "basis": basis, "branch": branch,
-            "commits": commits, "dirty": dirty, "cost": c, "problems": [], "detail": ""}
+            "commits": commits, "dirty": dirty, "cost": c, "problems": [], "detail": "",
+            "job": NOT_RECORDED, "team": NOT_RECORDED,
+            "team_version": NOT_RECORDED, "agent_versions": NOT_RECORDED}
 
 
 def report() -> List[dict]:
@@ -235,5 +263,27 @@ def report() -> List[dict]:
                         "detail": latest.get("detail", "")})
             if latest.get("cost", {}).get("basis") == MEASURED:
                 row["cost"] = latest["cost"]
+            for f in ATTRIBUTION:
+                row[f] = latest.get(f, NOT_RECORDED)
         rows.append(row)
     return rows
+
+
+#: The join keys every later question needs. Named so a caller can ask how many rows carry them
+#: without hardcoding the list in four places.
+ATTRIBUTION = ("job", "team", "team_version", "agent_versions")
+
+
+def unattributed() -> dict:
+    """How much of the ledger cannot be joined to a job or a configuration.
+
+    Reported rather than gated, on purpose. Today the honest answer is *all of it* — nothing
+    executes a `TeamSpec` and no `Job` exists — and a gate that failed on that would be failing on
+    the absence of two features rather than on a defect. The number is here so it moves visibly
+    when RUN-03 and RUN-04 land, instead of the gap being something only a code reader knows.
+    """
+    rows = history()
+    out = {"rows": len(rows)}
+    for f in ATTRIBUTION:
+        out[f] = sum(1 for r in rows if r.get(f, NOT_RECORDED) != NOT_RECORDED)
+    return out

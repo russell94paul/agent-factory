@@ -1,14 +1,24 @@
 # Synthesis — what the research passes concluded, and what changes
 
 ⚠ **The title used to say "thirteen research passes" and had said so for three additions.**
-**Seventeen ids are filed in `answers/` — R1–R8 and R10–R18, R9 withdrawn — across twenty answer
+**Eighteen ids are filed in `answers/` — R1–R8 and R10–R19, R9 withdrawn — across twenty-one answer
 documents** (R4, R13 and R16 each filed twice; the three `*-followup.md` files are questions, not
 answers). The count was a number nobody could make move, which §15.4 is about. Removed from the title
-rather than re-fixed, because it will go stale again.
+rather than re-fixed, because it will go stale again — and per the standing rule it now travels with
+the command that produces it, so the next reader re-measures instead of trusting this line:
+
+```bash
+python -c "from factory.synthesis import filed; print(len(filed()))"          # 18 ids
+ls docs/research/answers/*.md | grep -vE 'README|followup' | wc -l            # 21 documents
+```
+
 Mentioning an id is still not reconciling it (`factory/synthesis.py` says so in its own docstring).
 ⛔ **§17 is the reconciliation, and it found more than an absorption gap: seven sentences in this
 document assert that an answer has not landed, and all seven are false.** Read §17 before trusting a
 status claim anywhere above it.
+⚠ **§18 folds in R19 (added 2026-08-29) — and §17.11 rows 29, 30 and 34 are still `not started`, so
+the newest answer now has a section while R14 and R18 still do not.** That is §17.4's shape repeating
+inside the fix for it, and it is recorded in §18.11 rather than left for a later pass to discover.
 
 **2026-08-21, extended 2026-08-22.** Eight documents: R1 eval harness, R2 topology, R3 control
 plane, R4 agnostic optimiser (twice), **R5 build velocity**, **R6 automation and alerting**, and —
@@ -2420,3 +2430,414 @@ appended, not when someone finally reads the whole thing. And the reason both in
 the reason §16.7 gives — *"upstream transformations destroy the information needed to check the
 claim."* Absorbing R17 cleared the mtime signal for R13 run 2, R14 and R18 **as a side effect**.
 ⭐ **The act of reconciling one answer is what erased the evidence that three others had not been.**
+
+
+---
+
+## 18. R19 — the work taxonomy, and the first pass to say what the selector should *refuse* (added 2026-08-29)
+
+The eighteenth answer, filed 18:48 on 2026-08-29, six days after §17 closed the previous batch. It
+asked what kinds of work this company actually does and how a team gets chosen for a ticket — the
+first pass pointed at the **dispatch** decision rather than at the product, the process or the record.
+
+⚠ **Grade the instrument first, because that is the house rule.** R19 ran as a Claude Code session
+**inside this checkout**, with `~/repos/wiki` readable and no evidence pack — the same class as R16,
+which §15 calls *"the least independent pass we have run"*. It has **no external evidence of any
+kind**: not one paper, benchmark or vendor doc. Everything in it is either our own artefacts or its
+own design. So it is **strong on `path:line` claims and weak on anything that would need the outside
+world to arbitrate**, and it must not be weighed as R17 was.
+
+✅ **The `path:line` half was re-run here and it holds.** Every load-bearing internal figure in R19
+was re-measured this session, including the two that would have been most convenient to leave alone:
+
+| R19 claim | Re-measured 2026-08-29, this pass |
+|---|---|
+| 5 presets, 1 `WIRED` | **5, 1** ✓ |
+| 30 gates: 9 `PASS` / 17 `FAIL` / 3 `UNMEASURABLE` / 1 `NOT_RUN` | **identical** ✓ |
+| `.data/runs.jsonl` — 3 rows, all `FINISHED` | **3, all `FINISHED`** ✓ |
+| `g_version_hash_is_complete` → `FAIL`, 6 of 15 | **`FAIL`, 6 of 15** ✓ |
+| `presets.py:180` — `wrong-number` cites GP-322 alone | ✓ |
+| `eclipse-azure-deployment.md:16` — the no-op workflow that succeeds every run | ✓ verbatim in the wiki, plus `:150`'s `rollback-check` no-op |
+| GP-311 — *"a council of five… caught six factual errors"* | ✓ `tickets/gep/GP-311.md:16`, and the page is tagged `inquest` |
+| `TeamSpec.version` blind to `repo` and `prohibition` | ✓ **at `HEAD`. Already fixed in the working tree — §18.2** |
+| `.sessions` is absent from this checkout | ⛔ **wrong — the directory exists and the question it blocked is answerable. §18.6** |
+
+Per §17.12's rule — *when reconciling, re-open the artefact; do not quote a claim about it* — nothing
+below is inherited. Where a row above says ✓, this pass ran it.
+
+### 18.1 ⛔ The false-premise story, and it is not the one the reconciling prompt told
+
+The prompt that produced this section says, in bold: *"⚠ Read `docs/findings.md` F7 first. One of
+these answers was produced under a FALSE CONSTRAINT that I wrote into its prompt, and it demonstrably
+changed the ranking."* **That sentence is not about R19, and nobody wrote it about R19.** There are
+three layers here and they need separating, because two of them are real and the loudest one is not.
+
+**(a) The warning itself is a frozen template, and it is F7's own mechanism running in the instrument
+built to catch the R5/R6 gap.** `OBSERVED` — `factory/synthesis.py:84–86` hard-codes into *every*
+generated reconciliation prompt:
+
+> *"Label every recommendation by the basis its source gave it… **R6 labelled its own; R5 partly
+> did.** ⚠ Read `docs/findings.md` F7 first. **One of these answers** was produced under a FALSE
+> CONSTRAINT… and it demonstrably changed the ranking."*
+
+`grep -n "R6\|R5\|FALSE CONSTRAINT" factory/synthesis.py`. Those sentences were true of the R5/R6
+reconciliation on 2026-08-22 and are emitted verbatim for R19 on 2026-08-29 — an assertion about the
+answers in front of the reader, made by a generator that has never read them. ⭐ **That is precisely
+F7: a constraint asserted in a prompt without being measured, optimising the reader against a world
+described to them rather than the one on disk.** It is also §17.1's class — a status claim nobody
+re-read before appending under it — relocated from this document into the tool that checks it. §17.10
+concluded that the generated prompt is the honest half of `factory/synthesis.py` because it *"names
+the actual gap"*; `test_the_prompt_names_the_actual_gap` asserts the **id list** is generated and says
+nothing about the paragraph around it. **The gap is computed; the guidance is a constant.**
+
+**(b) There *is* a false constraint in R19's brief, it is a different one, and it is a re-infection
+this document already cured once.** `R19-work-taxonomy-and-team-selection.md` §5.1 states as fact that
+*"the config hash covers **0 of 15** identity dimensions"*, citing `docs/specs/product-end-state.md:66`.
+**§15.1 established on 2026-08-23 that the true figure is 6 of 15**, that the `0` was the output of a
+regex containing a literal U+0008 that could never match, and fixed the gate. **The spec was never
+updated.** Six days later it seeded a research prompt with the number §15.1 retired.
+
+⭐ **A corrected premise that survives in an uncorrected document is not corrected.** `grep -rn "0 of
+15"` returns the spec plus **nine** further occurrences across R13 run 2, R14, R16 (both lanes) and
+R18 — the four documents §15.1 itself listed as carrying it, still carrying it. §15.1's own table
+named where the wrong figure was load-bearing and then fixed only the instrument. **That is the
+inverse of §17.4's failure and the same cost**: there, a principle three answers held never reached
+the record; here, a correction the record made never reached the answers or the spec.
+
+**(c) Did it change the ranking? No — and *that* is the difference from F7, which is why this must not
+be filed as a repeat.** R6 deferred CI-on-push *on the strength of* my false sentence and its ordering
+moved. R19 **re-measured the number it was handed, found it wrong, and filed the correction inside its
+own answer** (§6.2), under this estate's rule that correcting an inherited premise is a deliverable:
+
+> *"This brief's own §5.1 repeated the '0 of 15' figure, inherited from that spec without
+> re-measuring… The substantive claim survives — 9 dimensions are genuinely absent, `contract_version`
+> most damagingly — but *'the hash covers nothing'* is false and **overstates the case in a way that
+> would have made §6.1's real defect harder to see**."*
+
+**The honest verdict: the distortion was caught in-pass, the ranking is unaffected, and the residual
+harm R19 names is real but small** — an overstated denominator makes a specific, live hashing defect
+harder to notice, because if the hash covers nothing then nothing about it is surprising. ⚠ **Do not
+record this as "F7 again."** §12.2 and §16.1 are already F7 variants (a real constraint omitted; a
+claim degraded across restatements). This is the fourth variant and it is the *good* outcome: **the
+premise was false, the pass measured it, and the correction is in the answer rather than in a later
+reconciliation.** The finding is not about R19's judgement. It is that the corrected number sat
+un-propagated in a spec for six days and re-entered the programme through a prompt.
+
+**(d) And one constraint that was violated rather than false — the blind-first control.** R19's brief
+required the ticket corpus to be read **before** `factory/presets.py`. R19 opens with the disclosure,
+before anything else, that this was *"partially violated, and not by this run"*: the answering session
+had already read `presets.py` — every `type_id`, `seen_in` and `verifier_state` — while writing the
+brief the previous turn. What stayed blind was the 59-ticket sweep; what did not was the five existing
+types, so R19 marks *"these five are correct"* as `ASSUMED` throughout and claims no independent
+weight for it.
+
+⭐ **Its generalisation is the most transferable thing in the answer, and it is about us, not about
+it:** *"a `STRUCTURE_CRITIQUE` pass whose brief is written by the same session that then answers it
+cannot be blind, because writing the brief requires reading the code. **The brief-writer and the
+answerer must be different sessions**, or blind-first is a label rather than a control."* That is
+`readiness.py`'s own doctrine — an instrument that cannot refuse — applied to a research protocol, and
+`docs/research/README.md` does not carry it.
+
+### 18.2 ⭐ The certification-laundering defect — found, proven, and fixed while this section was being written
+
+R19's first executive finding is a live defect in the module whose docstring is *"the config that IS
+the version"*.
+
+`TeamSpec` declares `repo` and `prohibition`; its `version` property hashed four hand-enumerated keys —
+`team`, `topology`, `contract`, `agents` — and neither of those two. R19 predicted identical hashes
+**before** running the test, in the form this estate requires, and got them.
+
+**Re-run this session, and the result has moved:**
+
+| | `repo` + `prohibition` changed | Verdict |
+|---|---|---|
+| `git show HEAD:factory/blueprint.py` | version **unchanged** | ⛔ R19 confirmed — a team certified against `prefect-connectors` under *"must not deploy to production"* keeps its certification when repointed at another repo with the prohibition deleted |
+| working tree, uncommitted | `9e68053d5cbc` vs `63009b7da765` — **different** | ✅ fixed |
+
+A concurrent session fixed it between R19 filing and this reconciliation, and the fix cites R19 §6.1
+in its docstring. ⭐ **It also went further than R19 asked, in the direction this estate cares about.**
+R19 recommended hashing `asdict(self)` minus `purpose`. The implementation does that and adds the
+thing R19 only asked for elsewhere (§7.3): `NOT_IDENTITY` is a **deny-list**, so a field added to the
+dataclass is identity by default, and `tests/test_blueprint.py` gained
+`test_every_identity_field_has_been_proved_able_to_move_the_hash` — one constructed pair per field,
+proving by construction rather than by reading the source. **That is the negative-control idiom
+(`test_every_assertion_has_been_proved_able_to_fail`) reaching a third module.**
+
+⛔ **What was *not* fixed is the half that matters for every future instance.** R19's second claim
+about this defect — *"the gate cannot catch it"* — is still true, and this pass re-ran it to be sure.
+`g_version_hash_is_complete` (`readiness.py:867–879`) **greps `blueprint.py`'s file text** for each
+dimension name. `repo` and `prohibition` appear in that file whether or not they are hashed, so the
+probe cannot distinguish *"the field exists"* from *"the field is in the hash"* — the self-matching
+class the same file warns about twelve lines later, at the probe that *"MATCHED ITS OWN SOURCE"*.
+
+⭐ **And here is the tell, which R19 did not have because it ran before the fix: the gate reports
+`FAIL, 6 of 15` on both sides of a change that genuinely improved the hash.** The number did not move
+when the thing it measures got better. **§15.4 called that out as a class — *"a number nobody can make
+move is not a measurement, it is a constant with a citation"* — and this is the same gate that carried
+§15.1's U+0008 defect.** Twice broken, twice for the same reason: it asks the source text a question
+only two constructed objects can answer. R19's fix is one line of intent — *compare two specs, do not
+grep* — and it belongs in §8 as its own row (row 37), separate from the code fix that is already done.
+
+### 18.3 Where R19 disagrees — with `presets.py`, with §6, and with a formation this estate already runs
+
+| # | Disagreement | Which evidence is stronger |
+|---:|---|---|
+| 1 | **`presets.py` covers 5 of 16 measured ticket types**, and R19 argues the 11 missing carry the *larger* blast radius — incident, auth/token lifecycle, infrastructure, analysis-deliverable, schema-extension | **R19**, and it is not close. The five presets are a real table with `seen_in` on every row; the taxonomy is a 59-page sweep with ≥2 tickets per type. ⚠ But per §18.1(d) the *agreement* half — "the five are right" — is `ASSUMED` and carries no weight |
+| 2 | **`wrong-number`'s `seen_in` cites GP-322 alone**; R19 adds GP-311, GP-282, GP-281 — and notes GP-311 is *"the second occurrence of the same defect"* (ALDC-490 fixed it five weeks earlier at the wrong layer) | **R19**, verified here at `presets.py:180`. ⭐ Its argument is the sharp part: **a repeat is the strongest possible evidence that a type is real, and the repeat is the citation the row omits** |
+| 3 | **§6's unlock condition for a dynamic team-selection LLM — *"≥200 adjudicated examples plus static misrouting ≥10%"* — is unreachable in principle, not merely distant** | **R19**, and this **amends §6**. R2 set a threshold on a *count*; R19 shows the count can never be accumulated because nothing records **which configurations were eligible and were not chosen**. *"Every other field can be backfilled with effort; this one is gone the moment the run starts."* A count-based unlock condition on an unrecorded population is not a gate |
+| 4 | **GP-311's five-agent council does not overturn R2's rejection of the three-agent team**, and R19 refuses to let it | **R19's distinction is right and it is the reconciliation §3.1 needed.** R2 measured *sequential handoff chains on shared mutable state* — every seam a place to lose information. `inquest` is a **parallel council on orthogonal lenses with a human arbiter**: no agent consumes another's output, so there are no seams. ⚠ `INFERRED`, on n=1, from our own ticket |
+| 5 | **§16.2's third option — conflict-graph resolution — and R19's §7.2 rule 8 point opposite ways on what to do *now*** | Not a contradiction, and both stand. §16.2 asks how to *raise* the ceiling; R19 asks what the filter should return **today**, and answers: *"applying rule 8 alone against today's gate state, the filter returns empty for every unattended run in the estate."* ⭐ **That is the first sentence in the programme that says what the 17 `FAIL`ing gates should actually *do* to a dispatch decision**, rather than what they reveal about it |
+
+⭐ **Item 4 is worth stating as a rule, because this estate has now spent four sections arguing around
+it:** *parallelism over orthogonal views of the same artefact is cheap and safe; sequential handoff on
+shared mutable state is what R2 measured and rejected.* §16.6 already corroborated the mechanism from
+outside — a critic helps when it **sees something the generator did not use**, and fails when it is
+"think again" on the same reasoning [A-10–A-12] — and §16.9's adversarial reviewer is the same shape.
+R19 supplies the name for the distinction and the one internal case where it was run.
+
+⚠ **And the qualification R19 does not make, which §16.9 forces.** GP-311 is a **recall** observation —
+six errors caught — with **no denominator and no false-positive count**, which is exactly the gap
+§16.9 says *"the field will not supply"* and R18 was asked to generate internally. One ticket where a
+council caught six errors is a reason to keep the formation, not evidence of its precision.
+
+### 18.4 Basis labels — and R19 has none of the kind the house rule asks for
+
+The standing rule is `OBSERVED in a comparable setting` versus `EXTRAPOLATED from human teams`. R19
+runs two vocabularies of its own (`MEASURED / DERIVED / STATED / ASSUMED / PROXY` for the world,
+`REPO-BACKED / INFERRED / RECOMMENDED / EXTERNAL / SPECULATIVE` for the design) and applies them
+consistently. The mapping needs one thing said plainly:
+
+| R19 recommendation | Its tier | Read it as |
+|---|---|---|
+| The taxonomy — 16 types, ≥2 tickets each (§2.1) | `MEASURED` from 59 ticket pages | **OBSERVED in the only comparable setting there is: ours.** The strongest class in this answer |
+| The `TeamSpec` version defect (§6.1) | `MEASURED`, discriminating test, prediction first | **OBSERVED** ✓ re-run here. The single hardest claim in the pass |
+| The manual-step ledger and its verdicts (§4) | `REPO-BACKED` runbook citations + `RECOMMENDED` verdicts | Citations **OBSERVED** ✓ spot-checked; the `KEEP-HUMAN`/`AUTOMATABLE-NOW` column is **authored judgement** |
+| The dispatch record schema (§5.2) | `RECOMMENDED` | **Design, not evidence.** Nothing like it has been run here or cited from anywhere else |
+| The eligibility filter and its negative control (§7.2–7.3) | `RECOMMENDED` | Design. Its *inputs* (gate verdicts, `verifier_state`) are measured; the rule set is not |
+| ≈12 terminal runs per (type × bundle) arm for stage 4 (§7.5) | `DERIVED`, and it says so | **EXTRAPOLATED** — a power calculation against R2's ≥10pp threshold, not a measurement. Compare §3.2's 29/59/299 table, which is the same arithmetic done for the corpus |
+| Formations, and `inquest` as `READY-NOW` (§8.2) | `MEASURED` on GP-311 | **OBSERVED, n = 1, our own ticket, recall-only** (§18.3) |
+| *"Six of nine recurring operations are `NOT-VISIBLE` or `NOT-RECORDED`"* (§9) | `MEASURED` from tickets | **OBSERVED** — and three of the six have a ticket proving a real failure went unnoticed |
+
+⭐ **Nothing in R19 is `EXTERNAL`, and the answer never pretends otherwise.** That is a legitimate
+brief — it was asked to read our repos and our wiki — but it means **R19 cannot corroborate anything**.
+Where it agrees with R2, R17 or this document, that agreement is not independent: it read them. The
+one place it is genuinely independent is the ticket corpus, which no previous pass had opened, and
+that is where its value is.
+
+### 18.5 What R19 settles that the record has been circling — three arrivals, one of them eight days late
+
+**(a) ⭐ R3's *"biggest missing control"* has been rediscovered from the ticket corpus, and §17.9
+predicted this exact rediscovery.** §17.9 lists, under R3 unabsorbed: *"the expected-work manifest and
+`scope_hash` — R3's executive verdict calls scope/evidence closure the biggest missing control, because
+the six prescriptions can still report success over work they never knew existed."* Filed 2026-08-21.
+
+R19 arrives at the same object from the tickets, eight days later and without contact, and it arrives
+with **evidence R3 did not have**: `MEASURED`, each from a ticket's own text —
+
+> **DV-444:** *"Initial ticket framing: 'code change to eclipse-2.1.' After investigation, that framing
+> is wrong… the feature branch will close with **zero commits**."*
+> **GP-318:** two scoping premises refuted by measurement. **GP-310:** documents *"the false premise
+> that created the bug"* and *"the wrong fix, and why it was reverted."*
+
+R19's conclusion: *"a selector that reads the ticket's stated layer and dispatches a team scoped to it
+will, on this corpus's evidence, be wrong often enough to matter. **Scope discovery must be a separate,
+cheap, human-gated stage before team formation.**"* Its `declared_scope` / `discovered_scope` pair is
+R3's `scope_hash` with a measurement behind it. ⭐ **Two passes, eight days apart, one unabsorbed
+section between them — and §17.9 named the gap before R19 filled it.** The record now holds both.
+
+**(b) The `eligible[]` field, and why it is the only irreversible one.** *"It costs nothing to write
+and cannot be reconstructed later."* Everything else in the dispatch record can be backfilled with
+effort; the set of configurations that passed the filter and were not chosen exists only at the moment
+of dispatch. Without it there is no counterfactual and **no off-policy evaluation, ever** — which is
+the mechanism behind §18.3 item 3.
+
+**(c) ⛔ The false-`succeeded` mechanism is live in production tooling, already diagnosed, still
+shipped.** Verified in the wiki this session, verbatim at `eclipse-azure-deployment.md:16`:
+
+> *"`deploy_az_webapp.yaml` ('Deploy to Azure App Service') is a **NO-OP**. It builds Next.js and
+> pushes to `wwwroot`, which a container App Service **ignores entirely**. Every run 'succeeds' but
+> changes nothing."*
+
+— compounded at `:150`, where `rollback-check` is itself a no-op whenever the tag does not change, and
+GitVersion reuses tags, so *"both slots can share a tag and the rollback net is degraded."* This is the
+mechanism `docs/evidence/false-succeeded-mechanism.md` was written about, running in a repo we deploy
+from. R19's operational conclusion is the useful part and it is a discriminating test in this estate's
+own idiom: **the question an agent must ask is not *"did the workflow go green?"* but *"does the
+container digest served by the stage slot differ from the one served before the run?"***
+
+**(d) ⭐ Most of the eleven uncovered types should get a *refusal*, not a preset.** R19 refuses to fill
+the table, and the reasoning is §6's never-optimise rule arriving in a new place: *"writing eleven more
+`Preset` rows would manufacture the appearance of readiness"*, which `presets.py:29-31` already warns
+against. Its dispositions: **preset now** for connector-failure and support-exclusion (the only two
+with a real verifier); **a refusal row with a named unblocking condition** for the seven whose verifier
+is `UNBUILT` *and* whose consumer layer is production; **out of scope for team formation entirely** for
+analysis and scoping, because neither produces a diff.
+
+⭐ **And type 11 — the analysis deliverable — deserves the paragraph R19 gives it.** FU92-420 is *"the
+only ticket in the corpus that damaged a client relationship, it involved **zero deploys**, and it
+would pass every gate in this repo untouched because nothing was ever certified."* R19's remedy is a
+**pre-registration artefact** — the counting basis declared and committed *before* the first query
+runs, diffed against the published figure at review. That is the third standing gate (`CLAUDE.md`,
+Evidence-Gated Analysis) made into an object, and it is the one class of work where this repo's entire
+apparatus is structurally blind: **every gate here triggers on a change, and this class ships damage
+without one.**
+
+### 18.6 ⛔ One R19 instrument was pointed at the wrong path, and the question it filed as unanswerable is answerable
+
+R19's §13 lists as `NOT-DETERMINABLE`: *"Do the 14 orchestrator runs and the 3 lane runs overlap? —
+`.sessions` is absent from this checkout (`ls .sessions` → 0)."*
+
+**`.sessions` is not absent.** `OBSERVED`, this session:
+
+```bash
+ls ../prefect-connectors/.sessions | wc -l          # 13
+```
+
+`readiness.py:625` reads it as `CONNECTORS / ".sessions"` — the sibling repo, not this one. R19 ran
+`ls .sessions` relative to `agent-factory`, where it has never existed, and read the empty result as
+an absence. ⭐ **That is this estate's own third analysis gate, failed by the pass that cites it: a
+zero from an instrument nobody proved could see.** It is the cheapest possible instance — the
+instrument was pointed at the wrong directory — and it produced a `NOT-DETERMINABLE` verdict on a
+question one correct path settles. `readiness.py`'s own docstring for that gate says the matching
+thing: *"a question filed as unanswerable that a probe can settle is the same defect as a gate that
+cannot refuse."*
+
+**And the question, now settled.** The two ledgers cannot overlap, and not for the reason R19's
+framing implies:
+
+| | `.data/runs.jsonl` | `prefect-connectors/.sessions` |
+|---|---|---|
+| Rows | 3 | 13 dirs, against 14 audit files |
+| Dated | **2026-08-23**, all three within 5 seconds | **2026-05-25 → 05-28** |
+| Keyed by | `lane` — `control-plane`, `certify`, `artifact` | `pipe_<TICKET>_<runid>` — GP-271…275, KA-15, one placeholder |
+| About | agent-factory's own lanes | connector migrations in another repo |
+
+**Disjoint key spaces, disjoint repos, three months apart.** R19's §5.1 presents these as *"two run
+ledgers [that] count different populations"*, which reads as two rival counts of one thing. They are
+records of **two different machines**, and the honest statement is stronger than R19's: *no single
+ledger in the estate covers the thing R19 wants to record, and neither of these is a candidate to be
+extended into one.* The substantive finding survives untouched — **neither carries a model, an effort
+level, a blueprint version, or an eligible set**, and 3 rows all `FINISHED` is a training set with
+zero negative examples.
+
+⚠ **And F4 attaches, as it does every time this number is quoted.** R19 cites *"14 runs `MEASURED`"*
+with no age. Those runs stopped **2026-05-28** and nothing has run in the orchestrator since. §16.8
+attached F4 to the 3-of-14 figure for exactly this reason; the same caveat is owed here, and the gates
+still do not carry the age of their evidence.
+
+### 18.7 What R19 could not settle — and which of its gaps this pass moved
+
+R19 declares seven. Three moved this session; four stand.
+
+| Its question | Its verdict | Now |
+|---|---|---|
+| Do the 14 orchestrator runs and the 3 lane runs overlap? | `NOT-DETERMINABLE` | ✅ **Settled — no. §18.6** |
+| Are the 5 existing presets the right 5? | `ASSUMED` (§0) | ⚠ **Still open, and it needs a different session, not a better prompt** (§18.1d) |
+| Time cost of a manual Snowflake deploy | `NOT-DETERMINABLE` — no timestamped phase log exists | Stands. ⭐ It is also the denominator for §4.2's third-ranked automation, so **that ranking is `ASSUMED` on both sides of its ratio** |
+| How often is a ticket's stated scope wrong? | `NOT-DETERMINABLE` — 3 instances, denominator unknown | Stands, and R19 calls it *"the strongest single argument for building the record"*. ⭐ Same shape as §16.9's absent false-positive rate: **a recall observation with no denominator**, twice, in two passes |
+| Is Zeus Memory queryable as typed selector input? | `NOT-DETERMINABLE` — not inspected | Stands. One `mcp__ccx__cce_memory_search` against a known ticket key settles it |
+| Does `pbi_model_apply.exe` cover relationships as well as measures? | `NOT-DETERMINABLE` | Stands |
+| What does `succeeds` need to stop being `UNMEASURABLE`? | `NOT-DETERMINABLE` | ⛔ **This one is load-bearing and should not have been deferred.** R19's own §7.1 says *"a selector whose objective function is `UNMEASURABLE` is not a selector"*, and its roadmap phase 8 must not start until phase 5 completes — so the answer to this question gates the whole staging argument, and the pass filed it unread. It is `readiness.py`'s `g_succeeds_more_than_fails` and its `Unmeasurable` raise path. **Row 41** |
+
+⭐ **The pattern across the middle three rows is the one §16.9 named and §18.3 repeats: this estate
+keeps producing recall observations with no denominator.** Six errors caught by a council; three
+tickets whose scope was wrong; two defects found by a reviewer. Every one is a numerator. **The
+denominators are not hard to collect and nobody has collected one**, which is why R19's dispatch record
+matters more than its selector.
+
+### 18.8 Amendments to §5 and §6
+
+**§5's build order is unchanged — R19 reorders nothing — but it supplies the missing precondition for
+step 9.** §5 step 9 reads *"── only here ── configuration experiments"*. R19 shows that step 9 is not
+merely gated on steps 1–8 being done; it is gated on a **schema decision that has to be made before
+the data accumulates, not after**. Nothing in steps 1–8 records the eligible set, so completing all of
+them still leaves step 9 untrainable. ⭐ **Add the dispatch record as step 6b**, alongside step 6's
+telemetry, and note the asymmetry in the same breath: telemetry can be backfilled, the counterfactual
+cannot.
+
+⚠ **This also sharpens the R16 outside lane's step-6 challenge (§17.6), which is still unresolved.**
+That lane argued step 6 sits too late — observability adoption 89% against offline evals 52.4%,
+n = 1,340 — and named a possible internal contradiction between step 3 (terminal verdict from
+append-only history) and step 6 (the telemetry that fills it). R19 arrives from inside and pushes the
+same way: *"the optimiser is not the missing piece — the logging schema is."* **Two independent passes
+now say step 6 is misplaced, and §5 still does not carry either.** Row 33 covers the first; this is a
+second voice for it, from a different direction.
+
+**§6 changes in one row.** The deferral table says a dynamic team-selection LLM unlocks at *"≥200
+adjudicated examples plus static misrouting ≥10%"*. Per §18.3 item 3 that condition is **not merely far
+away, it is unreachable as written**, because the population it counts is not recorded. Restate it as a
+**schema precondition followed by a count**: *the dispatch record with `eligible[]` in place, then ≥200
+adjudicated examples.* ⭐ **A count-based unlock condition on an unrecorded population is a gate that
+cannot pass — the class §15.1, §17.3 and §18.2 have now found in four separate instruments.**
+
+**And one thing §6 gains rather than loses.** Its *"never optimise: retry caps, gate thresholds,
+tenancy checks, timeout/concurrency limits, evaluator thresholds or corpus"* now has a fifth
+independent arrival, from the dispatch side: R19's §7.4 insists **blast radius is a multiplier on the
+failure term, not an additive cost** — *"removing an empty Eclipse filter and issuing `CREATE OR
+REPLACE` against a shared Snowflake view are not the same decision at any budget"* — and that
+**escalation must carry `was_correct`**, or the maximum-scoring policy is *escalate everything*: the
+retired agent's 233 diagnoses / 234 escalations / 0 fixes. §15.5 item 2's *Oversight Has a Capacity*
+result, corroborated independently by R17 (§16.9), is the same conclusion from outside — escalating
+everything is strictly worse than the optimum. **Four sources, one rule, and it is already in §6.**
+
+### 18.9 What changes in this repo — additions to §8
+
+| # | Change | State |
+|---:|---|---|
+| 36 | ⭐ **Build the dispatch record** — `factory/dispatch_record.py`, written **at dispatch** and closed at terminal state, with `eligible[]` mandatory (§5.2, §18.5b). The one field that cannot be backfilled | not started — **R19's own #1, and the precondition for §6's selector row and §5 step 9** |
+| 37 | **Fix `g_version_hash_is_complete` to compare two constructed specs instead of grepping `blueprint.py`** (§18.2) | not started — ⛔ **the code defect is already fixed and the gate can see neither the defect nor the fix.** Twice broken for the same reason (§15.1) |
+| 38 | **Propagate the `6 of 15` correction out of §15.1 into the documents that seed prompts** — `docs/specs/product-end-state.md:66` first, then the nine other occurrences (§18.1b) | not started — **six days un-propagated, and it re-entered the programme through R19's brief** |
+| 39 | **Un-freeze the guidance paragraph in `factory/synthesis.py:84–86`**, which asserts F7 and names R5/R6 in every prompt regardless of the actual gap (§18.1a) | not started — the generator computes the id list and hard-codes the reasoning around it |
+| 40 | **Extend `presets.py` to 16 types — 2 new presets, 7 refusal rows with named unblocking conditions, 2 out of scope, 5 existing** (§18.5d). A refusal row is the honest content when the verifier is `UNBUILT` and the consumer layer is production | not started — ⚠ **filling it with eleven presets instead is the anti-pattern R19 names** |
+| 41 | **Read `g_succeeds_more_than_fails` and say what would make `succeeds` stop reporting `UNMEASURABLE`** (§18.7) | not started — **it gates R19's entire staging argument and R19 filed it unread.** One function |
+| 42 | **Scope discovery as a separate, cheap, human-gated stage before team formation** — `declared_scope` / `discovered_scope` recorded as a pair (§18.5a) | not started — **this is R3's `scope_hash` from 2026-08-21, unabsorbed since, now with ticket evidence behind it** |
+| 43 | **Write the blind-first protocol into `docs/research/README.md`**: the brief-writer and the answerer must be different sessions (§18.1d) | not started — cheap, and it is the only control that makes a `STRUCTURE_CRITIQUE` label mean anything |
+
+### 18.10 Additions to §9 — follow-ups
+
+⚠ Per §16.14 item 9, R19 ran as an in-repo session and **there is no thread to return to**. Two of the
+three below are therefore probes, not questions — answered by running something.
+
+10. **Probe, one command:** `mcp__ccx__cce_memory_search` against a known ticket key, to settle whether
+    Zeus Memory is typed enough to be a selector input (§18.7). R19 filed it `NOT-DETERMINABLE` without
+    trying.
+11. **Probe, one hour:** a timestamped phase log on the next manual Snowflake TEST deploy. It is the
+    missing denominator under R19 §4.2's third-ranked automation, and without it that ranking is
+    `ASSUMED` on both sides of the ratio (§18.7).
+12. **New brief, and it is the one that matters:** a genuinely blind second pass on the taxonomy, by a
+    session that has never opened `factory/presets.py`, to answer *"are the five existing presets the
+    right five?"* — the question R19 marked `ASSUMED` and could not answer about itself (§18.1d). ⚠ It
+    must be dispatched by a different session than the one that writes its brief, or it reproduces
+    R19's disclosure verbatim.
+
+### 18.11 How this reconciliation ran — both halves, and what it did not do
+
+**Read R19 in full — all 40,190 bytes — and its brief, and `docs/findings.md` F1–F10, before writing
+anything.** Then re-ran every internal figure R19 states (the table in §18's preamble), opened
+`factory/blueprint.py` at `HEAD` *and* in the working tree, read `g_version_hash_is_complete` and
+`g_work_is_attributable` in source, and verified R19's three load-bearing wiki citations —
+`eclipse-azure-deployment.md:16` and `:150`, `tickets/gep/GP-311.md:16` — in the wiki itself.
+
+**Stronger than an outside reader on the mechanical half**, in the way §17.12 describes: an outside
+pass cannot run the `TeamSpec` discriminating test against two versions of the file and discover that
+the defect was fixed between the answer and the reconciliation, and cannot discover that `.sessions`
+exists one directory over from where R19 looked. §18.1b, §18.2 and §18.6 are all of that kind.
+
+⚠ **Weaker, and in the same specific way every reconciliation here has been.** This pass read this
+document's conclusions before deciding what in R19 mattered, from inside the estate whose record it is
+grading. §18.5's ⭐ marks are judgement, and it is the same judgement that produced the record.
+
+⛔ **Two things it did not do, stated rather than left to be found.**
+
+1. **It wrote §18 for the newest answer while §17.11 rows 29, 30 and 34 are still `not started`.**
+   R14 (1,389 lines, filed 08-23) and R18 (614 lines, filed 08-23) still have no section, and the eval
+   corpus is still one file. ⭐ **That is §17.4's shape — *the oldest conclusion in the corpus filed as
+   the newest* — repeating inside the mechanism built to stop it**, because the instrument that summons
+   a reconciliation is `unsynthesised()`, which goes green on a mention and had nothing to say about
+   R14 or R18. §17.10 and F75 already ruled that absorption is not mechanically detectable; this is
+   what that ruling costs in practice, on the very next pass.
+2. **It did not verify R19's taxonomy against the ticket corpus.** The 16 types rest on a 59-page sweep
+   this pass did not repeat; the `seen_in` ids are ✓ for the four tickets read here and `REPORTED` for
+   the rest. **Treat every ticket id inherited into §18 as `REPORTED` until someone opens the page** —
+   the standing rule from §17.12, which exists because five ledger citations held in substance and
+   drifted in line number.

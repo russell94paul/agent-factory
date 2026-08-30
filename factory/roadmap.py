@@ -191,9 +191,18 @@ TEAMS: Dict[str, dict] = {
                   "reading every line. Named alongside the pipeline team, and much further away.",
         "gates": [],
         "blocked_on": None,
-        "unblock": "No contract exists for what its output must satisfy. Until one does, there is "
-                   "nothing to gate and nothing to certify — so this team cannot have a "
-                   "percentage, and a roadmap that gave it one would be inventing progress. "
+        "unblock": "⚠ CORRECTED 2026-08-29 — this read 'No contract exists for what its output "
+                   "must satisfy', and that is no longer true. `factory/pbi_contract.py` defines "
+                   "M1–M12, including the two assertions only a renderer can make; it builds and "
+                   "reports UNMEASURABLE=12 with no probes wired (verified, not inferred). "
+                   "The real blocker is narrower and worse: **nothing has ever watched it "
+                   "refuse.** `grep -rln pbi_contract tests/ factory/ scripts/` returns nothing — "
+                   "zero tests, zero callers. The connector contract earns its standing from "
+                   "`test_every_assertion_has_been_proved_able_to_fail`; this one has no "
+                   "equivalent, so its twelve assertions are a claim about sensitivity that "
+                   "nobody has tested. A contract never watched refusing is decoration. "
+                   "Until it is calibrated it stays UNGATED — a percentage here would be "
+                   "inventing progress. "
                    "⚠ Microsoft's first-party agentic Power BI surface may define that contract "
                    "or may duplicate it; the doc is saved UNREAD and is MARKETED until exercised "
                    "against a real tenant.",

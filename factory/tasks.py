@@ -7,6 +7,10 @@ Two rules that matter more than the schema:
 2. **A task cannot close without evidence.** ``status=done`` with an empty ``evidence`` list is
    rejected by the store, not by convention. This is the smallest possible version of the
    GreenContract discipline and it is what stops a team reporting completions with no outcomes.
+3. **Evidence carries a typed class, not just a label.** Four pieces of evidence that all answer
+   the same question satisfy rule 2 and prove almost nothing. ``evidence_class`` names which of
+   the four questions in :mod:`factory.evidence` an artefact answers, so ``close(require=...)``
+   can refuse a delivery that never proved its target or never captured a rollback.
 """
 from __future__ import annotations
 
@@ -16,6 +20,8 @@ import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+from . import evidence as _evidence
 
 OPEN, CLAIMED, BLOCKED, DONE, ABANDONED = "open", "claimed", "blocked", "done", "abandoned"
 _TERMINAL = {DONE, ABANDONED}
@@ -115,15 +121,41 @@ class TaskStore:
                     "task": tid, "data": {"by": by}})
 
     def add_evidence(self, tid: str, kind: str, ref: str, actor: str,
-                     basis: str = "MEASURED") -> None:
-        """basis is MEASURED | DERIVED | ASSUMED — an assumed 'proof' is not a proof."""
+                     basis: str = "MEASURED", evidence_class: str | None = None) -> None:
+        """basis is MEASURED | DERIVED | ASSUMED — an assumed 'proof' is not a proof.
+
+        `kind` stays free text: it is the human label for *this* artefact ("shadow diff",
+        "screenshot"). `evidence_class` is the typed one — which of the four questions in
+        :mod:`factory.evidence` this artefact answers — and it is **validated when given**.
+
+        ⚠ It is optional, and an unclassified row counts toward **nothing**. That is deliberate
+        rather than lenient: making it mandatory would reclassify every historical row by
+        guesswork, and a class inferred from a free-text label is exactly the "inferred from
+        matching values" move the TARGET class exists to forbid.
+        """
         if basis not in {"MEASURED", "DERIVED", "ASSUMED"}:
             raise ValueError(f"basis must be MEASURED|DERIVED|ASSUMED, got {basis!r}")
+        data = {"kind": kind, "ref": ref, "basis": basis}
+        if evidence_class is not None:
+            data["evidence_class"] = _evidence.check(evidence_class)
         self._emit({"ts": time.time(), "actor": actor, "kind": "evidence", "task": tid,
-                    "data": {"kind": kind, "ref": ref, "basis": basis}})
+                    "data": data})
 
-    def close(self, tid: str, actor: str = "system", status: str = DONE) -> None:
-        """⭐ Cannot close as done without at least one MEASURED or DERIVED piece of evidence."""
+    def coverage(self, tid: str, required=_evidence.DELIVERY):
+        """Which of the required evidence classes this task's rows satisfy. See `factory.evidence`."""
+        return _evidence.coverage(self._tasks[tid].evidence, required)
+
+    def close(self, tid: str, actor: str = "system", status: str = DONE,
+              require=None) -> None:
+        """⭐ Cannot close as done without at least one MEASURED or DERIVED piece of evidence.
+
+        `require` raises the bar from *"some evidence"* to *"these named classes"* — pass
+        `factory.evidence.DELIVERY` for the four-artefact gate. It is opt-in per call because
+        what a piece of work must prove is a property of the work, not of the store: an analysis
+        has nothing to roll back, and forcing a ROLLBACK row would teach people to file empty
+        ones. `evidence.ANALYSIS` exists so the reduced set is a declared policy rather than a
+        quiet omission.
+        """
         t = self._tasks[tid]
         if status == DONE:
             usable = [e for e in t.evidence if e.get("basis") in {"MEASURED", "DERIVED"}]
@@ -131,6 +163,12 @@ class TaskStore:
                 raise EvidenceRequired(
                     f"task {tid} cannot close as done: no MEASURED or DERIVED evidence attached "
                     f"({len(t.evidence)} assumed-only item(s))")
+            if require:
+                cov = _evidence.coverage(t.evidence, require)
+                if not cov.complete:
+                    raise EvidenceRequired(
+                        f"task {tid} cannot close as done — required evidence is not "
+                        f"satisfied:\n{_evidence.render(cov)}")
         self._emit({"ts": time.time(), "actor": actor, "kind": "close",
                     "task": tid, "data": {"status": status}})
 
