@@ -25,6 +25,12 @@ Four things are already true, and each one kills a plausible plan:
    B3 Implementation → B4 Testing → B5 PR → B6 CR → B7 Deploy+Rollback. **The client portal is a
    front end on B1 and B2, which today have no client-facing surface at all.** It is not a new
    pipeline.
+   **Where B1…B7 is defined** (verified 2026-08-29 — this plan asserted the pipeline for weeks
+   without citing it, and a reader cannot check an uncited anchor):
+   `~/repos/aldc-launchpad/.claude/commands/launchpad-tracker.md:21` declares Part B, and
+   `~/repos/aldc-launchpad/cli/platform/b1_requirements.py` implements B1's brief generator.
+   ⚠ Note the precision that buys: B1 already has **internal tooling**; what it has no surface for
+   is the **client**. "No client-facing surface" is the accurate claim, not "nothing exists".
 
 ---
 
@@ -58,10 +64,20 @@ Its finding is not about food waste. It is about **elicitation quality**:
 > **70–80%** of the ontology automatically; a generic 'tell us about your work' questionnaire will
 > yield **30–40%** and require extensive manual curation."*
 
-That is a **2× difference in spec completeness**, decided entirely by how the form is written. It is
-the single highest-leverage claim across all four corpora, and it applies directly to a client
-kickoff form. The four target dimensions — entity types, relationships, roles, decision gates — are
-the schema for the questionnaire.
+⚠ **BASIS: `EXTERNAL / ASSUMED` — an unsourced projection, from another domain. Do not quote it to
+a client, and do not let it order the roadmap on its own.** Checked 2026-08-29: the quote is
+verbatim accurate (`ALDC Ontology AutoGeneration Assessment.md:18`), but at source it sits in the
+**executive summary of a forward-looking feasibility assessment** ("Is feasible in 8–12 weeks for a
+1.0 beta"), carries **no citation, no study and no dataset**, and describes ontology extraction from
+stakeholder interviews for a **food-waste / circular-economy** domain (FoodMesh, Food Banks Canada,
+CPMA) — not connector intake specs. It is a projection the document makes, not a result it reports.
+
+**What survives without it.** The *design guidance* stands on its own merits: targeting entity
+types, relationships, roles and decision gates beats "tell us about your work", and every question
+mapping to a check (CIP-08) is right regardless of the ratio. So the four target dimensions — entity
+types, relationships, roles, decision gates — remain the schema for the questionnaire. What does
+**not** survive is the "2×" as a scheduling argument. **How it dies:** CIP-19's pre/post test on
+real ALDC intake records. Until that runs, no ALDC figure exists.
 
 It also states the extraction pipeline is feasible in 8–12 weeks for a domain-scale ontology, and
 that relationship-heavy domains suit graph extraction. A single client's connector spec is far
@@ -315,3 +331,57 @@ report what they actually say. Do not trust this file's claims about them.
 - **Effort.** The ontology assessment's 8–12 weeks is for a full domain ontology with 10–30
   stakeholder interviews. A single connector spec is far smaller, but no ALDC figure exists.
   NOT-SUPPLIED — do not quote a timeline until P1 has produced one real record.
+
+---
+
+## 11. Basis register — attack these first
+
+Format borrowed wholesale from `docs/specs/control-room.md` §8, including its **"how it dies"**
+column, which is the part that makes a register useful rather than decorative. Added 2026-08-29,
+after a divergence pass found this plan's most-quoted number carrying no basis at all while a
+sibling spec one directory away labelled its own centrepiece honestly as a `BET`.
+
+| Claim | Basis | How it dies |
+|---|---|---|
+| A well-designed questionnaire yields 70–80% vs 30–40% | **`EXTERNAL / ASSUMED`** — unsourced projection in a feasibility doc, food-waste domain, no dataset | CIP-19's pre/post test on real intake records shows no difference in spec completeness |
+| The questionnaire and the acceptance test are the same artefact | **`REASONED`** from the A1–A12 mapping in §3, which is concrete and checkable | a client-declared field turns out not to be expressible as an A9 invariant |
+| The client portal is a front end on B1–B2, not a new pipeline | **`OBSERVED`** — `aldc-launchpad/.claude/commands/launchpad-tracker.md:21`, `cli/platform/b1_requirements.py` | B1/B2 turn out to need a different contract shape than `blueprint.yaml` |
+| Certification (A1–A12) is a working instrument to hang intake off | **`MEASURED`** 2026-08-29: `python -m factory.certify blueprints/windsorai_client_a.yaml --calibrate` → PASS=12 | it is REPLAYED, not live — a live run against a fresh pull disagrees with the recorded corpus |
+| A client will complete a 20–30 question form | **`ASSUMED`** — the ontology assessment's design point, never tested on an ALDC client | P3's exit criterion: a real client abandons it |
+| RMRR-style instrumentation transfers to delivery specs | **`DERIVED`** — same axis (was a correction needed?), different unit | the correction signal turns out to track reviewer habit rather than spec quality |
+| Effort for a single connector spec | **`NOT-SUPPLIED`** — the 8–12 weeks is for a full domain ontology with 10–30 interviews | — do not quote a timeline until P1 produces one real record |
+| The factory track's 13 tickets are independent | **`NOT-MODELLED`** — they have no `detail` entry at all, so no edges, no gate, no effort | anyone models them and finds a real edge |
+
+**Rule this register exists to enforce:** no figure appears anywhere in this plan, or in anything
+derived from it, without its basis beside it. A number quoted without one is how an unsourced
+projection from a food-waste ontology came to sit on the critical path.
+
+---
+
+## 12. The specs this plan builds on — read before designing anything
+
+⚠ Added 2026-08-29. Until then **this plan cited none of them**, and `docs/specs/` — six files,
+~91 KB — was referenced only by prompt scaffolding and R13/R14/R15 evidence packs. The cost was
+real: a session was about to re-specify a UI whose shape had been decided days earlier.
+
+| Spec | What it already settles | Do not re-derive |
+|---|---|---|
+| `docs/specs/control-room.md` (443 lines) | §5 the build in slices, each with the gate that says it worked; §7 seven explicit refusals; §8 the basis register §11 above borrows | the slices, the refusals, the register format |
+| `docs/specs/client-intake-portal.md` | the portal surface this plan's P3 delivers | portal shape |
+| `docs/specs/architecture-v0.md` | the layer model behind §4 | L1–L5 |
+| `docs/specs/product-end-state.md` | where this is going | the end state |
+| `docs/specs/ui-future-features.md` | what is deliberately deferred | the deferral list |
+| `docs/specs/terminal-configuration.md` | how lanes are launched | launcher shape |
+
+**Two of these are load-bearing for tickets that currently have no acceptance criterion:**
+control-room §5 **Slice 0 is CIP-24** (assert `CLAUDE_CODE_SESSION_NAME` reaches the spawned
+process; gate = *"a test that spawns through the real launcher and reads the name back out of the
+registry"*) and **Slice 1 is CIP-36** (fire-drill the blocked-question inbox; gate = *"block a real
+agent on a real question and time how long until a human sees it"*, against a measured before of
+*"4 sat all day"*). §5's governing rule — **"A slice with no gate is not a slice"** — is the
+standard every ticket in this plan should meet.
+
+**And one refusal worth restating here**, because it is already enforced in code and a later
+session may otherwise "add" it: control-room §7 refuses *"a cache that can quietly show yesterday's
+state"*. `scripts/local_tracker.py` implements that refusal — it re-measures per request
+(`:2321`), and the single cache it permits carries its own age in the same string as its number.
