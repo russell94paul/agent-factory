@@ -830,6 +830,73 @@ def render(when: datetime.datetime, tab: str = "tickets", team: str = "") -> str
             _tasks = None
             _terr = "%s: %s" % (type(_exc).__name__, _exc)
 
+        # ---------------------------------------------------------------- inbox
+        # ⭐ Questions agents wrote when they blocked. `sessions.blocked()` has been
+        # correct since 2026-08-23 — it reads JOBS/*/state.json so a question outlives
+        # the process that asked it — and until now NOTHING RENDERED IT. Its only two
+        # callers were launch.py (which prints the count, inside a 9-minute command)
+        # and a roadmap note. So the August fix took the display from "2 of 5 shown"
+        # to "0 of 5 shown", and two credential requests sat unanswered and unseen.
+        #
+        # Rendered FIRST, above the ticket counts, because a question waiting on a
+        # human outranks any amount of progress reporting.
+        #
+        # ⚠ The panel renders even when the count is zero. An inbox that disappears
+        # when empty cannot be told apart from an inbox that is not wired up — which
+        # is the exact failure this panel exists to end. ZERO is a measurement; a
+        # missing panel is not.
+        try:
+            from factory import sessions as _sx
+            _q, _qerr = _sx.blocked(), None
+        except Exception as _exc:                                      # noqa: BLE001
+            _q, _qerr = None, "%s: %s" % (type(_exc).__name__, _exc)
+
+        def _age(rec):
+            """`waiting_since` is a unix timestamp (float), not an ISO date string."""
+            try:
+                d = datetime.datetime.now().timestamp() - float(rec.get("waiting_since"))
+                if d < 3600:
+                    return "%dm" % (d // 60)
+                if d < 86400:
+                    return "%dh" % (d // 3600)
+                return "%dd" % (d // 86400)
+            except Exception:                                          # noqa: BLE001
+                return "?"
+
+        w('<div class="par" style="margin:0 0 18px;border-color:var(--unmeas)">')
+        if _qerr is not None:
+            w('<h3 style="margin:0;color:var(--fail)">Inbox unreadable &mdash; %s</h3>' % e(_qerr))
+        elif not _q:
+            w('<h3 style="margin:0;color:var(--pass)">Inbox: 0 questions waiting</h3>'
+              '<p style="font-size:13px;color:var(--ink3);margin:6px 0 0">Read from '
+              '<code>~/.claude/jobs/*/state.json</code> on every refresh. Shown at zero on '
+              'purpose &mdash; a panel that vanishes when empty is indistinguishable from one '
+              'that was never wired.</p>')
+        else:
+            _live = [r for r in _q if r.get("answerable")]
+            w('<h3 style="margin:0;color:var(--unmeas)">Inbox &mdash; %d question(s) waiting '
+              '&middot; %d answerable</h3>' % (len(_q), len(_live)))
+            w('<p style="font-size:13px;color:var(--ink3);margin:6px 0 10px">Oldest first, '
+              'across every session alive or dead &mdash; a question is a fact on disk and '
+              'outlives the process that asked it. <b>Liveness says how to answer, never '
+              'whether to show.</b></p>')
+            for _r in _q:
+                _ok = bool(_r.get("answerable"))
+                _col = "var(--pass)" if _ok else "var(--notrun)"
+                _tag = "answerable" if _ok else "orphaned &mdash; %s" % e(str(_r.get("state") or "?"))
+                _who = e(str(_r.get("name") or _r.get("lane") or _r.get("job_id") or "?")[:28])
+                _txt = " ".join(str(_r.get("needs") or "").split()) or "(no question text)"
+                w('<div style="border-left:3px solid %s;padding:2px 0 2px 11px;margin:0 0 11px">' % _col)
+                w('<div style="font-size:11px;color:%s;font-family:ui-monospace,monospace">'
+                  '%s &middot; waited %s &middot; %s</div>' % (_col, _who, _age(_r), _tag))
+                w('<div style="font-size:14px;color:var(--ink);margin:3px 0 0">%s</div>' % e(_txt[:400]))
+                _sug = " ".join(str(_r.get("suggested_reply") or "").split())
+                if _sug:
+                    w('<div style="font-size:12.5px;color:var(--ink3);margin:3px 0 0">'
+                      'suggested reply: <i>%s</i></div>' % e(_sug[:160]))
+                w('</div>')
+        w('</div>')
+
         w('<div class="head">')
         w('<h1>Agent Factory &mdash; where the work stands</h1>')
         if _tasks is None:
