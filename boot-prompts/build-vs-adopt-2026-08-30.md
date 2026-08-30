@@ -181,6 +181,42 @@ column.
 
 ---
 
+## 3b. Second thread, opened late: the operations UI
+
+`docs/FACTORY-UI-PROMPT.md` (324 lines) replaces a 58-section UI brief. **Paul is testing it against
+Claude Design as of 2026-08-29 late** — treat any output from that as a draft to assess, not a
+decision taken.
+
+⭐ **Why it matters to the `next:` line above: the UI's Phase 0 and the supervised-lane run are the
+same work seen from two ends.** Phase 0 is `factory/events.py`, an append-only event ledger wired to
+the path that actually launches agents (`local_tracker._launch_script()`, **not** `deploy.py`, which
+has zero production callers). It has nothing to record until a real lane runs. So the one action in
+`next:` unblocks three things at once: gate `breadth`, the first real certification, and the UI's
+only honest data source.
+
+**The three rules in that prompt that must survive contact with any design tool:**
+
+1. **No single-number percentage may stand for a set containing an UNMEASURABLE.** The original brief
+   specified `PASS RATE 81%` on the front page — that is the aggregation collapse §3 documents, in
+   the one product whose thesis forbids it.
+2. **Simulated data may never satisfy the acceptance test.** The test ends: *pointed at the factory
+   as it stands today — 3 runs, 1 corpus case, 12 uninstrumented assertions — the UI must look
+   conspicuously unfinished. If it renders as a healthy busy command centre, it is lying.*
+3. **Stack is decided, not delegated:** extend `local_tracker.py` with vanilla JS over one SSE
+   endpoint. There is no `package.json` anywhere in this repo; a node toolchain is a large ungated
+   new surface while `BVA-01` is open.
+
+⚠ **Collision:** `docs/design/session-ui-and-intake.html` ("Control Room & Intake", 35 KB) was
+written by a concurrent session the same evening. **Read it before building either surface** or the
+estate gets two command centres.
+
+⛔ **My own recommendation, recorded so it is not silently lost:** Phase 0 is worth doing now and the
+UI probably is not. Three recorded runs and one certified connector do not need a command centre;
+they need a second certified connector. Build the event ledger and stop — it captures the only thing
+that is unrecoverable, and the UI gets better the more history sits behind it.
+
+---
+
 ## 4. NOT done — read this before believing anything is ready
 
 - **The factory has never certified a connector.** `certified NOT_RUN — 12 assertions have no
@@ -195,7 +231,12 @@ column.
   evidence on existing tickets instead:** `CIP-05` (certify a connector — now the gate on all
   adoption), `RUN-03` (the BUILD verdict + the runner pricing), `CIP-09`/`CIP-10` (already built
   upstream). **Check `CIP-05` and `BVA-01` before actioning any adoption.**
-- **Nothing was committed.** `docs/reviews/build-vs-adopt-2026-08-29.md` and this file are untracked.
+- ✅ **Everything from this session is committed and pushed** across `agent-factory` (`f32c69b`),
+  `wiki` and `aldc-launchpad`. Nothing of mine is outstanding.
+- ⛔ **No UI code was written.** `docs/FACTORY-UI-PROMPT.md` is a prompt, not an implementation,
+  and its Phase 0 (`factory/events.py`) **does not exist**. Nothing in it has been built.
+- ⛔ **No connector has been certified**, so the UI has no honest data source and the review's
+  migration costs remain priced against interfaces that have never carried traffic.
 - **No candidate was executed.** Every verdict rests on reading source, packaging metadata, CI
   matrices and release APIs. Two cheap executions would upgrade DOCUMENTED → OBSERVED and are named
   in §6.
