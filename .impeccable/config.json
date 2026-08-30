@@ -56,6 +56,15 @@
         ],
         "createdAt": "2026-08-29T23:19:30.089Z",
         "reason": "Claude triage 2026-08-29: dark-mode --mute, same class as the other four — declared only in the two dark blocks (template.html:20,32); light --mute is #6F6B7A. Cannot render on #ffffff."
+      },
+      {
+        "rule": "overused-font",
+        "value": "instrument serif",
+        "files": [
+          "docs/board/template.html"
+        ],
+        "createdAt": "2026-08-30T00:25:24.635Z",
+        "reason": "Claude triage 2026-08-29: part of a deliberate, consistently applied three-face system on an already-published artifact - Archivo (sans), Instrument Serif (display only, .eyebrow/headings), DM Mono (mono/labels). Not a default pick. NOT user-confirmed; suppressed because changing the typeface of a board Paul is actively working from is an identity change, out of scope for functional edits, and riskier than the warning. Revisit if the board is ever restyled deliberately."
       }
     ]
   }
