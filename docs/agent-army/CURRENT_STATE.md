@@ -103,9 +103,37 @@ qualifiers are in `R2-answer-topology.md` and in neither downstream summary:
   controlled agentic benchmarks, not systems that deploy containers or write to a warehouse.
 
 **The decision to reject the three-agent blueprint still stands, but not on the −3.5%.** It stands
-on the two things that survive scrutiny: the **sequential-task degradation of 39–70%**, which is
-the task class connector migration actually belongs to, and **our own measured failures, which were
-all at seams** — so adding two mandatory LLM-to-LLM handoffs treats the wrong variable.
+on the two things that survive scrutiny: the **sequential-task degradation**, which is the task
+class connector migration actually belongs to, and **our own measured failures, which were all at
+seams** — so adding two mandatory LLM-to-LLM handoffs treats the wrong variable.
+
+### And the source has moved — the current version supports the decision better
+
+Verified 2026-08-30 against the paper itself: **arXiv:2512.08296**, *Towards a Science of Scaling
+Agent Systems* (Kim et al.), DOI `10.48550/arXiv.2512.08296`. Our header describes **v1**
+(Dec 2025) — 180 configurations, four benchmarks. The live version is **v3** (8 Apr 2026):
+**260 configurations, six benchmarks**, five architectures, three LLM families.
+
+**v3 does not lead with an average at all.** Its abstract frames the finding as architecture–task
+fit, and the aggregate mean is not the headline:
+
+> "Relative performance change compared to single-agent baseline ranges from **+80.8%** on
+> decomposable financial reasoning to **−70.0%** on sequential planning, demonstrating that
+> **architecture-task alignment determines collaborative success**."
+
+It also reports a capability-saturation effect — coordination yields diminishing returns once
+single-agent baselines pass a threshold — and that architectures **without centralized
+verification propagate errors more** than those with it.
+
+That is a *better* argument for the blueprint decision than the one we were making. Connector
+migration is sequential shared-state work — the −70.0% pole, named in the paper's own abstract.
+And "no centralized verification propagates errors" is an independent argument for the
+non-LLM authoritative verifier this repository already built (`evaluator_service/`).
+
+⚠ **Unverified claim, recorded so it is not repeated:** R01 reported that this work "landed in
+Nature MI 2026" and was paywalled. **The arXiv record shows no journal reference.** Treat the
+Nature attribution as `NOT-VERIFIED` until someone produces the DOI. The expanded version is not
+paywalled — it is arXiv v3, free.
 
 Stated plainly because this document exists to be trusted: the argument as previously written here
 was **stronger than the evidence supporting it**. The conclusion did not change; the reason did.
