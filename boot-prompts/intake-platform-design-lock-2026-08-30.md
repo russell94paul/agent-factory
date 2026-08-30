@@ -1,5 +1,7 @@
 # Boot — Intake Platform: full review, and lock the design
 
+⛔ **SUPERSEDED for sequencing** by `run-the-loop-2026-08-30.md`, and now by `run-03-the-missing-middle-2026-08-30.md`. The divergence pass this file commissioned is **done** — read its outputs in `docs/reviews/`, do not re-run it. See `README.md` in this folder.
+
 **Written:** 2026-08-29 late. **For:** the next session.
 **Goal of that session:** stop designing. Lock design, tracker, roadmap, dependencies, use-cases and
 > ⚠ **SUPERSEDED for sequencing by `run-the-loop-2026-08-30.md`.** The divergence pass this

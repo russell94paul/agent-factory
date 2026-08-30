@@ -1,5 +1,7 @@
 # Boot — RUN-03: make one TeamSpec actually execute
 
+✅ **CURRENT as of 2026-08-30 05:25** — this is the live boot prompt; every other file in `boot-prompts/` is superseded or half-done. See `README.md` in this folder for the map, and `docs/findings.d/F77`/`F78` for the corrections that outlived every earlier prompt.
+
 **Written:** 2026-08-30, 02:00. **This is the one that gets the factory running.**
 
 Everything else open right now is tidying or infrastructure. This is the assembly line.

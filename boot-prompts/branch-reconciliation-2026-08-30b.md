@@ -1,5 +1,7 @@
 # Boot — the last two branches, re-measured after main moved
 
+⚠ **HALF DONE, 2026-08-30 05:25.** `lane/control-plane-renamed` **landed** (`6bd12f3`, 05:22) — its figures here are spent. **`lane/certify` is still out**: 4 commits, worktree at `.worktrees/certify`. Read this file only for that half, and do not delete that branch or worktree until it merges. See `README.md` in this folder.
+
 **Written:** 2026-08-30, 01:40. **Supersedes `branch-reconciliation-2026-08-30.md`**, whose conflict
 figures were measured before three merges landed and are now wrong in both directions. That file is
 kept for its reasoning; **this one has the numbers.**

@@ -1,5 +1,7 @@
 # Boot — Phase 0: the event ledger, and the wiring change that comes first
 
+⛔ **SUBSUMED 2026-08-30 by `run-03-the-missing-middle-2026-08-30.md`**, which states it directly: *you cannot record events for a run that never happens* — build the runner and have it emit the event record as it goes. One vertical slice, not two tickets. **Kept for the event-model design, especially the eligible-set argument.** See `README.md` in this folder.
+
 **Written:** 2026-08-29, late. **For:** the session that builds `factory/events.py`.
 **Companions:** `build-vs-adopt-2026-08-30.md` (the decision record), `run-the-loop-2026-08-30.md`
 (the live `next:` for the wider board), `docs/FACTORY-UI-PROMPT.md` (what Phase 0 eventually feeds).
