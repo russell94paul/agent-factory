@@ -18,10 +18,12 @@ from __future__ import annotations
 
 import ast
 import collections
+from datetime import datetime, timezone
 import re
 import functools
 import glob
 import hashlib
+import importlib
 import json
 import os
 import sys
@@ -196,59 +198,80 @@ def _counts(runs) -> collections.Counter:
 _ENGINE: dict = {}
 
 
+def _scratch_pipeline(engine, pid, stages, status="running"):
+    engine._pipelines.clear()
+    p = {"id": pid, "ticket_id": "READINESS", "ticket_title": "readiness probe",
+         "pipeline_type": "connector-migration", "client_code": "GEP", "status": status,
+         "stages": stages, "params": {}, "prior_results": {}, "budget_usd": 0}
+    engine._pipelines[pid] = p
+    return p
+
+
+def _scratch_stage(name, **kw):
+    s = {"name": name, "status": "pending", "depends_on": [], "type": "claude-p",
+         "timeout_min": 10, "auto_advance": True}
+    s.update(kw)
+    return s
+
+
+_ACTIVITY = {"stage_started", "stage_completed", "stage_failed", "stage_skipped",
+             "restart_from_stage", "retry_stage", "gate_approved", "gate_rejected"}
+
+
+def _history_window():
+    runs = _audits()
+    stamps = sorted(e.get("timestamp", "") for r in runs for e in r["events"]
+                    if e.get("timestamp") and e.get("event_type") in _ACTIVITY)
+    if not stamps:
+        return ""
+    return f"{stamps[0][:10]} to {stamps[-1][:10]}"
+
+
 def _engine():
-    """Import the build plane's control module and hand it back with its writes muted.
+    """Import the build plane against a scratch data directory. Cached per process.
 
-    ⭐ **This exists so a control-plane gate can WATCH A CONTROL REFUSE rather than read the
-    source for a word.** `tests/test_readiness_probes_can_pass.py::
-    test_the_control_plane_probes_watch_rather_than_grep` has required this since 2026-08-22 and
-    there was nothing to call: `_engine` did not exist, so the test was a specification with no
-    implementation and five probes went on grepping. The cost of grepping was measured twice —
-    `g_concurrency_is_reserved_outside_the_agent` searched case-sensitively for `max_parallel`
-    while the code spelled it `MAX_PARALLEL_STAGE_DISPATCH`, and reported "concurrency is bounded
-    per wave, not per stage dispatch" about a module that bounds stage dispatch (F81).
-
-    ⛔ **Writes are muted, and that is not optional.** `pipelines._refuse` records an audit event
-    *before* handing back the exception — deliberately, so a control cannot fire unseen. But
-    `_audits()` reads that same directory, so a probe that drove a control without muting would
-    write the evidence another probe then measures. A gate that manufactures its own input is not
-    an instrument. `audit_trail._append_event` and `event_bus.emit` are replaced with no-ops for
-    the life of the process.
-
-    Raises :class:`Unmeasurable` when the module will not import. An engine that cannot be loaded
-    is *not* a failed control — it is no measurement at all, and the difference is the reason the
-    four verdicts exist.
+    Raises Unmeasurable — never a verdict — when the checkout cannot be imported. A gate
+    that cannot establish its instrument has not measured anything.
     """
-    # ⚠ Keyed on the checkout, not a bare flag. `CONNECTORS` is monkeypatched by tests and by
-    # anyone comparing two branches, and a cache that ignored it would hand back the engine from
-    # whichever checkout was measured first — a probe reporting on a revision it never loaded.
-    root = str(CONNECTORS)
-    if root in _ENGINE:
-        return _ENGINE[root]
+    # ⚠ KEYED ON THE CHECKOUT, not a bare global. `CONNECTORS` is repointed by tests and by
+    # anyone comparing two branches, and a single cached engine would hand back whichever
+    # checkout was imported first — a probe reporting on a revision it never loaded. That is
+    # the F80 failure one level down: measuring the wrong revision and not being able to say so.
+    global _ENGINE
+    key = str(CONNECTORS)
+    if isinstance(_ENGINE, dict) and key in _ENGINE:
+        return _ENGINE[key]
+    import sys
+    import tempfile
     if not (CONNECTORS / "orchestrator" / "pipelines.py").is_file():
-        raise Unmeasurable(
-            f"no orchestrator/pipelines.py at {CONNECTORS} — set $PREFECT_CONNECTORS to a "
-            "checkout that carries the build plane")
-    if root not in sys.path:
-        sys.path.insert(0, root)
+        raise Unmeasurable(f"no orchestrator/pipelines.py at {CONNECTORS}")
+    if str(CONNECTORS) not in sys.path:
+        sys.path.insert(0, str(CONNECTORS))
+    for _m in [m for m in list(sys.modules) if m.startswith("orchestrator")]:
+        del sys.modules[_m]
     try:
-        import importlib
-        # Drop any previously-imported copy: two checkouts share the module name, and the second
-        # import would otherwise return the first checkout's module from sys.modules.
-        for name in [n for n in list(sys.modules) if n.startswith("orchestrator")]:
-            del sys.modules[name]
-        mod = importlib.import_module("orchestrator.pipelines")
-    except Exception as exc:                                       # noqa: BLE001
-        raise Unmeasurable(f"orchestrator.pipelines will not import from {CONNECTORS}: "
-                           f"{type(exc).__name__}: {exc}")
-    # Mute the two write paths a driven control touches. Best-effort by design: a missing
-    # attribute means that write path does not exist in this revision, which is not an error.
-    for target, attr in ((getattr(mod, "audit_trail", None), "_append_event"),
-                         (getattr(mod, "event_bus", None), "emit")):
-        if target is not None and hasattr(target, attr):
-            setattr(target, attr, lambda *a, **k: None)
-    _ENGINE[root] = mod
-    return mod
+        from orchestrator import pipelines as engine
+        from orchestrator.engine import audit as audit_trail
+    except Exception as exc:
+        raise Unmeasurable(f"the build plane will not import: {type(exc).__name__}: {exc}")
+    # The engine logs every refusal at WARNING, which is exactly right in production and
+    # exactly wrong in the middle of a readiness table. The refusals are still measured —
+    # each probe reports what it watched — they are just not printed over the report.
+    import logging as _logging
+    _logging.getLogger("orchestrator").setLevel(_logging.CRITICAL)
+    _logging.getLogger("orchestrator.pipelines").setLevel(_logging.CRITICAL)
+    # A scratch directory, never the real one. These probes dispatch and reap; pointing
+    # them at orchestrator/data would have the readiness check mutate the record it is
+    # also measuring.
+    d = pathlib.Path(tempfile.mkdtemp(prefix="readiness-probe-"))
+    audit_trail.configure(d, d / "sessions")
+    engine.configure(d)
+    # Two checkouts share the module name, so a second import would return the first
+    # checkout's module straight out of sys.modules.
+    if not isinstance(_ENGINE, dict):
+        _ENGINE = {}
+    _ENGINE[key] = (engine, audit_trail, d)
+    return _ENGINE[key]
 
 
 def _stage(name: str = "extract", **kw) -> dict:
@@ -387,71 +410,59 @@ def g_succeeds_more_than_fails():
 
 
 def g_failure_is_bounded():
-    """Can repetition get past the cap? `cap` asks whether it refuses; this asks whether it holds.
+    """Is failure bounded — can a stage be dispatched forever?
 
-    ⭐ **This probe had exactly one return path — `_fail` — from the day it was written until
-    2026-08-30.** It read the audits, computed the worst restart count, and returned "no attempt
-    cap on restart" *whatever it found*, including a clean window. It was a constant wearing an
-    instrument's clothes, and it sat in `launch.UNATTENDED_GATES` being read as a measurement of
-    an unbounded system. Recorded 2026-08-22 in `test_readiness_probes_can_pass.py`'s docstring;
-    the fix took eight days to arrive. F81.
-
-    **What "bounded" means here, distinct from `cap`.** `check_attempt_cap` accepts an
-    `override_reason` that buys one further attempt, and the estate's own history is the reason:
-    on 2026-08-14 an unoverridable cap was got past by *deleting the pipeline*, destroying the
-    evidence with the loop. So an override is correct — but it must be **single-shot**. An
-    override that can be replayed is not a bound, it is a slower loop. That is the property
-    driven below.
+    Drives the choke point every dispatch passes through, including the watchdog's, and
+    counts how many attempts it takes before dispatch stops. The previous version of this
+    probe had a single return path, `_fail`: it could not have reported a bounded system
+    if one had existed, which makes it a constant rather than an instrument.
     """
-    src = f"{CONNECTORS}/orchestrator/pipelines.py :: check_attempt_cap (driven) + audits"
-    mod = _engine()
-    fn = getattr(mod, "check_attempt_cap", None)
-    cap = getattr(mod, "MAX_ATTEMPTS_PER_STAGE", None)
-    if fn is None or cap is None:
-        raise Unmeasurable("the engine exposes no attempt cap to drive")
+    engine, _, _ = _engine()
+    src = f"{CONNECTORS.name}/orchestrator/pipelines.py::_build_stage_requests, driven"
+    cap = getattr(engine, "MAX_ATTEMPTS_PER_STAGE", None)
+    runs = _audits()
+    per = []
+    for r in runs:
+        c = collections.Counter(e.get("stage_name") for e in r["events"]
+                                if e.get("event_type") == "restart_from_stage")
+        if c:
+            per.append((r["id"],) + c.most_common(1)[0])
+    worst = max(per, key=lambda x: x[2]) if per else None
+    ev = ["pipelines.py records the 2026-08-14 incident verbatim: the stage was "
+          "'auto-restarted with no attempt cap', and ten containers took the whole "
+          "10-core canadacentral quota"]
+    if worst:
+        ev.append(f"worst in the recorded history ({_history_window()}): {worst[2]} "
+                  f"restarts of '{worst[1]}' in {worst[0]} — before any cap existed")
 
-    st = _stage(_attempts=int(cap) + 1)
-    pl = _pipeline(stages=[st])
-    first, _ = _refused(fn, pl, st, "restart_from_stage")
-    granted, _ = _refused(fn, pl, st, "restart_from_stage", "one more, investigating")
-    # After the override is spent, the SAME stage at the SAME attempt count must refuse again.
-    after, _ = _refused(fn, pl, st, "restart_from_stage")
-
-    ev = [f"cap = {cap}",
-          f"over the cap -> {'REFUSED' if first else 'ALLOWED'}",
-          f"with an override reason -> {'REFUSED' if granted else 'ALLOWED (one grant)'}",
-          f"replaying the same override -> {'REFUSED' if after else 'ALLOWED'}"]
-
-    # The audits are history, cited as evidence and never as the verdict: the 2026-08-14 incident
-    # is permanent, and a gate whose verdict reads it can never go green no matter what is built.
-    try:
-        runs = _audits()
-        inw, excluded = _since(runs)
-        per = []
-        for r in inw:
-            c = collections.Counter(e.get("stage_name") for e in r["events"]
-                                    if e.get("event_type") == "restart_from_stage")
-            if c:
-                per.append((r["id"],) + c.most_common(1)[0])
-        worst = max(per, key=lambda x: x[2]) if per else None
-        ev.append(f"in-window runs: {len(inw)}; excluded as pre-controls: {len(excluded)}")
-        ev.append(f"worst in-window: {worst[2]} restarts of '{worst[1]}' in {worst[0]}"
-                  if worst else "no restart events in the window")
-        ev.append(_basis())
-    except Unmeasurable as exc:
-        ev.append(f"audit history not readable ({exc}) — verdict rests on the driven control")
-
-    ev.append("history: the 2026-08-14 incident is recorded verbatim in pipelines.py — the stage "
-              "was 'auto-restarted with no attempt cap' and ten containers took the whole 10-core "
-              "canadacentral quota. Cited as evidence, never as this gate's verdict.")
-
-    if first and after and not granted:
-        return _pass("failure is bounded: the cap refuses, an override buys exactly one, "
-                     "and replay refuses again", ev, src)
-    if not first:
+    if cap is None:
+        ev.append("the engine declares no ceiling, so nothing bounds the loop")
         return _fail("no attempt cap on restart", ev, src)
-    return _fail("the override is not single-shot — a replayable override is a slower loop",
-                 ev, src)
+
+    # A watchdog that re-dispatches a permanently-failing stage: reset to pending and ask
+    # again, exactly as recover_stale_pipelines does, and see where it stops.
+    LIMIT = 50
+    p = _scratch_pipeline(engine, "pipe_bounded", [_scratch_stage("stuck")])
+    dispatched = 0
+    for _ in range(LIMIT):
+        got = engine._build_stage_requests(p, [0])
+        if not got:
+            break
+        dispatched += 1
+        p["stages"][0]["status"] = "pending"
+    ev.append(f"simulated an uncapped watchdog: asked for {LIMIT} dispatches, the engine "
+              f"granted {dispatched} and then refused")
+    ev.append(f"the stage was left '{p['stages'][0]['status']}', so it is not re-offered "
+              f"forever")
+
+    if dispatched == 0:
+        ev.append("nothing was dispatched at all — the ceiling refuses honest work")
+        return _fail("the cap disables dispatch entirely", ev, src)
+    if dispatched >= LIMIT:
+        return _fail("no attempt cap on restart", ev, src)
+    if dispatched != cap:
+        ev.append(f"stopped at {dispatched}, but MAX_ATTEMPTS_PER_STAGE is {cap}")
+    return _pass(f"failure is bounded at {dispatched} attempts, watched", ev, src)
 
 
 def g_gates_can_refuse():
@@ -926,40 +937,79 @@ def _grep(rel: str, pattern: str):
 def g_attempt_cap_on_the_live_path():
     """Is the retry cap enforced on the path that actually restarts stages?
 
-    ⭐ **Driven, not grepped.** This probe used to search `pipelines.py` for a regex spanning
-    3,000 characters from `def restart_from_stage` to any of four ceiling-ish tokens. A comment
-    mentioning `max_attempts` satisfied it, and the lane being graded writes the comments. Now it
-    calls `check_attempt_cap` and watches what happens.
-
-    **Both directions are required.** A cap that refuses a stage on its first attempt is as broken
-    as one that never refuses, and only one of those two failures looks like a failure. So the
-    control must refuse over the cap AND allow under it; either half alone is not the control.
+    Watched, not inferred: the probe drives `retry_stage` and `restart_from_stage` past
+    the ceiling and requires each to refuse. The previous version searched
+    `pipelines.py` for a regex near those two function names — which a comment satisfies.
     """
-    src = f"{CONNECTORS}/orchestrator/pipelines.py :: check_attempt_cap (driven)"
-    mod = _engine()
-    cap = getattr(mod, "MAX_ATTEMPTS_PER_STAGE", None)
-    fn = getattr(mod, "check_attempt_cap", None)
-    if fn is None or cap is None:
-        return _fail("no attempt cap on the dispatch path",
-                     ["the engine exposes no check_attempt_cap/MAX_ATTEMPTS_PER_STAGE",
+    engine, audit_trail, _ = _engine()
+    src = f"{CONNECTORS.name}/orchestrator/pipelines.py, driven"
+    cap = getattr(engine, "MAX_ATTEMPTS_PER_STAGE", None)
+    refused = getattr(engine, "ControlRefused", None)
+    ev = []
+    if cap is None or refused is None:
+        return _fail("the engine declares no attempt cap",
+                     ["no MAX_ATTEMPTS_PER_STAGE / ControlRefused in pipelines.py",
                       "1,004 restart_from_stage events recorded; worst 352 in one run"], src)
+    ev.append(f"MAX_ATTEMPTS_PER_STAGE = {cap}")
 
-    over = _stage(_attempts=int(cap) + 1)
-    under = _stage(_attempts=0)
-    refused_over, why = _refused(fn, _pipeline(stages=[over]), over, "restart_from_stage")
-    refused_under, _ = _refused(fn, _pipeline(stages=[under]), under, "restart_from_stage")
+    watched = {}
+    for path in ("retry_stage", "restart_from_stage"):
+        p = _scratch_pipeline(engine, f"pipe_cap_{path}",
+                              [_scratch_stage("stuck", status="failed", _attempts=cap)])
+        try:
+            getattr(engine, path)(p["id"], "stuck")
+            watched[path] = None
+        except refused as exc:
+            watched[path] = getattr(exc, "control", "?")
+        except Exception as exc:
+            watched[path] = f"raised {type(exc).__name__}"
 
-    ev = [f"cap declared: MAX_ATTEMPTS_PER_STAGE = {cap}",
-          f"driven at {cap + 1} attempts -> {'REFUSED' if refused_over else 'ALLOWED'}",
-          f"driven at 0 attempts -> {'REFUSED' if refused_under else 'ALLOWED'}",
-          "1,004 restart_from_stage events recorded historically; worst 352 in one run"]
-    if refused_over:
-        ev.append(f"refusal said: {why}")
-    if refused_over and not refused_under:
-        return _pass("the restarting path is capped, and the cap was watched refusing", ev, src)
-    if refused_under:
-        return _fail("the cap refuses work that is under the limit", ev, src)
-    return _fail("a cap exists on a path that did not run", ev, src)
+    # A guard that refuses everything would satisfy the two checks above while silently
+    # disabling retry altogether, so the honest direction is measured too — and the SAME
+    # dispatch establishes that the production path actually increments the counter.
+    #
+    # ⭐ This second half is why the probe was rewritten twice. It used to hand itself a
+    # stage with `_attempts` already at the ceiling, which proves the comparison fires but
+    # proves nothing about whether anything ever moves the counter. Deleting the single
+    # line that writes `_attempts` left this gate reporting "watched refusing" over an
+    # engine whose cap could never fire.
+    p = _scratch_pipeline(engine, "pipe_cap_honest", [_scratch_stage("fresh")])
+    before_attempts = engine.attempts(p["stages"][0])
+    permitted = bool(engine.start_pipeline(p["id"]))
+    counts = engine.attempts(p["stages"][0]) > before_attempts
+
+    # The counter the cap is measured against must not be resettable from the dashboard.
+    # `_retry_count` is now only informational — `attempts()` reads `_attempts` — so this
+    # greps for a pop of EITHER. Guarding only the old field would have let a future
+    # `clear_context` zero the real counter with this gate still green.
+    # ⚠ The quote is matched EXPLICITLY. The original regex here was
+    # `pop\(\s*.._retry_count`, and it never matched the line it was written to catch:
+    # after `pop(` the source reads `"_retry_count`, so `..` consumes `"_` and the literal
+    # then has to match `retry_count` against `retry_count` one character too late. The
+    # `not cleared` half of this gate's pass condition was therefore VACUOUSLY TRUE — at
+    # ea888b0 and in the first version of this rewrite. Verified by running both patterns
+    # against the real line from server.py at 3da40f6.
+    cleared = _grep("orchestrator/server.py",
+                    r"""pop\(\s*['"](_attempts|_retry_count)""")
+    for path, control in watched.items():
+        ev.append(f"{path} at the cap -> "
+                  + (f"REFUSED ({control})" if control == "attempt_cap"
+                     else f"NOT REFUSED ({control})"))
+    ev.append("a first dispatch is still permitted" if permitted
+              else "a first dispatch was ALSO refused — the cap disables the feature")
+    ev.append(f"and that dispatch moved the counter: {before_attempts} -> "
+              f"{engine.attempts(p['stages'][0])}" if counts
+              else "⛔ the dispatch did NOT move the counter — the cap can never fire")
+    if cleared:
+        ev.append(f"server.py:{cleared[0][0]} POPS the attempt counter, resetting it: "
+                  f"{cleared[0][1]}")
+    ev.append(f"history, {_history_window()}: 1,004 restart_from_stage events, worst 352 "
+              f"in one run, all of it before this cap existed")
+
+    if (all(c == "attempt_cap" for c in watched.values())
+            and permitted and counts and not cleared):
+        return _pass("the restarting path is capped, and was watched refusing", ev, src)
+    return _fail("the restarting path is not capped", ev, src)
 
 
 def g_spend_ceiling_survives_restart():
@@ -1019,163 +1069,367 @@ def g_spend_ceiling_survives_restart():
 
 
 def g_concurrency_is_reserved_outside_the_agent():
-    """Is concurrent STAGE dispatch bounded — the level at which ten containers took a quota?
+    """Is concurrent STAGE dispatch bounded, across pipelines?
 
-    ⛔ **This probe reported a false FAIL for eight days because of one letter's case.** It ran
-    `re.search(r"max_parallel", _src("orchestrator/pipelines.py"))` — case-sensitively — while the
-    code spells the constant `MAX_PARALLEL_STAGE_DISPATCH`. It therefore announced *"nothing
-    bounds concurrent STAGE dispatch"* about a module containing a dispatch ceiling, a
-    `_DISPATCH_LOCK`, and a `dispatch_ceiling` refusal event. **A zero from an instrument nobody
-    proved could see is not a measurement** — the identical defect review finding D-2 recorded,
-    where a document was reported missing over a case-sensitive grep. F81.
-
-    Now driven: fill the ceiling and confirm no slots remain, then empty it and confirm they do.
+    Waves bound how many pipelines start together. Ten containers took the region quota at
+    the stage level, across runs. The previous probe searched `pipelines.py` for the
+    lowercase literal `max_parallel` — a string, not a behaviour.
     """
-    src = f"{CONNECTORS}/orchestrator/pipelines.py :: dispatched_slots_in_use (driven)"
-    mod = _engine()
-    ceiling = getattr(mod, "MAX_PARALLEL_STAGE_DISPATCH", None)
-    in_use = getattr(mod, "dispatched_slots_in_use", None)
-    if ceiling is None or in_use is None:
-        return _fail("concurrency is bounded per wave, not per stage dispatch",
-                     ["the engine exposes no stage-level dispatch ceiling",
-                      "wave_scheduler bounds how many PIPELINES start together, which is not "
-                      "the level at which ten containers took the region quota"], src)
+    engine, _, _ = _engine()
+    src = f"{CONNECTORS.name}/orchestrator/pipelines.py::_build_stage_requests, driven"
+    par = _grep("orchestrator/engine/wave_scheduler.py", r"max_parallel")
+    ceiling = getattr(engine, "MAX_PARALLEL_STAGE_DISPATCH", None)
+    ev = [f"{len(par)} max_parallel reference(s) in the wave scheduler — those bound how "
+          f"many PIPELINES start together"]
+    if not par and ceiling is None:
+        raise Unmeasurable("no concurrency mechanism found to assess")
+    if ceiling is None:
+        ev.append("pipelines.py declares no stage-level ceiling — nothing bounds "
+                  "concurrent STAGE dispatch, which is the level ten containers took the "
+                  "region quota at")
+        return _fail("concurrency is bounded per wave, not per stage dispatch", ev, src)
+    ev.append(f"MAX_PARALLEL_STAGE_DISPATCH = {ceiling}")
 
-    saved = dict(getattr(mod, "_pipelines", {}))
-    try:
-        mod._pipelines.clear()
-        empty = in_use()
-        stages = [_stage(f"s{i}", status="dispatched") for i in range(int(ceiling) + 2)]
-        mod._pipelines["readiness-probe"] = _pipeline("readiness-probe", stages)
-        full = in_use()
-        # A manual gate must NOT consume a slot: two paused runs would otherwise starve
-        # everything else, which is a ceiling causing the outage it was added to prevent.
-        mod._pipelines.clear()
-        gate = _stage("await-human", status="dispatched", type="gate", gate_type="manual")
-        mod._pipelines["readiness-probe"] = _pipeline("readiness-probe", [gate])
-        manual = in_use()
-    finally:
-        mod._pipelines.clear()
-        mod._pipelines.update(saved)
+    # Two pipelines, because the quota was taken across runs and not inside one.
+    engine._pipelines.clear()
+    n = ceiling + 3
+    a = _scratch_pipeline(engine, "pipe_conc_a", [_scratch_stage(f"a{i}") for i in range(n)])
+    b = {"id": "pipe_conc_b", "ticket_id": "READINESS", "ticket_title": "readiness probe",
+         "pipeline_type": "connector-migration", "client_code": "GEP", "status": "running",
+         "stages": [_scratch_stage("b0")], "params": {}, "prior_results": {}, "budget_usd": 0}
+    engine._pipelines["pipe_conc_b"] = b
+    granted = len(engine._build_stage_requests(a, list(range(n))))
+    spill = len(engine._build_stage_requests(b, [0]))
+    deferred = [s["name"] for s in a["stages"] if s["status"] == "pending"]
+    ev.append(f"asked for {n} concurrent stage dispatches in one run: {granted} granted, "
+              f"{len(deferred)} left pending")
+    ev.append(f"then asked a SECOND pipeline for one more: {spill} granted — the ceiling "
+              f"is {'global' if spill == 0 else 'per-pipeline, which the quota is not'}")
 
-    ev = [f"ceiling declared: MAX_PARALLEL_STAGE_DISPATCH = {ceiling}",
-          f"with no dispatched stages, slots in use = {empty}",
-          f"with {int(ceiling) + 2} dispatched stages, slots in use = {full} "
-          f"(free = {int(ceiling) - full})",
-          f"a dispatched MANUAL gate counts as {manual} slot(s) — a human being asked a "
-          f"question must not hold the scarce resource"]
-    if empty == 0 and full > ceiling and manual == 0:
-        return _pass("stage dispatch is bounded, and the ceiling was driven past its limit",
-                     ev, src)
+    # A ceiling that counts a gate waiting on a human deadlocks every other pipeline. That
+    # is a control causing the outage it was added to prevent, so it is measured.
+    engine._pipelines.clear()
+    g = _scratch_pipeline(engine, "pipe_conc_gate",
+                          [_scratch_stage(f"g{i}", type="gate", gate_type="manual",
+                                          timeout_min=None) for i in range(ceiling + 2)])
+    engine._build_stage_requests(g, list(range(ceiling + 2)))
+    work = {"id": "pipe_conc_work", "ticket_id": "READINESS", "ticket_title": "probe",
+            "pipeline_type": "connector-migration", "client_code": "GEP",
+            "status": "running", "stages": [_scratch_stage("real")], "params": {},
+            "prior_results": {}, "budget_usd": 0}
+    engine._pipelines["pipe_conc_work"] = work
+    starved = not engine._build_stage_requests(work, [0])
+    ev.append("paused manual gates starve real work — the ceiling deadlocks" if starved
+              else "manual gates hold no slot, so paused runs cannot starve the rest")
+
+    if granted == ceiling and deferred and spill == 0 and not starved:
+        return _pass(f"stage dispatch is bounded at {ceiling}, watched deferring", ev, src)
     return _fail("concurrency is bounded per wave, not per stage dispatch", ev, src)
 
 
 def g_orphans_are_reaped():
-    """Is dispatched work either finished or killed — or can it sit at `stage_started` forever?
+    """Is dispatched work either finished or killed?
 
-    ⭐ **Like `bounded`, this probe had one return path and it was `_fail`.** It counted heartbeat
-    mentions in `work_guard.py`, appended three canned lines, and returned "no lease, timeout or
-    reaper for dispatched work" unconditionally. No input could satisfy it. Meanwhile
-    `orchestrator/engine/cloud_reaper.py` and `reap_expired_leases` exist, with 965 lines of tests
-    behind them, and the gate reported their absence with confidence. F81.
-
-    ⚠ **The reaper's own third verdict is the thing to preserve.** A dispatched stage with neither
-    a lease nor a `started_at` is NOT-MEASURABLE, not expired — the reaper says so itself and
-    collects those separately rather than killing them. A probe that treated "not reaped" as "not
-    working" would be pressuring the engine to kill work it cannot measure, which is worse than
-    the orphan.
+    The previous probe searched `orchestrator/engine/work_guard.py` for a heartbeat and
+    returned `_fail` unconditionally. work_guard's lease covers repo locks between agents;
+    it was never going to hold a reaper for dispatched cloud work — and the probe never
+    looked in `pipelines.py`, where an orphan reclaimer already lived.
     """
-    src = f"{CONNECTORS}/orchestrator/pipelines.py :: reap_expired_leases (driven)"
-    mod = _engine()
-    reap = getattr(mod, "reap_expired_leases", None)
+    engine, audit_trail, _ = _engine()
+    src = f"{CONNECTORS.name}/orchestrator/pipelines.py::reap_expired_leases, driven"
+    reap = getattr(engine, "reap_expired_leases", None)
+    runs = _audits()
+    stuck = [r["id"] for r in runs
+             if r["events"] and r["events"][-1].get("event_type") == "stage_started"]
+    ev = [f"{len(stuck)} of {len(runs)} recorded runs ({_history_window()}) sit at "
+          f"stage_started with no terminal event",
+          "documented: a container outlived its stage and ten of them took a 10-core quota"]
     if reap is None:
-        return _fail("no lease, timeout or reaper for dispatched work",
-                     ["the engine exposes no reap_expired_leases",
-                      "work_guard's lease covers REPO LOCKS between agents, not dispatched "
-                      "cloud work",
-                      "4 of 14 runs sit at stage_started with no terminal event"], src)
-
-    import datetime as _dt
-    now = _dt.datetime.now(_dt.timezone.utc)
-    expired = (now - _dt.timedelta(hours=6)).isoformat()
-    future = (now + _dt.timedelta(hours=6)).isoformat()
-
-    saved = dict(getattr(mod, "_pipelines", {}))
-    try:
-        mod._pipelines.clear()
-        dead = _stage("orphan", status="dispatched", lease_expires_at=expired)
-        alive = _stage("healthy", status="dispatched", lease_expires_at=future)
-        mod._pipelines["readiness-probe"] = _pipeline("readiness-probe", [dead, alive])
-        reaped = reap()
-        names = {r.get("stage") or r.get("stage_name") for r in (reaped or [])
-                 if isinstance(r, dict)}
-        dead_status, alive_status = dead.get("status"), alive.get("status")
-    except Exception as exc:                                       # noqa: BLE001
-        raise Unmeasurable(f"driving reap_expired_leases raised {type(exc).__name__}: {exc}")
-    finally:
-        mod._pipelines.clear()
-        mod._pipelines.update(saved)
-
-    ev = [f"drove the reaper over one stage with a 6h-EXPIRED lease and one with a live lease",
-          f"reaped: {sorted(n for n in names if n) or 'nothing'}",
-          f"expired stage ended as '{dead_status}'; live stage ended as '{alive_status}'",
-          "the reaper never re-dispatches — it closes the stage so the run can reach a "
-          "terminal state and stop holding a slot"]
-    took_the_dead = "orphan" in names or dead_status not in (None, "dispatched")
-    spared_the_live = "healthy" not in names and alive_status == "dispatched"
-    if took_the_dead and spared_the_live:
-        return _pass("dispatched work is reaped when its lease expires, and only then", ev, src)
-    if not took_the_dead:
+        ev.append("work_guard's lease covers REPO LOCKS between agents, not dispatched "
+                  "cloud work, and no reaper exists in the engine")
         return _fail("no lease, timeout or reaper for dispatched work", ev, src)
-    return _fail("the reaper killed a stage whose lease had not expired", ev, src)
+
+    from datetime import timedelta as _td
+    def _iso(mins):
+        return (datetime.now(timezone.utc) + _td(minutes=mins)).isoformat(timespec="seconds")
+
+    # 1. an expired lease is killed, and killed TERMINALLY — not made runnable again.
+    p = _scratch_pipeline(engine, "pipe_reap",
+                          [_scratch_stage("orphan", status="dispatched",
+                                          lease_expires_at=_iso(-120))])
+    killed = reap()
+    after = p["stages"][0]["status"]
+    log = [e.get("event_type") for e in
+           json.loads(audit_trail._audit_path("pipe_reap").read_text(encoding="utf-8"))["events"]] \
+        if audit_trail._audit_path("pipe_reap").exists() else []
+
+    # 2. a live lease is NOT killed — a reaper that kills everything is not a reaper.
+    q = _scratch_pipeline(engine, "pipe_reap_live",
+                          [_scratch_stage("running", status="dispatched",
+                                          lease_expires_at=_iso(+30))])
+    spared = reap()
+
+    ev.append(f"expired lease -> {len(killed)} reaped, stage left '{after}'")
+    ev.append("reaped work was NOT made runnable again" if after == "failed"
+              else f"reaped work went to '{after}' — a re-dispatch would relaunch its "
+                   f"cloud work and land the same rows twice")
+    ev.append(f"the log gained a terminal event: {'yes' if 'stage_failed' in log else 'NO'} "
+              f"({', '.join(log) or 'nothing recorded'})")
+    ev.append(f"live lease -> {len(spared)} reaped; a still-running stage is left alone"
+              if not spared else "a LIVE lease was reaped — the reaper kills honest work")
+
+    # 3. ⭐ The half this gate could not see. "Either finished or killed" was satisfied for
+    # a year by a reaper that closed the RECORD and handed the container to a human in an
+    # error string — and the container is the thing that holds the quota. Ten of them took
+    # the whole 10-core canadacentral allocation on 2026-08-13 while every record looked
+    # tidy. So the probe now requires the reap to REACH the terminator with the stage's own
+    # handle, and requires an unrecorded handle to be reported as an unknown rather than
+    # as an absence.
+    #
+    # The handle is put there by `record_external_handle` — the same function server.py
+    # binds into every script stage's ScriptContext — rather than written into the dict by
+    # the probe. That distinction is finding F18: a probe that constructs the precondition
+    # proves the comparison fires and proves nothing about whether the system reaches it.
+    killed_handles, unknown_handles, wiring = [], [], []
+    reg = getattr(engine, "register_terminator", None)
+    rec = getattr(engine, "record_external_handle", None)
+    if reg is None or rec is None:
+        ev.append("the engine has no external-handle registry, so a reaped stage's cloud "
+                  "work cannot be killed or even identified — the record is closed and "
+                  "the container is left to a human")
+        return _fail("dispatched work is leased and reaped, but its cloud work is not", ev, src)
+
+    HANDLE = "d894339e-900c-4244-b81a-72d43e2760da"
+    reached = []
+    engine.clear_terminators() if hasattr(engine, "clear_terminators") else None
+    reg("prefect_flow_run", lambda hid, name: (reached.append(hid), {"verdict": "KILLED"})[1])
+
+    r = _scratch_pipeline(engine, "pipe_reap_handle",
+                          [_scratch_stage("trigger-run", status="dispatched", type="script",
+                                          lease_expires_at=_iso(-120))])
+    wrote = rec("pipe_reap_handle", "trigger-run", "prefect_flow_run", HANDLE, "moose")
+    reap()
+    killed_handles = list(reached)
+    term = (r["stages"][0].get("_termination") or [{}])[0]
+
+    # ⛔ The retry path. Gutting `_retry_unterminated` left this gate reading PASS — over
+    # exactly the system F30 describes, where every handle the budget skipped sits on a
+    # `failed` stage that no sweep reads again while the record promises otherwise. The
+    # tests caught that removal; the GATE did not, so the gate was not measuring the fix.
+    #
+    # Driven with a terminator that refuses first and settles second, which is the shape a
+    # transient Azure outage has. If nothing comes back for the handle, `retried_ok` stays
+    # False and the gate refuses.
+    retried_ok = capped_ok = False
+    sweep = getattr(engine, "sweep_unterminated_handles", None)
+    if sweep is not None:
+        seen_retry = []
+
+        def _flaky(hid, name):
+            seen_retry.append(hid)
+            return ({"verdict": "KILLED"} if len(seen_retry) > 1
+                    else {"verdict": "FAILED", "detail": "transient"})
+
+        engine.clear_terminators()
+        reg("prefect_flow_run", _flaky)
+        t = _scratch_pipeline(engine, "pipe_retry",
+                              [_scratch_stage("trigger-run", status="dispatched",
+                                              type="script", lease_expires_at=_iso(-120))])
+        rec("pipe_retry", "trigger-run", "prefect_flow_run", HANDLE)
+        reap()
+        sweep()
+        retried_ok = seen_retry == [HANDLE, HANDLE]
+
+        # and the cap, because a retry loop with no cap is how a colleague's flow run was
+        # sent CANCELLING 288 times in 24 hours
+        engine.clear_terminators()
+        stubborn = []
+        reg("prefect_flow_run", lambda h, n: stubborn.append(h) or {"verdict": "FAILED"})
+        u = _scratch_pipeline(engine, "pipe_capped",
+                              [_scratch_stage("trigger-run", status="dispatched",
+                                              type="script", lease_expires_at=_iso(-120))])
+        rec("pipe_capped", "trigger-run", "prefect_flow_run", HANDLE)
+        reap()
+        for _ in range(30):
+            sweep()
+        cap = getattr(engine, "MAX_TERMINATION_ATTEMPTS", None)
+        capped_ok = bool(cap) and len(stubborn) == cap
+        ev.append(f"a handle that refuses once is retried and settles: "
+                  f"{'yes' if retried_ok else 'NO — nothing comes back for it, so the '
+                     'budget abandons work rather than deferring it'}")
+        ev.append(f"a handle that never settles is given up on after {cap} attempts: "
+                  f"{'yes' if capped_ok else f'NO — {len(stubborn)} attempts and counting, '
+                     'each one a CANCELLING sent to work we then refuse to delete'}")
+    else:
+        ev.append("no retry pass exists: a handle the termination budget skips sits on a "
+                  "`failed` stage that no sweep reads again, and leaks permanently")
+
+    engine.clear_terminators()
+    reg("prefect_flow_run", lambda hid, name: (reached.append(hid), {"verdict": "KILLED"})[1])
+
+    # and the honest-unknown branch: a stage dispatched before handles existed
+    s = _scratch_pipeline(engine, "pipe_reap_nohandle",
+                          [_scratch_stage("old", status="dispatched", type="script",
+                                          lease_expires_at=_iso(-120))])
+    reap()
+    unknown = (s["stages"][0].get("_termination") or [{}])[0].get("verdict")
+    if hasattr(engine, "clear_terminators"):
+        engine.clear_terminators()
+
+    ev.append(f"a handle recorded by the engine's own recorder ({'yes' if wrote else 'NO'}) "
+              f"was carried to the terminator on reap: "
+              f"{killed_handles and killed_handles[0][:8] or 'NOTHING REACHED IT'} "
+              f"-> {term.get('verdict')}")
+    ev.append(f"a reaped stage carrying no handle reports '{unknown}' — an unknown, not an "
+              f"absence" if unknown == "NOT_RECORDED" else
+              f"a reaped stage carrying no handle reports '{unknown}': whether it left a "
+              f"container running is being read as nothing to kill")
+
+    # ⛔ The wiring, DRIVEN. This was three substring searches over server.py until an
+    # independent review deleted the registration call, gutted `_report_run`, and watched
+    # all three keep reading "yes" — the ordering one compared string POSITIONS and was
+    # satisfied by the surviving `import cloud_reaper` line. The gate reported "server
+    # registers the cloud terminators at startup: yes" over a system where nothing was
+    # registered. A recorder nothing calls records nothing, and a grep cannot tell.
+    #
+    # So the two seams are named functions in server.py now, and this calls them and asks
+    # the engine what it actually holds.
+    ops = _src("orchestrator/stage_scripts/prefect_ops.py")
+    launches, reports = ops.count("prefect.create_flow_run"), ops.count("_report_run(ctx,")
+    try:
+        srv_mod = importlib.import_module("orchestrator.server")
+    except Exception as exc:
+        raise Unmeasurable(f"orchestrator.server will not import: {type(exc).__name__}: {exc}")
+
+    engine.clear_terminators()
+    registered = bool(srv_mod.wire_cloud_terminators(engine)) and bool(engine._TERMINATORS)
+    engine.clear_terminators()
+
+    w = _scratch_pipeline(engine, "pipe_wired",
+                          [_scratch_stage("trigger-run", status="dispatched", type="script")])
+    srv_mod.build_script_context({"pipeline_id": "pipe_wired", "stage_name": "trigger-run"})         .report_external_handle("prefect_flow_run", HANDLE, "moose")
+    bound = [h["id"] for h in (w["stages"][0].get("_external_handles") or [])] == [HANDLE]
+
+    # And the callee, driven. `ops.count("_report_run(ctx,")` counts CALL SITES, so
+    # gutting the function they all call was invisible to this gate — the second half of
+    # the same review finding. Importing prefect_ops is affordable here; if it ever is not,
+    # the gate says NOT-IMPORTABLE rather than quietly falling back to the count.
+    reported = None
+    try:
+        po = importlib.import_module("orchestrator.stage_scripts.prefect_ops")
+        seen = []
+
+        class _Ctx:
+            def report_external_handle(self, kind, hid, name=""):
+                seen.append(hid)
+
+        po._report_run(_Ctx(), {"id": HANDLE, "name": "moose"})
+        reported = (seen == [HANDLE])
+    except Exception as exc:
+        ev.append(f"could not drive _report_run: {type(exc).__name__}: {exc}")
+
+    ev += [f"{reports} of {launches} flow-run launch sites report their handle, and the "
+           f"function they call "
+           + ({True: "does report it", False: "REPORTS NOTHING — every launch is invisible "
+                                              "to the reaper",
+               None: "could not be driven (NOT-IMPORTABLE), so only the call sites are "
+                     "measured"}[reported]),
+           "the context the server builds writes a handle to the record: "
+           + ("yes" if bound else "NO — the recorder is bound to nothing"),
+           "calling the server's own wiring leaves a terminator registered: "
+           + ("yes" if registered else "NO — every reap would be NOT_ATTEMPTED and the "
+                                      "container would keep its core")]
+
+    cloud_ok = (killed_handles == [HANDLE] and term.get("verdict") == "KILLED"
+                and unknown == "NOT_RECORDED"
+                and launches and reports == launches
+                and reported is True and retried_ok and capped_ok
+                and bound and registered)
+
+    if killed and after == "failed" and "stage_failed" in log and not spared and cloud_ok:
+        return _pass("dispatched work is leased, reaped and its cloud work killed", ev, src)
+    if killed and after == "failed" and "stage_failed" in log and not spared:
+        return _fail("the record is reaped; the cloud work it started is not", ev, src)
+    return _fail("no lease, timeout or reaper for dispatched work", ev, src)
 
 
 def g_verdict_is_computed_from_history():
     """Does the terminal verdict read the append-only log, or a last-write-wins field?
 
-    ⭐ **The drive is a discriminating test, and the two candidate implementations disagree.**
-    Hand `terminal_verdict` a pipeline whose every stage reads `completed` — current state says
-    unambiguously *succeeded* — but whose history cannot be read. A verdict computed from
-    `pipeline["stages"]` returns **succeeded**. A verdict computed from the log cannot read the
-    log, so it must decline: `failed`, `basis=UNMEASURABLE`, failing closed. The answer separates
-    the two mechanisms; no regex over the source can.
-
-    That failure mode is not hypothetical — `docs/evidence/false-succeeded-mechanism.md` records
-    three runs marked succeeded over 115, 21 and 15 failures, because a stage that failed 100
-    times and succeeded on the 101st reads `completed`.
+    Driven rather than grepped. The regex version located `any_failed = any(... for x in
+    <name>)` and asked whether `<name>` contained "event" — which renaming a variable
+    satisfies.
     """
-    src = f"{CONNECTORS}/orchestrator/pipelines.py :: terminal_verdict (driven)"
-    mod = _engine()
-    fn = getattr(mod, "terminal_verdict", None)
-    if fn is None:
-        raise Unmeasurable("the engine exposes no terminal_verdict to drive")
-
-    pl = _pipeline("readiness-probe-no-such-history",
-                   [_stage("a", status="completed"), _stage("b", status="completed")])
-    try:
-        out = fn(pl)
-    except Exception as exc:                                       # noqa: BLE001
-        raise Unmeasurable(f"driving terminal_verdict raised {type(exc).__name__}: {exc}")
-
-    if not isinstance(out, dict):
-        return _fail("the verdict reads current state, not history",
-                     [f"terminal_verdict returned {out!r}, which carries no basis field",
-                      "a verdict with no basis cannot say whether the log was read"], src)
-
-    status, basis = out.get("status"), out.get("basis")
-    ev = [f"drove terminal_verdict on a pipeline whose stages all read 'completed' and whose "
-          f"history is absent",
-          f"returned status={status!r} basis={basis!r}",
-          "a state-derived verdict returns 'succeeded' here; a history-derived one cannot read "
-          "the log and must fail closed",
-          "3 runs were recorded succeeded over 115, 21 and 15 failures — "
-          "docs/evidence/false-succeeded-mechanism.md"]
-    if status == "failed" and basis == "UNMEASURABLE":
-        return _pass("the verdict is derived from the event log, and fails closed when the log "
-                     "cannot be read", ev, src)
-    if status == "succeeded":
+    engine, audit_trail, _ = _engine()
+    src = f"{CONNECTORS.name}/orchestrator/pipelines.py::terminal_verdict, driven"
+    verdict_fn = getattr(engine, "terminal_verdict", None)
+    body = _src("orchestrator/pipelines.py")
+    m = re.search(r"any_failed\s*=\s*any\(.{0,400}?for \w+ in ([^\s:)]+)", body, re.S)
+    iterable = m.group(1) if m else ""
+    ev = [f"any_failed iterates over: {iterable or '(not found)'}"]
+    if verdict_fn is None:
+        ev += ['that is pipeline["stages"][i]["status"] — last-write-wins',
+               "a stage that failed 100 times and succeeded on 101 reads 'completed', so "
+               "it contributes nothing to any_failed",
+               "the failures exist only in the append-only log, which this does not consult",
+               "3 runs recorded succeeded over 115, 21 and 15 failures"]
         return _fail("the verdict reads current state, not history", ev, src)
-    return _fail("the verdict did not fail closed on an unreadable log", ev, src)
+
+    # The defect itself, reproduced: a stage that fails many times and then succeeds.
+    FAILS = 7
+    p = _scratch_pipeline(engine, "pipe_verdict", [_scratch_stage("flaky")])
+    for _ in range(FAILS):
+        engine.start_pipeline(p["id"])
+        engine.on_session_complete(p["id"], "flaky", "ses", success=False, error="transient")
+        p["stages"][0]["status"] = "pending"
+        p["stages"][0]["_attempts"] = 0
+    engine.start_pipeline(p["id"])
+    engine.on_session_complete(p["id"], "flaky", "ses", success=True)
+    v = p.get("verdict") or {}
+    ev.append(f"drove a stage to fail {FAILS}x then succeed: status='{p['status']}', "
+              f"failures_in_log={v.get('failures_in_log')}, clean={v.get('clean')}")
+
+    # ⭐ The discriminating case, and the reason this probe was rewritten a second time.
+    # An independent review reverted `any_failed` to the original last-write-wins
+    # expression — one edit — and this gate still read PASS, because everything it checked
+    # (failures_in_log, clean) comes from the log INDEPENDENTLY of any_failed. The gate
+    # could not see the defect it is named for.
+    #
+    # In the current engine every status write is mirrored by an audit event, so the two
+    # expressions agree on any state the engine can reach on its own. This constructs the
+    # one state where they cannot: a stage whose log ends stage_failed and whose status
+    # field says completed. Reading the field gives `succeeded`; reading the log gives
+    # `failed`.
+    d = _scratch_pipeline(engine, "pipe_verdict_liar", [_scratch_stage("liar")])
+    engine.start_pipeline(d["id"])
+    engine.on_session_complete(d["id"], "liar", "ses", success=False, error="real")
+    d["stages"][0]["status"] = "completed"     # the field, without the log
+    d["status"] = "running"
+    d.pop("verdict", None)
+    liar = verdict_fn(d) or {}
+    ev.append(f"a stage whose log ends stage_failed but whose status field says completed: "
+              f"verdict={liar.get('status')} — the verdict follows "
+              f"{'the log' if liar.get('status') == 'failed' else 'the STATUS FIELD'}")
+
+    # A log that cannot be read must not read as a clean one.
+    q = _scratch_pipeline(engine, "pipe_verdict_nolog",
+                          [_scratch_stage("a", status="completed")])
+    blind = verdict_fn(q) or {}
+    ev.append(f"with no audit log at all: basis={blind.get('basis')}, "
+              f"status={blind.get('status')} — an unreadable history "
+              f"{'fails closed' if blind.get('status') == 'failed' else 'reads as success'}")
+
+    saw_failures = v.get("failures_in_log") == FAILS and v.get("clean") is False
+    follows_log = liar.get("status") == "failed"
+    fails_closed = blind.get("basis") == "UNMEASURABLE" and blind.get("status") == "failed"
+    if saw_failures and follows_log and fails_closed:
+        return _pass("the verdict is derived from the event log", ev, src)
+    if not saw_failures:
+        ev.append("the verdict could not see failures that are in the log")
+    if not follows_log:
+        ev.append("the verdict followed the status field over the log — this is the "
+                  "last-write-wins defect itself")
+    return _fail("the verdict reads current state, not history", ev, src)
 
 
 def g_corpus_has_breadth():

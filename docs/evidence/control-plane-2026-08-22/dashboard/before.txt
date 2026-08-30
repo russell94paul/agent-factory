@@ -1,0 +1,14 @@
+[control] attempt_cap refused pipe_probe/trigger-run: stage 'trigger-run' has been dispatched 5 times; the cap is 5. Re-running it again will not fix it and each attempt costs real money. Supply an explicit override reason to buy one more attempt.
+the engine's own refusal:
+  stage 'trigger-run' has been dispatched 5 times; the cap is 5. Re-running it again will not fix it and each attempt costs real money. Supply an explicit override reason to buy one more attempt.
+
+  !!  the refusal was recognised as a cap refusal, not a generic error  — NO PROMPT — the regex in isAttemptCapRefusal did not match the real message
+  ok  the first request carried no override
+  !!  the second request carried the override to the wire  — 1 request(s)
+  !!  the refusal was shown to the operator as an ERROR, not a success  — [success] Retrying "trigger-run" with context — 0 dispatched
+  ok  no success toast was raised before the override succeeded
+  ok  cancelling sends NOTHING  — 1 request(s)
+  !!  cancelling says nothing was retried
+  ok  a whitespace-only reason is not an override  — 1 request(s)
+
+FAILED: the dashboard did not behave as claimed.
