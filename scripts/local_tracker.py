@@ -709,6 +709,21 @@ def render(when: datetime.datetime, tab: str = "tickets", team: str = "") -> str
          '<title>Agent Factory</title>', f"<style>{CSS}</style></head><body><div class='wrap'>"]
     w = o.append
     w(f'<nav style="padding:22px 0 4px">{nav}</nav>')
+    # Reload lives in the shared header, not on one tab. It was gates-only until
+    # 2026-08-29, which meant changing the landing tab silently removed it.
+    # ⚠ Refresh RE-MEASURES; reload RE-READS THE CODE. Keep the distinction visible —
+    # conflating them is how this page sat on a stale gate list for hours.
+    _rl = (f'code reloaded {_RELOADED_AT.strftime("%H:%M:%S")}'
+           if _RELOADED_AT else 'code as at server start')
+    w('<div style="padding:2px 0 10px">'
+      '<a href="/reload" style="display:inline-block;padding:6px 12px;border:1px solid '
+      'var(--rule);border-radius:3px;background:var(--raise);color:var(--ink);'
+      'text-decoration:none;font-size:13px">&#8635; reload code &amp; re-measure</a>'
+      '<a href="/sync" style="display:inline-block;margin-left:8px;padding:6px 12px;'
+      'border:1px solid var(--rule);border-radius:3px;background:var(--raise);'
+      'color:var(--ink);text-decoration:none;font-size:13px">&#8681; sync artifact file</a>'
+      f'<span style="color:var(--ink3);font-size:12.5px">&nbsp; refresh re-measures &middot; {_rl}</span>'
+      '</div>')
     if _SYNC_MSG:
         okc = 'var(--pass)' if _SYNC_MSG[0] else 'var(--fail)'
         w(f'<div class="sub" style="color:{okc};font-size:13px">{e(_SYNC_MSG[1])}</div>')
@@ -804,17 +819,6 @@ def render(when: datetime.datetime, tab: str = "tickets", team: str = "") -> str
           f'refresh this page to re-measure</div>')
         # Refresh re-measures; reload re-reads the CODE. They are different things and the page says
         # so, because conflating them is exactly how this page sat on a 23-gate list for hours.
-        reloaded = (f' &middot; code reloaded {_RELOADED_AT.strftime("%H:%M:%S")}'
-                    if _RELOADED_AT else ' &middot; code as at server start')
-        w(f'<div class="sub" style="margin-top:10px">'
-          f'<a href="/reload" style="display:inline-block;padding:6px 12px;border:1px solid '
-          f'var(--rule);border-radius:3px;background:var(--raise);color:var(--ink);'
-          f'text-decoration:none;font-size:13px">&#8635; reload code &amp; re-measure</a>'
-          f'<a href="/sync" style="display:inline-block;margin-left:8px;padding:6px 12px;'
-          f'border:1px solid var(--rule);border-radius:3px;background:var(--raise);'
-          f'color:var(--ink);text-decoration:none;font-size:13px">&#8681; sync artifact file</a>'
-          f'<span style="color:var(--ink3);font-size:12.5px">&nbsp; refresh re-measures'
-          f'{reloaded}</span></div>')
         # The published page is a SEPARATE copy. Saying so on the page is the cheapest possible
         # guard against reading a stale artifact as current state — which already happened.
         w('<div class="sub" style="color:var(--ink3);font-size:12.5px;margin-top:4px">'
