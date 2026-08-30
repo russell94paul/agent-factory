@@ -10,52 +10,7 @@
           "docs/board/template.html"
         ],
         "createdAt": "2026-08-29T23:14:27.965Z",
-        "reason": "Claude triage 2026-08-29: all 7 uppercase rules are micro-labels, not body text — .pill 9.5px, .tk dt 10px ('acceptance'/'evidence'), .states .lbl 10px ('state'), .filters .lbl 10.5px, th 10.5px, .eyebrow 11px, all letter-spaced. The rule's own carve-out ('reserve uppercase for short labels and headings') covers every instance; no passage is set in caps."
-      },
-      {
-        "rule": "low-contrast",
-        "value": "#a594e8 on #ffffff",
-        "files": [
-          "docs/board/template.html"
-        ],
-        "createdAt": "2026-08-29T23:19:08.535Z",
-        "reason": "Claude triage 2026-08-29: dark-mode-only token judged against the LIGHT block's --raise:#FFFFFF. Verified this value appears ONLY inside @media(prefers-color-scheme:dark) (template.html:19-27) and :root[data-theme=dark] (:29-39); in both, --paper is #131218 and --raise is #1A1922, so this pairing cannot render. Detector does not scope tokens by theme block."
-      },
-      {
-        "rule": "low-contrast",
-        "value": "#c0bcc8 on #ffffff",
-        "files": [
-          "docs/board/template.html"
-        ],
-        "createdAt": "2026-08-29T23:19:08.629Z",
-        "reason": "Claude triage 2026-08-29: dark-mode-only token judged against the LIGHT block's --raise:#FFFFFF. Verified this value appears ONLY inside @media(prefers-color-scheme:dark) (template.html:19-27) and :root[data-theme=dark] (:29-39); in both, --paper is #131218 and --raise is #1A1922, so this pairing cannot render. Detector does not scope tokens by theme block."
-      },
-      {
-        "rule": "low-contrast",
-        "value": "#eeebe6 on #ffffff",
-        "files": [
-          "docs/board/template.html"
-        ],
-        "createdAt": "2026-08-29T23:19:08.756Z",
-        "reason": "Claude triage 2026-08-29: dark-mode-only token judged against the LIGHT block's --raise:#FFFFFF. Verified this value appears ONLY inside @media(prefers-color-scheme:dark) (template.html:19-27) and :root[data-theme=dark] (:29-39); in both, --paper is #131218 and --raise is #1A1922, so this pairing cannot render. Detector does not scope tokens by theme block."
-      },
-      {
-        "rule": "low-contrast",
-        "value": "#d8a85a on #ffffff",
-        "files": [
-          "docs/board/template.html"
-        ],
-        "createdAt": "2026-08-29T23:19:08.886Z",
-        "reason": "Claude triage 2026-08-29: dark-mode-only token judged against the LIGHT block's --raise:#FFFFFF. Verified this value appears ONLY inside @media(prefers-color-scheme:dark) (template.html:19-27) and :root[data-theme=dark] (:29-39); in both, --paper is #131218 and --raise is #1A1922, so this pairing cannot render. Detector does not scope tokens by theme block."
-      },
-      {
-        "rule": "low-contrast",
-        "value": "#8c8899 on #ffffff",
-        "files": [
-          "docs/board/template.html"
-        ],
-        "createdAt": "2026-08-29T23:19:30.089Z",
-        "reason": "Claude triage 2026-08-29: dark-mode --mute, same class as the other four — declared only in the two dark blocks (template.html:20,32); light --mute is #6F6B7A. Cannot render on #ffffff."
+        "reason": "Claude triage 2026-08-29: all 7 uppercase rules are micro-labels, not body text \u2014 .pill 9.5px, .tk dt 10px ('acceptance'/'evidence'), .states .lbl 10px ('state'), .filters .lbl 10.5px, th 10.5px, .eyebrow 11px, all letter-spaced. The rule's own carve-out ('reserve uppercase for short labels and headings') covers every instance; no passage is set in caps."
       },
       {
         "rule": "overused-font",
