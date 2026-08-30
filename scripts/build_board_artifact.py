@@ -28,12 +28,26 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 BOARD = ROOT / "docs" / "board"
 
-# CIP-01..20 are the Client Intake Platform. CIP-21+ came from the external
-# review and are agent-factory hardening — mis-prefixed, pending rename to AF-*.
-# The board shows that honestly rather than pretending one track.
+# CIP-01..20 build the intake platform; CIP-21+ harden agent-factory itself. They are shown as
+# separate tracks because their P-labels mean different things — NOT because they are different
+# products. Plan §0.4: "the client portal is a front end on B1 and B2 ... It is not a new
+# pipeline." §3: "we already own every piece but the front end." So CIP-01..20 build the missing
+# B1–B2 surface and CIP-21+ harden the machinery running B3–B7; both are the factory. The AF-*
+# rename is ON HOLD — it would formalise a split the plan denies.
 PLATFORM_MAX = 20
 
 TITLE_RE = re.compile(r"^(?P<id>[A-Z]+-\d+)\s*-\s*(?P<phase>[A-Z]\d)\s+(?P<title>.+)$")
+
+# ⭐ The absorption backlog titles itself `AB-01 · R3 …` — middot, and the token after it is the
+# SOURCE PASS, not a phase. It therefore never matched TITLE_RE, so all 19 rows were counted in
+# "tasks skipped" and rendered nowhere. The board that carries CIP-01 — whose entire job is
+# "action or reject AB-01..AB-19" — did not show a single one of them. Disclosed only as a skip
+# count in build output, which nobody reads. See docs/reviews/divergence-2026-08-29.md.
+# The source token is NOT uniform — `R3 `, `R16-outside:`, `R8's`, and AB-19 has none at all — so
+# it is captured optionally rather than required. Forcing a shape the data does not have is what
+# dropped these rows in the first place.
+AB_TITLE_RE = re.compile(r"^(?P<id>AB-\d+)\s*·\s*(?P<title>.+)$")
+AB_SOURCE_RE = re.compile(r"^(R\d+)")
 
 
 def load_tasks():
@@ -63,13 +77,19 @@ def build():
     tickets, skipped = [], 0
 
     for t in tasks:
-        m = TITLE_RE.match(t["title"])
+        m = TITLE_RE.match(t["title"]) or AB_TITLE_RE.match(t["title"])
         if not m:
             skipped += 1
             continue
-        tid, phase, title = m.group("id"), m.group("phase"), m.group("title")
+        tid, title = m.group("id"), m.group("title")
+        if "phase" in m.groupdict():
+            phase = m.group("phase")
+        else:                                   # AB rows: source pass if stated, else "R?"
+            sm = AB_SOURCE_RE.match(title)
+            phase = sm.group(1) if sm else "R?"
         num = int(tid.split("-")[1])
-        track = ("observed" if tid.startswith("OBS")
+        track = ("absorption" if tid.startswith("AB")
+         else "observed" if tid.startswith("OBS")
          else "platform" if (tid.startswith("CIP") and num <= PLATFORM_MAX)
          else "factory")
 
@@ -88,7 +108,12 @@ def build():
         tickets.append({
             "id": tid, "p": phase, "t": title, "track": track,
             "e": d.get("e", "M"),
-            "dep": d.get("dep", []),
+            # ⭐ Dependencies come from the STORE, not from authored prose. Until 2026-08-29 this
+            # read d["dep"] out of ticket-detail.json while every ticket's blocked_by sat empty —
+            # so the board claimed a DAG "computed from the store" that the store did not hold,
+            # and blocked_by was a supported, populated, never-read field. The edges are now
+            # `block` events. See docs/reviews/divergence-2026-08-29.md D-1.
+            "dep": t.get("blocked_by", []),
             "why": d.get("why", ""),
             "acc": d.get("acc", "<b>No acceptance criterion recorded.</b> Until one exists this is a "
                                 "<i>decide</i> ticket, not a <i>build</i> ticket."),
@@ -96,7 +121,7 @@ def build():
             "status": t.get("status", "open"),
         })
 
-    ORDER = {"platform": 0, "factory": 1, "observed": 2}
+    ORDER = {"platform": 0, "factory": 1, "absorption": 2, "observed": 3}
     tickets.sort(key=lambda x: (ORDER.get(x["track"], 9), int(x["id"].split("-")[1])))
 
     tmpl = (BOARD / "template.html").read_text(encoding="utf-8")
@@ -111,7 +136,10 @@ def build():
     obs = sum(1 for x in tickets if x["track"] == "observed")
     noacc = sum(1 for x in tickets if "No acceptance criterion" in x["acc"])
     print("wrote %s" % dest.relative_to(ROOT))
-    print("  tickets: %d  (platform %d · factory %d · observed %d)" % (len(tickets), plat, len(tickets)-plat-obs, obs))
+    absn = sum(1 for x in tickets if x["track"] == "absorption")
+    fac = len(tickets) - plat - obs - absn
+    print("  tickets: %d  (platform %d · factory %d · absorption %d · observed %d)"
+          % (len(tickets), plat, fac, absn, obs))
     print("  without an acceptance criterion: %d" % noacc)
     if skipped:
         print("  tasks skipped (title not ID - PHASE title): %d" % skipped)

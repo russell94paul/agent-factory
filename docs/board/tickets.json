@@ -2115,6 +2115,11 @@
           "kind": "note",
           "ref": "All 13 factory-hardening tickets sit at wave 0 with zero edges between them. The graph therefore claims they are fully parallel and none is on the critical path. That is either a real and valuable fact or an artefact of nobody modelling them.",
           "basis": "MEASURED"
+        },
+        {
+          "kind": "citation",
+          "ref": "ANSWERED by docs/reviews/divergence-2026-08-29.md D-6: the factory track is UNMODELLED, not independent. The promotion trigger asked to add the edges or record in writing that there are none \u2014 the second half is now done. Remaining action: add the edges, or accept unmodelled as the standing position and say so on the board.",
+          "basis": "MEASURED"
         }
       ],
       "events": [
@@ -2144,6 +2149,16 @@
           "data": {
             "kind": "note",
             "ref": "All 13 factory-hardening tickets sit at wave 0 with zero edges between them. The graph therefore claims they are fully parallel and none is on the critical path. That is either a real and valuable fact or an artefact of nobody modelling them.",
+            "basis": "MEASURED"
+          }
+        },
+        {
+          "ts": 1788048938.924014,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "citation",
+            "ref": "ANSWERED by docs/reviews/divergence-2026-08-29.md D-6: the factory track is UNMODELLED, not independent. The promotion trigger asked to add the edges or record in writing that there are none \u2014 the second half is now done. Remaining action: add the edges, or accept unmodelled as the standing position and say so on the board.",
             "basis": "MEASURED"
           }
         }
