@@ -65,7 +65,7 @@ have no counterpart in it. Any Agent Army design must either adopt them or expla
 | Mechanism | Where | Why it matters |
 |---|---|---|
 | **The four-verdict contract** | `factory/contract.py:17-21`; `README.md` scope table | `UNMEASURABLE` is never collapsed into `FAIL` or `PASS`. *"A check whose instrument could not run has not passed."* The research corpus has no equivalent — R30's metric lists have no way to say "the instrument was dark". |
-| **Grader separation** | `factory/corpus.py` (corpus is hashed JSON under `evals/`, verified on load, not executable Python); `evaluator_service/` + `factory/evaluator.py` (three routes, no fourth); `factory/certify.py:19` `--calibrate` vs `--remote` | An agent that can edit its own grader is not graded. `--calibrate` scores in-process and is explicitly *"worthless as evidence that an agent did not grade itself"*. `corpus.py` names the remaining gap honestly: separation is evident and attributed, not yet *enforced*. |
+| **Grader separation** | `factory/corpus.py` (corpus is hashed JSON under `evals/`, verified on load, not executable Python); `evaluator_service/` + `factory/evaluator.py` (three routes, no fourth); `factory/certify.py:15-17` (the stated distinction) and `:79,82` (the flags) `--calibrate` vs `--remote` | An agent that can edit its own grader is not graded. `--calibrate` scores in-process and is explicitly *"worthless as evidence that an agent did not grade itself"*. `corpus.py` names the remaining gap honestly: separation is evident and attributed, not yet *enforced*. |
 | **Evidence-gated close** | `factory/evidence.py` + `factory/tasks.py:163` | Refusal lives in the **store**, not in a convention an agent can forget. |
 
 ---
