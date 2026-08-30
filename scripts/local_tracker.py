@@ -26,6 +26,7 @@ from __future__ import annotations
 import datetime
 import html
 import json
+import ast
 import http.server
 import pathlib
 import re
@@ -97,10 +98,101 @@ TABS = [
         ("sessions", "/sessions", "Sessions"),
         ("research", "/research", "Research"), ("handoff", "/handoff", "Handoff")]
 
-#: Modules whose source can change while the server is running, newest-dependency-last: board and
-#: lanes both import from readiness, so readiness must be reloaded before them or they keep
-#: references to the old Gate objects.
-_HOT = ("factory.readiness", "factory.board", "factory.lanes", "factory.schedule", "factory.goals", "factory.roadmap")
+#: Modules whose source can change while the server is running — DERIVED from this file's own
+#: imports, never typed out.
+#:
+#: ⛔ It was typed out, twice, and both lists under-covered. `_HOT` named 6 modules and a second
+#: hand-written `_EXTRA` block named 9 more; between them they missed **`factory.flow`,
+#: `factory.runs` and `factory.sessions`** — 3 of the 19 factory modules this script imports, one
+#: of which (`sessions`) is the entire Sessions tab. So "reload code & re-measure" re-served the
+#: session code the process started with and reported success, which is the same claim-of-freshness
+#: defect already recorded against `factory.dispatch` in the `_EXTRA` comment below. Fixing that
+#: instance by adding a line was treating the symptom: the list is hand-maintained, so it
+#: under-covers again on the next import anyone adds.
+#:
+#: ⭐ Third hand-maintained allow-list to under-cover in one session — after `TeamSpec.version`'s
+#: enumerated hash keys and `synthesis.session_prompt`'s `or` fallback. All three looked correct
+#: and all three silently omitted something. The rule this file now follows: **if a list can be
+#: derived from the thing it is supposed to track, derive it.**
+def _own_imports():
+    """This file's own `factory` imports, parsed — `(submodules, [(module, [names])])`.
+
+    ⚠ Parsed with `ast`, not regex. The first attempt used a regex and it silently swallowed the
+    next twenty lines of the file, "finding" 125 imported names that do not exist — including
+    `E402` out of a `# noqa` comment. A deriving step that derives the wrong thing is worse than
+    the hand-written list it replaced, because it looks principled.
+    """
+    tree = ast.parse(pathlib.Path(__file__).read_text(encoding="utf-8", errors="replace"))
+    submodules, values = set(), []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.ImportFrom) or not node.module:
+            continue
+        if node.module == "factory":                    # from factory import X as y
+            submodules.update(a.name for a in node.names)
+        elif node.module.startswith("factory."):        # from factory.X import a, b
+            mod = node.module.split(".", 1)[1]
+            submodules.add(mod)
+            values.append((mod, [a.name for a in node.names]))
+    return submodules, values
+
+
+def _imported_factory_modules() -> tuple:
+    """Every `factory.*` module this script imports."""
+    return tuple(sorted(_own_imports()[0]))
+
+
+def _dependency_order(names: tuple) -> list:
+    """`names` sorted so a module always follows everything it imports from.
+
+    Reload order is load-bearing and the old comment said so: board and lanes both import from
+    readiness, so readiness must be reloaded first or they keep references to the old Gate
+    objects. That ordering was maintained by hand in the tuple's literal order — invisible, and
+    wrong the moment a new edge appeared. It is now computed from the imports themselves.
+
+    A cycle cannot be ordered; those modules are reloaded last, in name order, and the caller is
+    told. Reloading them in *some* order beats refusing to reload at all, but the freshness claim
+    for them is weaker and must not be silent.
+    """
+    pkg = pathlib.Path(__file__).resolve().parent.parent / "factory"
+    src = {}
+    for n in names:
+        f = pkg / f"{n}.py"
+        src[n] = f.read_text(encoding="utf-8", errors="replace") if f.is_file() else ""
+    deps = {}
+    for n in names:
+        d = set()
+        for m in names:
+            if m == n:
+                continue
+            if (re.search(rf"^from \.{m} import", src[n], re.M)
+                    or re.search(rf"^from factory\.{m} import", src[n], re.M)
+                    or re.search(rf"^from \. import .*\b{m}\b", src[n], re.M)
+                    or re.search(rf"^import factory\.{m}\b", src[n], re.M)):
+                d.add(m)
+        deps[n] = d
+    out, done = [], set()
+    while True:
+        ready = sorted(n for n in names if n not in done and deps[n] <= done)
+        if not ready:
+            break
+        out.extend(ready)
+        done.update(ready)
+    cyclic = sorted(n for n in names if n not in done)
+    return out + cyclic
+
+
+def _value_imports() -> list:
+    """`(module, [names])` for every `from factory.X import a, b` in this file.
+
+    `import x as y` binds the module object, and `importlib.reload` re-executes a module in place,
+    so those aliases see new code for free. `from x import y` binds the VALUE once and does not —
+    which is why a rebinding step exists at all. That list was hand-written too; it is now read
+    off the same source it is supposed to mirror.
+    """
+    return _own_imports()[1]
+
+
+_HOT = tuple(f"factory.{n}" for n in _dependency_order(_imported_factory_modules()))
 
 _RELOADED_AT = None
 _RELOAD_MSG = None
@@ -560,50 +652,38 @@ def hot_reload():
     global _RELOADED_AT
     import importlib
     try:
+        # Reload every factory module this file imports, in dependency order. Both the set and
+        # the order are DERIVED (see `_HOT`) — nothing here is a list to keep in step by hand.
         mods = {}
         for name in _HOT:
-            m = importlib.import_module(name)
-            mods[name] = importlib.reload(m)
-        g = globals()
-        r, b = mods["factory.readiness"], mods["factory.board"]
-        for n in ("CONNECTORS", "FACTORY", "FAIL", "NOT_RUN", "PASS", "PHASES",
-                  "UNMEASURABLE", "measure"):
-            g[n] = getattr(r, n)
-        for n in ("BLOCKED", "DONE", "READY", "board", "critical_path"):
-            g[n] = getattr(b, n)
-        for n in ("LANES", "SIZE", "conflicts", "recommend", "waits_on"):
-            g[n] = getattr(mods["factory.lanes"], n)
-        import importlib as _il
-        g["by_lane"] = getattr(_il.reload(_il.import_module("factory.findings")), "by_lane")
-        # global name(s) -> module, in DEPENDENCY ORDER: a module must come after everything it
-        # imports from, or the importers keep references to the old objects. Same rule as _HOT.
-        #
-        # ⛔ `factory.dispatch` was MISSING from this block entirely, under BOTH of its aliases,
-        # so "reload code & re-measure" kept serving the dispatch code the process started with —
-        # and reported success. A reload that silently excludes a module is worse than no reload
-        # button: it is a claim of freshness. Found 2026-08-23 when a dependency-graph fix did not
-        # appear on the page. A list beats nine hand-written lines precisely because a missing
-        # entry is now visible as a gap in one place rather than an absence nobody can see.
-        _EXTRA = (
-            (("synth",), "factory.synthesis"),
-            (("disp", "dispatchlib"), "factory.dispatch"),   # after synthesis, before research_run
-            (("claimlib",), "factory.claims"),
-            (("opans",), "factory.operator"),
-            (("wt",), "factory.worktrees"),
-            (("ho",), "factory.handoff"),
-            (("launchlib",), "factory.launch"),
-            (("rrun",), "factory.research_run"),
-            (("tplan",), "factory.teamplan"),
-        )
-        for names, modname in _EXTRA:
-            m = _il.reload(_il.import_module(modname))
-            for nm in names:
-                g[nm] = m
+            mods[name] = importlib.reload(importlib.import_module(name))
+
+        # Rebind only what was imported BY VALUE. `import x as y` aliases point at the module
+        # object, which `reload` re-executes in place, so they are already current; a
+        # `from x import y` name is a stale copy until it is re-read. That list is derived too.
+        g, rebound, missing = globals(), 0, []
+        for mod, names in _value_imports():
+            m = mods.get(f"factory.{mod}")
+            if m is None:
+                continue
+            for n in names:
+                if hasattr(m, n):
+                    g[n] = getattr(m, n)
+                    rebound += 1
+                else:
+                    missing.append(f"{mod}.{n}")
+
         _RELOADED_AT = datetime.datetime.now()
-        # ⚠ Counted, not assumed. This said `len(_HOT)` — 6 — while the block actually reloads 16,
-        # so the one number an operator had for "did my edit land" understated by 10, and would
-        # not have moved even while `factory.dispatch` was being skipped entirely.
-        return True, (f"reloaded {len(_HOT) + len(_EXTRA) + 1} modules, {len(r.GATES)} gates")
+        gates = len(mods["factory.readiness"].GATES) if "factory.readiness" in mods else 0
+        # ⚠ Counted from what actually ran, never from a literal. The old message added two
+        # hand-maintained list lengths and was wrong by 10 for a while, and would not have moved
+        # even while `factory.dispatch` was skipped entirely.
+        msg = f"reloaded {len(mods)} modules, rebound {rebound} names, {gates} gates"
+        if missing:
+            # A name this file imports that its module no longer exports. The page keeps serving
+            # the stale value, so say so rather than reporting a clean reload.
+            msg += f" — ⚠ {len(missing)} name(s) no longer exported: {', '.join(missing[:4])}"
+        return True, msg
     except Exception as exc:                                          # noqa: BLE001
         return False, f"{type(exc).__name__}: {exc}"
 
