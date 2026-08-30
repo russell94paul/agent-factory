@@ -61,17 +61,48 @@ KNOWN_CANNOT_REFUSE: dict[str, str] = {
     ),
 }
 
+_HELPERS = ("_pass", "_fail", "_notrun")
+
+
 def _verdicts_reachable(fn: ast.FunctionDef) -> set[str]:
-    """Every verdict this probe can return, by the helper or constant it names."""
+    """Every verdict this probe can return, by the helper or constant it names.
+
+    ⚠ **This checker was itself blind until 2026-08-30, and reported a false defect for it.**
+    It read only the *immediate* call in a `return`, so the extremely ordinary
+
+        res = _pass(...)          # or _fail(...)
+        _cache_write(...)         # something in between
+        return res
+
+    looked like a probe with no PASS path. `g_contract_suite_green` builds its result, writes it
+    to a cache, and then returns the name — and was reported as *"a constant, not a measurement"*
+    while being neither. The red was read for days as sibling-repo noise.
+
+    That is the same family as the defects this file exists to catch, one level up: **an
+    instrument that cannot see reports absence with total confidence.** So the walk now follows
+    a name back to the helper it was assigned from. It is still static and still shallow — it
+    does not follow a helper through a branch into a second name, and a probe that hid its
+    verdict behind two hops would fool it.
+    """
+    assigned: dict[str, set[str]] = {}
+    for node in ast.walk(fn):
+        if isinstance(node, ast.Assign):
+            f = getattr(getattr(node.value, "func", None), "id", None)
+            if f in _HELPERS:
+                for t in node.targets:
+                    if isinstance(t, ast.Name):
+                        assigned.setdefault(t.id, set()).add(f)
+
     seen: set[str] = set()
     for node in ast.walk(fn):
         if isinstance(node, ast.Return) and node.value is not None:
             f = getattr(getattr(node.value, "func", None), "id", None)
-            if f in ("_pass", "_fail", "_notrun"):
+            if f in _HELPERS:
                 seen.add(f)
-            elif isinstance(node.value, ast.Name) and node.value.id in (
-                    "PASS", "FAIL", "UNMEASURABLE", "NOT_RUN"):
-                seen.add(node.value.id)
+            elif isinstance(node.value, ast.Name):
+                if node.value.id in ("PASS", "FAIL", "UNMEASURABLE", "NOT_RUN"):
+                    seen.add(node.value.id)
+                seen |= assigned.get(node.value.id, set())
     return seen
 
 
