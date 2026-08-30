@@ -4,6 +4,12 @@
 **Companions:** `phase-0-event-ledger-2026-08-30.md` (what comes after this),
 `build-vs-adopt-2026-08-29.md` (the decision record).
 
+⛔ **SUPERSEDED 2026-08-30 01:40 by `branch-reconciliation-2026-08-30b.md`.** Three merges landed
+after this file was written and its conflict figures are now wrong in BOTH directions —
+`lane/certify` went 5 -> 7 conflicts, `lane/control-plane-renamed` 2 -> 4, and its corpus table is
+5 rows where the truth is now 3. **Read the `-b` file for numbers. This one is kept for its
+reasoning only.**
+
 **Scope:** two unmerged branches. ⭐ **UPDATED 2026-08-30 01:20 — the data defect this file was
 written around is FIXED and merged to main** (`485ad12`, `0b03c2e`). §2 is kept because it explains
 *why* `lane/certify`'s remaining conflict is now small, and because the reasoning is the evidence for
