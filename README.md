@@ -1,4 +1,4 @@
-# Agent Factory — skeleton
+# Agentic Factory — skeleton
 
 A **foundation**, not a framework. Everything here exists to make one claim testable:
 

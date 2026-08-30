@@ -30,7 +30,7 @@ Architecture Decision           adr/
       ↓
 Approved Implementation Handoff implementation-handoffs/approved/   ← the bridge
       ↓
-Agent Factory Implementation    this repository
+Agentic Factory Implementation    this repository
       ↓
 Tests / Benchmarks              tests/, evals/, evaluator_service/
       ↓

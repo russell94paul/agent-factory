@@ -28,7 +28,7 @@ every `IMPLEMENTED` or `PARTIAL` claim in it carries a path and a line number yo
 ## Direction of travel
 
 ```text
-agent-army-research                    agent-factory
+agent-army-research                    agentic-factory
 ───────────────────                    ─────────────
 research → synthesis → ADR
         → approved handoff  ──────────▶ implementation → tests → completion evidence
@@ -53,4 +53,4 @@ Documentation that describes *this* system stayed where it is, beside the code t
 - `BRAIN-DUMP.md` — the verbatim recovered origin record of the R1–R19 programme. Its Agent Army
   fragments are *excerpted* into the research repo with line references; the original is intact.
 
-Full pre-migration classification: `agent-army-research/migration/agent-factory-inventory-before.md`.
+Full pre-migration classification: `agent-army-research/migration/agentic-factory-inventory-before.md`.

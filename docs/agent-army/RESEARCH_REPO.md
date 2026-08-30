@@ -8,7 +8,7 @@ agent-army-research          # sibling of this repository
 
 ```text
 workspace/
-├── agent-factory/           ← you are here: what exists
+├── agentic-factory/           ← you are here: what exists
 └── agent-army-research/     ← what should exist
 ```
 

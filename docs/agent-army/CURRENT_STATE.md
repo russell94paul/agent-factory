@@ -233,7 +233,7 @@ Not neglect — an explicit scope decision. `README.md` §"What is deliberately 
 | Gym | The eval corpus plus a scoreboard |
 | Platform UI | Numbers worth looking at |
 
-`docs/research/agent-factory-research-prompts.md:55` records the same call: *"Agent Army (level 5)
+`docs/research/agentic-factory-research-prompts.md:55` records the same call: *"Agent Army (level 5)
 — **Cut for now**. Crucible already asked whether levels 4–5 are real structure or ceremony. With
 zero certified teams…"*, and `docs/DEEP-REVIEW-PROMPT.md:228` encodes the unlock rule as
 *"agent army ← one certified team"*.
