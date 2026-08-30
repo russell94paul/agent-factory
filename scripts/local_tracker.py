@@ -90,7 +90,8 @@ def _ago(ts: float) -> str:
     return "%dd ago" % round(secs / 86400)
 
 #: (key, href, label). The key is what render() switches on.
-TABS = [("gates", "/", "Gates"), ("goals", "/goals", "Goals"),
+TABS = [
+    ("tickets", "/", "Tickets"), ("gates", "/gates", "Gates"), ("goals", "/goals", "Goals"),
         ("roadmap", "/roadmap", "Roadmap"),
         ("flow", "/flow", "Flow"), ("lanes", "/lanes", "Lanes"),
         ("sessions", "/sessions", "Sessions"),
@@ -689,7 +690,7 @@ def _tok(n) -> str:
     return str(n)
 
 
-def render(when: datetime.datetime, tab: str = "gates", team: str = "") -> str:
+def render(when: datetime.datetime, tab: str = "tickets", team: str = "") -> str:
     # Research needs no measurement, and a full measure is ~10s of probes. Paying that to read a
     # prompt was the main reason this page felt slow.
     results = measure() if tab != "research" else []
@@ -705,7 +706,7 @@ def render(when: datetime.datetime, tab: str = "gates", team: str = "") -> str:
 
     o = ['<!doctype html><html lang="en"><head><meta charset="utf-8">',
          '<meta name="viewport" content="width=device-width,initial-scale=1">',
-         '<title>Readiness</title>', f"<style>{CSS}</style></head><body><div class='wrap'>"]
+         '<title>Agent Factory</title>', f"<style>{CSS}</style></head><body><div class='wrap'>"]
     w = o.append
     w(f'<nav style="padding:22px 0 4px">{nav}</nav>')
     if _SYNC_MSG:
@@ -720,6 +721,81 @@ def render(when: datetime.datetime, tab: str = "gates", team: str = "") -> str:
     if _RELOAD_MSG:
         okc = 'var(--pass)' if _RELOAD_MSG[0] else 'var(--fail)'
         w(f'<div class="sub" style="color:{okc};font-size:13px">{e(_RELOAD_MSG[1])}</div>')
+
+    if tab == "tickets":
+        # ------------------------------------------------------------------ tickets
+        # Progress on THIS project, read from the same append-only store the board
+        # reads. No second copy of the truth: if a ticket is closed anywhere, it is
+        # closed here. Counts are computed per render, never cached.
+        import collections as _c
+        try:
+            from factory.tasks import TaskStore as _TS
+            _tasks = _TS(pathlib.Path(__file__).resolve().parent.parent / ".data" / "tasks.jsonl").all()
+        except Exception as _exc:                                  # noqa: BLE001
+            _tasks = None
+            _terr = "%s: %s" % (type(_exc).__name__, _exc)
+
+        w('<div class="head">')
+        w('<h1>Agent Factory &mdash; where the work stands</h1>')
+        if _tasks is None:
+            w('<div class="sub" style="color:var(--fail)">could not read the task store &mdash; '
+              + e(_terr) + '</div></div>')
+        else:
+            _lane = lambda t: ("platform" if t.title.startswith("CIP-") and int(t.title.split("-")[1].split()[0]) <= 20
+                               else "factory" if t.title.startswith("CIP-")
+                               else "absorption" if t.title.startswith("AB-")
+                               else "observed" if t.title.startswith("OBS-")
+                               else "other")
+            _done = lambda t: t.status in ("done", "abandoned")
+            _by = _c.defaultdict(list)
+            for _t in _tasks:
+                _by[_lane(_t)].append(_t)
+            _tracked = [t for t in _tasks if _lane(t) != "other"]
+            _nd = sum(1 for t in _tracked if _done(t))
+            w('<div class="sub">%d of %d tickets closed &middot; re-read from '
+              '<code>.data/tasks.jsonl</code> on every refresh &middot; the board is a view of this '
+              'same store, never a second copy</div>' % (_nd, len(_tracked)))
+            w('</div>')
+
+            _order = [("platform", "Client Intake Platform", "the questionnaire becomes the acceptance test"),
+                      ("factory", "Factory hardening", "no dependencies; none on the critical path"),
+                      ("observed", "Observed in flight", "surfaced mid-work; each carries its promotion rule"),
+                      ("absorption", "Absorption backlog", "conclusions reached and never actioned")]
+            for _k, _label, _why in _order:
+                _rows = _by.get(_k) or []
+                if not _rows:
+                    continue
+                _d = sum(1 for t in _rows if _done(t))
+                _frac = _d / len(_rows) if _rows else 0
+                _col = "var(--pass)" if _frac == 1 else ("var(--unmeas)" if _frac else "var(--fail)")
+                w('<div class="par" style="margin-top:14px">')
+                w('<h3 style="margin-top:0">%s <span style="font-weight:400;color:%s;'
+                  'font-family:ui-monospace,monospace;font-size:13px">%d of %d</span></h3>'
+                  % (e(_label), _col, _d, len(_rows)))
+                w('<div style="height:7px;background:var(--rule);border-radius:3px;margin:6px 0 8px">'
+                  '<div style="height:7px;width:%.1f%%;background:%s;border-radius:3px"></div></div>'
+                  % (_frac * 100, _col))
+                w('<p style="font-size:13px;color:var(--ink2);margin:0 0 8px">%s</p>' % e(_why))
+                _open = [t for t in _rows if not _done(t)][:6]
+                if _open:
+                    w('<div style="font-family:ui-monospace,monospace;font-size:11.5px;'
+                      'color:var(--ink2);line-height:1.7">')
+                    for _t in _open:
+                        w('&middot; %s<br>' % e(_t.title[:96]))
+                    if len(_rows) - _d > len(_open):
+                        w('<span style="opacity:.6">&hellip; and %d more open</span>'
+                          % (len(_rows) - _d - len(_open)))
+                    w('</div>')
+                w('</div>')
+
+            w('<div class="par" style="margin-top:22px">')
+            w('<h3 style="margin-top:0">What this page does not tell you</h3>')
+            w('<p style="font-size:13px;color:var(--ink2);margin:0">A closed ticket is a claim that '
+              'work happened, not evidence that it worked. For that, see the <b>Gates</b> tab &mdash; '
+              'it asks whether a team can run a migration unattended, which is the acceptance test '
+              'this whole project is measured by. Tickets moving while gates stay red is the '
+              'failure mode worth watching for.</p>')
+            w('</div>')
 
     if tab == "gates":
         w('<div class="head">')
@@ -1230,7 +1306,12 @@ def render(when: datetime.datetime, tab: str = "gates", team: str = "") -> str:
           f'on you</b> &middot; {len(inv)} known to the registry</div>')
         w('</div>')
 
-        # Contended repos, above everything except a blocked session. A repo with uncommitted work
+        # Contended repos, above everything except a blocked session. THE SET IS DELIBERATELY WIDE
+        # and must stay so: every live session's cwd plus the primary, NOT 'this project'.
+        # Narrowing it to the factory would delete the one signal it exists for — proven again
+        # 2026-08-29, when a session whose cwd was `neurospect-learn` made six commits into
+        # `agent-factory` while a second session edited the same two files.
+        # A repo with uncommitted work
         # and several sessions alive is the shape that produced fc71b6a — one session ran `git add`
         # across a directory another was mid-edit in, swept up a half-finished file, and shipped a
         # HEAD that did not import.
@@ -1240,8 +1321,15 @@ def render(when: datetime.datetime, tab: str = "gates", team: str = "") -> str:
         # that guessed would be believed.
         if contended:
             w('<div class="par" style="margin-top:14px;border-color:var(--unmeas)">')
-            w(f'<h3 style="margin-top:0;color:var(--unmeas)">&#9888; {len(contended)} repo(s) hold '
-              f'uncommitted work while more than one session is alive</h3>')
+            w(f'<h3 style="margin-top:0;color:var(--unmeas)">&#9888; Live sessions could be '
+              f'writing to {len(contended)} repo(s) that hold uncommitted work</h3>')
+            # The set is the blast radius, not the project. Said on the page, because a heading
+            # naming an unrelated repo otherwise reads as the tracker having lost its own scope.
+            w('<p style="font-size:12px;color:var(--ink3);margin:6px 0 0">'
+              '<b>These are not this project.</b> They are the blast radius: a session&rsquo;s cwd '
+              'says where it <i>started</i>, not what it writes to, so the set is every live '
+              'session&rsquo;s cwd plus the primary worktree. A repo here may be unrelated to the '
+              'factory and still be somewhere a live agent can reach.</p>')
             for r in contended:
                 here = r["sessions_with_this_cwd"]
                 cwd_note = (f'{here} session(s) started here'
@@ -2310,7 +2398,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
         # ⛔ This used `self.path` raw, so ANY query string 404'd -- `/lanes?team=X` was
         # unreachable and the failure looked like a broken link rather than a parsing bug.
         parsed = urllib.parse.urlparse(self.path)
-        route = {"/": "gates", "/index.html": "gates", "/flow": "flow",
+        route = {"/": "tickets", "/index.html": "tickets", "/tickets": "tickets",
+                 "/gates": "gates", "/flow": "flow",
                  "/goals": "goals", "/roadmap": "roadmap",
                  "/lanes": "lanes", "/sessions": "sessions", "/research": "research",
                  "/handoff": "handoff"}.get(parsed.path.rstrip("/") or "/")
@@ -2343,7 +2432,7 @@ def main(argv=None) -> int:
             return 2
 
     if not serve:
-        page = render(datetime.datetime.now(), "gates")
+        page = render(datetime.datetime.now(), "tickets")
         OUT.write_text(page, encoding="utf-8")
         url = OUT.resolve().as_uri()
         print(f"wrote {OUT}  ({len(page):,} bytes)")
