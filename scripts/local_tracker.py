@@ -836,7 +836,12 @@ def render(when: datetime.datetime, tab: str = "tickets", team: str = "") -> str
             w('<div class="sub" style="color:var(--fail)">could not read the task store &mdash; '
               + e(_terr) + '</div></div>')
         else:
-            _lane = lambda t: ("platform" if t.title.startswith("CIP-") and int(t.title.split("-")[1].split()[0]) <= 20
+            # ⚠ Every prefix must appear here. A prefix that does not is not dropped —
+            # it lands in "other", which is COUNTED AND SHOWN below. On 2026-08-29 RUN
+            # was missing and 7 tickets vanished from the total while the page still
+            # reported a confident "3 of 64".
+            _lane = lambda t: ("run" if t.title.startswith("RUN-")
+                               else "platform" if t.title.startswith("CIP-") and int(t.title.split("-")[1].split()[0]) <= 20
                                else "factory" if t.title.startswith("CIP-")
                                else "absorption" if t.title.startswith("AB-")
                                else "observed" if t.title.startswith("OBS-")
@@ -846,13 +851,16 @@ def render(when: datetime.datetime, tab: str = "tickets", team: str = "") -> str
             for _t in _tasks:
                 _by[_lane(_t)].append(_t)
             _tracked = [t for t in _tasks if _lane(t) != "other"]
+            _unclassified = [t for t in _tasks if _lane(t) == "other"]
             _nd = sum(1 for t in _tracked if _done(t))
             w('<div class="sub">%d of %d tickets closed &middot; re-read from '
               '<code>.data/tasks.jsonl</code> on every refresh &middot; the board is a view of this '
               'same store, never a second copy</div>' % (_nd, len(_tracked)))
             w('</div>')
 
-            _order = [("platform", "Client Intake Platform", "the questionnaire becomes the acceptance test"),
+            _order = [("run", "Ticket in, team runs it",
+                       "acceptance is a gate id in `python -m factory.launch` — done is a verdict moving"),
+                      ("platform", "Client Intake Platform", "the questionnaire becomes the acceptance test"),
                       ("factory", "Factory hardening", "no dependencies; none on the critical path"),
                       ("observed", "Observed in flight", "surfaced mid-work; each carries its promotion rule"),
                       ("absorption", "Absorption backlog", "conclusions reached and never actioned")]
@@ -882,6 +890,19 @@ def render(when: datetime.datetime, tab: str = "tickets", team: str = "") -> str
                           % (len(_rows) - _d - len(_open)))
                     w('</div>')
                 w('</div>')
+
+            if _unclassified:
+                w('<div class="par" style="margin-top:14px;border-color:var(--unmeas)">')
+                w('<h3 style="margin-top:0;color:var(--unmeas)">%d ticket(s) this page cannot classify</h3>'
+                  % len(_unclassified))
+                w('<p style="font-size:13px;color:var(--ink2);margin:0 0 6px">Shown rather than '
+                  'dropped. A prefix missing from the lane map is a fact about this page, not a '
+                  'reason to omit the ticket &mdash; and omitting them is how the total read '
+                  '&ldquo;3 of 64&rdquo; while the store held 5 of 68.</p>')
+                w('<div style="font-family:ui-monospace,monospace;font-size:11.5px;color:var(--ink2)">')
+                for _t in _unclassified[:8]:
+                    w('&middot; %s<br>' % e(_t.title[:92]))
+                w('</div></div>')
 
             w('<div class="par" style="margin-top:22px">')
             w('<h3 style="margin-top:0">What this page does not tell you</h3>')
