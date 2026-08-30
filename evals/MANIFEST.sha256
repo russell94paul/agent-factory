@@ -1,1 +1,19 @@
+# ⚠ HISTORY IS LOAD-BEARING. scripts/pin_corpus.py rebuilds this file from the corpus and DROPS
+#   every `#` line — its reader skips comments, its writer destroys them. The 2026-08-29 entry
+#   below was lost that way on 2026-08-30 and restored by hand. Until that is fixed, re-add the
+#   superseded lines after every `pin_corpus.py` run, or the audit trail this file exists to keep
+#   disappears one re-pin at a time. See docs/findings.d/F82.
+#
+# c3fbfed83308bc10878b8865c2547b6c3152da3256b0e7328d41eb811e77cffe  corpus/windsorai-2026-08-20.json
+#   ^ superseded 2026-08-29: a client identifier was redacted to CLIENT-A.
+#     Measurements unchanged; only an identifier string differs. Recorded so the
+#     re-hash is auditable rather than silent.
+#
+# f7cd15c2d379a0535736c7ea4db264eeedad498de058260279d1f89ec0cd5ceb  corpus/windsorai-2026-08-20.json
+#   ^ superseded 2026-08-30: the recorded `constructed` classes carried the blueprint's guessed
+#     names (WindsorAiConnection / WindsorAiOptions). The real classes capitalise the initialism,
+#     MEASURED by WindsorAiGepProbes.config() against the prefect-connectors checkout. Two strings
+#     changed; every measurement and every redaction value is unchanged. INFERENCE, stated: this
+#     field claimed MEASURED provenance but a real run would have constructed the real classes, so
+#     it was authored from the blueprint's DERIVED guess. lane/certify already had it right.
 5c0d63ea19d056181f72c01db67ad10a96f0fe12e50dcd18d6d5853d3515c859  corpus/windsorai-2026-08-20.json
