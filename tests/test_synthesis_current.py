@@ -179,3 +179,34 @@ def test_a_fresh_checkout_does_not_invent_a_backlog(tmp_path, monkeypatch):
 
     assert S.unreconciled() == [], "a checkout's write order must not create a backlog"
     assert S.outstanding()["stale"] == []
+
+
+def test_the_hash_survives_a_line_ending_rewrite(tmp_path, monkeypatch):
+    """⛔ Without this, the fix for F93 reproduces F93.
+
+    `core.autocrlf` is `true` on this machine, so git rewrites line endings at checkout and the
+    same committed answer has different BYTES in different working trees. Measured 2026-08-31 on
+    R1-answer-eval-harness.md — 60,313 bytes / 0 CRLF in the primary, 61,186 / 873 in a worktree.
+    A byte hash therefore made the verdict depend on which checkout you stood in, which is exactly
+    what F93 says must not happen. It was caught by banking in a worktree and reading in the
+    primary: 14 answers reported stale that had not changed.
+
+    Only CRLF is collapsed, because that is the transformation git performs. A hash that ignored
+    more than that would start missing real edits, which is the worse failure.
+    """
+    from factory import synthesis as S
+
+    lf = tmp_path / "lf.md"
+    crlf = tmp_path / "crlf.md"
+    lf.write_bytes(b"line one\nline two\nline three\n")
+    crlf.write_bytes(b"line one\r\nline two\r\nline three\r\n")
+
+    assert lf.read_bytes() != crlf.read_bytes(), "the fixture must actually differ in bytes"
+    assert S.answer_hash(lf) == S.answer_hash(crlf), (
+        "the same content checked out with different line endings must bank identically, or the "
+        "check is checkout-dependent — which is the defect it replaces")
+
+    changed = tmp_path / "changed.md"
+    changed.write_bytes(b"line one\nline two CHANGED\nline three\n")
+    assert S.answer_hash(changed) != S.answer_hash(lf), (
+        "normalising must not blind the hash to a real edit")

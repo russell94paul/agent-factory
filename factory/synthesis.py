@@ -81,16 +81,32 @@ _BANK_ROW = re.compile(r"^\s*(R\d+)\s+([0-9a-f]{6,64})\s*$", re.M)
 
 
 def answer_hash(path: pathlib.Path) -> Optional[str]:
-    """sha256 of an answer's bytes, truncated. None when it cannot be read.
+    """sha256 of an answer's content, LINE-ENDING NORMALISED. None when it cannot be read.
 
     ⭐ Not a new idea in this estate — it is the third application of one that already works.
     `evals/MANIFEST.sha256` pins the corpus and is verified on load, and `registry.py:104-113`
     hashes a workflow's own text as its version on the stated ground that *"a SKILL.md edited
     between two runs is a different workflow."* An answer edited after the synthesis read it is a
     different answer.
+
+    ⛔ **The normalisation is not tidiness — without it this reproduces the exact bug it replaces.**
+    `core.autocrlf` is `true` on this machine, so git rewrites line endings at checkout time and
+    the same committed answer has different bytes in different working trees. Measured 2026-08-31
+    on `R1-answer-eval-harness.md`:
+
+        primary    60,313 bytes    0 CRLF    003908b84f48
+        worktree   61,186 bytes  873 CRLF    6404ae91d168
+
+    Byte-hashing therefore made the verdict depend on which checkout you were standing in — F93's
+    symptom, arriving by a different route, in F93's own fix. Caught because banking in a worktree
+    and reading in the primary reported **14 stale answers that had not changed**.
+
+    Only CRLF is collapsed, because that is precisely the transformation git performs. Stripping
+    more — trailing whitespace, a BOM — would be inventing semantics rather than undoing a
+    known rewrite, and a hash that ignores a real edit is worse than one that is checkout-sensitive.
     """
     try:
-        return hashlib.sha256(path.read_bytes()).hexdigest()[:12]
+        return hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()[:12]
     except OSError:
         return None
 
