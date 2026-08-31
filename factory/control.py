@@ -40,6 +40,7 @@ from . import events as _events
 from . import presets as _presets
 from . import repo as _repo
 from . import runs as _runs
+from . import verifiers as _verifiers
 from . import worktrees as _worktrees
 from .blueprint import AgentSpec, TeamSpec
 from .contract import ContractResult, GreenContract, Unmeasurable, Verdict
@@ -144,6 +145,36 @@ def eligible(ticket: Ticket) -> Tuple[List[dict], Optional[str], str]:
     return out, chosen.type_id, rule
 
 
+def _evidence_clause(preset: Preset) -> str:
+    """What a WIRED preset obliges the agent to leave behind, stated in the agent's own prompt.
+
+    ⛔ Without this the wiring is only half-built. `verifiers.pbi_model_change` adjudicates the
+    file at `.factory/verification.json`; an agent never told to write one cannot produce anything
+    but UNMEASURABLE, and would be failing an obligation nobody ever stated. **A verifier the
+    agent cannot satisfy is not a gate, it is a trap.**
+
+    ⚠ The last paragraph is the load-bearing one. The whole apparatus is worth nothing if an agent
+    under pressure to go green invents an observation, so *omit rather than guess* is stated where
+    the agent will actually read it — not only in a design note nobody passes to the model.
+    """
+    if preset.verifier_state != WIRED:
+        return ""
+    return (
+        "EVIDENCE — this is how your work gets a verdict, and it is not optional:\n"
+        f"  Write {_verifiers.EVIDENCE_RELPATH} inside this worktree before you finish. It is "
+        "JSON with two objects: 'target' (what the change is held to — the dataset id, the "
+        "anchors, the baseline, the bound reports) and 'observations' (what you actually "
+        "measured, one key per probe).\n"
+        "  The verifier reads THAT FILE. It does not go and look for itself, so an observation "
+        "you did not write down did not happen as far as the verdict is concerned. No file at all "
+        "is UNMEASURABLE — not a failure, but not a pass either, and the ticket cannot be signed "
+        "off on it.\n"
+        "  ⛔ OMIT anything you did not measure. Never invent a value to fill a key. An absent "
+        "observation is reported honestly as 'nobody looked'; a fabricated one turns every check "
+        "downstream into decoration, and is far worse than an unmeasured ticket.\n\n"
+    )
+
+
 def team_for(ticket: Ticket, preset: Preset) -> TeamSpec:
     """A one-agent team from the preset, with the ticket supplying what a preset must not guess.
 
@@ -162,6 +193,7 @@ def team_for(ticket: Ticket, preset: Preset) -> TeamSpec:
             f"The check that owns the verdict for this ticket type is: {preset.verifier}\n"
             f"Its state is {preset.verifier_state.upper()} — if it is not WIRED, nothing "
             f"downstream can confirm your work, so say so plainly rather than claiming success.\n\n"
+            + _evidence_clause(preset) +
             f"ESCALATE AND STOP rather than proceeding when: {preset.escalate_when}\n"
         ),
         **preset.as_spec_kwargs(),
@@ -504,7 +536,13 @@ class RunController:
                    "ticket": ticket, "preset": preset, "team": team}
             log.emit("evidence_gathered", changed=changed, cost=cost)
 
-            cres = assertions(preset, self.verifier).run(ctx)
+            # ⭐ An injected verifier wins; otherwise the registry is consulted. Before this
+            # fallback existed nothing ever supplied a callable, so `ticket_verifier` reported
+            # "the declaration and the wiring disagree" on EVERY run — including the one
+            # preset that claimed WIRED. Injection stays first so a test can drive this line
+            # to PASS and to FAIL without the registry in the way.
+            verifier = self.verifier or _verifiers.for_type(preset.type_id)
+            cres = assertions(preset, verifier).run(ctx)
             log.verdict(cres.verdict, contract=cres.contract,
                         results=[{"name": r.name, "verdict": r.verdict.value, "detail": r.detail}
                                  for r in cres.results])

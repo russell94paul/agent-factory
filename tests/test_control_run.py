@@ -22,8 +22,18 @@ from factory.contract import Unmeasurable, Verdict
 from factory.deploy import LIMIT_NONE, UNDETERMINED
 from factory.provider import AgentResult, FakeProvider, ProviderError
 
-UI = presets.by_id("ui-control")          # the one preset with a WIRED verifier
-UNWIRED = presets.by_id("wrong-number")   # one of the four that name a verifier nobody wired
+# ⛔ DERIVED, not named. These were `by_id("ui-control")` and `by_id("wrong-number")`, with a
+# comment asserting that ui-control was "the one preset with a WIRED verifier". That stopped being
+# true the moment a verifier was actually wired (F87): ui-control had been claiming WIRED with no
+# callable behind it, and the preset that is really wired is now `add-measure`. A test fixture
+# that names the row it expects goes stale silently — the same hand-maintained-list failure as
+# F83's allow-lists and F86's ledger. Ask the table.
+WIRED_PRESETS = [p for p in presets.PRESETS if p.verifier_state == presets.WIRED]
+assert WIRED_PRESETS, "no preset declares a WIRED verifier — these tests have nothing to exercise"
+
+UI = WIRED_PRESETS[0]                     # a preset whose verifier the controller can actually run
+UNWIRED = presets.unwired()[0]            # one that names a verifier nobody has wired
+WIRED_TYPE = UI.type_id
 
 
 def _good_result(transcript: pathlib.Path) -> AgentResult:
@@ -274,11 +284,11 @@ def _controller(git_worktree, tmp_path, result=None, rows=None, verifier=_wired_
 def test_one_ticket_runs_end_to_end_and_lands_in_both_ledgers(git_worktree, tmp_path):
     """⭐ The vertical slice: ticket -> preset -> TeamSpec -> agent -> verdict -> record."""
     fake, rows, ctl = _controller(git_worktree, tmp_path)
-    res = ctl.run(control.Ticket(id="gp-327", title="remove two filters", type_id="ui-control",
+    res = ctl.run(control.Ticket(id="gp-327", title="remove two filters", type_id=WIRED_TYPE,
                                  task="Remove the two empty filters from the dashboard."))
 
     assert res.verdict is Verdict.PASS, res.summary()
-    assert res.preset_id == "ui-control"
+    assert res.preset_id == WIRED_TYPE
 
     # the stream
     kinds = [e["kind"] for e in events.read(res.run_id)]
@@ -286,7 +296,7 @@ def test_one_ticket_runs_end_to_end_and_lands_in_both_ledgers(git_worktree, tmp_
                      "agent_returned", "evidence_gathered", "verdict_assigned", "run_finished"]
     fold = events.fold(res.run_id)
     assert fold["verdict"] == "PASS"
-    assert fold["chosen"] == "ui-control"
+    assert fold["chosen"] == WIRED_TYPE
     assert fold["team_version"] and fold["agent_versions"]
 
     # the fold
@@ -302,7 +312,7 @@ def test_the_agent_is_configured_from_the_preset_not_from_a_default(git_worktree
     """The provider receives the preset's model, caps and prohibition — otherwise the preset table
     is decoration and every run silently uses the session default."""
     fake, _rows, ctl = _controller(git_worktree, tmp_path)
-    ctl.run(control.Ticket(id="gp-327", title="t", type_id="ui-control"))
+    ctl.run(control.Ticket(id="gp-327", title="t", type_id=WIRED_TYPE))
     spec, task, wt = fake.calls[0]
     assert (spec.model, spec.max_turns, spec.budget_usd) == (UI.model, UI.max_turns, UI.budget_usd)
     assert spec.prohibition == UI.prohibition
@@ -320,7 +330,7 @@ def test_the_provider_boundary_is_real(git_worktree, tmp_path):
                     transcript=t, limit=LIMIT_NONE)
     for result in (a, b):
         fake, _rows, ctl = _controller(git_worktree, tmp_path, result=result)
-        res = ctl.run(control.Ticket(id="gp-327", title="t", type_id="ui-control"))
+        res = ctl.run(control.Ticket(id="gp-327", title="t", type_id=WIRED_TYPE))
         assert res.verdict is Verdict.PASS
         assert len(fake.calls) == 1, "the controller called the seam exactly once"
 

@@ -114,7 +114,14 @@ PRESETS: List[Preset] = [
             "default_value. Must not deploy to PROD. Abort rather than assume the author checked."
         ),
         verifier="read the live Cosmos doc; assert both locked_value AND default_value are empty",
-        verifier_state=WIRED,
+        # ⛔ Was WIRED. Corrected 2026-08-31, F87: that check was run BY HAND on GP-327 and no
+        # code in this repository performs it, so `verifiers.REGISTRY` holds no entry and the
+        # controller had nothing to call. Every run of this preset reported "declares a WIRED
+        # verifier but the controller was given no callable". WIRED must mean "the controller can
+        # run it" — the only sense in which this field moves a verdict, and the sense
+        # `control.ticket_verifier` already reads it in. A procedure a human once followed is
+        # AVAILABLE. Wiring it needs a Cosmos probe, which is the next verifier worth building.
+        verifier_state=AVAILABLE,
         needs_paul="PROD promotion.",
     ),
     Preset(
@@ -140,9 +147,18 @@ PRESETS: List[Preset] = [
             "replace reverts another engineer's work. Additive alias only. Must not write any "
             "credential into an exported artefact."
         ),
-        verifier="DAX validation against the applied model; assert the alias resolves and no "
-                 "existing measure changed",
-        verifier_state=AVAILABLE,
+        verifier=("factory.pbi_contract M1-M12, adjudicated by verifiers.pbi_model_change over "
+                  "the agent's .factory/verification.json: rollback captured first, the target is "
+                  "the declared dataset, every field appended or prior-asserted, additive only, "
+                  "the refresh moved data, the anchors hold, out-of-scope measures enumerated and "
+                  "unchanged, absence renders BLANK not 0, the warehouse agrees, EVERY VISUAL "
+                  "PAINTS, every control responds, and the change is reachable by a consumer"),
+        # ⭐ The prose above used to read "DAX validation against the applied model; assert the
+        # alias resolves and no existing measure changed" — a real check, and a strictly smaller
+        # one than what now runs. DAX parity alone passed on GP-293 while every visual rendered
+        # "Error loading data", so the contract keeps M10/M11 and reports UNMEASURABLE until a
+        # renderer has been pointed at the report.
+        verifier_state=WIRED,
         needs_paul="Design sign-off on naming and folder placement.",
     ),
     Preset(
