@@ -31,6 +31,7 @@ also does not replace the supervised terminal path — see `factory.provider.Sup
 """
 from __future__ import annotations
 
+import os
 import pathlib
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
@@ -206,6 +207,44 @@ def team_for(ticket: Ticket, preset: Preset) -> TeamSpec:
         repo=ticket.repo or str(_repo.primary()),
         prohibition=preset.prohibition,
     )
+
+
+def unreachable_repo(ticket: Ticket) -> Optional[str]:
+    """The repository this run would be *recorded* against, when the executor cannot reach it.
+
+    ⛔ **F90.** `TeamSpec.repo` is inside the team version hash — a team certified against
+    `clients` is a different team from one certified against `agent-factory`, which is the whole
+    point of putting it there. But nothing downstream honoured it: `worktrees.REPO` is
+    ``_repo.primary()`` bound at import, and no function in `worktrees.py` accepts a repository
+    argument. The hash was carrying an assurance the run could not keep.
+
+    So the controller refuses. This is remedy **(b)** of the two F90 names, and deliberately the
+    smaller one: it cannot make a cross-repo run happen, it only stops the ledger claiming one
+    did. Remedy (a) — threading the repository through `worktrees.ensure` and the providers — is
+    the feature, and it is not this.
+
+    ⚠ The comparison is against `worktrees.REPO`, **not** `repo.primary()`, even though they are
+    the same object today. The rule F90 states is *a field that is part of an identity must be
+    read by whatever acts on that identity*; the thing that acts is the worktree maker, so that is
+    what this must track. If someone later gives `worktrees` a second root, this check follows it.
+
+    Returns None when the run may proceed — including for an empty `ticket.repo`, which means the
+    operator named no repository and `team_for` defaults it to this checkout.
+    """
+    declared = (ticket.repo or "").strip()
+    if not declared:
+        return None
+    try:
+        want = pathlib.Path(declared).resolve()
+        have = pathlib.Path(_worktrees.REPO).resolve()
+    except OSError as exc:                                         # noqa: BLE001
+        return f"could not resolve the declared repository {declared!r}: {exc}"
+    if os.path.normcase(str(want)) == os.path.normcase(str(have)):
+        return None
+    return (f"ticket declares repo {want} but the executor can only create worktrees under "
+            f"{have}. The run record and the team version would both name a repository the "
+            f"agent was never placed in (F90). Refusing rather than recording a false "
+            f"attribution.")
 
 
 # ---------------------------------------------------------------------------------- contract
@@ -488,6 +527,17 @@ class RunController:
             ticket=ticket.id, eligible=el, chosen=chosen_id, rule=rule,
             title=ticket.title, team=team.name, team_version=team.version,
             agent_versions=team.pinned(), repo=team.repo, provider=self.provider.name)
+
+        # ⛔ F90 — refuse before the worktree, not after. The eligible set is already on disk
+        # above, so the refusal is recorded rather than vanishing; but nothing is created, no
+        # claim is taken, and no attempt is spent. NOT_RUN because nothing was attempted: the
+        # apparatus did not break (ERROR) and no assertion failed (FAIL).
+        mismatch = unreachable_repo(ticket)
+        if mismatch:
+            log.abort(Verdict.NOT_RUN, why=mismatch)
+            return RunResult(ticket, Verdict.NOT_RUN, run_id=log.run_id, preset_id=chosen_id,
+                             eligible=el, team_version=team.version,
+                             detail=f"refused: {mismatch}")
 
         wt: Optional[pathlib.Path] = None
         claimed = False

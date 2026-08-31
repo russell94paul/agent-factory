@@ -16,6 +16,7 @@ These tests exist so those cannot come back quietly.
 from __future__ import annotations
 
 import json
+import pathlib
 import time
 
 import pytest
@@ -163,6 +164,46 @@ def test_the_guard_is_set_for_the_whole_suite():
     """conftest sets it at import so no test has to remember — proven by reading it here."""
     import os
     assert os.environ.get("AGENT_FACTORY_IN_SUITE") == "1"
+
+
+def test_the_certify_gate_also_refuses_to_shell_out_from_inside_the_suite(monkeypatch):
+    """The same guard, on the gate that did not have it.
+
+    `g_output_is_certified` shells to `factory.certify`, which reaches a pytest run in the
+    connectors repo (`live_probes.py:188`). Every test that renders a measuring surface paid it.
+    Measured before this guard: `tests/test_roadmap.py` calls `board()` in ~20 tests at 60-170s
+    each and never finished; after, the same file runs in **39s**.
+
+    ⚠ Unlike the suite gate this is not a self-invocation — `certify.py` does not import
+    `readiness`, so there was never a cycle. It is an expensive reach into a second repository
+    whose answer the running suite cannot use, which is why NOT_RUN is the honest verdict rather
+    than a cheaper measurement.
+    """
+    monkeypatch.setenv("AGENT_FACTORY_IN_SUITE", "1")
+    ran = []
+    monkeypatch.setattr(R.subprocess, "run", lambda *a, **k: (ran.append(1), _FakeRun())[1])
+    res = R.g_output_is_certified()
+    assert not ran, "the gate shelled out to certify from inside the suite"
+    assert res.verdict == R.NOT_RUN
+    assert "certify" in res.headline
+
+
+def test_the_certify_timeout_outlives_the_pytest_it_starts():
+    """An outer bound below the inner one orphans the grandchild instead of stopping it.
+
+    `subprocess.run(timeout=...)` kills only the direct child. With the outer bound at 120s and
+    the inner pytest allowed 300s, `certify` was killed while its pytest grandchild kept running
+    unattended — the parent reporting a timeout for work that had not stopped.
+    """
+    from factory import live_probes
+    inner = None
+    for line in pathlib.Path(live_probes.__file__).read_text(encoding="utf-8").splitlines():
+        if "subprocess.run(cmd" in line and "timeout=" in line:
+            inner = int(line.split("timeout=")[1].split(")")[0].strip())
+    assert inner is not None, "could not find the inner pytest timeout to compare against"
+    assert R._CERTIFY_TIMEOUT_SEC > inner, (
+        f"certify is bounded at {R._CERTIFY_TIMEOUT_SEC}s but the pytest it starts is allowed "
+        f"{inner}s — the grandchild outlives the parent that was supposed to stop it")
 
 
 # --------------------------------------------------------------------------- atomicity

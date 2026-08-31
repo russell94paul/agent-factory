@@ -18,6 +18,7 @@ should be using it, not on one call site.
 from __future__ import annotations
 
 import pathlib
+import re
 
 from factory import claims, repo, runs, worktrees
 
@@ -182,3 +183,51 @@ def test_operator_answers_are_visible_to_the_lane_that_asked():
     from factory import operator
     assert ".worktrees" not in operator.ROOT.parts
     assert operator.ROOT.parent.parent == repo.primary()
+
+
+# ------------------------------------------------- a path that leaves this repository entirely
+
+def test_a_path_to_another_repository_resolves_from_the_primary():
+    """⛔ The sixth instance, and it fell between the guard's two categories.
+
+    `test_no_module_computes_a_shared_data_root_from_its_own_file` targets `.data/` on a stated
+    principle: estate-wide state must be shared, git-tracked content may be checkout-relative.
+    `readiness.CONNECTORS` is neither. It names a **sibling repository**, which is estate-wide by
+    definition — there is only one `prefect-connectors` — so the `.data/`-shaped guard never
+    looked at it and it stayed wrong.
+
+    Measured 2026-08-31 from `.worktrees/bootstrap-wave`, before the fix:
+
+        CONNECTORS -> agent-factory/.worktrees/prefect-connectors    (is_dir() False)
+
+    Every gate reading the connectors checkout was measuring a path that does not exist whenever
+    it ran from a lane, and `CONNECTORS=` is inside `_suite_fingerprint`, so the suite cache keyed
+    differently in a worktree and could never hit.
+    """
+    from factory import readiness
+    assert readiness.FACTORY == repo.primary(), (
+        f"readiness computes the estate root as {readiness.FACTORY}, not {repo.primary()}")
+    assert readiness.CONNECTORS.parent == repo.primary().parent, (
+        f"{readiness.CONNECTORS} is not a sibling of {repo.primary()}")
+    assert ".worktrees" not in readiness.CONNECTORS.parts, (
+        f"{readiness.CONNECTORS} is private to one worktree")
+
+
+def test_readiness_does_not_derive_the_estate_root_from_its_own_file():
+    """The structural half, because the assertion above only *discriminates* inside a worktree.
+
+    Run from the primary, `__file__.parent.parent` and `repo.primary()` are the same path and the
+    behavioural test passes over the bug. This one fails on the shipped defect from anywhere,
+    which is the property that makes it worth having.
+    """
+    # ⚠ Read the module that was actually imported, not `primary()/factory/readiness.py`. In a
+    # lane worktree those are different files, and the first version of this test asserted on the
+    # primary's copy — it would have passed a worktree whose own readiness.py still had the bug,
+    # and failed a worktree that had just fixed it. Both are the wrong answer.
+    from factory import readiness as _readiness
+    src = pathlib.Path(_readiness.__file__).read_text(encoding="utf-8")
+    assert re.search(r"^FACTORY = _repo\.primary\(\)", src, re.M), (
+        "readiness.FACTORY must come from the shared resolver")
+    assert not re.search(r"^FACTORY = pathlib\.Path\(__file__\)", src, re.M), (
+        "readiness.FACTORY is back to being computed from its own file — the defect fixed on "
+        "2026-08-31, which made CONNECTORS point inside .worktrees/ whenever a gate ran in a lane")

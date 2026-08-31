@@ -33,9 +33,24 @@ import time
 from dataclasses import dataclass, field
 from typing import Callable, List, Optional
 
+from . import repo as _repo
+
 PASS, FAIL, UNMEASURABLE, NOT_RUN = "PASS", "FAIL", "UNMEASURABLE", "NOT_RUN"
 
-FACTORY = pathlib.Path(__file__).resolve().parent.parent
+#: ⛔ The primary checkout, NOT `__file__.parent.parent`.
+#:
+#: `factory/repo.py` exists because three modules answered "where are we?" three different ways,
+#: and the two that used `__file__.parent.parent` were *"correct in the primary checkout and wrong
+#: inside a lane worktree"*. This module was the third such site and was never converted. Measured
+#: 2026-08-31 from `.worktrees/bootstrap-wave`:
+#:
+#:     CONNECTORS  ->  agent-factory/.worktrees/prefect-connectors   (does not exist)
+#:
+#: rather than `repos/prefect-connectors`. Every gate reading the connectors checkout therefore
+#: measured a path that is not there whenever a gate ran from a lane — the blind-instrument shape
+#: this file's own gates exist to catch. It also fed `_suite_fingerprint` (`CONNECTORS=` below),
+#: so the suite cache keyed differently in a worktree than in the primary and could never hit.
+FACTORY = _repo.primary()
 CONNECTORS = pathlib.Path(
     os.environ.get("PREFECT_CONNECTORS", FACTORY.parent / "prefect-connectors")
 )
@@ -703,11 +718,36 @@ def g_contract_suite_green():
     return res
 
 
+#: The inner pytest that `certify` reaches through `live_probes` (`live_probes.py:188`) allows
+#: itself 300s. `subprocess.run(timeout=...)` kills only the DIRECT child, so an outer bound below
+#: the inner one kills `certify` and leaves its pytest grandchild running — the parent reports a
+#: timeout while the work carries on unattended. The outer bound must exceed the inner one, and is
+#: stated as a sum so the relationship survives someone editing either number.
+_CERTIFY_INNER_TIMEOUT_SEC = 300
+_CERTIFY_TIMEOUT_SEC = _CERTIFY_INNER_TIMEOUT_SEC + 120
+
+
 def g_output_is_certified():
+    # ⛔ RECURSION GUARD, for the same reason `g_contract_suite_green` has one — and this gate was
+    # missing it. `certify` reaches a pytest run against the connectors repo, so any test that
+    # renders a measuring surface pays a full subprocess certify. `test_roadmap.py` calls
+    # `board()` in ~20 tests and each one paid it: measured 60-170s PER TEST, ~900s of a 35-minute
+    # suite, for a number the parent run cannot use anyway.
+    #
+    # ⚠ Unlike the suite gate this is NOT a self-invocation — `certify.py` does not import
+    # `readiness`, so there is no cycle. It is an expensive reach into a second repository whose
+    # verdict is not about the run asking for it. NOT_RUN, and it says which.
+    if os.environ.get("AGENT_FACTORY_IN_SUITE") == "1":
+        return _notrun("certify not run from inside the suite",
+                       ["AGENT_FACTORY_IN_SUITE=1 — this gate shells out to `factory.certify`, "
+                        "which reaches a pytest run in the connectors repo",
+                        "run `python -m factory.certify blueprints/windsorai_client_a.yaml` "
+                        "directly for this verdict"], "factory/certify.py")
     try:
         r = subprocess.run(["python", "-m", "factory.certify",
                             "blueprints/windsorai_client_a.yaml"], cwd=FACTORY,
-                           capture_output=True, text=True, timeout=120)
+                           capture_output=True, text=True,
+                           timeout=_CERTIFY_TIMEOUT_SEC)
     except Exception as exc:
         raise Unmeasurable(f"could not run certify: {exc}")
     head = (r.stdout or r.stderr).strip().splitlines()

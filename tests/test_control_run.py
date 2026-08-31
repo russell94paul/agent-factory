@@ -17,7 +17,7 @@ import subprocess
 
 import pytest
 
-from factory import control, events, presets, provider, runs
+from factory import control, events, presets, provider, runs, worktrees
 from factory.contract import Unmeasurable, Verdict
 from factory.deploy import LIMIT_NONE, UNDETERMINED
 from factory.provider import AgentResult, FakeProvider, ProviderError
@@ -450,3 +450,65 @@ def test_the_supervised_provider_never_claims_to_have_seen_the_outcome(tmp_path)
     r = sp.run(control.team_for(control.Ticket(id="x", title="t"), UI).agents[0], "do it", tmp_path)
     assert r.dispatched and not r.observable
     assert r.returncode is None and r.limit == UNDETERMINED
+
+
+# --------------------------------------------------------------- F90: the repo it cannot reach
+
+def test_a_ticket_naming_another_repo_is_refused_before_anything_is_created(git_worktree,
+                                                                           tmp_path):
+    """⛔ F90. The controller must not run a ticket in a repository it was not pointed at.
+
+    `TeamSpec.repo` is inside the team version hash, so a run recorded against `clients` is a
+    materially different certification from one against `agent-factory`. The executor could only
+    ever create a worktree under `worktrees.REPO`. Recording the run anyway is worse than
+    refusing, because the version then carries an assurance the run did not keep.
+    """
+    fake, rows, ctl = _controller(git_worktree, tmp_path)
+    elsewhere = tmp_path / "some-other-repo"
+    elsewhere.mkdir()
+
+    res = ctl.run(control.Ticket(id="gp-329", title="add ad-spend measures", type_id=WIRED_TYPE,
+                                 repo=str(elsewhere)))
+
+    assert res.verdict is Verdict.NOT_RUN, res.summary()
+    assert "refused" in (res.detail or "")
+    # nothing was attempted: no agent, no worktree, no claim
+    assert not fake.calls, "the agent was dispatched into the wrong repository"
+    kinds = [e["kind"] for e in events.read(res.run_id)]
+    assert kinds == ["run_started", "run_aborted"], kinds
+    assert "worktree_ready" not in kinds and "claim_taken" not in kinds
+
+
+def test_the_refusal_names_both_repositories_so_the_operator_can_act(git_worktree, tmp_path):
+    """A refusal that does not say what it wanted and what it had is a dead end, not a finding."""
+    _fake, _rows, ctl = _controller(git_worktree, tmp_path)
+    elsewhere = tmp_path / "other"
+    elsewhere.mkdir()
+    res = ctl.run(control.Ticket(id="gp-330", title="t", type_id=WIRED_TYPE, repo=str(elsewhere)))
+    assert str(elsewhere.resolve()) in res.detail
+    assert str(pathlib.Path(worktrees.REPO).resolve()) in res.detail
+
+
+def test_a_ticket_naming_this_checkout_is_not_refused(git_worktree, tmp_path):
+    """The negative control. A guard that refuses everything is not a guard.
+
+    Without this the test above passes for a controller that has simply stopped working.
+    """
+    _fake, _rows, ctl = _controller(git_worktree, tmp_path)
+    res = ctl.run(control.Ticket(id="gp-331", title="t", type_id=WIRED_TYPE,
+                                 repo=str(worktrees.REPO)))
+    assert res.verdict is Verdict.PASS, res.summary()
+
+
+def test_an_unnamed_repo_still_runs_because_it_means_this_one(git_worktree, tmp_path):
+    """`repo=""` is the operator declining to name one, not a mismatch. `team_for` defaults it."""
+    _fake, _rows, ctl = _controller(git_worktree, tmp_path)
+    res = ctl.run(control.Ticket(id="gp-332", title="t", type_id=WIRED_TYPE))
+    assert res.verdict is Verdict.PASS, res.summary()
+
+
+def test_the_guard_is_case_and_separator_insensitive_because_windows(git_worktree, tmp_path):
+    """An upper- and a lower-case spelling of one Windows path are the same repository, and a
+    guard that says otherwise would refuse every legitimate run on this platform."""
+    same = str(worktrees.REPO).swapcase().replace("\\", "/")
+    assert control.unreachable_repo(control.Ticket(id="x", title="t", repo=same)) is None
