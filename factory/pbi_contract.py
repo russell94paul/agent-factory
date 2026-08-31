@@ -97,6 +97,20 @@ class PbiTarget:
     #: took ~0.5s, which is metadata only.
     min_refresh_seconds: float = 5.0
 
+    # ------------------------------------------------------------------ redesign-only fields
+    # Used by `factory.redesign_contract`. Optional and empty by default, so an additive change
+    # is completely unaffected by their presence.
+
+    #: ⚠ EVERY measure that existed before the change — the population, not a sample. GP-318
+    #: audited a 356-measure model; a redesign checked against the measures somebody thought to
+    #: list is checked against their memory, not against the model.
+    population: List[str] = field(default_factory=list)
+
+    #: ⭐ measure -> the dimensions that must GENUINELY slice it. This is the declaration that
+    #: makes GP-318's signature defect measurable: a slice returning the grand total on every
+    #: member neither errors nor blanks, so it looks healthy to every other assertion here.
+    must_slice_by: Dict[str, List[str]] = field(default_factory=dict)
+
 
 class Probes:
     """The instruments. Each returns observed facts, or raises Unmeasurable.
@@ -127,6 +141,16 @@ class Probes:
         "an INTERACTION harness — no slicer has been observed to respond. A silent no-op filter "
         "is a finding, never an acceptable default")
 
+    # ---------------------------------------------------------------- redesign-only instruments
+    def pre_state(self, ctx: dict) -> dict: self._refuse(
+        "the PRE-STATE of the model — what every measure evaluated to BEFORE the overwrite. "
+        "Captured afterwards it is a record of the damage, not a baseline")
+
+    def slices(self, ctx: dict) -> dict: self._refuse(
+        "a SLICING harness — no measure has been observed to differ across the members of a "
+        "dimension. `interact` answers whether a control responded; this answers whether the "
+        "numbers actually moved, and only the second can see an inert axis")
+
 
 class CtxProbes(Probes):
     """Probes that read the world out of the context dict.
@@ -153,6 +177,8 @@ class CtxProbes(Probes):
     def bindings(self, ctx): return self._get(ctx, "bindings")
     def render(self, ctx): return self._get(ctx, "render")
     def interact(self, ctx): return self._get(ctx, "interact")
+    def pre_state(self, ctx): return self._get(ctx, "pre_state")
+    def slices(self, ctx): return self._get(ctx, "slices")
 
 
 def _close(a: float, b: float, tol: float) -> bool:
