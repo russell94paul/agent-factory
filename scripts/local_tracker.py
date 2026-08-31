@@ -145,6 +145,52 @@ def _imported_factory_modules() -> tuple:
     return tuple(sorted(_own_imports()[0]))
 
 
+def _sibling_imports(src: str) -> set:
+    """The `factory` modules that one factory module imports, in every form we actually write."""
+    found = set()
+    for pat in (r"^from \.(\w+) import", r"^from factory\.(\w+) import", r"^import factory\.(\w+)"):
+        found.update(re.findall(pat, src, re.M))
+    # `from . import claims as claimlib, dispatch as disp` — the alias form, which is how the
+    # tracker itself imports every one of its modules.
+    for group in re.findall(r"^from \. import (.+)$", src, re.M):
+        for part in group.split(","):
+            name = part.strip().split(" as ")[0].strip()
+            if name.isidentifier():
+                found.add(name)
+    return found
+
+
+def _factory_module_closure(seeds: tuple) -> tuple:
+    """`seeds` plus every factory module they import, transitively.
+
+    ⛔ **The derivation was still under-covering, one level down.** `_HOT` was derived from this
+    file's own imports — which fixed the hand-written list — but `importlib.reload` does NOT
+    recurse. So a module this script imports only *through* another one was never reloaded, and
+    the button went on reporting success: exactly the false claim of freshness the comment above
+    describes, surviving the fix that was supposed to end it.
+
+    Measured 2026-08-31: the direct-import set was **24** modules; the closure is larger, and the
+    gap included `factory.verifiers` and `factory.pbi_contract` — the module that decides a
+    ticket's verdict and the 12-assertion contract behind it, both reached via `factory.control`.
+    Editing a verifier and pressing reload would have re-served the old one and said so happily.
+
+    ⭐ Same lesson as the two before it, one turn further out: **a derived list is only as wide as
+    the relation it derives over.** Deriving over "what this file imports" is not the same as
+    deriving over "what this process runs", and the second is what the reload button claims.
+    """
+    pkg = pathlib.Path(__file__).resolve().parent.parent / "factory"
+    seen, stack = set(seeds), list(seeds)
+    while stack:
+        f = pkg / f"{stack.pop()}.py"
+        if not f.is_file():
+            continue
+        for name in _sibling_imports(f.read_text(encoding="utf-8", errors="replace")):
+            if name not in seen and (pkg / f"{name}.py").is_file():
+                seen.add(name)
+                stack.append(name)
+    return tuple(sorted(seen))
+
+
 def _dependency_order(names: tuple) -> list:
     """`names` sorted so a module always follows everything it imports from.
 
@@ -196,7 +242,8 @@ def _value_imports() -> list:
     return _own_imports()[1]
 
 
-_HOT = tuple(f"factory.{n}" for n in _dependency_order(_imported_factory_modules()))
+_HOT = tuple(f"factory.{n}"
+             for n in _dependency_order(_factory_module_closure(_imported_factory_modules())))
 
 _RELOADED_AT = None
 _RELOAD_MSG = None
