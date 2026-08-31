@@ -20,7 +20,8 @@ never as a specification and never as evidence that the subsystem exists.
 | Path | What it is | Authority |
 |---|---|---|
 | `bootstrap/` | The imported pack, verbatim. 109 manifest files, unmodified. | **None.** Reference only. |
-| `RECONCILIATION.md` | Written here, from measurement: every pack concept mapped to its existing home in this estate, with a disposition. | The only file here worth citing. |
+| `RECONCILIATION.md` | Written here, from measurement: every pack concept mapped to its existing home in this estate, with a disposition. | Worth citing. |
+| `PACK_CONFORMANCE.md` | Every *instruction* in `START_CLAUDE_HERE.md`, marked FOLLOWED / SUBSTANCE / DEVIATED / NOT YET with its reason. | **Read this before building on any of it** — the four deviations are decisions awaiting review, not settled. |
 
 Regenerate the install check with:
 
