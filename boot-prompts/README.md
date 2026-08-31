@@ -184,7 +184,19 @@ thing a fresh session re-derives wrongly. Regenerate the list with
   the failure count moved 8 → 21 in one session with no code change here.
 - **The git index is shared between concurrent sessions.** Staging by path does *not* protect you —
   another session's `git commit` takes whatever you have staged. Proven 2026-08-29 21:00.
-- **`main` may be checked out in another session's worktree.** `git worktree list` before assuming.
+- ⛔ **`git worktree list` is NOT enough — the branch under you can change with no worktree
+  involved.** Measured 2026-08-31: the primary tree moved
+  `fix/fifth-verdict-apparatus-error` → `docs/agent-army-research-separation` → `main` *mid-session*,
+  because the other session ran a plain `git checkout` in it. `git worktree list` shows nothing
+  unusual when that happens. Anything uncommitted is then sitting on somebody else's branch, and the
+  natural next step — `git add` — puts it in their commit under their message.
+  **Run `git rev-parse --abbrev-ref HEAD` immediately before every `git add` / `git commit`**, not
+  once at the start. And prefer committing promptly over leaving work in the tree "for review":
+  uncommitted work in a contended checkout is the exposed state.
+- ⚠ **Before concluding anything is unpushed, `git fetch` then
+  `git log --branches --not --remotes`.** Twice on 2026-08-31 a session was asked to push and
+  everything was already on the remote, merged by the other session. Verify a merge by ancestry per
+  commit (`git merge-base --is-ancestor <sha> personal/main`), never by a merge commit's subject.
 - ⚠ **`python -m factory.launch` will still report the five bounding gates FAIL** until someone moves
   `repos/prefect-connectors` off `chore/artefact-homes` (29 dirty files, another session's) onto
   `main`. That is truthful about the revision it reads, and wrong about the estate. Point
