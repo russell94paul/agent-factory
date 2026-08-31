@@ -22,7 +22,7 @@ false within the hour. A second session had a workstream open the whole time.
 | thread | prompt | `next:` |
 |---|---|---|
 | **execution plane** (this section) | none — RUN-03 executed, nothing scoped to replace it | **write one before you start** |
-| **workflow library / client delivery** | [`workflow-library-2026-08-31.md`](workflow-library-2026-08-31.md) | run `keel` on the GEP marketing model when Paul's artifacts land |
+| **workflow library / client delivery** | [`workflow-library-2026-08-31.md`](workflow-library-2026-08-31.md) | run `keel` on the GEP marketing model **as an instrumented experiment** — §3a's five setup steps come before any agent spawns |
 
 They do not conflict: one owns *what the factory can execute*, the other owns *which workflow a
 ticket routes to* and the client-facing delivery. ⛔ **Both sessions were committing to this repo at

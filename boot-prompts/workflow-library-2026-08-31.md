@@ -1,10 +1,16 @@
 # Workflow library — shape × layer, and the marketing model that is still blocked
 
-**Written 2026-08-31.** Supersedes nothing. Runs alongside `run-03-the-missing-middle` (that thread
+**Written 2026-08-31, extended the same day with §3a-c after Paul directed the team experiment.**
+Supersedes nothing. Runs alongside `run-03-the-missing-middle` (that thread
 is DONE and committed by a concurrent session — see §5).
 
-`next:` **run `keel` on the GEP/Navira marketing model the moment Paul's artifacts land.**
-Everything upstream of that is built and green. Nothing else in this file is on the critical path.
+`next:` **run `keel` on the GEP/Navira marketing model as an INSTRUMENTED experiment** the moment
+Paul's artifacts land. Everything upstream is built and green.
+
+⭐ **The run is two deliverables, not one.** The client design is the visible half; the other is the
+first recorded arm of a comparison this estate has never been able to make. **Do §3a's five setup
+steps before spawning anything** — they are cheap, they are unrecoverable afterwards, and skipping
+them turns the experiment into a demonstration. Nothing else in this file is on the critical path.
 
 ---
 
@@ -49,7 +55,7 @@ recurs across clients, and keying on client would duplicate every workflow ~19 t
 | `factory/registry.py` | Joins councils ↔ factory. `(shape, layer) → workflow`, versioned by `SKILL.md` content hash. 21 tests. Honestly reports 4 of 9 never run on real work. |
 | `factory/presets.py` | `model-design` row added, `verifier_state=AVAILABLE` citing `redesign_contract.R3`. |
 | `wiki/scripts/wiki_lint.py` | The lint `CLAUDE.md` §Lint always specified and which had run **once in 193 operations**. Self-testing, refuses to report when blinded. |
-| `wiki/concepts/architecture/cross-channel-marketing-dimensional-model.md` | 498 lines of graded external evidence for the marketing design. ⚠ **UNCOMMITTED.** |
+| `wiki/concepts/architecture/cross-channel-marketing-dimensional-model.md` | 498 lines of graded external evidence for the marketing design. Committed `b19bfac`. |
 | corrections | five verdicts in 3 live docs; stale Agent Army counts; the Job-object row; `army` + `eclipse-app` frontmatter (both were untriggerable — H1 used as trigger). |
 
 ## 3. ⭐ The next session's actual job
@@ -81,6 +87,132 @@ client who is not sure what they want.
 
 **Two human decisions `keel` must surface, not settle:** which ROAS is canonical, and sign-off on
 names. Both already open in GP-319.
+
+## 3a. ⭐ Run it as an INSTRUMENTED experiment, not a demonstration
+
+Paul's direction: build a small specialised team, direct the right context to each member, and find
+out whether it is more efficient. **The `keel` run is that experiment.** It is real work you need
+anyway, so the team is not a toy — but the difference between an experiment and a demonstration is
+entirely in what you set up *before* spawning.
+
+### ⛔ Do these five before any agent starts
+
+**1. Write the falsifiable prediction first, to a file.**
+In one sentence: *what will the team find that a solo run would miss?* Then check it afterwards and
+record whether you were right. `MEASURED 2026-08-30` — the honest prediction for the wiki council
+would have been *"it will correct my own numbers"*, and it did, **four times**. Without the
+prediction written first, a team always looks worth it afterwards, because you only ever see what it
+found and never what a solo run would also have found.
+
+**2. Verify the brief before spawning. One cheap agent, ~2 minutes.**
+Its only job: re-run every number in the brief with a positive control. ⛔ **The brief is
+simultaneously the highest-leverage artifact and the single largest correlated-error source.** On
+2026-08-30 a wrong baseline (37% orphaned, 532 broken links) reached all five lenses at once; two
+burned effort re-deriving it before the correction landed. The true figures were 9% and ~38.
+Put **raw command output** in the brief, never the synthesiser's summary of it.
+
+**3. Four lenses, not six. Size to independent work units, never to ambition.**
+`army`'s own rule. For `keel` on the marketing model, collapse `answerer` and `lexicographer` for the
+first pass — both read the same artefact, and the second only sharpens the first.
+
+**4. Tier the models. The 2026-08-30 run overspent by an estimated 2–3x.**
+
+| lens | model | why |
+|---|---|---|
+| `surveyor` (grain) | **opus** | the decision that cannot be undone later |
+| `devil` (numbers against the design) | **opus** | it killed the premise last time; pay for it |
+| `assayer` (coverage %) | **sonnet** | measurement against real rows, mechanical once scoped |
+| `cartographer` (conformance) | **sonnet** | cardinality and key checks are queries |
+
+⭐ The lesson from the wiki council: **behaviour beat structure.** The two lenses that changed the
+verdict ran empirical trials and measured cost. The two that measured structure produced excellent
+data that moved nothing. Weight the team toward *testing what happens*, not *describing what is*.
+
+**5. Direct context by POINTER SET, not prose — this is the actual experiment.**
+Today every lens got one shared brief plus a paragraph. Instead: the brief carries only shared
+invariants (raw gate output, the constraints, the read-only rule), and **each lens receives the
+specific files and commands its link owns.**
+
+`factory/context.py` was built for exactly this — `ContextPack.of_kind()` — and **has never had a
+real caller.** Wiring it here validates the schema against one real client workflow, which is the
+precondition its own docstring names for building any wiki→pack pipeline. That makes this run worth
+more than its own output.
+
+---
+
+## 3b. Continuous improvement — the ledger, and what "success" is allowed to mean
+
+⛔ **Efficiency claims are currently unfalsifiable, because no baseline exists.** R19's central
+finding applies directly: *the optimiser is not the missing piece — the logging schema is.* A team
+run that records nothing produces a feeling, not a measurement, and the fields are **missing at
+write time and unrecoverable afterwards.**
+
+### Record per lens, at dispatch
+
+`shape` · `layer` · `lens` · `model` · `effort` · `turns` · `cost` · `context_kinds[]` (which
+`ContextPack` kinds it was handed) · `findings[]` · **`survived_verification`** · `human_acted` ·
+`refusals[]` (what it declined to measure, and the access it named).
+
+### ⛔ The definition of success, and the ones that are forbidden
+
+| | |
+|---|---|
+| **NOT success** | the agent finished · it exited 0 · it produced a report · it found N things |
+| **success** | a finding **survived adversarial verification** AND a human **acted on it** |
+
+This is not pedantry. This estate retired an agent with **233 diagnoses, 234 escalations and 0
+fixes** over 81 days, and a loop that ran **965 times, recorded its own 1.6% success rate, and never
+adjusted.** Both were capable. Neither was measurable. `factory/metrics.py` already raises
+`GoodhartViolation` on an activity metric with no paired outcome — **the ledger must inherit that
+refusal, not merely display its result.**
+
+### Seed the baseline from 2026-08-30, retrospectively
+
+The wiki council is a usable first data point and costs nothing to record now: 5 lenses, all opus,
+~12 major findings, **4 of which corrected the synthesiser and survived**, premise refuted and the
+recommendation changed as a result. That is one arm. The `keel` run is the second, and two arms
+carrying the same record are the first honest comparison this estate will have had.
+
+⚠ Honest caution to carry: the wiki council produced ~30k words to support *"don't do it, write four
+pages."* The synthesis burden fell entirely on the orchestrator and was heavy. **For a narrower
+question that is a bad trade** — the cost valve matters as much as the method.
+
+---
+
+## 3c. The pattern flagger — and the one thing that decides whether it is worth building
+
+Paul wants a mechanism that identifies recurring process patterns in agentic runs and flags them.
+The detection is the easy half. **The pairing is the whole design.**
+
+### What it detects, all from artifacts the run already produces
+
+| signal | what it means | example from 2026-08-30 |
+|---|---|---|
+| **correction** | an agent overturned a synthesiser claim | 4 of them — the baseline, the denominator, the "lost" lane, the filter choice |
+| **convergence** | ≥2 lenses independently reach the same finding | librarian + cartographer + retriever all found the 152 `sources/` inflation → **candidate for a deterministic check instead of an agent** |
+| **rework** | the same command re-derived by ≥2 lenses | an alias-aware resolver, built three separate times → **belongs in the brief template** |
+| **refusal** | a lens returned *"unmeasurable — needs X"* | "no Jira access" → a capability gap, not a failure |
+| **dud** | a lens whose findings did not survive verification | → wrong model tier, or a lens duplicating another |
+
+### ⛔ Emission without acceptance is the 234/0 signature in a new costume
+
+**Every flag carries `accepted | declined | pending`, and the flagger reports its own acceptance
+rate.** Where the acceptance rate is unknown it reports `UNMEASURABLE` — never *"N patterns
+identified"*, which is an activity metric wearing an outcome's clothes.
+
+This is not hypothetical. **Every promotion mechanism in this estate has a firing rate of zero:**
+`potential-tickets.md` 15 in / 0 out over four months · `action-items.md` has never moved a single
+item Open→Done in its entire life · FU92-420's explicitly-generalisable lessons still trapped in a
+ticket body · 47 of 52 trackers stale inside `active/` · the wiki `lint` run **once in 193
+operations**. ⭐ **A flagger that only emits will join that graveyard within a month. Build the
+acceptance half first, or do not build it.**
+
+### Precondition, stated plainly
+
+**The dispatch record (§3b) must exist before the flagger.** A flagger over a run that recorded
+nothing is inferring patterns from prose. Sequence: **record → run twice → then detect.** Anything
+presented as pattern detection before two recorded arms is `SPECULATIVE` — R19 says exactly this
+about its own selector, for the same reason.
 
 ## 4. Open threads, ranked
 
