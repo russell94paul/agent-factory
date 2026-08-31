@@ -1,4 +1,4 @@
-# F80 — RUN-01/02's work is already built, on a branch the readiness board never looks at
+### F80 — RUN-01/02's work is already built, on a branch the readiness board never looks at
 
 **Extends F77 and F78.** Those two established *which repository* the bounding gates measure. This
 is about *which revision of it* — a distinction neither of them draws, and the one that decides

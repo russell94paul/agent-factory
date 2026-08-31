@@ -1,4 +1,4 @@
-# F84 — "2,041 lines, zero consumers" was 574, and the grep that said otherwise could not see the only consumer
+### F84 — "2,041 lines, zero consumers" was 574, and the grep that said otherwise could not see the only consumer
 
 The headline measurement in `boot-prompts/run-03-the-missing-middle-2026-08-30.md` §0 — the one it
 says "should decide what gets built next" — was produced by a command that is structurally blind to
@@ -106,3 +106,30 @@ enumerated in the instrument's own terms.
 See also `F80` (the board measuring the wrong branch) and `F81` (three probes that could not see).
 This is the fourth blind instrument in nine days, and the second where the blindness was invisible
 because the instrument returned a plausible number rather than an error.
+
+## The ledger fields
+
+Added 2026-08-31 when [[F86]] made this file visible to `findings.load()` for the first time. The
+body above is the finding; these are the mandatory fields the parser reads.
+
+- **BELIEVED** — `boot-prompts/run-03-the-missing-middle-2026-08-30.md` §0: *"Just over 2,000
+  lines of working, tested machinery that nothing calls"* — 2,041 lines across seven modules at
+  zero consumers, offered as "the single fact that should decide what gets built next".
+
+- **ACTUALLY** — 574 lines across two modules. `dispatch`, `claims`, `runs`, `launch` and
+  `worktrees` each had a consumer the whole time — `scripts/local_tracker.py`, 54 call sites
+  between them — reached as `from factory import X as Y`, an import form the counting grep does
+  not match. Wrong by 3.5×.
+
+- **MEASURED BY** — the same count re-run against a clean `git archive` export of `3e33a1a`, with
+  the pattern widened to the aliased import form; command and per-module results in the table
+  above. The instrument's own blindness is demonstrated rather than asserted: the narrow pattern
+  returns 0 for `claims.py` while `local_tracker.py` calls it 29 times.
+
+- **AFFECTS** — every lane, because it is a rule about instruments rather than about one module:
+  any session that counts callers, consumers, usages or references with a code search inherits
+  it. Concretely it corrects §0 of the RUN-03 boot prompt, which is annotated in place.
+
+- **KIND** — INSTRUMENT
+
+- **STATUS** — ADOPTED

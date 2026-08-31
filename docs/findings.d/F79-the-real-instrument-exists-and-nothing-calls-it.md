@@ -1,4 +1,4 @@
-# F79 — the connector contract's real instrument exists, works, and nothing calls it
+### F79 — the connector contract's real instrument exists, works, and nothing calls it
 
 **Extends F77/F78.** Those found the *plan* aimed at gates it could not move. This is the inverse:
 work that is **already done**, already correct, and wired to nothing — so the board reports it as

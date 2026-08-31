@@ -1,4 +1,4 @@
-# F83 — the controller's two verdict defects were the same defect: one boolean answering two questions
+### F83 — the controller's two verdict defects were the same defect: one boolean answering two questions
 
 Both were found by **running** the newly-wired controller, not by the 24 tests that already passed
 against it. Both were a single field standing in for two independent facts. Recording them together
@@ -93,3 +93,33 @@ the same reason.
 sentences fit, it is two fields.** `observable` answers *"can I see how it ended"*. It does not
 answer *"is it still running"* and it does not answer *"is the worktree's state evidence about the
 agent"* — and it was quietly asked all three.
+
+## The ledger fields
+
+Added 2026-08-31 when [[F86]] made this file visible to `findings.load()` for the first time. The
+two defects above are stated as BELIEVED/ACTUALLY in their own sections; these are the mandatory
+fields the parser reads, and they cover the pair.
+
+- **BELIEVED** — one `observable` flag on `AgentResult` answers everything a caller needs to know
+  about a run it did not watch: whether the outcome can be seen, whether the run is still going,
+  and whether the worktree's state is evidence about the agent.
+
+- **ACTUALLY** — it answers only the first. Gating on it for the other two produced a `FAIL`
+  verdict on a run in which no agent existed, and a lane claim held open against a run that had
+  already finished.
+
+- **MEASURED BY** — running the thing, twice, which is the whole point of the entry.
+  `python -m factory.control GP-327 --type ui-control --dry-run` returned
+  `FAIL / work_landed / "the worktree is unchanged — the agent altered nothing"` with no agent
+  ever dispatched; and `ls .data/claims/` afterwards showed `task--gp-327.json` still held, read
+  by `claims.task_holder` as `HELD_UNVERIFIED`. Neither was visible to the 24 tests that passed
+  against the same code, including its mutation test.
+
+- **AFFECTS** — the `judgement` lane and its `honest` gate most directly: a verdict of FAIL
+  assigned to a run that never happened is the precise failure `honest` exists to refuse. Also
+  the `control-plane` lane, `factory/control.py`, `factory/provider.py`, and every future
+  provider — each one must now set `in_flight` itself rather than have it derived.
+
+- **KIND** — CORRECTION
+
+- **STATUS** — ADOPTED

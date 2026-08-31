@@ -1,4 +1,4 @@
-# F82 — `pin_corpus.py` erases the manifest history that is the whole reason it demands a `--why`
+### F82 — `pin_corpus.py` erases the manifest history that is the whole reason it demands a `--why`
 
 - **BELIEVED** — `scripts/pin_corpus.py` is the sanctioned, auditable way to change the corpus pin.
   Its own docstring:
