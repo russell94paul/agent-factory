@@ -1,14 +1,19 @@
 # Boot prompts — read this first, then read exactly one
 
-Eight prompts accumulated here in about thirty hours. Each was correct when written; most describe a
+Nine prompts accumulated here in about fifty hours (`ls boot-prompts/*.md | grep -v README | wc -l`). Each was correct when written; most describe a
 plan that a later measurement retired. **A boot prompt carrying a retired plan is worse than none,
 because it is confidently wrong and sits further from the reader's eye than the correction.**
 
 So: this file is the router. It is the only file here that is maintained. Everything else is dated
 and frozen at its moment.
 
-**Measured 2026-08-31 03:55.** `fix/fifth-verdict-apparatus-error` at `f8679b7`;
+**Measured 2026-08-31 05:40**, at `ec488bb` on `fix/fifth-verdict-apparatus-error`;
 **prefect-connectors `main` at `0195e59`**. RUN-03 has landed — see below.
+
+⚠ **Every count in this file is regenerable, and none of it is hand-maintained.** Two sessions
+committed here within one hour and three numbers below rotted in that window — including
+*"2 of 5 presets"*, written by one session and made false by the other adding a sixth. If you are
+about to type a number here, put its command beside it or leave it out.
 
 ---
 
@@ -35,7 +40,7 @@ moved mid-session for one of them.
 |---|---|
 | `factory/control.py` · `events.py` · `provider.py` | landed `31f3527`, 1,137 lines + 442 of tests |
 | `factory/verifiers.py` | the verifier registry — `add-measure` → `pbi_contract` M1–M12, `model-redesign` → `redesign_contract` M+R |
-| presets with a runnable verifier | **2 of 5** (`add-measure`, `model-redesign`); the other three name a check nobody has built |
+| presets with a runnable verifier | **2 of 6** — `add-measure`, `model-redesign`. The other four name a check nobody has built, `model-design` among them. `python -c "from factory.presets import PRESETS; from factory import verifiers as v; print(len(v.REGISTRY), 'of', len(PRESETS))"` |
 | the tracker | routed through the controller — `local_tracker.run_ticket`, POST `/run-ticket` |
 | `.data/runs.jsonl` | 10 rows |
 | findings ledger | **19 visible → 31** (`f8679b7`, then F87/F88) |
