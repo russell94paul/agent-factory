@@ -33,12 +33,22 @@ They do not conflict: one owns *what the factory can execute*, the other owns *w
 ticket routes to* and the client-facing delivery.
 
 ⚠ **The execution-plane row was `none — write one before you start` until 2026-08-31.** It now has
-a prompt: the bootstrap pack was installed (and deliberately left inert), three instruments were
-repaired, and the suite went **~2100s → 112s**. The remaining 15 suite failures are **not this
-repo's defect** — `prefect-connectors` is parked on `chore/artefact-homes` with 29 uncommitted
-files, and the mutation anchors do not exist on that branch. ⛔ **Both sessions were committing to this repo at
-once.** Run `git log --oneline -5` before assuming anything about HEAD — `presets.py` verifier states
-moved mid-session for one of them.
+a prompt: the bootstrap pack was installed (and deliberately left inert), five instruments were
+repaired (F91–F95), negative-control coverage went 5 → 23 of 30 gates, and the suite went
+**~2100s → 112s**.
+
+⭐ **Corrected later the same day: the suite is now GREEN.** The 15 failures were never this repo's
+defect — `prefect-connectors` had been parked on `chore/artefact-homes` since 2026-08-23 and the
+mutation anchors do not exist on that branch. One `git checkout main` there took this repo from 15
+red to 0, and the PASS-only suite cache can now fill, so `g_contract_suite_green` returns in
+**0.0s** instead of ~90. ⚠ **But one run in four reported `1 failed` and did not reproduce** — a
+flaky test nobody has identified, so read a single green run as weak evidence.
+`python -m pytest -q`
+
+⛔ **Sessions commit to this repo concurrently.** Run `git rev-parse --abbrev-ref HEAD` immediately
+before every `add`/`commit` — HEAD moved three times mid-session on 2026-08-31. A `PreToolUse`
+advisory now warns when it does (`scripts/hooks/git-tree-moved.py`, imported by `lane-bus.py`), and
+it is silent inside a worktree because the worktree is the actual control.
 
 **Write the next one before you start work, not after.** The honest state, measured:
 
@@ -49,7 +59,7 @@ moved mid-session for one of them.
 | presets with a runnable verifier | **2 of 6** — `add-measure`, `model-redesign`. The other four name a check nobody has built, `model-design` among them. `python -c "from factory.presets import PRESETS; from factory import verifiers as v; print(len(v.REGISTRY), 'of', len(PRESETS))"` |
 | the tracker | routed through the controller — `local_tracker.run_ticket`, POST `/run-ticket` |
 | `.data/runs.jsonl` | 10 rows |
-| findings ledger | **19 visible → 31** (`f8679b7`, then F87/F88) |
+| findings ledger | `python -c "from factory import findings; print(len(findings.load()))"` — the count is regenerated, never typed. `design_debt()` open: F71, F90 |
 
 ⛔ **Do not re-run RUN-03's plan.** `run-03-the-missing-middle-2026-08-30.md` is now a
 **superseded** file kept for its reasoning; its `next:` is executed. Its §0 headline measurement
