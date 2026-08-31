@@ -88,6 +88,30 @@ client who is not sure what they want.
 **Two human decisions `keel` must surface, not settle:** which ROAS is canonical, and sign-off on
 names. Both already open in GP-319.
 
+### ⚠ If the artifacts have not landed, do NOT wait — swap the subject
+
+Paul challenged this on 2026-08-31, correctly: *"I thought we were building agent factory, what has
+the marketing model got to do with it?"* The answer is that he nominated it as the first subject when
+asked which workflow to build first, and it is client work he needs anyway — so the validation run is
+free. **It is the SUBJECT, not the project.** Everything in §2 was built for the factory and none of
+it is marketing work.
+
+But `keel` must run on *something* real. `registry.unproven()` prints `4 of 9 have never been run on
+real work`, and a council that has never run is **written-and-unwired — the exact defect this repo
+exists to catch, with three independent instances already on record.** Running it is what stops it
+being decoration.
+
+So if the artifacts are not there, take an internal subject instead and lose nothing:
+
+| fallback subject | why it works | available |
+|---|---|---|
+| **`agent-factory`'s own board schema** | 76 tasks in `.data/tasks.jsonl` with no lifecycle worth the name — a real grain-and-status design question | now |
+| **the wiki's missing `status:` field** | the 2026-08-31 council established the question (`live \| archive \| stale \| abandoned \| superseded-by`); `keel` would produce the schema | now |
+| **decline, and leave `keel` DECLARED** | defensible — the registry keeps saying 4 of 9 unproven, which is true and visible | — |
+
+⛔ **What is NOT acceptable is running `keel` on a toy.** A council validated against something with
+no consequence tells you the prompt parses, not that the method works.
+
 ## 3a. ⭐ Run it as an INSTRUMENTED experiment, not a demonstration
 
 Paul's direction: build a small specialised team, direct the right context to each member, and find
