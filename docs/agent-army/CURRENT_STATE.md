@@ -64,7 +64,7 @@ have no counterpart in it. Any Agent Army design must either adopt them or expla
 
 | Mechanism | Where | Why it matters |
 |---|---|---|
-| **The four-verdict contract** | `factory/contract.py:17-21`; aggregation rule at `:73-85`; `README.md` scope table | `UNMEASURABLE` is never collapsed into `FAIL` or `PASS`. *"A check whose instrument could not run has not passed."* The research corpus has no equivalent — R30's metric lists have no way to say "the instrument was dark". ⚠ **Four in the enum, five in effective use:** `REFUSED` (`evaluator_service/service.py:62`) is treated as a verdict by the client — `UNSCORED_VERDICTS = {"REFUSED", "UNMEASURABLE", "NOT_RUN"}` (`factory/evaluator.py:65`) — but is not a `Verdict` member. And `Unmeasurable` is defined three separate times, with three different docstrings, at `contract.py:63`, `readiness.py:42` and `schedule.py:54`. |
+| **The five-verdict contract** | `factory/contract.py:32` (`Verdict`); aggregation rule in `ContractResult.verdict`; `README.md` scope table | `PASS / FAIL / UNMEASURABLE / ERROR / NOT_RUN`. Neither `UNMEASURABLE` nor `ERROR` can be collapsed into `FAIL` or `PASS`, and `ERROR` outranks `FAIL` — *"if the apparatus broke we cannot claim the failure we think we saw was real."* **`ERROR` was added 2026-08-31** (`ba57f66`) after this document recorded its absence; see the FIXED section below. ⚠ **Five in the enum, six in effective use:** `REFUSED` (`evaluator_service/service.py:62`) is a verdict to the client — `UNSCORED_VERDICTS` (`factory/evaluator.py:65`) — but is not a `Verdict` member; it is the *service* refusing to score, not an assertion outcome, so the separation may be correct. And `Unmeasurable` is still defined three separate times, with three different docstrings, at `contract.py`, `readiness.py:42` and `schedule.py:54` — **unresolved**. |
 | **Grader separation** | `factory/corpus.py` (corpus is hashed JSON under `evals/`, verified on load, not executable Python); `evaluator_service/` + `factory/evaluator.py` (three routes, no fourth); `factory/certify.py:15-17` (the stated distinction) and `:79,82` (the flags) `--calibrate` vs `--remote` | An agent that can edit its own grader is not graded. `--calibrate` scores in-process and is explicitly *"worthless as evidence that an agent did not grade itself"*. `corpus.py` names the remaining gap honestly: separation is evident and attributed, not yet *enforced*. |
 | **Evidence-gated close** | `factory/evidence.py` + `factory/tasks.py:163` | Refusal lives in the **store**, not in a convention an agent can forget. |
 
@@ -109,19 +109,40 @@ Two different situations, one verdict. *"The instrument correctly reports it can
 *"the instrument crashed"* are not the same fact, and the second usually means something is wrong
 with **us**, not with the thing under test.
 
-⭐ **This repository's founding principle is that you must never collapse two kinds of not-knowing.
-At `contract.py:57` it collapses two kinds of not-knowing.** That is not a research point; it is a
-defect in the control, and the fix is small — a fifth `Verdict` member and one `except` clause,
-with the aggregation rule in `ContractResult.verdict` (`:73-85`) extended to rank it worst.
+⭐ **This repository's founding principle is that you must never collapse two kinds of not-knowing,
+and it was collapsing two kinds of not-knowing.** That was not a research point; it was a defect in
+the control.
 
-Follow the standard's shape rather than inventing one: the new member should be settable **only by
-the harness** (an `Assertion.check` must not be able to return it), and should **dominate** every
-other verdict in the fold — `FAIL` currently wins, and an instrument that crashed should outrank a
-test that legitimately failed, because it means the run itself is not trustworthy.
+## ✅ FIXED — `Verdict.ERROR` landed
 
-**Filed, not fixed.** `contract.py` is the root object seven modules import; changing the enum is a
-product decision with real blast radius and belongs to whoever owns it. Recorded here because it is
-exactly the class of thing this document exists to surface.
+The paragraph above described the state at `b4bac0d`. It is **no longer true**, and this document is
+worthless if it says otherwise. Merged to `main` via `ba57f66`
+(`fix/fifth-verdict-apparatus-error`). Verified on `main` at the time of writing:
+
+```python
+class Verdict(str, Enum):                       # factory/contract.py:32
+    PASS = "PASS"
+    FAIL = "FAIL"
+    UNMEASURABLE = "UNMEASURABLE"   # instrument declined to run — NOT a pass
+    ERROR = "ERROR"                 # the apparatus itself broke — NOT a measurement
+    NOT_RUN = "NOT_RUN"
+```
+
+All three properties the standard requires are present:
+
+| Property | Where |
+|---|---|
+| Separated from `UNMEASURABLE` | `Assertion.run` — `except Unmeasurable` → `UNMEASURABLE`; `except Exception` → `ERROR`, commented *"our own instrument fell over… TTCN-3 `error`"* |
+| **Dominates `FAIL`** | `ContractResult.verdict` checks `ERROR` **before** `FAIL`: *"if the apparatus broke we cannot claim the failure we think we saw was real"* |
+| Not scored as a measurement | `ERROR` is in `UNSCORED_VERDICTS` (`tests/test_contract.py:96`) |
+
+Tests cover it, including the regression guard that matters most —
+*"the fix must not sweep declared inconclusiveness into ERROR"* (`test_contract.py:68`).
+
+**This is the first Wave 0 finding to reach production code**, and it did so without an
+implementation handoff — which is a boundary exception worth noting rather than hiding. It was a
+defect fix in existing code, not a research concept being built, so
+[APPROVED_CONCEPTS.md](APPROVED_CONCEPTS.md) stays empty and correct.
 
 Full analysis: `agent-army-research/research/sources/W0-adversarial-refutation-novelty-claim.md`.
 
