@@ -14,7 +14,20 @@ and frozen at its moment.
 
 ## ⭐ Read this one
 
-### There is no CURRENT prompt. RUN-03 is done, and nothing has been scoped to replace it.
+### Two threads are live. Pick the one you are here for.
+
+⚠ **Corrected 2026-08-31.** This heading read *"There is no CURRENT prompt"* — true when written,
+false within the hour. A second session had a workstream open the whole time.
+
+| thread | prompt | `next:` |
+|---|---|---|
+| **execution plane** (this section) | none — RUN-03 executed, nothing scoped to replace it | **write one before you start** |
+| **workflow library / client delivery** | [`workflow-library-2026-08-31.md`](workflow-library-2026-08-31.md) | run `keel` on the GEP marketing model when Paul's artifacts land |
+
+They do not conflict: one owns *what the factory can execute*, the other owns *which workflow a
+ticket routes to* and the client-facing delivery. ⛔ **Both sessions were committing to this repo at
+once.** Run `git log --oneline -5` before assuming anything about HEAD — `presets.py` verifier states
+moved mid-session for one of them.
 
 **Write the next one before you start work, not after.** The honest state, measured:
 
@@ -78,6 +91,25 @@ something, then run it.** It has not failed to pay yet.
 ⭐ F89 is the sharpest of them, and the one to read if you read one: the blind instrument was our
 **newest and most careful** file, not an old thin one. Care is not coverage. Before reusing a
 contract for a second ticket type, run that type's own named defect through it and watch it fail.
+
+---
+
+### `workflow-library-2026-08-31.md` — **CURRENT for the workflow/client-delivery thread**
+
+`next:` **run `keel` on the GEP/Navira marketing model when Paul's artifacts land.**
+
+Runs *alongside* RUN-03 rather than superseding it — different thread. Establishes that the estate
+already had three disconnected workflow layers (`MEASURED`: zero cross-references from `factory/` to
+the councils), keys the library on **shape × layer** with client as a context pack, and ships the
+`design` shape as the new `keel` council plus `factory/registry.py` to join the two halves.
+
+Carries three corrected premises worth more than the build: R19 already did the taxonomy (re-measured
+exact), the Job object **exists** in `clients/GEP/tickets/*/artifact.yaml` rather than being missing,
+and **Agent Army's founding premise was falsified by its own Wave 0** — stop investing there.
+
+⚠ Also the record of a five-lens wiki council that **refuted its own commission**: do not sort the
+wiki, write four pages and ship one instrument. And of three instruments that returned plausible
+wrong numbers in one session.
 
 ---
 
