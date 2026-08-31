@@ -69,7 +69,7 @@ pytest -q                                        # all four gates must pass
 python -m factory.demo                           # end-to-end on a fake connector
 ```
 
-## The four verdicts — never collapsed
+## The five verdicts — never collapsed
 
 Borrowed from `orchestrator/engine/gauge.py`, for the reason its docstring gives: *collapsing
 "I could not look" into "I looked and it was fine" is how a measurement that never happened passes
@@ -79,8 +79,14 @@ for one that did.*
 |---|---|---|
 | `PASS` | Asserted, and the assertion held | **Yes** |
 | `FAIL` | Asserted, and the assertion did not hold | No |
-| `UNMEASURABLE` | The instrument could not run | **No — and this is the important one** |
+| `UNMEASURABLE` | The instrument declined to run — it *knows* it cannot look | **No — and this is the important one** |
+| `ERROR` | The apparatus itself broke; this is not a measurement at all | No — and it **dominates FAIL** |
 | `NOT_RUN` | Never attempted | No |
+
+Not our invention: conformance testing standardised this in ISO/IEC 9646, and TTCN-3 carries it
+still (ITU-T Z.140 §24.2) as a monotone lattice — `none < pass < inconc < fail < error`, where
+`inconc` is our `UNMEASURABLE`. `ERROR` outranks `FAIL` because once the apparatus has broken we
+no longer know the observed failure was real. Added in `0d4bdb1`; see `factory/contract.py`.
 
 `UNMEASURABLE` is not a pass. A contract whose instruments are dark reports `UNMEASURABLE`, and a
 team holding an `UNMEASURABLE` is not certified.

@@ -24,7 +24,7 @@ Every entry carries four things, and an entry missing any of them is not a findi
 
 ⭐ **Closing a lane with nothing to add is itself an entry.** Write `NOTHING TO REPORT` with the
 date and lane. Silence has to mean "checked and found nothing", not "nobody looked" — the same
-distinction between ZERO and NOT-RECORDED that the contract's four verdicts exist to protect.
+distinction between ZERO and NOT-RECORDED that the contract's five verdicts exist to protect.
 
 ---
 
