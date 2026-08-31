@@ -85,7 +85,8 @@ class Preset:
         }
 
 
-#: The five types. Each row's `seen_in` is the evidence that it is a real shape of work.
+#: Each row's `seen_in` is the evidence that it is a real shape of work. The count is computed
+#: (`len(PRESETS)`), never typed — a hand-maintained count re-rots invisibly.
 #:
 #: Sizes: a type carries the size it USUALLY is. An operator can override, and the escalation
 #: trigger is where the override is argued for.
@@ -261,6 +262,43 @@ PRESETS: List[Preset] = [
         # can see it, and `interact` (did the control respond) is not it.
         verifier_state=WIRED,
         needs_paul="Design sign-off; PROD promotion.",
+    ),
+    Preset(
+        type_id="model-design",
+        title="Design the model — a structure does not exist yet, or the one that does is unusable",
+        seen_in="GP-319 — the client rejected the marketing model's design; 383 measures, 198 visible, "
+                "128 of them with no description. Also GP-318, the 356-measure audit that preceded it.",
+        layers=("snowflake", "pbi_model",),
+        size="L",
+        model="opus",
+        model_why=(
+            "there is no artefact to interrogate and no symptom to anchor on — the output IS the "
+            "structure. The hard part is knowing which question nobody will be able to ask once the "
+            "grain is fixed, which is reasoning about an absence rather than reading a defect."
+        ),
+        escalate_when=(
+            "the structure already exists and one number in it is wrong. That is a wrong-number "
+            "ticket, not a design — re-scope to `wrong-number` and save the budget. Conversely, if "
+            "the client's field list turns out to describe a report rather than a process, stop and "
+            "re-scope: a flat field list is an input, never a specification."
+        ),
+        effort="high",
+        max_turns=150,
+        budget_usd=25.0,
+        prohibition=(
+            "Must not create or alter any object — this type ends at an ACCEPTED design, never a "
+            "built one. Must not fill an absent value with zero; an unfeatured platform is "
+            "NOT-RECORDED and a placeholder key is SENTINEL, and neither is a gap to allocate "
+            "across. Must not choose the grain after exploring the data. Must not deploy to PROD."
+        ),
+        verifier="`redesign_contract.R3-no-axis-is-inert` — the (measure x axis) census over the "
+                 "declared `must_slice_by`, asserting no pair returns the same value on every "
+                 "member. It already distinguishes the false positive (a single-member axis cannot "
+                 "show whether an axis slices) and reports UNMEASURABLE rather than PASS when no "
+                 "axis is declared, so declaring nothing is not the cheap route to green.",
+        verifier_state=AVAILABLE,
+        needs_paul="Which ROAS is canonical, and sign-off on names. Both were already open in "
+                   "GP-319 and neither is a modelling question.",
     ),
 ]
 
