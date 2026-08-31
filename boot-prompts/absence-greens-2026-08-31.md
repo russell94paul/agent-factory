@@ -5,22 +5,31 @@
 thing on the board. They are fixed. Its `next:` — F90 remedy (a) — is untouched and still the
 thing that unblocks the first real run.
 
-`next:` **extend the mutation harness to the gates that measure agent-factory itself.** 25 of 30
-readiness gates have never had a negative control, and the five that do all point at the
-*connectors* repo — so every gate measuring this repo is outside it. That is not a coincidence with
-the six repaired below; it is the reason for them.
+`next:` **F90 remedy (a)** — unchanged, and still the only thing that unblocks a real dispatch.
+It needs Paul: it increases blast radius by letting an agent run in another repository.
+
+**Safe to continue unattended instead:** thirteen readiness gates still have no negative control.
+The census that names them is built and enforced (`tests/test_gate_negative_control_census.py`);
+raising the floor is mechanical from here, and the two hardest — `suite` and `certified` — are hard
+for the reason F92 was about, because provoking them means a subprocess.
 
 ---
 
 ## 0. State
 
-Branch **`fix/absence-greens`**, two commits, **unpushed**, worktree `.worktrees/absence-greens`.
+Branch **`fix/absence-greens`**, five commits, **unpushed**, worktree `.worktrees/absence-greens`.
 Main is `ee4bc8d` and untouched by this work.
 
 ```
 da23ddb  fix(gates): six gates reported PASS over an absence, and four cited no evidence
 d79fe41  feat(hooks): warn when the checkout moved under you, and pay nothing extra for it
+9a04101  docs(boot): the overnight handoff, and what it deliberately did not touch
+25a64d8  test(gates): census the negative controls, and make an unclassified gate fail
+6263c91  test(gates): three more negative controls — coverage 14 -> 17 of 30
 ```
+
+**Negative-control coverage: 17 of 30**, up from 5. The suite prints the number and the thirteen
+unproven gates by name on every run.
 
 Suite: **16 failures before, the same 16 after** — no regression. (16 in a worktree, 15 in the
 primary; the extra is F93, which is fresh-checkout-only.)
@@ -63,16 +72,21 @@ made, deliberately, while Paul was asleep.
 
 ## 2. What is NOT done
 
-- **Nothing pushed.** Both commits are local.
+- **Nothing pushed.** All six commits are local, on `fix/absence-greens`.
 - **The 15 mutation-anchor failures are unchanged and are still not this repo's defect.**
   `prefect-connectors` is parked on `chore/artefact-homes` @ `8b7c68d`, created **2026-08-23 by
   Paul**, with **29 uncommitted files**. The anchors and `mutate_control_plane.py` exist only on
   its `main`. Moving it is destructive to whatever those 29 files are — **Paul must decide**, and
   it is the only thing standing between the suite and green.
-- ⛔ **The larger half of F94 is untouched: 19 further readiness gates have no negative control.**
-  Six were found by inventory. Nobody has shown the rest can fail, and
-  `tests/test_readiness_probes_can_pass.py` says at `:14-19` that it only proves a PASS branch is
-  *written* — *"a probe guarded by `if False:` would satisfy this test."*
+- ⚠ **Thirteen readiness gates still have no negative control** — down from 25, but the gap is
+  real and it is the larger half of F94. They are named in the census with a reason each, and
+  the suite prints them. `tests/test_readiness_probes_can_pass.py` says at `:14-19` why its own
+  coverage does not count: it proves a PASS branch is *written*, and *"a probe guarded by
+  `if False:` would satisfy this test."*
+  ⛔ **And five of the seventeen "proved" are proved by a harness that is currently inoperative** —
+  `scripts/mutate_readiness_probes.py`, whose anchors do not exist on the branch
+  `prefect-connectors` is parked on. They are counted because the harness demonstrated it once;
+  they are **not** currently verified, and the census says so in place rather than in a footnote.
 - **F90 remedy (a) not started**, and it is still the only thing that unblocks a real dispatch.
 - **F93 still OPEN** — three non-equivalent remedies named, none chosen.
 - **The hook is not registered anywhere.** It rides inside `lane-bus.py`, which is already wired in
@@ -101,6 +115,7 @@ made, deliberately, while Paul was asleep.
 ```bash
 python -m pytest tests/test_gates_refuse_an_empty_population.py -q   # 15, the six gates
 python -m pytest tests/test_tree_moved_advisory.py -q                # 15, the advisory
+python -m pytest tests/test_gate_negative_control_census.py -q -rA   # 11, prints coverage
 python -c "from factory import findings; print(len(findings.load()), findings.unattached())"
 git log --oneline main..fix/absence-greens
 ```
