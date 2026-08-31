@@ -49,3 +49,19 @@ def _isolate_run_ledger(tmp_path, monkeypatch, request):
     if "real_ledger" in request.fixturenames:
         return
     monkeypatch.setattr(runs, "_primary", lambda: tmp_path / "ledger-root")
+
+
+@pytest.fixture(autouse=True)
+def _isolate_event_stream(tmp_path, monkeypatch, request):
+    """The same redirect, for `.data/events.jsonl`, for exactly the same reason.
+
+    The run ledger got this fixture only after twelve fabricated rows had already landed in it and
+    the tracker had rendered them as history. `factory.events` is the *source* that ledger is a
+    fold of, so an unredirected test writing there would fabricate the same history one layer
+    further upstream — and would do it with a full eligible set attached, which reads as more
+    trustworthy, not less. Autouse, so a test added later cannot forget.
+    """
+    if "real_ledger" in request.fixturenames:
+        return
+    from factory import events
+    monkeypatch.setattr(events, "path", lambda: tmp_path / "event-root" / "events.jsonl")

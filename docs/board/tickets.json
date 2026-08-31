@@ -2,7 +2,7 @@
   "_generated_by": "python scripts/export_board.py",
   "_authoritative_source": ".data/tasks.jsonl (append-only, gitignored)",
   "_note": "DERIVED snapshot for recovery and for rendering the board. Never hand-edit.",
-  "count": 71,
+  "count": 76,
   "tasks": [
     {
       "id": "253d7fa9",
@@ -451,6 +451,261 @@
       ]
     },
     {
+      "id": "771630bd",
+      "title": "BVA-01 - P0 Add g_dependencies_are_pinned; lockfile gate, prerequisite to any ADOPT",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [
+        {
+          "kind": "citation",
+          "ref": "python -m factory.readiness | acceptance: a lockfile exists and is current; a gate dependencies-pinned reports PASS; a test asserts the verdict enum of every adopted judgement library and FAILS when a member is removed. Migration cost: one gate plus a lockfile, no runtime dependency added. Falsified by: the gate passing with no lockfile present, or the enum test passing when a verdict member is deleted.",
+          "basis": "MEASURED"
+        },
+        {
+          "kind": "note",
+          "ref": "Measured 2026-08-29: pyproject.toml:6 declares dependencies = ['pyyaml>=6.0']; no uv.lock, poetry.lock, requirements.txt, Pipfile.lock or constraints.txt exists; there is no .github/ directory so no CI runs; and none of the 27 readiness gates measures a dependency. The repo gates a corpus byte changing (corpus.py:89-96 raises CorpusError) and does not gate its grader's dependencies changing. Any adopted tool's minor release could collapse a four-state verdict model with nothing between it and GreenContract. This gates BVA-02 and BVA-04.",
+          "basis": "MEASURED"
+        }
+      ],
+      "events": [
+        {
+          "ts": 1788061730.9295044,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "BVA-01 - P0 Add g_dependencies_are_pinned; lockfile gate, prerequisite to any ADOPT",
+            "parent": null
+          }
+        },
+        {
+          "ts": 1788061730.9302464,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "citation",
+            "ref": "python -m factory.readiness | acceptance: a lockfile exists and is current; a gate dependencies-pinned reports PASS; a test asserts the verdict enum of every adopted judgement library and FAILS when a member is removed. Migration cost: one gate plus a lockfile, no runtime dependency added. Falsified by: the gate passing with no lockfile present, or the enum test passing when a verdict member is deleted.",
+            "basis": "MEASURED"
+          }
+        },
+        {
+          "ts": 1788061730.9306645,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "note",
+            "ref": "Measured 2026-08-29: pyproject.toml:6 declares dependencies = ['pyyaml>=6.0']; no uv.lock, poetry.lock, requirements.txt, Pipfile.lock or constraints.txt exists; there is no .github/ directory so no CI runs; and none of the 27 readiness gates measures a dependency. The repo gates a corpus byte changing (corpus.py:89-96 raises CorpusError) and does not gate its grader's dependencies changing. Any adopted tool's minor release could collapse a four-state verdict model with nothing between it and GreenContract. This gates BVA-02 and BVA-04.",
+            "basis": "MEASURED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "377b70f0",
+      "title": "BVA-02 - P1 Replace claims.py hand-rolled _exclusive() with tox-dev/filelock",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [
+        {
+          "kind": "citation",
+          "ref": "pytest tests/ -k claim | acceptance: claims.py:200-247 replaced by filelock; the 20-concurrent-thread race test still passes on Windows; no verdict semantics change. Migration cost: ~48 lines deleted, one zero-transitive-dependency package added, zero adapter required because a lock is not a judgement. Falsified by: any change to a PASS/FAIL/UNMEASURABLE outcome, or the race test failing under 20 threads.",
+          "basis": "DERIVED"
+        },
+        {
+          "kind": "note",
+          "ref": "tox-dev/filelock, Unlicense, zero transitive dependencies, last release 3.32.4 on 2026-08-23 (api.github.com). It exists to handle exactly the Windows EACCES-vs-EEXIST race that claims.py:225's own comment records being bitten by: 'On Windows, O_CREAT|O_EXCL against a file that another thread is concurrently deleting raises EACCES rather than EEXIST... Twenty racing threads reproduce it every time; two rarely do.' grep -rn filelock across this repo returns NOTHING - it is in no code, no doc and no pyproject. BUILD-VS-ADOPT-PROMPT.md Part 4 has no locking row at all, so the search never ran. This is the direct answer to that document's question 3, 'what am I about to build that already exists and I clearly do not know about'. K1/K2/K3/K4 all pass.",
+          "basis": "MEASURED"
+        }
+      ],
+      "events": [
+        {
+          "ts": 1788061730.9313042,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "BVA-02 - P1 Replace claims.py hand-rolled _exclusive() with tox-dev/filelock",
+            "parent": null
+          }
+        },
+        {
+          "ts": 1788061730.9317672,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "citation",
+            "ref": "pytest tests/ -k claim | acceptance: claims.py:200-247 replaced by filelock; the 20-concurrent-thread race test still passes on Windows; no verdict semantics change. Migration cost: ~48 lines deleted, one zero-transitive-dependency package added, zero adapter required because a lock is not a judgement. Falsified by: any change to a PASS/FAIL/UNMEASURABLE outcome, or the race test failing under 20 threads.",
+            "basis": "DERIVED"
+          }
+        },
+        {
+          "ts": 1788061730.9320648,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "note",
+            "ref": "tox-dev/filelock, Unlicense, zero transitive dependencies, last release 3.32.4 on 2026-08-23 (api.github.com). It exists to handle exactly the Windows EACCES-vs-EEXIST race that claims.py:225's own comment records being bitten by: 'On Windows, O_CREAT|O_EXCL against a file that another thread is concurrently deleting raises EACCES rather than EEXIST... Twenty racing threads reproduce it every time; two rarely do.' grep -rn filelock across this repo returns NOTHING - it is in no code, no doc and no pyproject. BUILD-VS-ADOPT-PROMPT.md Part 4 has no locking row at all, so the search never ran. This is the direct answer to that document's question 3, 'what am I about to build that already exists and I clearly do not know about'. K1/K2/K3/K4 all pass.",
+            "basis": "MEASURED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "56546789",
+      "title": "BVA-04 - P2 Reshape ConnectorTarget onto ODCS as the contract artefact, keep our validator",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [
+        {
+          "kind": "citation",
+          "ref": "python -m pytest tests/test_connector_contract.py | acceptance: ConnectorTarget's 22 fields each map to a named ODCS field or to a documented customProperties extension, field by field, with the mapping table committed; factory/contract.py unchanged; a negative control proves a rule that fails to compile is REFUSED, not reported passed. Migration cost: the field-mapping table plus a 7-state-to-4-state result shim; deletes ~25 lines and adds a declared-vs-executed reconciliation we do not need today. Falsified by: A7, A8 or A12 silently landing in an uninterpreted customProperties bag and being called adopted.",
+          "basis": "DERIVED"
+        },
+        {
+          "kind": "note",
+          "ref": "ODCS (Apache-2.0, v3.1.0 2025-12-08) is the consolidated standard - the older Data Contract Specification carries a deprecation notice pointing at it, supported only to end of 2026, so fragmentation risk is gone. Adopting the FORMAT makes the questionnaire an editor for a portable artefact. Adopting its JUDGEMENT is refused: grepping the full 2,929-line ODCS JSON Schema, 'tenant' appears ONCE, contract-level, type string, descriptive - A12 has no first-class form, and neither do A7 (this-run provenance) or A8 (landed==emitted); the root is additionalProperties:false so they fall into an untyped customProperties bag nothing interprets. And datacontract-cli's create_checks.py (673 lines, read at main) has SEVEN logger.warning(...) -> return [] paths and never imports Run, so a declared rule that cannot compile emits zero checks, never reaches the structured result, and the run still reports passed. That is bash-guard.sh exiting 127, inside the candidate. Depends on BVA-01.",
+          "basis": "MEASURED"
+        }
+      ],
+      "events": [
+        {
+          "ts": 1788061730.9327016,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "BVA-04 - P2 Reshape ConnectorTarget onto ODCS as the contract artefact, keep our validator",
+            "parent": null
+          }
+        },
+        {
+          "ts": 1788061730.933074,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "citation",
+            "ref": "python -m pytest tests/test_connector_contract.py | acceptance: ConnectorTarget's 22 fields each map to a named ODCS field or to a documented customProperties extension, field by field, with the mapping table committed; factory/contract.py unchanged; a negative control proves a rule that fails to compile is REFUSED, not reported passed. Migration cost: the field-mapping table plus a 7-state-to-4-state result shim; deletes ~25 lines and adds a declared-vs-executed reconciliation we do not need today. Falsified by: A7, A8 or A12 silently landing in an uninterpreted customProperties bag and being called adopted.",
+            "basis": "DERIVED"
+          }
+        },
+        {
+          "ts": 1788061730.9338074,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "note",
+            "ref": "ODCS (Apache-2.0, v3.1.0 2025-12-08) is the consolidated standard - the older Data Contract Specification carries a deprecation notice pointing at it, supported only to end of 2026, so fragmentation risk is gone. Adopting the FORMAT makes the questionnaire an editor for a portable artefact. Adopting its JUDGEMENT is refused: grepping the full 2,929-line ODCS JSON Schema, 'tenant' appears ONCE, contract-level, type string, descriptive - A12 has no first-class form, and neither do A7 (this-run provenance) or A8 (landed==emitted); the root is additionalProperties:false so they fall into an untyped customProperties bag nothing interprets. And datacontract-cli's create_checks.py (673 lines, read at main) has SEVEN logger.warning(...) -> return [] paths and never imports Run, so a declared rule that cannot compile emits zero checks, never reaches the structured result, and the run still reports passed. That is bash-guard.sh exiting 127, inside the candidate. Depends on BVA-01.",
+            "basis": "MEASURED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "c295ce8e",
+      "title": "BVA-06 - P2 One adapter contract plus a mutation-tested battery for every adopted boundary",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [
+        {
+          "kind": "citation",
+          "ref": "python -m pytest tests/test_adapter_contract.py | acceptance: a single adapter contract exists; one battery proves every adapter maps instrument-absent to UNMEASURABLE and not FAIL; each mapping is mutation-tested via mutate_and_expect_failure; the battery FAILS when an adapter is deliberately broken. Migration cost: this is the uncounted half of every ADOPT ticket and its cost belongs in all of them, not here. Falsified by: the battery passing when an adapter is mutated to return FAIL for a missing instrument.",
+          "basis": "DERIVED"
+        },
+        {
+          "kind": "note",
+          "ref": "contract.py:52-58 converts ANY instrument exception to UNMEASURABLE - 'a crash is not a pass' - and contract.py:73-85 ranks FAIL > UNMEASURABLE > PASS. Every adopted tool returns a boolean or boolean-plus-message, so each adapter must decide, for that library's every failure mode, whether no-result means FAIL or UNMEASURABLE. Each adoption is therefore a new place UNMEASURABLE can silently become FAIL, and no test guards an adapter boundary today because no adapter exists. Uniform precedence is the product; component-by-component adoption can be individually rational and collectively destroy it. Depends on BVA-02 and BVA-04.",
+          "basis": "DERIVED"
+        }
+      ],
+      "events": [
+        {
+          "ts": 1788061730.934321,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "BVA-06 - P2 One adapter contract plus a mutation-tested battery for every adopted boundary",
+            "parent": null
+          }
+        },
+        {
+          "ts": 1788061730.9345877,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "citation",
+            "ref": "python -m pytest tests/test_adapter_contract.py | acceptance: a single adapter contract exists; one battery proves every adapter maps instrument-absent to UNMEASURABLE and not FAIL; each mapping is mutation-tested via mutate_and_expect_failure; the battery FAILS when an adapter is deliberately broken. Migration cost: this is the uncounted half of every ADOPT ticket and its cost belongs in all of them, not here. Falsified by: the battery passing when an adapter is mutated to return FAIL for a missing instrument.",
+            "basis": "DERIVED"
+          }
+        },
+        {
+          "ts": 1788061730.9350123,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "note",
+            "ref": "contract.py:52-58 converts ANY instrument exception to UNMEASURABLE - 'a crash is not a pass' - and contract.py:73-85 ranks FAIL > UNMEASURABLE > PASS. Every adopted tool returns a boolean or boolean-plus-message, so each adapter must decide, for that library's every failure mode, whether no-result means FAIL or UNMEASURABLE. Each adoption is therefore a new place UNMEASURABLE can silently become FAIL, and no test guards an adapter boundary today because no adapter exists. Uniform precedence is the product; component-by-component adoption can be individually rational and collectively destroy it. Depends on BVA-02 and BVA-04.",
+            "basis": "DERIVED"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cd2a7aa5",
+      "title": "BVA-07 - P3 Retitle the public claim: UNMEASURABLE must survive aggregation",
+      "owner": null,
+      "parent": null,
+      "status": "open",
+      "blocked_by": [],
+      "evidence": [
+        {
+          "kind": "citation",
+          "ref": "acceptance: the write-up claims only that UNMEASURABLE must survive aggregation as a refusal - not dropped from the denominator, not counted as passed, not scored as failed, with no configuration path to defeat it - and cites Scorecard, OHDSI summarizeResults.R, XCCDF result_scoring.c and GE expectation_validation_result.py as the contrast set. Migration cost: none, it is a claim change. Falsified by: the published text still asserting that a fourth verdict is itself uncommon.",
+          "basis": "MEASURED"
+        },
+        {
+          "kind": "note",
+          "ref": "BUILD-VS-ADOPT-PROMPT.md's closing claim - 'I do not recall seeing UNMEASURABLE as a first-class feature in any scorecard or data-quality product' - is refuted by six sources read at primary: OpenSSF Scorecard InconclusiveResultScore = -1 (and it FIRES: checks/evaluation/code_review.go calls CreateInconclusiveResult); Soda Core CheckOutcome.NOT_EVALUATED vs EXCLUDED; datacontract-cli ResultEnum with seven members; Dagster EXECUTION_FAILED / SKIPPED with those meanings in source comments; W3C EARL earl:CannotTell and earl:NotTested; XCCDF/NIST IR 7275 ERROR/UNKNOWN/NOT_CHECKED. As drafted the claim is falsifiable in four minutes. What survives is that EVERY one of them discards it at the aggregate: Scorecard drops it from the denominator so 10 of 18 inconclusive can still score 10.0/10; OHDSI computes countPassed = countTotal - countOverallFailed so notApplicable and isError round UP to passed; XCCDF scores ERROR and UNKNOWN as 0.0, identical to fail; GE computes unsuccessful = evaluated - successful with successful = sum(exp.success or False) so a crashed instrument counts as failing; Grafana ships a Set-Normal handler for No-Data; pytest greens skipped and xfailed by default. readiness.py:1176 keeps it in the denominator. The representation problem is solved everywhere; the aggregation problem is solved nowhere.",
+          "basis": "MEASURED"
+        }
+      ],
+      "events": [
+        {
+          "ts": 1788061730.9354262,
+          "actor": "human",
+          "kind": "create",
+          "data": {
+            "title": "BVA-07 - P3 Retitle the public claim: UNMEASURABLE must survive aggregation",
+            "parent": null
+          }
+        },
+        {
+          "ts": 1788061730.9357076,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "citation",
+            "ref": "acceptance: the write-up claims only that UNMEASURABLE must survive aggregation as a refusal - not dropped from the denominator, not counted as passed, not scored as failed, with no configuration path to defeat it - and cites Scorecard, OHDSI summarizeResults.R, XCCDF result_scoring.c and GE expectation_validation_result.py as the contrast set. Migration cost: none, it is a claim change. Falsified by: the published text still asserting that a fourth verdict is itself uncommon.",
+            "basis": "MEASURED"
+          }
+        },
+        {
+          "ts": 1788061730.9359772,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "note",
+            "ref": "BUILD-VS-ADOPT-PROMPT.md's closing claim - 'I do not recall seeing UNMEASURABLE as a first-class feature in any scorecard or data-quality product' - is refuted by six sources read at primary: OpenSSF Scorecard InconclusiveResultScore = -1 (and it FIRES: checks/evaluation/code_review.go calls CreateInconclusiveResult); Soda Core CheckOutcome.NOT_EVALUATED vs EXCLUDED; datacontract-cli ResultEnum with seven members; Dagster EXECUTION_FAILED / SKIPPED with those meanings in source comments; W3C EARL earl:CannotTell and earl:NotTested; XCCDF/NIST IR 7275 ERROR/UNKNOWN/NOT_CHECKED. As drafted the claim is falsifiable in four minutes. What survives is that EVERY one of them discards it at the aggregate: Scorecard drops it from the denominator so 10 of 18 inconclusive can still score 10.0/10; OHDSI computes countPassed = countTotal - countOverallFailed so notApplicable and isError round UP to passed; XCCDF scores ERROR and UNKNOWN as 0.0, identical to fail; GE computes unsuccessful = evaluated - successful with successful = sum(exp.success or False) so a crashed instrument counts as failing; Grafana ships a Set-Normal handler for No-Data; pytest greens skipped and xfailed by default. readiness.py:1176 keeps it in the denominator. The representation problem is solved everywhere; the aggregation problem is solved nowhere.",
+            "basis": "MEASURED"
+          }
+        }
+      ]
+    },
+    {
       "id": "77a65215",
       "title": "CIP-01 - P0 Action or reject AB-01..AB-19, each in writing",
       "owner": null,
@@ -564,6 +819,11 @@
           "kind": "crossref",
           "ref": "AMBIGUOUS-as-written, do not close against windsorai: A1-A12 already PASS for windsorai/CLIENT-A (`python -m factory.certify blueprints/windsorai_client_a.yaml --calibrate` -> PASS=12, REPLAYED). But P1 means the PILOT connector and CIP-03 (pick it) is still open. Read 'certify the pilot connector chosen in CIP-03'; windsorai is the WORKED EXAMPLE this must reproduce, not the deliverable.",
           "basis": "MEASURED"
+        },
+        {
+          "kind": "note",
+          "ref": "BUILD-VS-ADOPT prospect pass 2026-08-29 promotes this to the gate on ALL adoption. python -m factory.launch prints 'certified NOT_RUN - 12 assertions have no instrument wired'. factory/live_probes.py wires A1 and A5 ONLY and its docstring notes both are reachable 'with no credential and no network call'; every other verb inherits Probes._refuse (10 sites in connector_contract.py). So A2,A3,A4,A6,A7,A8,A9,A10,A11,A12 have never been evaluated against a live target. Consequence: every migration cost in docs/reviews/build-vs-adopt-2026-08-29.md is priced against interfaces that have never carried traffic - A9 cannot be compared with pandera on merit because A9 has never done anything. NO ADOPT VERDICT SHOULD BE ACTIONED BEFORE THIS TICKET CLOSES. Cheapest path is wiring A2 and A7 against blueprints/windsorai_client_a.yaml.",
+          "basis": "MEASURED"
         }
       ],
       "events": [
@@ -592,6 +852,16 @@
           "kind": "block",
           "data": {
             "by": "CIP-04"
+          }
+        },
+        {
+          "ts": 1788061730.9363225,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "note",
+            "ref": "BUILD-VS-ADOPT prospect pass 2026-08-29 promotes this to the gate on ALL adoption. python -m factory.launch prints 'certified NOT_RUN - 12 assertions have no instrument wired'. factory/live_probes.py wires A1 and A5 ONLY and its docstring notes both are reachable 'with no credential and no network call'; every other verb inherits Probes._refuse (10 sites in connector_contract.py). So A2,A3,A4,A6,A7,A8,A9,A10,A11,A12 have never been evaluated against a live target. Consequence: every migration cost in docs/reviews/build-vs-adopt-2026-08-29.md is priced against interfaces that have never carried traffic - A9 cannot be compared with pandera on merit because A9 has never done anything. NO ADOPT VERDICT SHOULD BE ACTIONED BEFORE THIS TICKET CLOSES. Cheapest path is wiring A2 and A7 against blueprints/windsorai_client_a.yaml.",
+            "basis": "MEASURED"
           }
         }
       ]
@@ -711,7 +981,13 @@
       "blocked_by": [
         "CIP-08"
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "kind": "note",
+          "ref": "BUILD-VS-ADOPT prospect pass 2026-08-29: this is ALREADY BUILT upstream. datacontract-cli's imports/snowflake_importer.py (576 lines) opens a live Snowflake connection, queries information_schema.table_privileges for roles/grants, and emits a populated OpenDataContractStandard with servers, schema objects, SchemaProperty (including required, logical/physical types, maxLength) and DataQuality entries. 'datacontract import --format snowflake' produces the pre-filled contract a client confirms rather than types. There are 32 importers in the tree including powerbi_importer.py. Rescope this ticket to the mapping, not the probe. Depends on BVA-04 for the artefact choice.",
+          "basis": "MEASURED"
+        }
+      ],
       "events": [
         {
           "ts": 1788038294.1701806,
@@ -729,6 +1005,16 @@
           "data": {
             "by": "CIP-08"
           }
+        },
+        {
+          "ts": 1788061730.9373083,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "note",
+            "ref": "BUILD-VS-ADOPT prospect pass 2026-08-29: this is ALREADY BUILT upstream. datacontract-cli's imports/snowflake_importer.py (576 lines) opens a live Snowflake connection, queries information_schema.table_privileges for roles/grants, and emits a populated OpenDataContractStandard with servers, schema objects, SchemaProperty (including required, logical/physical types, maxLength) and DataQuality entries. 'datacontract import --format snowflake' produces the pre-filled contract a client confirms rather than types. There are 32 importers in the tree including powerbi_importer.py. Rescope this ticket to the mapping, not the probe. Depends on BVA-04 for the artefact choice.",
+            "basis": "MEASURED"
+          }
         }
       ]
     },
@@ -741,7 +1027,13 @@
       "blocked_by": [
         "CIP-08"
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "kind": "note",
+          "ref": "BUILD-VS-ADOPT prospect pass 2026-08-29: mostly built upstream, and the plan's load-bearing claim is already shipped by someone else. 'datacontract edit <file>' starts a local FastAPI/uvicorn server on 127.0.0.1:4243, serves a form editor from assets vendored into the pip package ('the editor works offline without any CDN access'), and mounts /test on the SAME server - so editing the spec and running the acceptance test are one UI over one artefact. What stays BUILD is the part that was always hard: 20-30 questions in business language (it is an engineer's editor over ~100 ODCS fields), plus auth/RLS and submit-to-PR, which are CIP-12/CIP-13 and untouched. TWO CHECKS BEFORE ANY CLIENT USE: read CUSTOMIZATION.md (if the form can be cut to a business-language subset the BUILD half shrinks to near zero - highest-value unread document in this area), and prove the editor's bundled AI Assistant is OFF in the pip build or contract content leaves the estate - that is NOT-VERIFIED. Part 4's own leads die: Formbricks needs Postgres+Redis+Next.js under Docker (K1 fail) and is AGPLv3 with a proprietary EE tier; rjsf/JSONForms are React renderers with no pre-fill, so the probe is our code either way.",
+          "basis": "MEASURED"
+        }
+      ],
       "events": [
         {
           "ts": 1788038294.1704516,
@@ -758,6 +1050,16 @@
           "kind": "block",
           "data": {
             "by": "CIP-08"
+          }
+        },
+        {
+          "ts": 1788061730.9375994,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "note",
+            "ref": "BUILD-VS-ADOPT prospect pass 2026-08-29: mostly built upstream, and the plan's load-bearing claim is already shipped by someone else. 'datacontract edit <file>' starts a local FastAPI/uvicorn server on 127.0.0.1:4243, serves a form editor from assets vendored into the pip package ('the editor works offline without any CDN access'), and mounts /test on the SAME server - so editing the spec and running the acceptance test are one UI over one artefact. What stays BUILD is the part that was always hard: 20-30 questions in business language (it is an engineer's editor over ~100 ODCS fields), plus auth/RLS and submit-to-PR, which are CIP-12/CIP-13 and untouched. TWO CHECKS BEFORE ANY CLIENT USE: read CUSTOMIZATION.md (if the form can be cut to a business-language subset the BUILD half shrinks to near zero - highest-value unread document in this area), and prove the editor's bundled AI Assistant is OFF in the pip build or contract content leaves the estate - that is NOT-VERIFIED. Part 4's own leads die: Formbricks needs Postgres+Redis+Next.js under Docker (K1 fail) and is AGPLv3 with a proprietary EE tier; rjsf/JSONForms are React renderers with no pre-fill, so the probe is our code either way.",
+            "basis": "MEASURED"
           }
         }
       ]
@@ -2640,6 +2942,16 @@
           "kind": "note",
           "ref": "The configurator exists (presets.py: 5 baseline presets with model, effort, caps, escalation and refusals, chosen by ticket type). The certifier exists (A1-A12). Nothing runs a TeamSpec: grep for TeamSpec or load_team outside blueprint.py returns nothing, and SYNTHESIS \u00a711.5 found the same independently. Sequenced AFTER RUN-01/02 deliberately: an executor built before the bounds is an unbounded executor, which is the thing that re-dispatched all night.",
           "basis": "MEASURED"
+        },
+        {
+          "kind": "note",
+          "ref": "BUILD-VS-ADOPT prospect pass 2026-08-29 answers HOW to build this: hand-roll the RunController, adopt the Claude Agent SDK as transport only. The six frameworks in Part 4 cover 3 of 8 requirements - worktree isolation, lane claiming, the persisted retry ledger, the event ledger and the verdict model are ABSENT from all of them. AutoGen README: 'AutoGen is now in maintenance mode.' CrewAI's core abstraction (role/goal/backstory, hierarchical process that 'automatically assigns a manager to the defined crew') IS the topology orchestrator_team.yaml rejects on a 180-configuration study, and it owns control flow so it cannot be layered below GreenContract. SWE-agent (2025-05-22) and Aider (2025-08-09) fail on release staleness. LangGraph drags langsmith, a hosted telemetry client, as the first entry of langchain-core's MANDATORY dependencies.",
+          "basis": "MEASURED"
+        },
+        {
+          "kind": "citation",
+          "ref": "Pricing | ~370-510 new lines hand-rolled, ~310-420 with the Claude Agent SDK, on top of 1,682 lines that already exist and work (claims 390, presets 309, runs 239, tasks 144, worktrees 130, contract 115, blueprint 90, deploy 265). LangGraph alone costs 150-300 lines of event-model adaptation PLUS the framework. The SDK (MIT, v0.2.148 2026-08-28, windows-latest CI, 5 runtime deps) costs NEGATIVE lines: deploy.py:230-234 already hard-codes --max-turns/--max-budget-usd/--output-format stream-json/--model against an undocumented, unversioned, unpinned argv surface, so the SDK makes an existing invisible coupling typed and pinnable. It has no verdict model, so it sits below GreenContract. Also: of deploy.py's 265 lines, 140 are AttemptLedger - a cap that survives restart - and every framework's budget control is per-invocation and resets, which is the exact bug AttemptLedger was written to fix.",
+          "basis": "DERIVED"
         }
       ],
       "events": [
@@ -2670,6 +2982,26 @@
             "kind": "note",
             "ref": "The configurator exists (presets.py: 5 baseline presets with model, effort, caps, escalation and refusals, chosen by ticket type). The certifier exists (A1-A12). Nothing runs a TeamSpec: grep for TeamSpec or load_team outside blueprint.py returns nothing, and SYNTHESIS \u00a711.5 found the same independently. Sequenced AFTER RUN-01/02 deliberately: an executor built before the bounds is an unbounded executor, which is the thing that re-dispatched all night.",
             "basis": "MEASURED"
+          }
+        },
+        {
+          "ts": 1788061730.9366426,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "note",
+            "ref": "BUILD-VS-ADOPT prospect pass 2026-08-29 answers HOW to build this: hand-roll the RunController, adopt the Claude Agent SDK as transport only. The six frameworks in Part 4 cover 3 of 8 requirements - worktree isolation, lane claiming, the persisted retry ledger, the event ledger and the verdict model are ABSENT from all of them. AutoGen README: 'AutoGen is now in maintenance mode.' CrewAI's core abstraction (role/goal/backstory, hierarchical process that 'automatically assigns a manager to the defined crew') IS the topology orchestrator_team.yaml rejects on a 180-configuration study, and it owns control flow so it cannot be layered below GreenContract. SWE-agent (2025-05-22) and Aider (2025-08-09) fail on release staleness. LangGraph drags langsmith, a hosted telemetry client, as the first entry of langchain-core's MANDATORY dependencies.",
+            "basis": "MEASURED"
+          }
+        },
+        {
+          "ts": 1788061730.9370193,
+          "actor": "claude",
+          "kind": "evidence",
+          "data": {
+            "kind": "citation",
+            "ref": "Pricing | ~370-510 new lines hand-rolled, ~310-420 with the Claude Agent SDK, on top of 1,682 lines that already exist and work (claims 390, presets 309, runs 239, tasks 144, worktrees 130, contract 115, blueprint 90, deploy 265). LangGraph alone costs 150-300 lines of event-model adaptation PLUS the framework. The SDK (MIT, v0.2.148 2026-08-28, windows-latest CI, 5 runtime deps) costs NEGATIVE lines: deploy.py:230-234 already hard-codes --max-turns/--max-budget-usd/--output-format stream-json/--model against an undocumented, unversioned, unpinned argv surface, so the SDK makes an existing invisible coupling typed and pinnable. It has no verdict model, so it sits below GreenContract. Also: of deploy.py's 265 lines, 140 are AttemptLedger - a cap that survives restart - and every framework's budget control is per-invocation and resets, which is the exact bug AttemptLedger was written to fix.",
+            "basis": "DERIVED"
           }
         }
       ]

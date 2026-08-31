@@ -552,6 +552,66 @@ footer b{color:var(--ink-2)}
   "status": "blocked"
  },
  {
+  "id": "BVA-01",
+  "p": "P0",
+  "t": "Add g_dependencies_are_pinned; lockfile gate, prerequisite to any ADOPT",
+  "track": "factory",
+  "e": "M",
+  "dep": [],
+  "why": "Measured 2026-08-29: pyproject.toml:6 declares dependencies = ['pyyaml>=6.0']; no uv.lock, poetry.lock, requirements.txt, Pipfile.lock or constraints.txt exists; there is no .github/ directory so no CI runs; and none of the 27 readiness gates measures a dependency. The repo gates a corpus byte changing (corpus.py:89-96 raises CorpusError) and does not gate its grader's dependencies changing. Any adopted tool's minor release could collapse a four-state verdict model with nothing between it and GreenContract. This gates BVA-02 and BVA-04.",
+  "acc": "a lockfile exists and is current; a gate dependencies-pinned reports PASS; a test asserts the verdict enum of every adopted judgement library and FAILS when a member is removed. Migration cost: one gate plus a lockfile, no runtime dependency added. Falsified by: the gate passing with no lockfile present, or the enum test passing when a verdict member is deleted.",
+  "ev": "python -m factory.readiness",
+  "status": "open"
+ },
+ {
+  "id": "BVA-02",
+  "p": "P1",
+  "t": "Replace claims.py hand-rolled _exclusive() with tox-dev/filelock",
+  "track": "factory",
+  "e": "M",
+  "dep": [],
+  "why": "tox-dev/filelock, Unlicense, zero transitive dependencies, last release 3.32.4 on 2026-08-23 (api.github.com). It exists to handle exactly the Windows EACCES-vs-EEXIST race that claims.py:225's own comment records being bitten by: 'On Windows, O_CREAT|O_EXCL against a file that another thread is concurrently deleting raises EACCES rather than EEXIST... Twenty racing threads reproduce it every time; two rarely do.' grep -rn filelock across this repo returns NOTHING - it is in no code, no doc and no pyproject. BUILD-VS-ADOPT-PROMPT.md Part 4 has no locking row at all, so the search never ran. This is the direct answer to that document's question 3, 'what am I about to build that already exists and I clearly do not know about'. K1/K2/K3/K4 all pass.",
+  "acc": "claims.py:200-247 replaced by filelock; the 20-concurrent-thread race test still passes on Windows; no verdict semantics change. Migration cost: ~48 lines deleted, one zero-transitive-dependency package added, zero adapter required because a lock is not a judgement. Falsified by: any change to a PASS/FAIL/UNMEASURABLE outcome, or the race test failing under 20 threads.",
+  "ev": "pytest tests/ -k claim",
+  "status": "open"
+ },
+ {
+  "id": "BVA-04",
+  "p": "P2",
+  "t": "Reshape ConnectorTarget onto ODCS as the contract artefact, keep our validator",
+  "track": "factory",
+  "e": "M",
+  "dep": [],
+  "why": "ODCS (Apache-2.0, v3.1.0 2025-12-08) is the consolidated standard - the older Data Contract Specification carries a deprecation notice pointing at it, supported only to end of 2026, so fragmentation risk is gone. Adopting the FORMAT makes the questionnaire an editor for a portable artefact. Adopting its JUDGEMENT is refused: grepping the full 2,929-line ODCS JSON Schema, 'tenant' appears ONCE, contract-level, type string, descriptive - A12 has no first-class form, and neither do A7 (this-run provenance) or A8 (landed==emitted); the root is additionalProperties:false so they fall into an untyped customProperties bag nothing interprets. And datacontract-cli's create_checks.py (673 lines, read at main) has SEVEN logger.warning(...) -> return [] paths and never imports Run, so a declared rule that cannot compile emits zero checks, never reaches the structured result, and the run still reports passed. That is bash-guard.sh exiting 127, inside the candidate. Depends on BVA-01.",
+  "acc": "ConnectorTarget's 22 fields each map to a named ODCS field or to a documented customProperties extension, field by field, with the mapping table committed; factory/contract.py unchanged; a negative control proves a rule that fails to compile is REFUSED, not reported passed. Migration cost: the field-mapping table plus a 7-state-to-4-state result shim; deletes ~25 lines and adds a declared-vs-executed reconciliation we do not need today. Falsified by: A7, A8 or A12 silently landing in an uninterpreted customProperties bag and being called adopted.",
+  "ev": "python -m pytest tests/test_connector_contract.py",
+  "status": "open"
+ },
+ {
+  "id": "BVA-06",
+  "p": "P2",
+  "t": "One adapter contract plus a mutation-tested battery for every adopted boundary",
+  "track": "factory",
+  "e": "M",
+  "dep": [],
+  "why": "contract.py:52-58 converts ANY instrument exception to UNMEASURABLE - 'a crash is not a pass' - and contract.py:73-85 ranks FAIL > UNMEASURABLE > PASS. Every adopted tool returns a boolean or boolean-plus-message, so each adapter must decide, for that library's every failure mode, whether no-result means FAIL or UNMEASURABLE. Each adoption is therefore a new place UNMEASURABLE can silently become FAIL, and no test guards an adapter boundary today because no adapter exists. Uniform precedence is the product; component-by-component adoption can be individually rational and collectively destroy it. Depends on BVA-02 and BVA-04.",
+  "acc": "a single adapter contract exists; one battery proves every adapter maps instrument-absent to UNMEASURABLE and not FAIL; each mapping is mutation-tested via mutate_and_expect_failure; the battery FAILS when an adapter is deliberately broken. Migration cost: this is the uncounted half of every ADOPT ticket and its cost belongs in all of them, not here. Falsified by: the battery passing when an adapter is mutated to return FAIL for a missing instrument.",
+  "ev": "python -m pytest tests/test_adapter_contract.py",
+  "status": "open"
+ },
+ {
+  "id": "BVA-07",
+  "p": "P3",
+  "t": "Retitle the public claim: UNMEASURABLE must survive aggregation",
+  "track": "factory",
+  "e": "M",
+  "dep": [],
+  "why": "BUILD-VS-ADOPT-PROMPT.md's closing claim - 'I do not recall seeing UNMEASURABLE as a first-class feature in any scorecard or data-quality product' - is refuted by six sources read at primary: OpenSSF Scorecard InconclusiveResultScore = -1 (and it FIRES: checks/evaluation/code_review.go calls CreateInconclusiveResult); Soda Core CheckOutcome.NOT_EVALUATED vs EXCLUDED; datacontract-cli ResultEnum with seven members; Dagster EXECUTION_FAILED / SKIPPED with those meanings in source comments; W3C EARL earl:CannotTell and earl:NotTested; XCCDF/NIST IR 7275 ERROR/UNKNOWN/NOT_CHECKED. As drafted the claim is falsifiable in four minutes. What survives is that EVERY one of them discards it at the aggregate: Scorecard drops it from the denominator so 10 of 18 inconclusive can still score 10.0/10; OHDSI computes countPassed = countTotal - countOverallFailed so notApplicable and isError round UP to passed; XCCDF scores ERROR and UNKNOWN as 0.0, identical to fail; GE computes unsuccessful = evaluated - successful with successful = sum(exp.success or False) so a crashed instrument counts as failing; Grafana ships a Set-Normal handler for No-Data; pytest greens skipped and xfailed by default. readiness.py:1176 keeps it in the denominator. The representation problem is solved everywhere; the aggregation problem is solved nowhere.",
+  "acc": "<b>No acceptance criterion recorded.</b> Until one exists this is a <i>decide</i> ticket, not a <i>build</i> ticket.",
+  "ev": "acceptance: the write-up claims only that UNMEASURABLE must survive aggregation as a refusal - not dropped from the denominator, not counted as passed, not scored as failed, with no configuration path to defeat it - and cites Scorecard, OHDSI summarizeResults.R, XCCDF result_scoring.c and GE expectation_validation_result.py as the contrast set. Migration cost: none, it is a claim change. Falsified by: the published text still asserting that a fourth verdict is itself uncommon.",
+  "status": "open"
+ },
+ {
   "id": "CIP-21",
   "p": "P1",
   "t": "Wire deploy.py budget enforcement into the live launch path",

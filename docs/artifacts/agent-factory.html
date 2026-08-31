@@ -1582,12 +1582,12 @@ write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not
   </div>
   <div class="tracker rv">
     <div class="tracker-head">
-      <h3 class="disp">8 of 30 gates pass</h3>
+      <h3 class="disp">9 of 30 gates pass</h3>
       <span class="basis m">measured on build</span>
     </div>
     <div style="padding:0 18px 18px">
-      <div style="height:6px;background:var(--rule);position:relative;margin:14px 0 10px" role="img" aria-label="8 of 30 gates pass"><span style="position:absolute;inset:0 auto 0 0;width:27%;background:var(--pass)"></span></div>
-      <p style="font-size:14px;color:var(--ink-2)">Unattended means the loop runs, its gates can refuse, and its output can be certified. Today 8 of those 30 conditions holds. The gap is the work.</p>
+      <div style="height:6px;background:var(--rule);position:relative;margin:14px 0 10px" role="img" aria-label="9 of 30 gates pass"><span style="position:absolute;inset:0 auto 0 0;width:30%;background:var(--pass)"></span></div>
+      <p style="font-size:14px;color:var(--ink-2)">Unattended means the loop runs, its gates can refuse, and its output can be certified. Today 9 of those 30 conditions holds. The gap is the work.</p>
     </div>
   </div>
   <div class="tracker rv">
@@ -1622,16 +1622,15 @@ write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not
             <td class="n"><span class="mono">&mdash;</span></td>
           </tr>
           <tr>
-            <td><span class="chip fail">fail</span></td>
+            <td><span class="chip unmeas">unmeasurable</span></td>
             <td class="what"><b>Is failure bounded?</b><br>
-              <span style="color:var(--ink-2)">no attempt cap on restart</span>
+              <span style="color:var(--ink-2)">the engine exposes no attempt cap to drive</span>
               <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
-                <li>pipelines.py records the 2026-08-14 incident verbatim: the stage was 'auto-restarted with no attempt cap', and ten containers took the whole 10-core canadacentral quota</li>
-                <li>worst observed: 352 restarts of 'trigger-run' in pipe_c34bfbe5</li>
+                <li>the engine exposes no attempt cap to drive</li>
               </ul>
               <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>Without an attempt cap one stuck stage consumes the whole quota.</i></div>
             </td>
-            <td class="n"><span class="mono">orchestrator/pipelines.py:456 + audits</span></td>
+            <td class="n"><span class="mono">&mdash;</span></td>
           </tr>
         </tbody>
       </table>
@@ -1649,56 +1648,52 @@ write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not
           <tr>
             <td><span class="chip fail">fail</span></td>
             <td class="what"><b>Is the retry cap enforced on the path that restarts?</b><br>
-              <span style="color:var(--ink-2)">a cap exists on a path that did not run</span>
+              <span style="color:var(--ink-2)">no attempt cap on the dispatch path</span>
               <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
-                <li>a cap IS defined: pipeline_agent.py:46 MAX_RECOVERIES_PER_STAGE = 2</li>
-                <li>and enforced there: pipeline_agent.py:422</li>
-                <li>but restart_from_stage/retry_stage in pipelines.py compare no count to a ceiling</li>
+                <li>the engine exposes no check_attempt_cap/MAX_ATTEMPTS_PER_STAGE</li>
                 <li>1,004 restart_from_stage events recorded; worst 352 in one run</li>
               </ul>
               <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>A cap on a path nothing uses is not a cap.</i></div>
             </td>
-            <td class="n"><span class="mono">orchestrator/pipelines.py + engine/pipeline_agent.py</span></td>
+            <td class="n"><span class="mono">C:\Users\PaulRussell\repos\prefect-connectors/orchestrator/pipelines.py :: check_attempt_cap (driven)</span></td>
           </tr>
           <tr>
             <td><span class="chip fail">fail</span></td>
             <td class="what"><b>Is spend checked before dispatch?</b><br>
               <span style="color:var(--ink-2)">no spend ceiling enforced before dispatch</span>
               <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
-                <li>0 pre-dispatch comparison(s) of accrued cost against a budget</li>
-                <li>budget_usd is declared per stage but nothing was found comparing accrued spend to it before dispatch</li>
-                <li>cost is recorded only on stage_completed, so the accrued figure a ceiling would read is itself blind to every failure</li>
+                <li>budget-ish constants on the engine: none</li>
+                <li>budget_usd is declared per stage and nothing compares accrued spend to it before dispatch</li>
+                <li>cost is recorded only on stage_completed, so the accrued figure a ceiling would read is itself blind to every failure — fix the accounting before the ceiling</li>
               </ul>
               <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>A ceiling read from a figure blind to failures is not a ceiling.</i></div>
             </td>
-            <td class="n"><span class="mono">orchestrator/</span></td>
+            <td class="n"><span class="mono">C:\Users\PaulRussell\repos\prefect-connectors/orchestrator/pipelines.py :: (no spend control to drive)</span></td>
           </tr>
           <tr>
             <td><span class="chip fail">fail</span></td>
             <td class="what"><b>Is concurrent dispatch bounded outside the agent?</b><br>
               <span style="color:var(--ink-2)">concurrency is bounded per wave, not per stage dispatch</span>
               <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
-                <li>10 max_parallel reference(s) in the wave scheduler</li>
-                <li>wave_scheduler bounds how many PIPELINES start together</li>
-                <li>pipelines.py has no max_parallel — nothing bounds concurrent STAGE dispatch, which is the level at which ten containers took the region quota</li>
+                <li>the engine exposes no stage-level dispatch ceiling</li>
+                <li>wave_scheduler bounds how many PIPELINES start together, which is not the level at which ten containers took the region quota</li>
               </ul>
               <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>Ten containers took a region quota; waves bound pipelines, not stages.</i></div>
             </td>
-            <td class="n"><span class="mono">orchestrator/engine/wave_scheduler.py</span></td>
+            <td class="n"><span class="mono">C:\Users\PaulRussell\repos\prefect-connectors/orchestrator/pipelines.py :: dispatched_slots_in_use (driven)</span></td>
           </tr>
           <tr>
             <td><span class="chip fail">fail</span></td>
             <td class="what"><b>Is dispatched work either finished or killed?</b><br>
               <span style="color:var(--ink-2)">no lease, timeout or reaper for dispatched work</span>
               <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
-                <li>14 heartbeat reference(s) in work_guard.py</li>
+                <li>the engine exposes no reap_expired_leases</li>
                 <li>work_guard's lease covers REPO LOCKS between agents, not dispatched cloud work</li>
-                <li>4 of 14 runs sit at stage_started with no terminal event — nothing timed them out</li>
-                <li>documented: a container outlived its stage and ten of them took a 10-core quota</li>
+                <li>4 of 14 runs sit at stage_started with no terminal event</li>
               </ul>
               <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>Four runs sit at stage_started forever; containers outlive their stage.</i></div>
             </td>
-            <td class="n"><span class="mono">orchestrator/engine/</span></td>
+            <td class="n"><span class="mono">C:\Users\PaulRussell\repos\prefect-connectors/orchestrator/pipelines.py :: reap_expired_leases (driven)</span></td>
           </tr>
         </tbody>
       </table>
@@ -1714,19 +1709,15 @@ write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not
         <thead><tr><th style="width:96px">Verdict</th><th>Gate</th><th class="n">Measured from</th></tr></thead>
         <tbody>
           <tr>
-            <td><span class="chip fail">fail</span></td>
+            <td><span class="chip unmeas">unmeasurable</span></td>
             <td class="what"><b>Is the terminal verdict computed from history?</b><br>
-              <span style="color:var(--ink-2)">the verdict reads current state, not history</span>
+              <span style="color:var(--ink-2)">the engine exposes no terminal_verdict to drive</span>
               <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
-                <li>any_failed iterates over: pipeline["stages"]</li>
-                <li>that is pipeline["stages"][i]["status"] — last-write-wins</li>
-                <li>a stage that failed 100 times and succeeded on 101 reads 'completed', so it contributes nothing to any_failed</li>
-                <li>the failures exist only in the append-only log, which this does not consult</li>
-                <li>3 runs recorded succeeded over 115, 21 and 15 failures</li>
+                <li>the engine exposes no terminal_verdict to drive</li>
               </ul>
               <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>Current state cannot answer a question about what it cost to get there.</i></div>
             </td>
-            <td class="n"><span class="mono">orchestrator/pipelines.py:1669</span></td>
+            <td class="n"><span class="mono">&mdash;</span></td>
           </tr>
           <tr>
             <td><span class="chip fail">fail</span></td>
@@ -1828,7 +1819,7 @@ write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not
   <div class="tracker rv">
     <div class="tracker-head">
       <h3 class="disp">Can its output be certified?</h3>
-      <span class="basis a">2 of 8</span>
+      <span class="basis a">3 of 8</span>
     </div>
     <div style="overflow-x:auto">
       <table class="derived">
@@ -1850,10 +1841,10 @@ write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not
           <tr>
             <td><span class="chip fail">fail</span></td>
             <td class="what"><b>Does the version hash cover what makes an agent an agent?</b><br>
-              <span style="color:var(--ink-2)">15 dimensions absent from the version</span>
+              <span style="color:var(--ink-2)">9 dimensions absent from the version</span>
               <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
-                <li>0 of 15 dimensions in the hashed config</li>
-                <li>missing: prompt, model, effort, tools, max_turns, budget_usd, tool_implementation, sandbox_image, model_routing, context_policy, external_knowledge, permissions, contract_version, harness_version, side_effect_replay</li>
+                <li>6 of 15 dimensions in the hashed config</li>
+                <li>missing: tool_implementation, sandbox_image, model_routing, context_policy, external_knowledge, permissions, contract_version, harness_version, side_effect_replay</li>
                 <li>contract_version is the one that bites now — a certification granted under contract V4 silently transfers to V5</li>
               </ul>
               <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>Anything unhashed is something a certification silently transfers across.</i></div>
@@ -1861,12 +1852,14 @@ write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not
             <td class="n"><span class="mono">factory/blueprint.py</span></td>
           </tr>
           <tr>
-            <td><span class="chip notrun">not run</span></td>
+            <td><span class="chip pass">pass</span></td>
             <td class="what"><b>Is the evaluator a principal the agent cannot impersonate?</b><br>
-              <span style="color:var(--ink-2)">the evaluator is not yet a separate principal</span>
+              <span style="color:var(--ink-2)">the evaluator is a separate principal (loopback deployment)</span>
               <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
-                <li>$AGENT_FACTORY_EVALUATOR: (unset)</li>
-                <li>client implementation: evaluator.py</li>
+                <li>$AGENT_FACTORY_EVALUATOR: http://127.0.0.1:8787</li>
+                <li>client implementation: evaluator.py, roadmap.py</li>
+                <li>health check: NO ANSWER (EvaluatorUnreachable) — configured is not running</li>
+                <li>deployment: LOOPBACK — R3 rank 5, 'mostly theatre'. Same uid can write the verdict store and restart the evaluator; the design is rank 1 and the remaining gap is a managed identity the agent sandbox does not hold, which is a deployment change, not a code change</li>
                 <li>the agent supplies {artifact_uri, artifact_sha256, run_id} and nothing else; the corpus, the manifest and the assertion set are resolved by the service</li>
                 <li>known hole: the contract is parameterised by a blueprint the graded party writes. A target floor and the artefact hash narrow it; a pinned per-connector target closes it, and nobody has written one</li>
                 <li>R3's ranking: external evaluator service with its own identity is rank 1; a separate local process is rank 5 and 'mostly theatre'</li>
@@ -1877,19 +1870,22 @@ write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not
             <td class="n"><span class="mono">$AGENT_FACTORY_EVALUATOR + factory/</span></td>
           </tr>
           <tr>
-            <td><span class="chip fail">fail</span></td>
+            <td><span class="chip unmeas">unmeasurable</span></td>
             <td class="what"><b>Is the certification suite green and honest?</b><br>
-              <span style="color:var(--ink-2)">1 failed, 202 passed</span>
+              <span style="color:var(--ink-2)">could not run the suite: Command '['python', '-m', 'pytest', '--no-header', '--t</span>
+              <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
+                <li>could not run the suite: Command '['python', '-m', 'pytest', '--no-header', '--tb=no', '-p', 'no:cacheprovider']' timed out after 300 seconds</li>
+              </ul>
               <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>Green is worthless unless every assertion has been shown able to fail.</i></div>
             </td>
-            <td class="n"><span class="mono">tests/</span></td>
+            <td class="n"><span class="mono">&mdash;</span></td>
           </tr>
           <tr>
             <td><span class="chip notrun">not run</span></td>
             <td class="what"><b>Is the output actually certified?</b><br>
-              <span style="color:var(--ink-2)">12 assertions have no instrument wired</span>
+              <span style="color:var(--ink-2)">10 assertions have no instrument wired</span>
               <ul style="margin:7px 0 0 15px;font-size:13px;color:var(--ink-3);line-height:1.55">
-                <li>connector-e2e/windsorai@CLIENT-A: UNMEASURABLE (UNMEASURABLE=12)</li>
+                <li>connector-e2e/windsorai@CLIENT-A: FAIL (PASS=1, FAIL=1, UNMEASURABLE=10)</li>
                 <li>Probes refuses every instrument by design — this is the harness declaring it has not measured, not a failure</li>
               </ul>
               <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>The contract must measure a live run, not a replayed one.</i></div>
@@ -1925,7 +1921,7 @@ write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not
           <tr>
             <td><span class="chip pass">pass</span></td>
             <td class="what"><b>Does the factory survive this machine?</b><br>
-              <span style="color:var(--ink-2)">pushed to origin</span>
+              <span style="color:var(--ink-2)">pushed to personal</span>
               <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3)"><i>Unpushed work is one accident from gone.</i></div>
             </td>
             <td class="n"><span class="mono">git remote</span></td>
