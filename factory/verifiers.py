@@ -31,6 +31,7 @@ from typing import Callable, Dict, Optional, Tuple
 
 from .contract import Unmeasurable, Verdict
 from .pbi_contract import CtxProbes, PbiTarget, build_contract
+from .redesign_contract import build_redesign_contract
 
 #: Same shape as `factory.control.Verifier`, restated rather than imported so this module does
 #: not depend on the controller — the controller imports this, and a cycle would make the
@@ -121,25 +122,12 @@ def _fold(res, what: str) -> Tuple[bool, str]:
     raise Unmeasurable(f"{what}: " + "; ".join(str(r) for r in res.failures()))
 
 
-# ------------------------------------------------------------------------------ the verifiers
+def _target_and_observations(ev: dict) -> Tuple[PbiTarget, dict]:
+    """The two halves of an evidence file, or Unmeasurable saying which half is missing.
 
-def pbi_model_change(ctx: dict) -> Tuple[bool, str]:
-    """Adjudicate a Power BI model change against `factory.pbi_contract`'s M1-M12.
-
-    `pbi_contract` has sat complete and unused since it was written — `roadmap.py` still carries
-    the line *"grep -rln pbi_contract tests/ factory/ scripts/ returns nothing"*. It is precisely
-    the deterministic check the `add-measure` preset already named in prose. This function is the
-    join between the two.
-
-    ⭐ **A green verdict here requires the consumer layer.** M10 (*every visual paints*) and M11
-    (*each control responds*) are assertions XMLA and DAX cannot make, and the contract refuses to
-    drop them. An agent that supplies only model-layer observations gets UNMEASURABLE — the honest
-    answer, because on GP-293 a repoint passed DAX parity while every visual rendered "Error
-    loading data". The standing rule that a dashboard change is validated at the *rendered
-    surface* is therefore enforced by the contract instead of remembered by a person.
+    Shared by both Power BI verifiers: they disagree about which contract adjudicates the
+    evidence, never about what a well-formed evidence file looks like.
     """
-    ev = read_evidence(ctx)
-
     target_kw = ev.get("target")
     if not isinstance(target_kw, dict):
         raise Unmeasurable(
@@ -159,9 +147,53 @@ def pbi_model_change(ctx: dict) -> Tuple[bool, str]:
         raise Unmeasurable(
             f"{EVIDENCE_RELPATH} carries no 'observations' object, so every probe would refuse "
             "and the contract could report only that it had not looked")
+    return target, observations
 
+
+# ------------------------------------------------------------------------------ the verifiers
+
+def pbi_model_change(ctx: dict) -> Tuple[bool, str]:
+    """Adjudicate a Power BI model change against `factory.pbi_contract`'s M1-M12.
+
+    `pbi_contract` has sat complete and unused since it was written — `roadmap.py` still carries
+    the line *"grep -rln pbi_contract tests/ factory/ scripts/ returns nothing"*. It is precisely
+    the deterministic check the `add-measure` preset already named in prose. This function is the
+    join between the two.
+
+    ⭐ **A green verdict here requires the consumer layer.** M10 (*every visual paints*) and M11
+    (*each control responds*) are assertions XMLA and DAX cannot make, and the contract refuses to
+    drop them. An agent that supplies only model-layer observations gets UNMEASURABLE — the honest
+    answer, because on GP-293 a repoint passed DAX parity while every visual rendered "Error
+    loading data". The standing rule that a dashboard change is validated at the *rendered
+    surface* is therefore enforced by the contract instead of remembered by a person.
+    """
+    ev = read_evidence(ctx)
+    target, observations = _target_and_observations(ev)
     return _fold(build_contract(target, CtxProbes()).run(observations),
                  f"the Power BI model contract for {target.dataset_id}")
+
+
+def pbi_model_redesign(ctx: dict) -> Tuple[bool, str]:
+    """Adjudicate a Power BI model REDESIGN against `factory.redesign_contract`'s M+R battery.
+
+    ⛔ **Not `pbi_model_change` with a bigger budget.** Two things were measured before this
+    existed, and either alone would have made reusing the M-contract dishonest:
+
+    * A redesign renames and deletes, so `additive_only` is false, so `M4` raises `Unmeasurable`
+      — *"blast radius uncertified"* — and the run is **permanently UNMEASURABLE**. Wiring that
+      would be a gate that cannot pass.
+    * Evidence carrying GP-318's signature defect — the Brand slicer responds, every visual
+      paints, and `ME Spend` returns the grand total for every brand — scores **PASS=12** under
+      the M-contract. The preset names that exact defect; nothing in M1-M12 can see it.
+
+    So `R2` replaces `M4` with the mechanism it said was missing, and `R3` is the assertion only
+    a slicing harness can make. `R1` and `R4` are the two halves of the pre/post battery the
+    preset asks for, each enumerated over the population rather than a sample.
+    """
+    ev = read_evidence(ctx)
+    target, observations = _target_and_observations(ev)
+    return _fold(build_redesign_contract(target, CtxProbes()).run(observations),
+                 f"the Power BI redesign contract for {target.dataset_id}")
 
 
 #: type_id -> the callable that owns that ticket type's verdict.
@@ -171,6 +203,7 @@ def pbi_model_change(ctx: dict) -> Tuple[bool, str]:
 #: either direction, so a half-landed wiring cannot ship.
 REGISTRY: Dict[str, Verifier] = {
     "add-measure": pbi_model_change,
+    "model-redesign": pbi_model_redesign,
 }
 
 

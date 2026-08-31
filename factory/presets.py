@@ -245,9 +245,21 @@ PRESETS: List[Preset] = [
             "zero, and publishing the difference is the defect this ticket type exists to fix. "
             "Must not overwrite live model state without asserting the before state first."
         ),
-        verifier="pre/post assertion battery — capture live state before overwriting, replay after. "
-                 "GP-318 caught 10 self-inflicted defects this way and review caught none",
-        verifier_state=AVAILABLE,
+        verifier=("factory.redesign_contract, adjudicated by verifiers.pbi_model_redesign over "
+                  "the agent's .factory/verification.json: M1-M12 with M4 replaced by R2, plus "
+                  "R1 the pre-state captured before the overwrite across the enumerated "
+                  "population, R2 every rename and deletion carrying dependents that were found "
+                  "and rewritten, R3 NO DECLARED AXIS IS INERT — no measure returning the same "
+                  "value, least of all the grand total, on every member of a dimension it must "
+                  "slice by — and R4 every captured measure actually replayed afterwards. "
+                  "GP-318 caught 10 self-inflicted defects this way and review caught none"),
+        # ⭐ Wired 2026-08-31 (F89), and NOT by reusing `add-measure`'s verifier. Two things were
+        # measured first, either of which alone would have made that dishonest: a redesign is not
+        # additive, so M4 raises Unmeasurable and the run is permanently UNMEASURABLE; and
+        # evidence carrying this preset's OWN named defect — a slicer that responds while every
+        # member returns the grand total — scored PASS=12 under M1-M12. R3 is the assertion that
+        # can see it, and `interact` (did the control respond) is not it.
+        verifier_state=WIRED,
         needs_paul="Design sign-off; PROD promotion.",
     ),
 ]

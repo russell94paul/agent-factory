@@ -21,7 +21,8 @@ and frozen at its moment.
 | | |
 |---|---|
 | `factory/control.py` · `events.py` · `provider.py` | landed `31f3527`, 1,137 lines + 442 of tests |
-| `factory/verifiers.py` | the first verifier the controller can actually run — `add-measure` → `pbi_contract` M1–M12 |
+| `factory/verifiers.py` | the verifier registry — `add-measure` → `pbi_contract` M1–M12, `model-redesign` → `redesign_contract` M+R |
+| presets with a runnable verifier | **2 of 5** (`add-measure`, `model-redesign`); the other three name a check nobody has built |
 | the tracker | routed through the controller — `local_tracker.run_ticket`, POST `/run-ticket` |
 | `.data/runs.jsonl` | 10 rows |
 | findings ledger | **19 visible → 31** (`f8679b7`, then F87/F88) |
@@ -44,17 +45,39 @@ mutation control. `RunController` resolves a verifier from the registry, so the 
 get one without being handed it, and the agent's prompt now states where to leave its evidence and
 to **omit rather than invent** an observation.
 
-⚠ **Still open, and deliberately not papered over.** Four of five presets name a check nobody has
-built. `add-measure` itself cannot go green on model-layer evidence alone — M10 *every visual
-paints* and M11 *each control responds* are assertions XMLA and DAX cannot make, so a run without a
-renderer is UNMEASURABLE **by design**, not by neglect. **The next verifier is `model-redesign`, and
-it needs that renderer wired;** `ui-control` needs a Cosmos probe.
+**`model-redesign` is wired too**, and it needed its own contract rather than a second registry
+row — two things measured first, either of which alone would have made reuse dishonest (**F89**).
+A redesign is not additive, so `M4` refuses and the M-contract can *never* pass one. And evidence
+carrying that preset's own named defect — a slicer that responds while every member returns the
+grand total — scored **PASS=12** under M1–M12. `factory/redesign_contract.py` replaces M4 with R2
+(renames carry enumerated, rewritten dependents) and adds R1/R3/R4, of which **R3 — no declared
+axis is inert** is the one nothing else could make.
 
-⚠ **Six findings, every one from running or wiring the thing** — F83 (two defects, two
+⚠ **I said last commit that `model-redesign` "needs that renderer wired". That was wrong**, and
+worth correcting rather than quietly dropping: it needed a **slicing** harness, which is a
+different instrument. A renderer answers *did the visual paint*; `interact` answers *did the
+control respond*; only `slices` answers *did the numbers differ across the members*. The first two
+were both green on the defect.
+
+⚠ **Still open, and deliberately not papered over.** Three of five presets name a check nobody has
+built — `ui-control` needs a Cosmos probe, `dimension-gap` and `wrong-number` need theirs. Neither
+wired verifier can go green on model-layer evidence alone: M10/M11 are assertions XMLA and DAX
+cannot make, and R3 needs per-member values, so a run without those harnesses is UNMEASURABLE **by
+design**, not by neglect. **R3 is also only as wide as the agent's `must_slice_by` declaration** —
+declaring no axes is UNMEASURABLE rather than PASS, but the contract cannot know which axes should
+have been declared. Enumeration is the agent's obligation; the contract's job is refusing to pass
+without it.
+
+⚠ **Seven findings, every one from running or wiring the thing** — F83 (two defects, two
 invocations), F85 (a plan-only run spending the attempt cap that stops a real one), F86 (the ledger
 that could not show you any of them), F87 (the verifier that was never wired), F88 (the reload
-button that never reloaded the verdict enum). **Not one came from a gate.** That is the whole
-argument for what to do next: **wire something, then run it.** It has not failed to pay yet.
+button that never reloaded the verdict enum), F89 (the contract that certified the defect it was
+pointed at). **Not one came from a gate.** That is the whole argument for what to do next: **wire
+something, then run it.** It has not failed to pay yet.
+
+⭐ F89 is the sharpest of them, and the one to read if you read one: the blind instrument was our
+**newest and most careful** file, not an old thin one. Care is not coverage. Before reusing a
+contract for a second ticket type, run that type's own named defect through it and watch it fail.
 
 ---
 
