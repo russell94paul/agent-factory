@@ -6,9 +6,10 @@ shows it can fail. **The readiness board has thirty gates and no equivalent.** F
 returned PASS over an absence, and the reason all six survived is here: nobody had ever asked the
 other twenty-four to refuse.
 
-⛔ **This file does not pretend to close that.** Fourteen of thirty are proved; sixteen are not,
+⛔ **This file does not pretend to close that.** Seventeen of thirty are proved; thirteen are not,
 and they are listed by name with the reason. A census whose gaps are invisible is the defect it
-was written about, so the gaps are the point of the file, not an omission from it.
+was written about, so the gaps are the point of the file, not an omission from it — and one test
+prints the count into the suite's output so it cannot quietly rot.
 
 What it enforces:
 
@@ -23,6 +24,8 @@ detail string). It is the useful first rung: a gate that cannot refuse at all is
 no amount of tuning fixes.
 """
 from __future__ import annotations
+
+import json
 
 import pytest
 
@@ -44,6 +47,9 @@ _PROVED = {
     "succeeds":  "this file::test_the_audit_family_refuses_an_empty_window",
     "refuses":   "this file::test_the_gate_refusal_gate_can_itself_refuse",
     "cost":      "this file::test_cost_gate_fails_when_no_failure_carries_a_cost",
+    "truthful":  "this file::test_the_truthfulness_gate_refuses_three_different_ways",
+    "tenancy":   "this file::test_tenancy_refuses_an_undeclared_blast_radius",
+    "version":   "this file::test_version_hash_completeness_fails_on_a_stub",
     # ⚠ Covered by scripts/mutate_readiness_probes.py — and that harness is CURRENTLY INOPERATIVE.
     # Its anchors are copies of production source in prefect-connectors, which is parked on
     # `chore/artefact-homes` where the anchored lines do not exist; all 15 anchor tests fail.
@@ -68,18 +74,14 @@ _UNPROVEN = {
     "ceiling":      "⛔ the only real RED on the board, and the engine's sole budget symbol is a "
                     "TIME budget — the accounting must be fixed before a control means anything",
     "breadth":      "corpus breadth; one corpus exists, so the population is degenerate",
-    "version":      "version-hash completeness; needs a spec fixture",
     "attributable": "reads worktree naming in the connectors repo",
-    "truthful":     "HAS a population floor already (it reports listed/with-log/compared) but no "
-                    "test exercises the refusal",
     "suite":        "shells out to pytest; provoking it means a nested suite run",
     "certified":    "shells out to factory.certify; same cost problem, see F92",
-    "tenancy":      "reads the blueprint's declared tenants; needs a blueprint fixture",
     "corpus":       "tamper-evidence over evals/MANIFEST.sha256; needs a corpus fixture",
 }
 
 #: The number proved today. ⭐ This may only ever go UP.
-_COVERAGE_FLOOR = 14
+_COVERAGE_FLOOR = 17
 
 
 # --------------------------------------------------------------------------------- the ratchet
@@ -118,7 +120,7 @@ def test_negative_control_coverage_does_not_regress():
 
 
 def test_the_gap_is_reported_rather_than_hidden():
-    """⚠ This test PASSES while sixteen gates are unproven, and says so out loud.
+    """⚠ This test PASSES while thirteen gates are unproven, and says so out loud.
 
     It exists so the number is in the suite's output and in this file's diff, not so it can be
     mistaken for coverage. `registry.unproven()` does the same for workflows.
@@ -175,3 +177,54 @@ def test_cost_gate_fails_when_no_failure_carries_a_cost(audits):
     """
     audits([])
     assert R.g_cost_survives_failure().verdict == R.FAIL
+
+
+def test_the_truthfulness_gate_refuses_three_different_ways(tmp_path, monkeypatch):
+    """Three distinct absences, three refusals, and it keeps them apart.
+
+    This gate is the one whose population-reporting discipline F94 held the others to — it already
+    says *"N listed, M with an event log, K actually compared"*. The census listed it as unproven
+    only because nothing exercised it. It was right all along; this records that.
+    """
+    monkeypatch.setattr(R, "CONNECTORS", tmp_path)
+    with pytest.raises(R.Unmeasurable):        # the file is not there
+        R.g_status_matches_reality()
+
+    d = tmp_path / "orchestrator" / "data"
+    d.mkdir(parents=True)
+    (d / "pipelines.json").write_text("{ not json", encoding="utf-8")
+    with pytest.raises(R.Unmeasurable):        # it is there and will not parse
+        R.g_status_matches_reality()
+
+    (d / "pipelines.json").write_text(json.dumps({"pipelines": []}), encoding="utf-8")
+    with pytest.raises(R.Unmeasurable):        # it parses and records nothing
+        R.g_status_matches_reality()
+
+
+def test_tenancy_refuses_an_undeclared_blast_radius(monkeypatch):
+    """⛔ The refusal here is a safety property, not bookkeeping.
+
+    Its own message: one ALDC Windsor key returns *every* client's accounts, so an unfiltered pull
+    lands CLIENT-B rows in a CLIENT-A table and nothing downstream can tell. Blast radius is
+    uncertifiable until the account ids are written down — so an empty list must never read as
+    "no restriction needed".
+    """
+    monkeypatch.setattr(R, "_blueprint", lambda: {"allowed_tenants": []})
+    with pytest.raises(R.Unmeasurable):
+        R.g_tenancy_declared()
+
+    monkeypatch.setattr(R, "_blueprint", lambda: {"allowed_tenants": ["CLIENT-A"]})
+    assert R.g_tenancy_declared().verdict == R.PASS          # positive control
+
+
+def test_version_hash_completeness_fails_on_a_stub(tmp_path, monkeypatch):
+    """A blueprint that hashes nothing must not report a complete hash.
+
+    The gate's own evidence names the dimension that bites: *"contract_version is the one that
+    bites now — a certification granted under contract V4 silently transfers to V5."*
+    """
+    (tmp_path / "blueprint.py").write_text("x = 1\n", encoding="utf-8")
+    monkeypatch.setattr(R, "FACTORY", tmp_path)
+    r = R.g_version_hash_is_complete()
+    assert r.verdict == R.FAIL
+    assert "dimensions absent" in r.headline
