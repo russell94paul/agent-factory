@@ -21,24 +21,40 @@ and frozen at its moment.
 | | |
 |---|---|
 | `factory/control.py` · `events.py` · `provider.py` | landed `31f3527`, 1,137 lines + 442 of tests |
+| `factory/verifiers.py` | the first verifier the controller can actually run — `add-measure` → `pbi_contract` M1–M12 |
 | the tracker | routed through the controller — `local_tracker.run_ticket`, POST `/run-ticket` |
-| `.data/runs.jsonl` | 5 rows |
-| findings ledger | **19 visible → 29** (`f8679b7`) |
+| `.data/runs.jsonl` | 10 rows |
+| findings ledger | **19 visible → 31** (`f8679b7`, then F87/F88) |
 
 ⛔ **Do not re-run RUN-03's plan.** `run-03-the-missing-middle-2026-08-30.md` is now a
 **superseded** file kept for its reasoning; its `next:` is executed. Its §0 headline measurement
 was already wrong when written (F84) and its `breadth` acceptance claim was already retired in its
 own margin.
 
-⭐ **What RUN-03 actually proved, and what it did not.** It proved the vertical slice runs and that
-`GreenContract` assigns the verdict. It did **not** produce a PASS, and should not have: four of
-five presets name a verifier nobody has wired, so a run under one ends `UNMEASURABLE` however
-cleanly it goes. **That is the honest next question — wire a verifier, or the assembly line
-produces records nobody can act on.** Nothing else on the board changes that.
+⭐ **What RUN-03 proved, and what came next.** It proved the vertical slice runs and that
+`GreenContract` assigns the verdict. It produced no PASS, and should not have: no preset had a
+verifier the controller could actually run — the one that *claimed* WIRED had nothing behind it
+(**F87**), so the run contract's only assertion about the client's problem could not be satisfied
+by any ticket type.
 
-⚠ Two defects were found within two invocations of running it (F83), and two more by running it
-once more the next morning (F85, F86). That yield is the argument for what to do next: **wire
-something, then run it.** It has never failed to pay.
+**That is now wired for one preset.** `factory/verifiers.py` joins `presets` to
+`factory/pbi_contract.py` — 12 assertions, ~460 lines, complete and importer-less since the day it
+was written — and `add-measure` reaches a real PASS, a real FAIL and UNMEASURABLE, each with a
+mutation control. `RunController` resolves a verifier from the registry, so the CLI and the tracker
+get one without being handed it, and the agent's prompt now states where to leave its evidence and
+to **omit rather than invent** an observation.
+
+⚠ **Still open, and deliberately not papered over.** Four of five presets name a check nobody has
+built. `add-measure` itself cannot go green on model-layer evidence alone — M10 *every visual
+paints* and M11 *each control responds* are assertions XMLA and DAX cannot make, so a run without a
+renderer is UNMEASURABLE **by design**, not by neglect. **The next verifier is `model-redesign`, and
+it needs that renderer wired;** `ui-control` needs a Cosmos probe.
+
+⚠ **Six findings, every one from running or wiring the thing** — F83 (two defects, two
+invocations), F85 (a plan-only run spending the attempt cap that stops a real one), F86 (the ledger
+that could not show you any of them), F87 (the verifier that was never wired), F88 (the reload
+button that never reloaded the verdict enum). **Not one came from a gate.** That is the whole
+argument for what to do next: **wire something, then run it.** It has not failed to pay yet.
 
 ---
 
