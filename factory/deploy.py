@@ -219,8 +219,6 @@ class RepoDeployer:
         # Read the prior failures BEFORE recording this dispatch, so the current attempt is not
         # in its own context block.
         prior = ledger.context(key) if ledger else ""
-        if ledger:
-            ledger.record(key)
 
         full_prompt = f"{spec.prompt}\n\nTASK:\n{task}\n"
         if prior:
@@ -233,16 +231,34 @@ class RepoDeployer:
                "--model", spec.model,
                "--dangerously-skip-permissions"]   # safe ONLY because wt is an isolated worktree
         if dry_run:
+            # ⛔ NOTHING MAY BE RECORDED AGAINST THE CAP IN THIS BRANCH. A dry run dispatches
+            # no agent and spends nothing, so it is not an attempt. It used to call `record()` —
+            # and with `max_attempts=2`, **two plan-only invocations made a ticket permanently
+            # unrunnable**, refused by a message that says the cap must not be raised to get past
+            # it. Measured live: `.data/attempts.json` held two entries for
+            # `ui-control-agent:gp-327`, both `detail: "dry run"`, both blocking. See F85.
+            #
+            # ⚠ `note_outcome()` is gone with it and must not come back. It writes to
+            # `attempts[-1]`, so with no attempt of its own it would stamp "ok"/"dry run" onto the
+            # PREVIOUS REAL attempt — erasing a genuine failure from `failures()`, and so from the
+            # retry context of the next real run. Reading the cap is free; writing to it is a
+            # dispatch.
+            #
             # `prompt` is recorded, not just `task`: a dry run whose output omits the prompt
             # cannot show whether retry context was actually injected, which is the one thing
             # a dry run of a retry exists to check.
             transcript.write_text(
                 json.dumps({"dry_run": True, "cmd": cmd, "task": task,
-                            "prompt": full_prompt, "attempt": ledger.attempts(key) if ledger else None})
+                            "prompt": full_prompt,
+                            # the attempt this WOULD be, not one it has taken
+                            "would_be_attempt": (ledger.attempts(key) + 1) if ledger else None})
                 + "\n", encoding="utf-8")
-            if ledger:
-                ledger.note_outcome(key, "ok", "dry run", limit=LIMIT_NONE)
             return Deployment(wt, wt.name, transcript, returncode=0)
+
+        # Count the dispatch. BEFORE the agent runs, so the cap holds even on a crash — and
+        # AFTER the dry-run return above, so only a real dispatch spends one.
+        if ledger:
+            ledger.record(key)
 
         stderr = ""
         with transcript.open("w", encoding="utf-8") as fh:

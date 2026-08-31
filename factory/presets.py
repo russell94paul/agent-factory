@@ -85,7 +85,8 @@ class Preset:
         }
 
 
-#: The five types. Each row's `seen_in` is the evidence that it is a real shape of work.
+#: Each row's `seen_in` is the evidence that it is a real shape of work. The count is computed
+#: (`len(PRESETS)`), never typed — a hand-maintained count re-rots invisibly.
 #:
 #: Sizes: a type carries the size it USUALLY is. An operator can override, and the escalation
 #: trigger is where the override is argued for.
@@ -114,7 +115,14 @@ PRESETS: List[Preset] = [
             "default_value. Must not deploy to PROD. Abort rather than assume the author checked."
         ),
         verifier="read the live Cosmos doc; assert both locked_value AND default_value are empty",
-        verifier_state=WIRED,
+        # ⛔ Was WIRED. Corrected 2026-08-31, F87: that check was run BY HAND on GP-327 and no
+        # code in this repository performs it, so `verifiers.REGISTRY` holds no entry and the
+        # controller had nothing to call. Every run of this preset reported "declares a WIRED
+        # verifier but the controller was given no callable". WIRED must mean "the controller can
+        # run it" — the only sense in which this field moves a verdict, and the sense
+        # `control.ticket_verifier` already reads it in. A procedure a human once followed is
+        # AVAILABLE. Wiring it needs a Cosmos probe, which is the next verifier worth building.
+        verifier_state=AVAILABLE,
         needs_paul="PROD promotion.",
     ),
     Preset(
@@ -140,9 +148,18 @@ PRESETS: List[Preset] = [
             "replace reverts another engineer's work. Additive alias only. Must not write any "
             "credential into an exported artefact."
         ),
-        verifier="DAX validation against the applied model; assert the alias resolves and no "
-                 "existing measure changed",
-        verifier_state=AVAILABLE,
+        verifier=("factory.pbi_contract M1-M12, adjudicated by verifiers.pbi_model_change over "
+                  "the agent's .factory/verification.json: rollback captured first, the target is "
+                  "the declared dataset, every field appended or prior-asserted, additive only, "
+                  "the refresh moved data, the anchors hold, out-of-scope measures enumerated and "
+                  "unchanged, absence renders BLANK not 0, the warehouse agrees, EVERY VISUAL "
+                  "PAINTS, every control responds, and the change is reachable by a consumer"),
+        # ⭐ The prose above used to read "DAX validation against the applied model; assert the
+        # alias resolves and no existing measure changed" — a real check, and a strictly smaller
+        # one than what now runs. DAX parity alone passed on GP-293 while every visual rendered
+        # "Error loading data", so the contract keeps M10/M11 and reports UNMEASURABLE until a
+        # renderer has been pointed at the report.
+        verifier_state=WIRED,
         needs_paul="Design sign-off on naming and folder placement.",
     ),
     Preset(
@@ -229,10 +246,59 @@ PRESETS: List[Preset] = [
             "zero, and publishing the difference is the defect this ticket type exists to fix. "
             "Must not overwrite live model state without asserting the before state first."
         ),
-        verifier="pre/post assertion battery — capture live state before overwriting, replay after. "
-                 "GP-318 caught 10 self-inflicted defects this way and review caught none",
-        verifier_state=AVAILABLE,
+        verifier=("factory.redesign_contract, adjudicated by verifiers.pbi_model_redesign over "
+                  "the agent's .factory/verification.json: M1-M12 with M4 replaced by R2, plus "
+                  "R1 the pre-state captured before the overwrite across the enumerated "
+                  "population, R2 every rename and deletion carrying dependents that were found "
+                  "and rewritten, R3 NO DECLARED AXIS IS INERT — no measure returning the same "
+                  "value, least of all the grand total, on every member of a dimension it must "
+                  "slice by — and R4 every captured measure actually replayed afterwards. "
+                  "GP-318 caught 10 self-inflicted defects this way and review caught none"),
+        # ⭐ Wired 2026-08-31 (F89), and NOT by reusing `add-measure`'s verifier. Two things were
+        # measured first, either of which alone would have made that dishonest: a redesign is not
+        # additive, so M4 raises Unmeasurable and the run is permanently UNMEASURABLE; and
+        # evidence carrying this preset's OWN named defect — a slicer that responds while every
+        # member returns the grand total — scored PASS=12 under M1-M12. R3 is the assertion that
+        # can see it, and `interact` (did the control respond) is not it.
+        verifier_state=WIRED,
         needs_paul="Design sign-off; PROD promotion.",
+    ),
+    Preset(
+        type_id="model-design",
+        title="Design the model — a structure does not exist yet, or the one that does is unusable",
+        seen_in="GP-319 — the client rejected the marketing model's design; 383 measures, 198 visible, "
+                "128 of them with no description. Also GP-318, the 356-measure audit that preceded it.",
+        layers=("snowflake", "pbi_model",),
+        size="L",
+        model="opus",
+        model_why=(
+            "there is no artefact to interrogate and no symptom to anchor on — the output IS the "
+            "structure. The hard part is knowing which question nobody will be able to ask once the "
+            "grain is fixed, which is reasoning about an absence rather than reading a defect."
+        ),
+        escalate_when=(
+            "the structure already exists and one number in it is wrong. That is a wrong-number "
+            "ticket, not a design — re-scope to `wrong-number` and save the budget. Conversely, if "
+            "the client's field list turns out to describe a report rather than a process, stop and "
+            "re-scope: a flat field list is an input, never a specification."
+        ),
+        effort="high",
+        max_turns=150,
+        budget_usd=25.0,
+        prohibition=(
+            "Must not create or alter any object — this type ends at an ACCEPTED design, never a "
+            "built one. Must not fill an absent value with zero; an unfeatured platform is "
+            "NOT-RECORDED and a placeholder key is SENTINEL, and neither is a gap to allocate "
+            "across. Must not choose the grain after exploring the data. Must not deploy to PROD."
+        ),
+        verifier="`redesign_contract.R3-no-axis-is-inert` — the (measure x axis) census over the "
+                 "declared `must_slice_by`, asserting no pair returns the same value on every "
+                 "member. It already distinguishes the false positive (a single-member axis cannot "
+                 "show whether an axis slices) and reports UNMEASURABLE rather than PASS when no "
+                 "axis is declared, so declaring nothing is not the cheap route to green.",
+        verifier_state=AVAILABLE,
+        needs_paul="Which ROAS is canonical, and sign-off on names. Both were already open in "
+                   "GP-319 and neither is a modelling question.",
     ),
 ]
 

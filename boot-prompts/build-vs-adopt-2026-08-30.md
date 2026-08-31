@@ -1,5 +1,7 @@
 # Boot — the adopt question is answered; go bound the loop
 
+⛔ **SUPERSEDED 2026-08-30 by `run-03-the-missing-middle-2026-08-30.md`** for sequencing — its `next:` only deferred to `run-the-loop`. **The adopt-vs-build decision record in this file is NOT superseded** and is still load-bearing. See `README.md` in this folder.
+
 **Written:** 2026-08-29, late, after a six-lens `/prospect` pass on `docs/BUILD-VS-ADOPT-PROMPT.md`.
 **Companion to** `run-the-loop-2026-08-30.md` (still right) and `execution-plane-2026-08-30.md`
 (⚠ **its starred "adopt before you abstract" section is now falsified — see §1**).

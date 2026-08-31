@@ -76,8 +76,16 @@ def mutate_and_expect_failure(contract: GreenContract, base_ctx: dict,
         ctx = dict(base_ctx)
         ctx[key] = bad_value
         res = contract.run(ctx)
-        # we expect NOT-green; encode that as: actual must not be PASS
-        actual = Verdict.FAIL if res.verdict is not Verdict.PASS else Verdict.PASS
+        # We expect NOT-green; encode that as: actual must not be PASS.
+        #
+        # ⚠ ERROR is exempt, and must be. It means our own instrument fell over under the
+        # mutated input — that is the harness breaking, not the contract catching the mutation.
+        # Folding it into FAIL scores a broken probe as a successful catch, which is how a
+        # mutation suite reports green over a population it never actually judged.
+        if res.verdict is Verdict.ERROR:
+            actual = Verdict.ERROR
+        else:
+            actual = Verdict.FAIL if res.verdict is not Verdict.PASS else Verdict.PASS
         reports.append(EvalReport(f"mutation:{key}", Verdict.FAIL, actual, res.summary()))
     return reports
 

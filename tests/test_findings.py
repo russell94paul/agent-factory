@@ -6,6 +6,8 @@ looks full — so they are asserted rather than trusted.
 """
 from __future__ import annotations
 
+import re
+
 from factory.findings import REQUIRED, by_lane, load, malformed, unattached
 from factory.lanes import LANES
 
@@ -80,3 +82,37 @@ def test_an_unknown_kind_or_status_is_rejected():
                "- **AFFECTS** — every lane\n")[0]
     assert any("KIND=DESIGNN" in m for m in f.missing), f.missing
     assert any("STATUS=MAYBE" in m for m in f.missing), f.missing
+
+
+# --------------------------------------------------------------------- ⭐ F86: the population
+def test_every_findings_file_is_visible_to_the_ledger():
+    """⛔ A file the parser cannot read is ABSENT, not malformed — and nothing else asks about it.
+
+    `malformed()` and `unattached()` both iterate `load()`, so both answer their question only of
+    the findings that already parsed. That left one state unasserted: a fragment the splitter
+    drops entirely. F77-F84 sat in that state for a day — eight consecutive findings, including
+    the four the boot-prompts README calls "the corrections that outlived every prompt above" —
+    because their titles used `#` where `_HEADING` requires `###`. Both tests above stayed green
+    over a ledger missing a third of itself.
+
+    The population is derived from `ls docs/findings.d/` rather than listed here, for the same
+    reason `test_hot_reload_covers_every_import` derives its own: a hand-maintained expectation
+    drifts silently, which is the failure being guarded against.
+    """
+    from factory.findings import FRAGMENTS
+
+    on_disk = {}
+    for p in sorted(FRAGMENTS.glob("F*.md")):
+        m = re.match(r"(F\d+)", p.name)
+        if m:
+            on_disk[m.group(1)] = p.name
+
+    assert on_disk, f"no finding fragments found under {FRAGMENTS} — the layout moved"
+
+    seen = {f.id for f in load()}
+    invisible = sorted(on_disk[i] for i in set(on_disk) - seen)
+    assert not invisible, (
+        f"{len(invisible)} finding file(s) exist but do not reach the ledger: {invisible}. "
+        "A fragment's title must be `### F<n> — <title>` (three hashes); `_HEADING` in "
+        "factory/findings.py matches nothing else, and a file it cannot split is invisible to "
+        "load(), by_lane(), malformed() and unattached() alike.")

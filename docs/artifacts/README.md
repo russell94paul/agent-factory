@@ -15,6 +15,7 @@ memory layer, however much they look like documents.
 |---|---|---|---|
 | `agent-factory.html` | https://claude.ai/code/artifact/50d3ca62-3e9c-46dd-8867-7e1c794aff75 | ⚙️ | engineering — status, gates, build order |
 | `orchestration-bench.html` | https://claude.ai/code/artifact/839fd517-5305-46e1-8325-74f18b1a45b0 | ⚖️ | engineering — ⚠ R13 run 2 recommends retiring this (AB-12) |
+| `project.html` | *(not yet published)* | 🏭 | **the showcase** — anyone asking *"what is this?"*. Deliberately decoupled from the board: a showcase should be stable, the board changes hourly. ⚠ Its zero code-references are BY DESIGN — an audit that treats them as orphaning is measuring the wrong property, which happened on 2026-08-31 and nearly cost the file. |
 
 ⚠ **`agent-factory.html` is stale as of 2026-08-29.** It reflects the `UNMEASURABLE (PASS=11)` era and
 a "9 of 30 gates" count; `certify --calibrate` now returns `PASS (PASS=12)`. See

@@ -3,9 +3,24 @@
 The root success object. Every team, every optimizer run and every certification reads its
 verdict from here, so this module is deliberately dependency-free and boring.
 
-**Four verdicts, never collapsed.** The distinction between FAIL and UNMEASURABLE is the entire
+**Five verdicts, never collapsed.** The distinction between FAIL and UNMEASURABLE is the entire
 reason this file exists: a check whose instrument could not run has not passed, and reporting it
 as a pass is how a measurement gap becomes a claim about the system.
+
+The fifth is ERROR, and it was added because we had made exactly the mistake this module exists
+to prevent. UNMEASURABLE was carrying two different things: a probe that *knows* it cannot look
+(`raise Unmeasurable`), and our own apparatus falling over (a bare exception). Those have
+different remedies — wire the instrument, versus fix the harness — and only the second says the
+run itself is untrustworthy.
+
+This is not our invention. Conformance testing standardised it in ISO/IEC 9646 and TTCN-3 carries
+it still (ITU-T Z.140 §24.2) as a monotone lattice::
+
+    none < pass < inconc < fail < error
+
+where ``inconc`` is our UNMEASURABLE and ``error`` is set by the *test system* rather than the
+test case, and cannot be overridden by anything. We follow that ordering: **ERROR dominates
+FAIL**, because once the apparatus has broken we no longer know the observed failure was real.
 """
 from __future__ import annotations
 
@@ -17,7 +32,8 @@ from typing import Any, Callable, List, Optional
 class Verdict(str, Enum):
     PASS = "PASS"
     FAIL = "FAIL"
-    UNMEASURABLE = "UNMEASURABLE"   # instrument could not run — NOT a pass
+    UNMEASURABLE = "UNMEASURABLE"   # instrument declined to run — NOT a pass
+    ERROR = "ERROR"                 # the apparatus itself broke — NOT a measurement
     NOT_RUN = "NOT_RUN"
 
     @property
@@ -55,7 +71,9 @@ class Assertion:
         except Unmeasurable as exc:
             return AssertionResult(self.name, Verdict.UNMEASURABLE, str(exc))
         except Exception as exc:                       # noqa: BLE001 - a crash is not a pass
-            return AssertionResult(self.name, Verdict.UNMEASURABLE,
+            # ...and it is not UNMEASURABLE either. Nothing declined to measure here; our own
+            # instrument fell over, which makes the whole run untrustworthy. TTCN-3 `error`.
+            return AssertionResult(self.name, Verdict.ERROR,
                                    f"instrument raised {type(exc).__name__}: {exc}")
         return AssertionResult(self.name, Verdict.PASS if ok else Verdict.FAIL, detail)
 
@@ -75,9 +93,14 @@ class ContractResult:
 
         An UNMEASURABLE required assertion yields UNMEASURABLE for the whole contract — not FAIL,
         because we did not observe a failure, and emphatically not PASS.
+
+        ERROR outranks even FAIL (TTCN-3's lattice, see the module docstring): if the apparatus
+        broke we cannot claim the failure we think we saw was real.
         """
         if not self.results:
             return Verdict.NOT_RUN
+        if any(r.verdict is Verdict.ERROR for r in self.results):
+            return Verdict.ERROR
         if any(r.verdict is Verdict.FAIL for r in self.results):
             return Verdict.FAIL
         if any(r.verdict is Verdict.UNMEASURABLE for r in self.results):

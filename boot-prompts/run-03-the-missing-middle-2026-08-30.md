@@ -1,5 +1,18 @@
 # Boot — RUN-03: make one TeamSpec actually execute
 
+⛔ **SUPERSEDED 2026-08-31 03:55 — ITS `next:` IS DONE. Do not execute this file.**
+RUN-03 landed at `31f3527`: `factory/control.py`, `events.py` and `provider.py` exist, the tracker
+routes through the controller, and runs reach `.data/runs.jsonl`. Read `README.md` in this folder
+for what is actually open. **Kept for its reasoning** — the pricing table (§2), the three
+non-negotiable requirements (§1) and the adopt-exactly-one-thing verdict on the Agent SDK are all
+unspent, and the SDK was *not* adopted, so that decision is still live.
+
+⚠ **Two of this file's own claims were already wrong when it was written**, and both are annotated
+in place below: §0's headline "2,041 lines, zero consumers" was 574 (F84), and §5's claim that
+RUN-03 moves the `breadth` gate is false (its own margin). Running it produced four more findings
+— F83 and F85 (defects in the code it wired) and F86 (the ledger that could not show you any of
+them). See `docs/findings.d/F77`/`F78` for the corrections that outlived every earlier prompt.
+
 **Written:** 2026-08-30, 02:00. **This is the one that gets the factory running.**
 
 Everything else open right now is tidying or infrastructure. This is the assembly line.
@@ -19,6 +32,28 @@ have it emit the event record as it goes.** They are one vertical slice, not two
 ---
 
 ## 0. ⭐ Why this and nothing else — the measurement that decides it
+
+> ⛔ **CORRECTED 2026-08-30 by `docs/findings.d/F84`. The table below is WRONG and the command
+> under it is why.** That grep matches only `from factory.X import` / `from .X import`. Every
+> factory module reaches its one production consumer as `from factory import X as Y` —
+> `scripts/local_tracker.py`, line 46 onward — which neither alternative matches. It returned
+> **0 for five modules holding 54 call sites between them.**
+>
+> **Actually unwired at `3e33a1a`: `presets.py` (309) + `deploy.py` (265) = 574 lines, not 2,041.**
+> `dispatch`, `claims`, `runs`, `launch` and `worktrees` were all consumed by the tracker the whole
+> time. Wrong by 3.5×.
+>
+> ⭐ **The conclusion survives and sharpens.** The two genuinely unwired modules are *exactly the
+> two on the execution path* — choose a configuration, run an agent under it. Every module that
+> was wired is a **reporting** surface. The estate had a complete reporting layer, no execution
+> layer, and the reporting layer was reporting on work nothing here could start. That is a better
+> statement of "the missing middle" than the inflated figure was: it makes the problem a shape
+> rather than neglect.
+>
+> The rule this broke is already written in §5 of this same file — *"a code-search zero without a
+> positive control is NOT-VISIBLE, not ABSENT"* — recorded four hours earlier against
+> `gh api search/code`, and then repeated in a local grep. F84 carries the corrected table and the
+> one-line positive control that catches it.
 
 Measured 2026-08-30 02:00, consumers counted by import, excluding each module's own file and `demo`:
 
@@ -212,6 +247,15 @@ evidence is.** If the first slice reports `PASS`, check what measured it before 
 - ⚠ **Four of five bounding gates cannot move from this repo** — `cap`, `ceiling`, `concurrency`,
   `reaper` grep `prefect-connectors` (F77/F78/F80). **The movable verdicts are `certified`,
   `breadth`, `corpus`** — and RUN-03 is what finally moves `breadth` off *1 case, 0 strata*.
+
+  > ⛔ **CORRECTED 2026-08-30. RUN-03 does not move `breadth`, and cannot.**
+  > `readiness.g_corpus_has_breadth` reads **`evals/corpus/`** — pinned eval cases and their
+  > declared strata — and passes only at `len(pinned) >= 29 and len(strata) >= 15`. It never looks
+  > at `.data/runs.jsonl` or at anything a run produces. Executing a thousand TeamSpecs leaves it
+  > at *1 case, 0 strata*. **Measured:** RUN-03 shipped and landed two runs; the board is
+  > byte-identical before and after except the ledger row count. Moving `breadth` means writing
+  > corpus cases, which is a different ticket. Same shape as F77 — an acceptance criterion
+  > pointed at something the work cannot reach.
 - ⚠ **`F83` is the next free finding id.** Ids have collided across branches twice.
 - **Ask before any secret.** No session has ever requested one.
 

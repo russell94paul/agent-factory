@@ -59,6 +59,10 @@ from factory import dispatch as disp  # noqa: E402
 from factory import launch as launchlib  # noqa: E402
 from factory import research_run as rrun  # noqa: E402
 from factory import teamplan as tplan  # noqa: E402
+from factory import control as ctrl  # noqa: E402
+from factory import events as evlib  # noqa: E402
+from factory import presets as presetlib  # noqa: E402
+from factory import provider as provlib  # noqa: E402
 
 OUT = FACTORY / "tracker.html"
 
@@ -141,6 +145,52 @@ def _imported_factory_modules() -> tuple:
     return tuple(sorted(_own_imports()[0]))
 
 
+def _sibling_imports(src: str) -> set:
+    """The `factory` modules that one factory module imports, in every form we actually write."""
+    found = set()
+    for pat in (r"^from \.(\w+) import", r"^from factory\.(\w+) import", r"^import factory\.(\w+)"):
+        found.update(re.findall(pat, src, re.M))
+    # `from . import claims as claimlib, dispatch as disp` — the alias form, which is how the
+    # tracker itself imports every one of its modules.
+    for group in re.findall(r"^from \. import (.+)$", src, re.M):
+        for part in group.split(","):
+            name = part.strip().split(" as ")[0].strip()
+            if name.isidentifier():
+                found.add(name)
+    return found
+
+
+def _factory_module_closure(seeds: tuple) -> tuple:
+    """`seeds` plus every factory module they import, transitively.
+
+    ⛔ **The derivation was still under-covering, one level down.** `_HOT` was derived from this
+    file's own imports — which fixed the hand-written list — but `importlib.reload` does NOT
+    recurse. So a module this script imports only *through* another one was never reloaded, and
+    the button went on reporting success: exactly the false claim of freshness the comment above
+    describes, surviving the fix that was supposed to end it.
+
+    Measured 2026-08-31: the direct-import set was **24** modules; the closure is larger, and the
+    gap included `factory.verifiers` and `factory.pbi_contract` — the module that decides a
+    ticket's verdict and the 12-assertion contract behind it, both reached via `factory.control`.
+    Editing a verifier and pressing reload would have re-served the old one and said so happily.
+
+    ⭐ Same lesson as the two before it, one turn further out: **a derived list is only as wide as
+    the relation it derives over.** Deriving over "what this file imports" is not the same as
+    deriving over "what this process runs", and the second is what the reload button claims.
+    """
+    pkg = pathlib.Path(__file__).resolve().parent.parent / "factory"
+    seen, stack = set(seeds), list(seeds)
+    while stack:
+        f = pkg / f"{stack.pop()}.py"
+        if not f.is_file():
+            continue
+        for name in _sibling_imports(f.read_text(encoding="utf-8", errors="replace")):
+            if name not in seen and (pkg / f"{name}.py").is_file():
+                seen.add(name)
+                stack.append(name)
+    return tuple(sorted(seen))
+
+
 def _dependency_order(names: tuple) -> list:
     """`names` sorted so a module always follows everything it imports from.
 
@@ -192,7 +242,8 @@ def _value_imports() -> list:
     return _own_imports()[1]
 
 
-_HOT = tuple(f"factory.{n}" for n in _dependency_order(_imported_factory_modules()))
+_HOT = tuple(f"factory.{n}"
+             for n in _dependency_order(_factory_module_closure(_imported_factory_modules())))
 
 _RELOADED_AT = None
 _RELOAD_MSG = None
@@ -520,6 +571,92 @@ def launch(lane_id: str, dry: bool = False):
                   f"({cwd.name}) on branch lane/{lane_id}")
 
 
+# ---------------------------------------------------------------------------------------------
+# ⭐ Ticket runs — the supervised path, routed through `factory.control`.
+#
+# This is the wiring that decides whether RUN-03 built an assembly line or a sixth unwired module.
+# Before it, the only path that actually started an agent was `launch()` above: a generated `.ps1`
+# running a bare `claude`, with no preset, no configuration record, no verdict and no ledger row.
+# `presets`, `worktrees`, `claims`, `deploy`, `runs` and `blueprint` had **zero consumers between
+# them** — just over 2,000 lines of tested machinery nothing called.
+#
+# ⚠ The terminal is still a terminal. Nothing here replaces the supervised path or pretends to
+# watch it; `SupervisedProvider` reports `observable=False`, so the controller records the run as
+# UNMEASURABLE rather than inferring an outcome from a window having opened. What changes is that
+# the run now leaves a record — which configuration was chosen, which four were not, and under
+# what rule — and that record cannot be reconstructed after the fact.
+
+def _ticket_spawn(ticket_id: str):
+    """A spawn callable for `SupervisedProvider`: opens the same terminal `launch()` opens.
+
+    Injected rather than built into the provider so this file keeps owning its own `.ps1`/`wt`
+    machinery — F10 (semicolons are `wt`'s subcommand separator) lives here and should stay here.
+    """
+    def spawn(spec, task, wtpath):
+        import subprocess as _sp
+        d = FACTORY / ".data" / "launch"
+        d.mkdir(parents=True, exist_ok=True)
+        f = d / f"ticket-{ticket_id}.txt"
+        f.write_text(f"{spec.prompt}\n\nTASK:\n{task}\n", encoding="utf-8")
+        title = f"ticket {ticket_id}"
+        ps1 = _launch_script(title, f"{spec.role} · {spec.model}", f, "38;5;179",
+                             model=spec.model, session_name=f"{ticket_id} · {spec.role}")
+        wtexe = _wt()
+        cmd = ([wtexe, "new-tab", "--title", title, "--startingDirectory", str(wtpath),
+                "--colorScheme", WT_SCHEME, "powershell", "-NoExit",
+                "-ExecutionPolicy", "Bypass", "-File", str(ps1)]
+               if wtexe else
+               ["cmd", "/c", "start", title, "powershell", "-NoExit",
+                "-ExecutionPolicy", "Bypass", "-File", str(ps1)])
+        return f"pid {_sp.Popen(cmd, cwd=str(wtpath), close_fds=True).pid}"
+    return spawn
+
+
+def run_ticket(ticket_id: str, title: str = "", type_id: str = "", task: str = "",
+               dry: bool = False):
+    """Run one ticket through the controller, supervised. Returns (ok, message).
+
+    ⚠ `pid=None` on the claim is deliberate. The pid this process could record is the *tracker's*,
+    not the agent terminal's, so recording it would make the claim look live exactly as long as
+    the tracker runs and dead the moment it stops — neither of which is a fact about the agent.
+    With no pid, `claims.task_holder` returns HELD_UNVERIFIED and a second launch is **refused**
+    with "not being able to look is not proof that nothing is there", which is the correct answer.
+    Release it from the Research tab when the session is done.
+    """
+    ticket = ctrl.Ticket(id=ticket_id.strip(), title=title.strip() or ticket_id.strip(),
+                         task=task, type_id=(type_id or None))
+    if not ticket.id:
+        return False, "no ticket id given"
+
+    if dry:
+        el, chosen, rule = ctrl.eligible(ticket)
+        if not chosen:
+            return False, f"nothing eligible under: {rule}"
+        lines = "; ".join(("-> " if x["chosen"] else "") + x["id"] for x in el)
+        return True, (f"DRY RUN, nothing started — worktree would be .worktrees/{ticket.key}, "
+                      f"rule: {rule}; eligible: {lines}")
+
+    provider = provlib.SupervisedProvider(spawn=_ticket_spawn(ticket.key))
+    controller = ctrl.RunController(
+        provider,
+        claim=lambda key: claimlib.task_claim(key, pid=None, who="tracker ticket run",
+                                              note=ticket.title[:120]))
+    try:
+        res = controller.run(ticket)
+    except claimlib.ClaimError as exc:
+        return False, str(exc)
+    except Exception as exc:                                       # noqa: BLE001
+        return False, f"{type(exc).__name__}: {exc}"
+
+    if res.verdict.value == "ERROR":
+        return False, f"{ticket.id}: {res.detail}"
+    if res.verdict.value == "NOT_RUN":
+        return False, f"{ticket.id}: {res.detail}"
+    return True, (f"{ticket.id} started under preset '{res.preset_id}' in .worktrees/"
+                  f"{ticket.key} — verdict {res.verdict.value} at dispatch (a supervised run's "
+                  f"outcome is not observable from here). run {res.run_id}")
+
+
 def _answer_path(prompt: pathlib.Path) -> pathlib.Path:
     """docs/research/R5-build-velocity.md -> docs/research/answers/R5-answer-build-velocity.md
 
@@ -829,6 +966,162 @@ def render(when: datetime.datetime, tab: str = "tickets", team: str = "") -> str
         except Exception as _exc:                                  # noqa: BLE001
             _tasks = None
             _terr = "%s: %s" % (type(_exc).__name__, _exc)
+
+        # ---------------------------------------------------------------- inbox
+        # ⭐ Questions agents wrote when they blocked. `sessions.blocked()` has been
+        # correct since 2026-08-23 — it reads JOBS/*/state.json so a question outlives
+        # the process that asked it — and until now NOTHING RENDERED IT. Its only two
+        # callers were launch.py (which prints the count, inside a 9-minute command)
+        # and a roadmap note. So the August fix took the display from "2 of 5 shown"
+        # to "0 of 5 shown", and two credential requests sat unanswered and unseen.
+        #
+        # Rendered FIRST, above the ticket counts, because a question waiting on a
+        # human outranks any amount of progress reporting.
+        #
+        # ⚠ The panel renders even when the count is zero. An inbox that disappears
+        # when empty cannot be told apart from an inbox that is not wired up — which
+        # is the exact failure this panel exists to end. ZERO is a measurement; a
+        # missing panel is not.
+        try:
+            from factory import sessions as _sx
+            _q, _qerr = _sx.blocked(), None
+        except Exception as _exc:                                      # noqa: BLE001
+            _q, _qerr = None, "%s: %s" % (type(_exc).__name__, _exc)
+
+        def _age(rec):
+            """`waiting_since` is a unix timestamp (float), not an ISO date string."""
+            try:
+                d = datetime.datetime.now().timestamp() - float(rec.get("waiting_since"))
+                if d < 3600:
+                    return "%dm" % (d // 60)
+                if d < 86400:
+                    return "%dh" % (d // 3600)
+                return "%dd" % (d // 86400)
+            except Exception:                                          # noqa: BLE001
+                return "?"
+
+        w('<div class="par" style="margin:0 0 18px;border-color:var(--unmeas)">')
+        if _qerr is not None:
+            w('<h3 style="margin:0;color:var(--fail)">Inbox unreadable &mdash; %s</h3>' % e(_qerr))
+        elif not _q:
+            w('<h3 style="margin:0;color:var(--pass)">Inbox: 0 questions waiting</h3>'
+              '<p style="font-size:13px;color:var(--ink3);margin:6px 0 0">Read from '
+              '<code>~/.claude/jobs/*/state.json</code> on every refresh. Shown at zero on '
+              'purpose &mdash; a panel that vanishes when empty is indistinguishable from one '
+              'that was never wired.</p>')
+        else:
+            _live = [r for r in _q if r.get("answerable")]
+            w('<h3 style="margin:0;color:var(--unmeas)">Inbox &mdash; %d question(s) waiting '
+              '&middot; %d answerable</h3>' % (len(_q), len(_live)))
+            w('<p style="font-size:13px;color:var(--ink3);margin:6px 0 10px">Oldest first, '
+              'across every session alive or dead &mdash; a question is a fact on disk and '
+              'outlives the process that asked it. <b>Liveness says how to answer, never '
+              'whether to show.</b></p>')
+            for _r in _q:
+                _ok = bool(_r.get("answerable"))
+                _col = "var(--pass)" if _ok else "var(--notrun)"
+                _tag = "answerable" if _ok else "orphaned &mdash; %s" % e(str(_r.get("state") or "?"))
+                _who = e(str(_r.get("name") or _r.get("lane") or _r.get("job_id") or "?")[:28])
+                _txt = " ".join(str(_r.get("needs") or "").split()) or "(no question text)"
+                w('<div style="border-left:3px solid %s;padding:2px 0 2px 11px;margin:0 0 11px">' % _col)
+                w('<div style="font-size:11px;color:%s;font-family:ui-monospace,monospace">'
+                  '%s &middot; waited %s &middot; %s</div>' % (_col, _who, _age(_r), _tag))
+                w('<div style="font-size:14px;color:var(--ink);margin:3px 0 0">%s</div>' % e(_txt[:400]))
+                _sug = " ".join(str(_r.get("suggested_reply") or "").split())
+                if _sug:
+                    w('<div style="font-size:12.5px;color:var(--ink3);margin:3px 0 0">'
+                      'suggested reply: <i>%s</i></div>' % e(_sug[:160]))
+                w('</div>')
+        w('</div>')
+
+        # ---------------------------------------------------------------- run a ticket
+        # ⭐ The assembly line, and the first surface from which a preset can actually start
+        # anything. Rendered with the recorded runs beside it on purpose: a record nobody reads is
+        # decoration, and this estate has already shipped an inbox that was correct for six days
+        # while nothing displayed it.
+        try:
+            _runs_seen = [evlib.fold(r) for r in evlib.runs()]
+            _rerr = None
+        except Exception as _exc:                                      # noqa: BLE001
+            _runs_seen, _rerr = [], "%s: %s" % (type(_exc).__name__, _exc)
+
+        w('<div class="par" style="margin:0 0 18px">')
+        w('<h3 style="margin-top:0">Run a ticket</h3>')
+        w('<p style="font-size:13px;color:var(--ink2);margin:0 0 10px">Ticket &rarr; preset '
+          '&rarr; TeamSpec &rarr; one agent in its own worktree &rarr; a verdict assigned by '
+          '<code>GreenContract</code> &rarr; a row in <code>.data/runs.jsonl</code>. The terminal '
+          'is supervised, so the controller records <b>UNMEASURABLE</b> at dispatch rather than '
+          'inferring an outcome from a window having opened &mdash; <b>you</b> are the cap, the '
+          'reaper and the spend ceiling. What is new is that the run leaves a record of '
+          '<i>which configuration was chosen and which were not</i>, which cannot be '
+          'reconstructed afterwards.</p>')
+        w('<form method="POST" action="/run-ticket" style="display:flex;gap:7px;flex-wrap:wrap;'
+          'align-items:center;font-size:13px">')
+        w('<input name="ticket" placeholder="ticket id, e.g. GP-327" required '
+          'style="padding:6px 9px;border:1px solid var(--rule);border-radius:5px;'
+          'background:var(--bg);color:var(--ink);font-family:ui-monospace,monospace;width:200px">')
+        w('<input name="title" placeholder="what it asks for" '
+          'style="padding:6px 9px;border:1px solid var(--rule);border-radius:5px;'
+          'background:var(--bg);color:var(--ink);flex:1;min-width:220px">')
+        w('<select name="type" style="padding:6px 9px;border:1px solid var(--rule);'
+          'border-radius:5px;background:var(--bg);color:var(--ink)">')
+        w('<option value="">(no type &mdash; all %d eligible, cheapest taken)</option>'
+          % len(presetlib.PRESETS))
+        for _p in presetlib.PRESETS:
+            w('<option value="%s">%s &middot; %s &middot; $%.2f &middot; verifier %s</option>'
+              % (e(_p.type_id), e(_p.type_id), e(_p.model), _p.budget_usd,
+                 e(_p.verifier_state)))
+        w('</select>')
+        w('<button name="dry" value="1" style="padding:6px 12px;border:1px solid var(--rule);'
+          'border-radius:5px;background:var(--bg);color:var(--ink2);cursor:pointer">plan only'
+          '</button>')
+        w('<button name="dry" value="" style="padding:6px 14px;border:1px solid var(--pass);'
+          'border-radius:5px;background:var(--bg);color:var(--pass);cursor:pointer">start</button>')
+        w('</form>')
+
+        _un = presetlib.unwired()
+        if _un:
+            w('<p style="font-size:12.5px;color:var(--unmeas);margin:10px 0 0">&#9888; %d of %d '
+              'presets name a verifier nobody has wired (%s). A run under one of those ends '
+              'UNMEASURABLE however cleanly it goes &mdash; nothing can say whether the ticket\'s '
+              'work was done, and reporting that as a pass is the collapse this whole page '
+              'exists to refuse.</p>'
+              % (len(_un), len(presetlib.PRESETS), e(", ".join(p.type_id for p in _un))))
+
+        w('<div style="margin-top:14px;border-top:1px solid var(--rule);padding-top:11px">')
+        if _rerr is not None:
+            w('<div style="color:var(--fail);font-size:13px">event stream unreadable &mdash; %s</div>'
+              % e(_rerr))
+        elif not _runs_seen:
+            w('<div style="font-size:13px;color:var(--ink3)">No runs recorded in '
+              '<code>.data/events.jsonl</code>. That is <b>NOT-RECORDED</b>, not zero: nothing '
+              'has executed a TeamSpec through the controller on this machine yet. Shown at zero '
+              'on purpose &mdash; same rule as the inbox above.</div>')
+        else:
+            w('<div style="font-size:12.5px;color:var(--ink3);margin:0 0 8px">%d recorded run(s) '
+              '&middot; newest last &middot; read from <code>.data/events.jsonl</code></div>'
+              % len(_runs_seen))
+            for _r in _runs_seen[-8:]:
+                _v = str(_r.get("verdict") or "no verdict recorded")
+                _vc = {"PASS": "var(--pass)", "FAIL": "var(--fail)",
+                       "UNMEASURABLE": "var(--unmeas)", "ERROR": "var(--fail)",
+                       "NOT_RUN": "var(--notrun)"}.get(_v, "var(--notrun)")
+                _el = _r.get("eligible") or _r.get("considered") or []
+                _not = [x.get("id") for x in _el if not x.get("chosen")]
+                w('<div style="border-left:3px solid %s;padding:2px 0 2px 11px;margin:0 0 10px">'
+                  % _vc)
+                w('<div style="font-family:ui-monospace,monospace;font-size:11.5px;color:%s">'
+                  '%s &middot; %s &middot; %s</div>'
+                  % (_vc, e(str(_r.get("ticket") or "?")), e(_v),
+                     e(str(_r.get("chosen") or "no preset chosen"))))
+                w('<div style="font-size:12.5px;color:var(--ink3);margin:2px 0 0">rule: %s</div>'
+                  % e(str(_r.get("rule") or "?")))
+                if _not:
+                    w('<div style="font-size:12.5px;color:var(--ink3);margin:1px 0 0">'
+                      'eligible, not taken: %s</div>' % e(", ".join(str(x) for x in _not)))
+                w('</div>')
+        w('</div>')
+        w('</div>')
 
         w('<div class="head">')
         w('<h1>Agent Factory &mdash; where the work stands</h1>')
@@ -2308,6 +2601,20 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 _CLAIM_MSG = (False, f"could not finish {lane_id}: {type(exc).__name__}: {exc}")
             print(f"  finish: {_CLAIM_MSG[1]}")
             self.send_response(303); self.send_header("Location", "/lanes"); self.end_headers()
+            return
+        if self.path.rstrip("/") == "/run-ticket":
+            raw = self.rfile.read(int(self.headers.get("Content-Length") or 0)).decode("utf-8", "replace")
+            q = urllib.parse.parse_qs(raw, keep_blank_values=True)
+            _CLAIM_MSG = run_ticket(
+                (q.get("ticket") or [""])[0], title=(q.get("title") or [""])[0],
+                type_id=(q.get("type") or [""])[0],
+                # ⚠ The submit button's own value carries the mode, so "plan only" and "start" are
+                # two buttons on one form rather than a checkbox somebody forgets to tick. A dry
+                # run that dispatches is worse than none at all — that lesson is already recorded
+                # against `start_research_pass`, which checked its flag three statements too late.
+                dry=bool((q.get("dry") or [""])[0]))
+            print(f"  run-ticket: {_CLAIM_MSG[1]}")
+            self.send_response(303); self.send_header("Location", "/"); self.end_headers()
             return
         if self.path.rstrip("/") == "/research/start":
             raw = self.rfile.read(int(self.headers.get("Content-Length") or 0)).decode("utf-8", "replace")

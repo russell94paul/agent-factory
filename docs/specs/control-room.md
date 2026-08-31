@@ -263,7 +263,7 @@ Concretely, and this is what the UI is *for* — not a dashboard:
 2. **Version it.** `TeamSpec.hash` already covers the composition. Pin the hash to the verdict, so
    **a certification cannot outlive the configuration that earned it.**
 3. **Run it** — claims, worktrees or clone schemas, budgets, caps.
-4. **Certify it** — the contract returns one of four verdicts, never collapsed.
+4. **Certify it** — the contract returns one of five verdicts, never collapsed.
 5. **Compare.** Two team compositions on comparable tickets, with cost and outcome side by side.
    That is the first honest version of "optimise a team", and it needs §1.3 to exist — which, as of
    today, it does.

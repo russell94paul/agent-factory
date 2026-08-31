@@ -120,3 +120,56 @@ def test_hot_reload_runs_and_reports_what_it_did():
     assert f"reloaded {n_hot} modules" in msg, (
         f"the reload message must count what it actually reloaded; got {msg!r}")
     assert "no longer exported" not in msg, msg
+
+
+# ------------------------------------------------- ⭐ the derivation was still one level too narrow
+def test_the_reload_set_is_the_transitive_closure_not_just_direct_imports():
+    """⛔ `importlib.reload` does not recurse, so direct imports are not the population.
+
+    Deriving `_HOT` from this file's own imports fixed the hand-written list and left the defect
+    alive one level down: a module reached only *through* another was never reloaded, while the
+    button went on reporting success. Measured 2026-08-31 — 24 direct imports, and the closure
+    recovered `blueprint`, `contract`, `deploy`, `evidence`, `pbi_contract`, `repo` and
+    `verifiers`. Among them `factory.contract`, which defines the five verdicts, and
+    `factory.deploy`, which holds the attempt cap.
+
+    ⭐ A derived list is only as wide as the relation it derives over. "What this file imports"
+    is not "what this process runs", and the reload button claims the second.
+    """
+    direct = set(lt._imported_factory_modules())
+    hot = {n.split(".", 1)[1] for n in lt._HOT}
+    closure = set(lt._factory_module_closure(lt._imported_factory_modules()))
+
+    assert hot == closure, (
+        f"_HOT is not the closure of the tracker's imports; "
+        f"outside it: {sorted(closure - hot)}, unexpected in it: {sorted(hot - closure)}")
+    assert closure > direct, (
+        "the closure is no wider than the direct imports — either the walk found nothing, in "
+        "which case it is not doing its job, or the import graph really is flat and this test "
+        "no longer measures anything")
+
+
+def test_the_modules_that_decide_a_verdict_are_reloadable():
+    """The specific regression, named rather than implied.
+
+    These four are what an operator is most likely to be editing when they press the button, and
+    every one of them was outside the reload set: the verdict enum, the attempt cap, the ticket
+    verifier registry, and the 12-assertion contract it runs.
+    """
+    hot = {n.split(".", 1)[1] for n in lt._HOT}
+    for name in ("contract", "deploy", "verifiers", "pbi_contract"):
+        assert name in hot, (
+            f"factory.{name} is reachable from the tracker but never reloaded — editing it and "
+            "pressing reload would report success while serving the old code")
+
+
+def test_a_dependency_still_precedes_its_importer_across_the_closure():
+    """Ordering is load-bearing and the closure widened what has to be ordered."""
+    order = lt._dependency_order(lt._factory_module_closure(lt._imported_factory_modules()))
+    pos = {n: i for i, n in enumerate(order)}
+    for earlier, later in (("contract", "verifiers"), ("verifiers", "control"),
+                           ("pbi_contract", "verifiers"), ("blueprint", "control"),
+                           ("readiness", "board")):
+        assert pos[earlier] < pos[later], (
+            f"{later} imports from {earlier} but is reloaded before it, so it keeps the old "
+            "objects and the reload only partly happened")

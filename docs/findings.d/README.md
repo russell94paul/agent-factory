@@ -19,6 +19,31 @@ F40-F49, artifact F50-F59, grain F60-F69, non-lane sessions F70+.
 
 Filename: `<id>-<slug>.md`. `ls docs/findings.d/` is the index.
 
+## ⭐ The title line, which decides whether the file is read at all
+
+```markdown
+### F87 — a short sentence saying what is actually true
+```
+
+**Three hashes, the id, an em dash.** `_HEADING` in `factory/findings.py` matches nothing else,
+and a fragment it cannot split is invisible to `load()` — and therefore to `by_lane()`,
+`malformed()` and `unattached()` alike. It does not warn; the file simply is not there.
+
+⛔ **This is stated first because omitting it cost eight findings.** This README specified the
+four mandatory fields, the id blocks, the filename and the optional fields, and never said what
+the title line had to look like. F77 through F84 were written with `#`, one after another, and
+none of them reached a single lane — including F80 and F81, which are corrections about
+`control-plane`'s own gates, and F84, a finding about a blind instrument that was itself
+invisible. `test_findings.py` was green throughout, because every check it ran asked its question
+only of the findings that had already parsed. See [[F86]].
+
+`tests/test_findings.py::test_every_findings_file_is_visible_to_the_ledger` now derives the
+expected set from this directory and fails on any file the parser cannot see.
+
+⚠ **STATUS must be the last field in the file.** A field's value runs to the end of its block,
+so any prose after `- **STATUS** — ADOPTED` is swallowed into the status value and rejected as
+not one of the four permitted words. Put narrative sections *above* the field block.
+
 ## The four mandatory fields
 
 Unchanged, and still the whole discipline. Without **MEASURED BY** a finding is an opinion;

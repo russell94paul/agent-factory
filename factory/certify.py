@@ -132,7 +132,11 @@ def main(argv: list[str] | None = None) -> int:
                   f"— REPLAYED, not a live measurement")
         if result.verdict is Verdict.UNMEASURABLE:
             print("\nUNMEASURABLE is not a pass. Wire the probes, or say so on the ticket.")
-    # 0 only for a real pass: UNMEASURABLE and FAIL must both stop a promotion.
+        if result.verdict is Verdict.ERROR:
+            print("\nERROR is not a measurement. An instrument raised instead of reporting, so "
+                  "this run says nothing about the blueprint — fix the harness and re-run. "
+                  "Do not read the other assertions as though they stood.")
+    # 0 only for a real pass: UNMEASURABLE, ERROR and FAIL must all stop a promotion.
     return 0 if result.verdict is Verdict.PASS else 1
 
 

@@ -1,4 +1,4 @@
-# F77 — RUN-01's acceptance criterion measures a different repository from RUN-01's work
+### F77 — RUN-01's acceptance criterion measures a different repository from RUN-01's work
 
 - **BELIEVED** — `boot-prompts/run-the-loop-2026-08-30.md`: *"RUN-01: wire `deploy.py`'s spend
   ceiling into the path the launcher actually takes. Done when `python -m factory.launch` stops

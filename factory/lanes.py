@@ -26,7 +26,7 @@ from .readiness import GATES
 SIZE = {"S": "under an hour", "M": "a session", "L": "more than a session"}
 
 #: Prepended to every lane prompt. One copy, because five copies means four of them go stale.
-PREAMBLE = """FIRST: read agent-factory/docs/findings.md — corrected premises from other lanes, so
+PREAMBLE = """FIRST: read agentic-factory/docs/findings.md — corrected premises from other lanes, so
 you do not rebuild a mistake somebody already paid for. Six are seeded; one is a research answer
 that named the wrong component and was carried into a second research question before anyone
 checked it.
@@ -63,7 +63,7 @@ tracker shows each worktree's commits-ahead and whether it is dirty, so a lane t
 committed in a long time is visible as a stalled one — which is the progress marker R6 recommends
 over a heartbeat.
 
-LAST: append what you learned to agent-factory/docs/findings.md — corrected premises only — or
+LAST: append what you learned to agentic-factory/docs/findings.md — corrected premises only — or
 write NOTHING TO REPORT with the date and lane. Silence has to mean checked, not unlooked-at."""
 
 
@@ -134,19 +134,19 @@ LANES: List[Lane] = [
         size="L",
         gates=["cap", "reaper", "concurrency", "bounded", "truthful", "from-history"],
         prompt=(
-            "Work the control-plane gates in the agent-factory readiness set. Read\n"
+            "Work the control-plane gates in the agentic-factory readiness set. Read\n"
             "aldc-launchpad/boot-prompts/evaluator-isolated-next-2026-08-22.md first, then\n"
-            "agent-factory/docs/research/answers/R2-followup.md — it explains that our build\n"
+            "agentic-factory/docs/research/answers/R2-followup.md — it explains that our build\n"
             "plane is a BESPOKE engine at :8765 that does not import Prefect, so none of\n"
             "Prefect's retry/concurrency primitives are available and each control has to be\n"
             "built.\n\n"
             "Gates: cap, reaper, concurrency, bounded, truthful, from-history.\n"
             "All six live in prefect-connectors/orchestrator/pipelines.py.\n\n"
             "The mechanism behind `truthful` and `from-history` is already diagnosed in\n"
-            "agent-factory/docs/evidence/false-succeeded-mechanism.md: the terminal verdict is\n"
+            "agentic-factory/docs/evidence/false-succeeded-mechanism.md: the terminal verdict is\n"
             "computed from a last-write-wins per-stage status field, so a stage that failed 100\n"
             "times and succeeded once contributes nothing to any_failed. Do not re-derive it.\n\n"
-            "Measure with `python -m factory.readiness` in agent-factory before and after.\n"
+            "Measure with `python -m factory.readiness` in agentic-factory before and after.\n"
             "Every control needs a negative control: make it refuse something, and commit the\n"
             "proof. A mechanism nobody has watched refuse is not a control."),
     ),
@@ -156,12 +156,12 @@ LANES: List[Lane] = [
         why="`certified` is the head of the only dependency chain on the board "
             "(isolated -> certified -> tenancy). All 12 assertions return UNMEASURABLE against a "
             "live target because no probe is wired to anything.",
-        repo="agent-factory",
+        repo="agentic-factory",
         touches="factory/connector_contract.py",
         size="M",
         gates=["certified", "breadth", "corpus"],
         prompt=(
-            "Wire a real instrument to the GreenContract in agent-factory so `certified` can\n"
+            "Wire a real instrument to the GreenContract in agentic-factory so `certified` can\n"
             "stop reporting UNMEASURABLE. Read\n"
             "aldc-launchpad/boot-prompts/evaluator-isolated-next-2026-08-22.md first.\n\n"
             "The contract is factory/connector_contract.py; Probes refuses everything by design\n"
@@ -186,7 +186,7 @@ LANES: List[Lane] = [
         size="M",
         gates=["refuses", "checks", "attributable", "honest", "general", "ceiling", "cost"],
         prompt=(
-            "Work the judgement gates in the agent-factory readiness set. Read\n"
+            "Work the judgement gates in the agentic-factory readiness set. Read\n"
             "aldc-launchpad/boot-prompts/evaluator-isolated-next-2026-08-22.md first.\n\n"
             "Gates: refuses, checks, attributable, honest, general, ceiling, cost.\n\n"
             "⚠ COORDINATE: these touch prefect-connectors/orchestrator/pipelines.py, the same\n"
@@ -203,12 +203,12 @@ LANES: List[Lane] = [
         why="Gate `chain` is unstated and impeccable's 59 deterministic detector rules have never "
             "been pointed at the artifact. It is the instrument the static checks lacked, and it "
             "needs no browser and no credentials.",
-        repo="agent-factory",
+        repo="agentic-factory",
         touches="docs/artifacts/agent-factory.html, ~/.claude/skills/",
         size="S",
         gates=["chain"],
         prompt=(
-            "Two things, both in agent-factory, neither needing a browser or a credential.\n\n"
+            "Two things, both in agentic-factory, neither needing a browser or a credential.\n\n"
             "1. Gate `chain`: state impeccable's place in the skill chain, in writing, in\n"
             "   ~/.claude/skills/living-systems-ui/SKILL.md — the probe reads that file and\n"
             "   looks for 'impeccable'. It overlaps artifact-design, artifact-motion and\n"
@@ -227,12 +227,12 @@ LANES: List[Lane] = [
         why="The calibration world assumes two accounts sharing two campaign ids. If the real "
             "table holds one account, the declared primary key is wrong and A9 is calibrated "
             "against a mistake.",
-        repo="agent-factory",
+        repo="agentic-factory",
         touches="blueprints/windsorai_client_a.yaml, factory/connector_contract.py",
         size="S",
         gates=["grain"],
         prompt=(
-            "Settle gate `grain` in agent-factory. One Snowflake query decides it:\n\n"
+            "Settle gate `grain` in agentic-factory. One Snowflake query decides it:\n\n"
             "  SELECT COUNT(DISTINCT account_id), COUNT(*), COUNT(DISTINCT campaign_id)\n"
             "  FROM QA_DG1_GEP_PREFECT_PR.WINDSORAI__PR.google_ads_CAMPAIGN\n"
             "  WHERE date = '2026-07-22';\n\n"

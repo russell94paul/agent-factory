@@ -1,5 +1,5 @@
 [project]
-name = "agent-factory"
+name = "agentic-factory"
 version = "0.1.0"
 description = "Foundation for measurable agent teams"
 requires-python = ">=3.11"

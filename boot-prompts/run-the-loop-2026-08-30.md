@@ -1,5 +1,7 @@
 # Boot — bound the loop, then run a ticket through it
 
+⛔ **SUPERSEDED 2026-08-30 by `run-03-the-missing-middle-2026-08-30.md`.** Its `next:` — run one supervised lane — is now RUN-03's first step, not a separate action. **Kept for the F77/F78 correction and the gate-ownership table**, which are still the clearest statement of that finding. See `README.md` in this folder.
+
 **Written:** 2026-08-29, late. **Refreshed:** 2026-08-29 ~20:45, after the tickets-tab count defect
 was fixed and the dependency graph became real.
 **For:** the next session.

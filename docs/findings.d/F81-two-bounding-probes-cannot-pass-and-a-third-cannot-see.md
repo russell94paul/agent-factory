@@ -1,4 +1,4 @@
-# F81 — two of the five bounding probes cannot pass, and a third cannot see the control it judges
+### F81 — two of the five bounding probes cannot pass, and a third cannot see the control it judges
 
 Found while checking F80. Both are in `factory/readiness.py`, both concern gates on the critical
 path, and both report a confident FAIL about a control that exists.

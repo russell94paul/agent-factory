@@ -62,7 +62,7 @@ EVALUATOR_IDENTITY_FIELDS = ("identity", "bundle_sha256")
 
 #: The verdicts that were never scored against a world, and so legitimately name no corpus.
 #: Everything else must say which world produced it.
-UNSCORED_VERDICTS = frozenset({"REFUSED", "UNMEASURABLE", "NOT_RUN"})
+UNSCORED_VERDICTS = frozenset({"REFUSED", "UNMEASURABLE", "ERROR", "NOT_RUN"})
 
 
 class EvaluatorError(Exception):

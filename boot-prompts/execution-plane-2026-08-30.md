@@ -1,5 +1,7 @@
 # Boot — split the execution plane, AFTER the loop is bounded
 
+⛔ **SUPERSEDED 2026-08-30 by `run-03-the-missing-middle-2026-08-30.md`.** This file has already been corrected once (F78, see below); RUN-03 then replaced its sequencing entirely. **Kept for the provider-boundary reasoning.** See `README.md` in this folder.
+
 **Written:** 2026-08-29, late. **Corrected:** 2026-08-29 ~21:40, after F78.
 **For:** a session that comes after `run-the-loop-2026-08-30.md`. **Does NOT supersede it.**
 

@@ -143,7 +143,7 @@ def write_lane_handoff(lane_id: str, note: str, overrides: Optional[List[str]] =
 
     lines += ["", "## Where it got to", "", note.strip() or "_(nothing recorded)_", "",
               "## Next", "",
-              f"Read `agent-factory/docs/findings.md` first, then re-open this lane from the",
+              f"Read `agentic-factory/docs/findings.md` first, then re-open this lane from the",
               f"tracker at `:8099/lanes`. Its prompt is generated and current — do not work from",
               f"a copy pasted earlier.", ""]
     p.write_text("\n".join(lines), encoding="utf-8")
