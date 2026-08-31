@@ -1,6 +1,17 @@
 # Boot — RUN-03: make one TeamSpec actually execute
 
-✅ **CURRENT as of 2026-08-30 05:25** — this is the live boot prompt; every other file in `boot-prompts/` is superseded or half-done. See `README.md` in this folder for the map, and `docs/findings.d/F77`/`F78` for the corrections that outlived every earlier prompt.
+⛔ **SUPERSEDED 2026-08-31 03:55 — ITS `next:` IS DONE. Do not execute this file.**
+RUN-03 landed at `31f3527`: `factory/control.py`, `events.py` and `provider.py` exist, the tracker
+routes through the controller, and runs reach `.data/runs.jsonl`. Read `README.md` in this folder
+for what is actually open. **Kept for its reasoning** — the pricing table (§2), the three
+non-negotiable requirements (§1) and the adopt-exactly-one-thing verdict on the Agent SDK are all
+unspent, and the SDK was *not* adopted, so that decision is still live.
+
+⚠ **Two of this file's own claims were already wrong when it was written**, and both are annotated
+in place below: §0's headline "2,041 lines, zero consumers" was 574 (F84), and §5's claim that
+RUN-03 moves the `breadth` gate is false (its own margin). Running it produced four more findings
+— F83 and F85 (defects in the code it wired) and F86 (the ledger that could not show you any of
+them). See `docs/findings.d/F77`/`F78` for the corrections that outlived every earlier prompt.
 
 **Written:** 2026-08-30, 02:00. **This is the one that gets the factory running.**
 

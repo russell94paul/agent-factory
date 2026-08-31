@@ -7,20 +7,38 @@ because it is confidently wrong and sits further from the reader's eye than the 
 So: this file is the router. It is the only file here that is maintained. Everything else is dated
 and frozen at its moment.
 
-**Measured 2026-08-30 06:10.** agent-factory `main` at `6bd12f3`; **prefect-connectors `main` at `0195e59`** — the bounding controls are merged there now, which changes what the readiness board says (see the new gotcha at the bottom).
+**Measured 2026-08-31 03:55.** `fix/fifth-verdict-apparatus-error` at `f8679b7`;
+**prefect-connectors `main` at `0195e59`**. RUN-03 has landed — see below.
 
 ---
 
 ## ⭐ Read this one
 
-### `run-03-the-missing-middle-2026-08-30.md` — **CURRENT**
+### There is no CURRENT prompt. RUN-03 is done, and nothing has been scoped to replace it.
 
-`next:` **wire ticket → preset → TeamSpec → one agent in a worktree → verdict → `.data/runs.jsonl`.**
+**Write the next one before you start work, not after.** The honest state, measured:
 
-Argues from a consumer count: `dispatch.py` (441 lines), `claims.py` (390), `presets.py` (309),
-`runs.py` (289) — **2,041 lines, zero consumers.** It explicitly subsumes `phase-0-event-ledger`
-(build the runner and have it emit the event record as it goes — one vertical slice, not two
-tickets) and explicitly rules out the branch merges as tidying that moves no verdict.
+| | |
+|---|---|
+| `factory/control.py` · `events.py` · `provider.py` | landed `31f3527`, 1,137 lines + 442 of tests |
+| the tracker | routed through the controller — `local_tracker.run_ticket`, POST `/run-ticket` |
+| `.data/runs.jsonl` | 5 rows |
+| findings ledger | **19 visible → 29** (`f8679b7`) |
+
+⛔ **Do not re-run RUN-03's plan.** `run-03-the-missing-middle-2026-08-30.md` is now a
+**superseded** file kept for its reasoning; its `next:` is executed. Its §0 headline measurement
+was already wrong when written (F84) and its `breadth` acceptance claim was already retired in its
+own margin.
+
+⭐ **What RUN-03 actually proved, and what it did not.** It proved the vertical slice runs and that
+`GreenContract` assigns the verdict. It did **not** produce a PASS, and should not have: four of
+five presets name a verifier nobody has wired, so a run under one ends `UNMEASURABLE` however
+cleanly it goes. **That is the honest next question — wire a verifier, or the assembly line
+produces records nobody can act on.** Nothing else on the board changes that.
+
+⚠ Two defects were found within two invocations of running it (F83), and two more by running it
+once more the next morning (F85, F86). That yield is the argument for what to do next: **wire
+something, then run it.** It has never failed to pay.
 
 ---
 
@@ -46,6 +64,7 @@ only because another session has it checked out.
 
 | file | why it is here | what retired it |
 |---|---|---|
+| `run-03-the-missing-middle-2026-08-30.md` | the pricing table, the three non-negotiable requirements, and the adopt-exactly-one-thing verdict on the Agent SDK — none of which is spent | **its `next:` is DONE** — landed `31f3527`, and the two defects that came out of running it are F83/F85 |
 | `run-the-loop-2026-08-30.md` | the F77/F78 correction and the gate-ownership table are still the clearest statement of that finding | its `next:` (run one supervised lane) is now RUN-03's first step |
 | `build-vs-adopt-2026-08-30.md` | **the adopt-vs-build decision record** — still load-bearing, and it falsifies `execution-plane`'s "adopt before you abstract" section | its `next:` only deferred to `run-the-loop` |
 | `execution-plane-2026-08-30.md` | the provider-boundary reasoning, and why it comes *after* a real execution path | corrected twice: F78, then RUN-03 |
@@ -57,8 +76,9 @@ only because another session has it checked out.
 
 ## The corrections that outlived every prompt above
 
-If you read nothing else here, read these two findings. Both were expensive and both are the kind of
-thing a fresh session re-derives wrongly:
+If you read nothing else here, read these. Every one was expensive, and every one is the kind of
+thing a fresh session re-derives wrongly. Regenerate the list with
+`grep -l 'AFFECTS' docs/findings.d/F7*.md docs/findings.d/F8*.md`; do not maintain a count by hand.
 
 - **`docs/findings.d/F77`** — RUN-01's acceptance criterion measures a different repository from
   RUN-01's work.
@@ -69,6 +89,13 @@ thing a fresh session re-derives wrongly:
 - **`docs/findings.d/F81`** — three probes that could not see (two with a single `_fail` return path
   since 2026-08-22, one case-sensitive grep), plus a fourth blind spot in the checker that catches
   them. All fixed; the probes now drive the controls.
+- ⭐ **`docs/findings.d/F86`** — **the findings ledger could not see F77–F84.** Every correction in
+  this list was invisible to `load()`, `by_lane()` and both of `test_findings.py`'s checks for a
+  day, because the fragments were titled `#` where the parser requires `###`. Fixed at `f8679b7`,
+  and a test now derives the population from `ls docs/findings.d/` rather than trusting the
+  parser's own output. **If you write a finding, `### F<n> — title` or it does not exist.**
+- **`docs/findings.d/F85`** — two `--dry-run` invocations spent the whole attempt cap and made a
+  ticket unrunnable. The suite missed it because it reached the cap the same way.
 - **`docs/findings.d/F78`** — it is four gates, not one. `cap`, `ceiling`, `concurrency` and `reaper`
   all grep `prefect-connectors`, so **no agent-factory work moves them**; and all five
   `OUTPUT-UNCERTIFIED` gates are local, so that is the verdict this repo can actually move.
