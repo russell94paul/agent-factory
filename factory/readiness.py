@@ -508,6 +508,16 @@ def g_gates_have_checks():
         if not s.get("gate_check"):
             ev.append(f"{k}/{s['name']} — {s.get('gate_type')}, check=None")
     src = "orchestrator/pipelines.py :: PIPELINE_DEFS"
+    # ⛔ POPULATION FLOOR. `len(checked) == len(gates)` is `0 == 0` when the pipeline
+    # definitions contain no stage of type "gate" at all — so **deleting every gate greened the
+    # gate-coverage gate**, with the evidence line reading "0 of 0 gates have a gate_check".
+    # Verified 2026-08-31 by substituting defs with no gate stages: PASS.
+    if not gates:
+        return _notrun("no gates to check",
+                       ev + ["this gate measures gate COVERAGE, and the definitions declare no "
+                             "gate at all. Zero of zero is not full coverage — it is an empty "
+                             "population, and reporting it as a pass is how a deleted control "
+                             "reads as a satisfied one"], src)
     if len(checked) == len(gates):
         return _pass("every gate has a check", ev, src)
     return _fail(f"{len(gates)-len(checked)} gates have no programmatic check", ev, src)
@@ -516,14 +526,36 @@ def g_gates_have_checks():
 def g_success_means_correct():
     runs = _audits()
     bad = []
+    completed = 0
     for r in runs:
         fin = any(e.get("event_type") == "pipeline_completed" for e in r["events"])
         f = sum(1 for e in r["events"] if e.get("event_type") == "stage_failed")
+        completed += bool(fin)
         if fin and f:
             bad.append((r["id"], f))
     src = "orchestrator/data/audits/*.json"
+    # ⛔ POPULATION FLOOR. This gate is named for the estate's founding failure — success
+    # reported over failures nobody saw — and it used to answer that question with
+    # `if not bad: _pass(...)` and an EMPTY evidence list. `bad` requires a run carrying BOTH
+    # `pipeline_completed` and `stage_failed`, so a population where **nothing ever completed**
+    # produces no `bad` rows and the gate reported "no completed run carried failures" as a
+    # PASS. It was true and it was not a measurement.
+    #
+    # Verified 2026-08-31 with a synthetic audit dir holding one run that only ever failed:
+    # PASS, evidence `[]`. The sibling `g_status_matches_reality` already computes and reports
+    # the population it could actually compare (`N listed, M with an event log, K compared`);
+    # this is that discipline, applied to the gate that needed it most.
+    if not completed:
+        return _notrun("no completed run to check",
+                       [f"{len(runs)} audit(s) on disk, {completed} of them reporting "
+                        f"pipeline_completed",
+                        "this gate asks whether a run reported SUCCESS over recorded failures. "
+                        "With no successful run in the population there is nothing to ask it "
+                        "of — that is NOT-RUN, not a pass"], src)
     if not bad:
-        return _pass("no completed run carried failures", [], src)
+        return _pass("no completed run carried failures",
+                     [f"{completed} completed run(s) examined, none carrying a stage_failed "
+                      f"event (of {len(runs)} audit(s) on disk)"], src)
     ev = [f"{len(bad)} completed run(s) carried recorded failures"]
     ev += [f"{i} reported completed after {n} stage_failed events" for i, n in bad]
     return _fail("a run reports success over failures it could not see", ev, src)
@@ -555,13 +587,30 @@ def g_qa_gate_is_general():
         raise Unmeasurable(f"no promotion_ops.py at {p}")
     txt = p.read_text(encoding="utf-8")
     src = "orchestrator/stage_scripts/promotion_ops.py"
+    # ⛔ POSITIVE CONTROL. The whole verdict here is the ABSENCE of one substring, and the only
+    # thing previously asserted was `p.is_file()`. So a file that exists and has been **emptied**
+    # contained no "smoke-test-" and scored PASS with an empty evidence list — verified
+    # 2026-08-31 against a one-comment stub. An absence is only evidence once the instrument has
+    # been shown able to see a presence.
+    #
+    # The anchors are measured against the real file rather than guessed: on
+    # prefect-connectors@main it is 241 lines with 7 `def`s and 48 mentions of "deployment".
+    defs = txt.count("def ")
+    mentions = txt.lower().count("deployment")
+    if defs < 1 or mentions < 1:
+        raise Unmeasurable(
+            f"{src} is present but does not look like the QA logic this gate reasons about "
+            f"({defs} def(s), {mentions} mention(s) of 'deployment'). A verdict that is the "
+            f"absence of a substring says nothing about a file that contains nothing")
     if "smoke-test-" in txt:
         line = next((i + 1 for i, l in enumerate(txt.splitlines())
                      if "smoke-test-" in l), None)
         return _fail("QA verification targets a smoke-test twin",
                      [f"{src}:{line} builds the deployment name as f\"smoke-test-{{connector}}\"",
                       "so it measures a twin, not the connector's own deployment"], src)
-    return _pass("QA verification targets the connector's own deployment", [], src)
+    return _pass("QA verification targets the connector's own deployment",
+                 [f"searched {len(txt.splitlines())} lines carrying {defs} def(s) and "
+                  f"{mentions} mention(s) of 'deployment'; no 'smoke-test-' among them"], src)
 
 
 #: Where the suite verdict is remembered between renders. Under .data/, which is gitignored.
@@ -835,17 +884,54 @@ def g_corpus_is_tamper_evident():
 
 
 def g_repo_is_durable():
+    """Is this work actually somewhere other than this disk?
+
+    ⛔ **This gate asserted a word it never tested.** It ran `git remote`, and if any remote was
+    NAMED it returned `_pass("pushed to origin")` with an empty evidence list — never inspecting
+    the return code, never contacting the remote, never counting commits ahead. Verified
+    2026-08-31 with a stubbed `git remote` exiting **128** ("could not read from remote
+    repository"): PASS, headline "pushed to origin". A repository 200 commits ahead of an
+    unreachable remote reported itself durable.
+
+    `g_evaluator_is_a_service` a thousand lines below carries the rule this violated —
+    *"a gate that asserts a word it never tested is the same species of defect as a probe
+    matching its own source"*. Configured is not pushed, and pushed is the claim.
+    """
+    src = "git remote + rev-list"
     try:
         r = subprocess.run(["git", "remote"], cwd=FACTORY, capture_output=True,
                            text=True, timeout=30)
     except Exception as exc:
         raise Unmeasurable(f"could not read git remotes: {exc}")
+    if r.returncode != 0:
+        raise Unmeasurable(
+            f"`git remote` exited {r.returncode}: {(r.stderr or '').strip()[:200]} — the "
+            f"instrument did not run, so this says nothing about durability")
     remotes = [x for x in r.stdout.split() if x]
-    src = "git remote"
-    if remotes:
-        return _pass(f"pushed to {', '.join(remotes)}", [], src)
-    return _fail("local git only — no remote",
-                 ["one rm -rf from gone"], src)
+    if not remotes:
+        return _fail("local git only — no remote", ["one rm -rf from gone"], src)
+
+    # A named remote is configuration. What makes the work durable is that commits have actually
+    # left this disk, so measure that: anything on a local branch and on no remote-tracking ref
+    # is still only here.
+    try:
+        u = subprocess.run(["git", "log", "--oneline", "--branches", "--not", "--remotes"],
+                           cwd=FACTORY, capture_output=True, text=True, timeout=60)
+    except Exception as exc:
+        raise Unmeasurable(f"could not count unpushed commits: {exc}")
+    if u.returncode != 0:
+        raise Unmeasurable(
+            f"could not count unpushed commits (exit {u.returncode}); a remote is configured "
+            f"({', '.join(remotes)}) but whether anything reached it is unmeasured")
+    unpushed = [l for l in (u.stdout or "").splitlines() if l.strip()]
+    ev = [f"remotes configured: {', '.join(remotes)}",
+          f"commits on a local branch and on no remote-tracking ref: {len(unpushed)}"]
+    if unpushed:
+        ev += [f"  {l}" for l in unpushed[:5]]
+        if len(unpushed) > 5:
+            ev.append(f"  … and {len(unpushed) - 5} more")
+        return _fail(f"{len(unpushed)} commit(s) exist only on this disk", ev, src)
+    return _pass(f"every commit has reached {', '.join(remotes)}", ev, src)
 
 
 
@@ -1579,7 +1665,28 @@ def g_evaluator_is_a_service():
            "local process is rank 5 and 'mostly theatre'",
            "'Moving only the files to another directory changes nothing; moving "
            "ownership/credentials out of the agent's capability set does'"]
-    if endpoint and impl:
+    # ⛔ The pass condition was `endpoint and impl` — ANY non-empty string, set by the very party
+    # this gate exists to hold at arm's length. Verified 2026-08-31 with
+    # `AGENT_FACTORY_EVALUATOR=totally-not-a-service`: PASS, headline "the evaluator is a separate
+    # principal (remote deployment)", sitting directly above its own evidence line reading
+    # "health check: NO ANSWER (ValueError) — configured is not running". The headline and the
+    # evidence contradicted each other inside one result object.
+    #
+    # ⚠ Reachability stays OUT of the pass condition, deliberately, for the reason given above:
+    # this gate asks whether the evaluator IS a separate principal, not whether it is up this
+    # second, and a service that is merely down is still a separate principal. But a string that
+    # is not an endpoint names no principal at all — that is a different claim, and it is the one
+    # that was going green. So the endpoint must at least parse as one.
+    from urllib.parse import urlparse
+    parsed = urlparse(endpoint) if endpoint else None
+    well_formed = bool(parsed and parsed.scheme in ("http", "https") and parsed.netloc)
+    if endpoint and not well_formed:
+        ev.append(f"⛔ $AGENT_FACTORY_EVALUATOR is set to {endpoint!r}, which is not an "
+                  f"http(s) endpoint — it names no principal, separate or otherwise. This "
+                  f"variable is set by the graded party, so an unvalidated string here is a "
+                  f"self-awarded pass")
+        return _notrun("the configured evaluator is not an endpoint", ev, src)
+    if well_formed and impl:
         return _pass(f"the evaluator is a separate principal ({mode} deployment)", ev, src)
     return _notrun("the evaluator is not yet a separate principal", ev, src)
 

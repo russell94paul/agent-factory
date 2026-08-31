@@ -99,9 +99,27 @@ def build_redesign_contract(target: PbiTarget, probes: Optional[Probes] = None) 
         if clobbered:
             return False, f"modified protected object(s): {', '.join(clobbered)}"
 
+        # ⛔ `w.get("renamed") or []` collapsed two different facts into one value: the agent
+        # reporting an empty list, and the agent never writing the key at all. Verified
+        # 2026-08-31 — `{}` and `{"renamed": [], "deleted": []}` both returned
+        # PASS / "nothing renamed or deleted — additive after all", indistinguishably.
+        #
+        # ⭐ The correct reasoning is already in this function, twelve lines below, for the
+        # dependents list: *"An absent list is NOT-VISIBLE, not 'nothing depends on it' —
+        # enumerate, never assume."* The same sentence applies one level up. A redesign whose
+        # evidence file never mentions renames has not reported that it renamed nothing; it has
+        # reported nothing, and R2 is the assertion about renames.
+        reported = [k for k in ("renamed", "deleted") if k in w]
+        if not reported:
+            raise Unmeasurable(
+                "the evidence file reports neither 'renamed' nor 'deleted', so whether this "
+                "redesign renamed anything is unmeasured. An absent key is NOT-VISIBLE, not "
+                "'additive after all' — report both keys, empty if genuinely empty")
+
         changes = list(w.get("renamed") or []) + list(w.get("deleted") or [])
         if not changes:
-            return True, "nothing renamed or deleted — additive after all"
+            return True, (f"nothing renamed or deleted — additive after all "
+                          f"(declared explicitly: {', '.join(sorted(reported))})")
         if not _structured(changes):
             raise Unmeasurable(
                 f"{len(changes)} rename/deletion(s) reported as bare names, so whether anything "
