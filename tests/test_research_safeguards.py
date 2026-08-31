@@ -27,33 +27,65 @@ from factory import dispatch, synthesis
 # --------------------------------------------------------------------------- unreconciled
 
 
-def _synth_and_answer(tmp_path, monkeypatch, answer_is_newer: bool):
+def _synth_and_answer(tmp_path, monkeypatch, banked: bool, prose="mentions R7 everywhere"):
+    """A synthesis and one answer, with the answer banked or not.
+
+    ⛔ This fixture used to set MODIFICATION TIMES, because `unreconciled()` compared them. That
+    was F93: `git worktree add` writes every file at once, so in any fresh checkout all eighteen
+    real answers read as "filed after" on write-ordering alone — measured at five milliseconds
+    apart. The check is now over CONTENT, so the fixture banks a hash or does not.
+    """
     research = tmp_path / "research"
     answers = research / "answers"
     answers.mkdir(parents=True)
     syn = research / "SYNTHESIS.md"
-    syn.write_text("mentions R7 everywhere", encoding="utf-8")
+    syn.write_text(prose, encoding="utf-8")
     ans = answers / "R7-answer-thing.md"
     ans.write_text("the answer", encoding="utf-8")
 
-    import os
-    base = syn.stat().st_mtime
-    os.utime(ans, (base + 60, base + 60) if answer_is_newer else (base - 60, base - 60))
-
     monkeypatch.setattr(synthesis, "SYNTHESIS", syn)
     monkeypatch.setattr(synthesis, "ANSWERS", answers)
+    if banked:
+        synthesis.bank()
     return research
 
 
-def test_unreconciled_fires_when_an_answer_lands_after_the_synthesis(tmp_path, monkeypatch):
+def test_unreconciled_fires_when_an_answer_has_never_been_banked(tmp_path, monkeypatch):
     """The negative control. Without this the check is decoration."""
-    _synth_and_answer(tmp_path, monkeypatch, answer_is_newer=True)
+    _synth_and_answer(tmp_path, monkeypatch, banked=False)
     assert synthesis.unreconciled() == ["R7"]
 
 
-def test_unreconciled_is_quiet_once_the_synthesis_is_rewritten(tmp_path, monkeypatch):
-    _synth_and_answer(tmp_path, monkeypatch, answer_is_newer=False)
+def test_unreconciled_is_quiet_once_the_answer_is_banked(tmp_path, monkeypatch):
+    _synth_and_answer(tmp_path, monkeypatch, banked=True)
     assert synthesis.unreconciled() == []
+
+
+def test_unreconciled_fires_again_when_a_banked_answer_changes(tmp_path, monkeypatch):
+    """⭐ The property mtime could not give per answer.
+
+    A modification time is one number for the whole synthesis, so ANY write cleared the check for
+    EVERY id — a partial reconciliation marked the answers it never opened as banked. The
+    2026-08-29 correction recorded that and could only answer it with a rule. Per-answer hashes
+    make it a property.
+    """
+    research = _synth_and_answer(tmp_path, monkeypatch, banked=True)
+    ans = research / "answers" / "R7-answer-thing.md"
+    ans.write_text("the answer, substantially revised", encoding="utf-8")
+    assert synthesis.unreconciled() == ["R7"]
+
+
+def test_rewriting_the_synthesis_does_not_bank_an_answer_nobody_read(tmp_path, monkeypatch):
+    """⛔ The regression this whole change exists to make impossible.
+
+    Under mtime, touching SYNTHESIS.md cleared the check for every id at once. Here the prose is
+    rewritten — at length, mentioning R7 — and R7 stays outstanding, because nothing banked it.
+    """
+    research = _synth_and_answer(tmp_path, monkeypatch, banked=False)
+    (research / "SYNTHESIS.md").write_text(
+        "A long and careful reconciliation that discusses R7 at length.", encoding="utf-8")
+    assert synthesis.unreconciled() == ["R7"], (
+        "writing the synthesis must not bank an answer that was never stamped")
 
 
 def test_a_future_tense_mention_does_not_satisfy_unreconciled(tmp_path, monkeypatch):
@@ -61,17 +93,24 @@ def test_a_future_tense_mention_does_not_satisfy_unreconciled(tmp_path, monkeypa
 
     `unsynthesised()` passes here — that is the weakness. `unreconciled()` must not.
     """
-    research = _synth_and_answer(tmp_path, monkeypatch, answer_is_newer=True)
-    (research / "SYNTHESIS.md").write_text(
-        "R7 is still outstanding. Read them together when R7 lands.", encoding="utf-8")
-    import os
-    ans = research / "answers" / "R7-answer-thing.md"
-    syn = research / "SYNTHESIS.md"
-    os.utime(ans, (syn.stat().st_mtime + 60,) * 2)
-
-    monkeypatch.setattr(synthesis, "RESEARCH", research)
+    _synth_and_answer(tmp_path, monkeypatch, banked=False,
+                      prose="R7 is still outstanding. Read them together when R7 lands.")
+    assert synthesis.unsynthesised() == [], "the id IS mentioned — this is the weak check passing"
     assert "R7" in synthesis.unreconciled(), (
-        "an answer filed after a synthesis that only promises to read it is NOT reconciled")
+        "an answer whose synthesis only promises to read it is NOT reconciled")
+
+
+def test_a_stamped_but_unmentioned_answer_is_reported(tmp_path, monkeypatch):
+    """⭐ The gap content-hashing opens, and the cross-check that closes it.
+
+    mtime was blunt on purpose: it could not be satisfied by writing the id anywhere, only by
+    editing the file after the answer landed. A hash CAN be stamped by something that never read
+    the answer — so a banked id the prose never names is reported rather than trusted.
+    """
+    _synth_and_answer(tmp_path, monkeypatch, banked=True, prose="this prose names no ids at all")
+    o = synthesis.outstanding()
+    assert o["never_banked"] == [] and o["stale"] == []
+    assert o["banked_but_unmentioned"] == ["R7"]
 
 
 # --------------------------------------------------------------------------- run_log

@@ -82,13 +82,47 @@ rather than a parser.
 
 - **KIND** — DESIGN
 
-- **CHANGES** — none. Recorded before choosing a remedy, because there are three and they are not
-  equivalent. **(a)** Drop `filed_after` and keep only the content check — honest, loses a real
-  signal. **(b)** Replace mtime with the git commit time of each path (`git log -1 --format=%ct`),
-  which survives any checkout but costs a subprocess per answer and is wrong for uncommitted work.
-  **(c)** Record the reconciliation point *inside* `SYNTHESIS.md` — a banked-as-of marker per id —
-  so the claim is data rather than an inference from the filesystem. (c) is the only one that
-  makes the check mean what it says, and it is the largest. Whichever is chosen, the test must be
-  moved onto `outstanding()` so it asks the same question as the code.
+- **CHANGES** — **none of the three remedies first named.** All three inherited the original
+  error, which is that `filed_after` used **time as a proxy for change**: (a) dropping the check
+  loses a real signal, (b) git commit times survive a clone but are wrong for uncommitted work,
+  and (c) a banked-as-of marker is still a timestamp, still answering *when* rather than *what*.
 
-- **STATUS** — OPEN
+  ⭐ **The remedy is to bank by CONTENT.** `SYNTHESIS.md` now carries a machine-written block
+  recording each answer's sha256 at the moment it was folded in, and the check compares hashes:
+
+  ```
+  never_banked   no hash recorded            -> the record has not taken it in at all
+  stale          recorded hash != current    -> the record describes an earlier version
+  ```
+
+  Not a new idea here — the **third** application of one that already works. `evals/MANIFEST.sha256`
+  pins the corpus and verifies on load; `registry.py:104-113` hashes a workflow's own text as its
+  version, on the stated ground that *"a `SKILL.md` edited between two runs is a different
+  workflow."* An answer edited after the synthesis read it is a different answer.
+
+  ⭐ **It also closes the defect the old docstring called unacceptable in itself.** An mtime is one
+  number for the whole file, so *any* write cleared the check for *every* id — a partial
+  reconciliation marked the answers it never opened as banked. The 2026-08-29 correction recorded
+  that and could only answer it with a rule (*"a partial write must never happen"*). Hashes are
+  per answer, so a partial pass banks only what it stamps. **The rule became a property.**
+
+  ⚠ **And the new mechanism opens a gap the old one did not have.** mtime was blunt on purpose: it
+  could not be satisfied by writing an id anywhere, only by editing the file after the answer
+  landed. A hash *can* be stamped by something that never read the answer. So `outstanding()`
+  gained a third key, `banked_but_unmentioned`, reporting any banked id the prose never names.
+
+  ⛔ **That cross-check shipped inert on the first attempt, and its own test caught it.** `bank()`
+  writes the ids into the block, and `synthesised()` scans the file for `R\d+` — so banking an
+  answer made it "mentioned" and the cross-check could never fire. `_prose()` now strips the block
+  before scanning. An inert control, inside the control added to prevent one.
+
+  `unreconciled()` keeps its name and signature, so `dispatch.py:394` and `handoff.py:201` improve
+  without changing. The tests moved onto `outstanding()` — they had been asking a weaker question
+  than the code since 2026-08-29, which is why nobody saw this.
+
+  **Measured:** every answer's mtime moved ahead of the synthesis, and the record stays clean; a
+  genuine one-line edit to R1 reports `stale: ['R1']`; reverting it clears. The suite in a fresh
+  worktree went **16 failures to 15** — the same 15 as the primary. The worktree and the primary
+  now agree, which is the whole of what this finding said they did not.
+
+- **STATUS** — ADOPTED

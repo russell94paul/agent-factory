@@ -45,7 +45,7 @@ def test_outstanding_covers_both_checks_and_does_not_double_count():
     ['R14','R18','R19'], and the launched session was told about R19 only.
     """
     o = outstanding()
-    never, late = o["never_mentioned"], o["filed_after"]
+    never, late = o["never_banked"], o["stale"]
 
     assert not (set(never) & set(late)), (
         f"an id is reported under both reasons: {sorted(set(never) & set(late))}. They must be "
@@ -65,7 +65,7 @@ def test_the_prompt_names_every_outstanding_answer():
     resulting write marks it reconciled. This test is the reason `outstanding()` exists.
     """
     o = outstanding()
-    gap = o["never_mentioned"] + o["filed_after"]
+    gap = o["never_banked"] + o["stale"]
     for text, label in ((prompt(), "prompt()"), (session_prompt(), "session_prompt()")):
         for rid in gap:
             assert rid in text, (
@@ -83,10 +83,10 @@ def test_the_prompt_never_claims_an_id_is_unmentioned_when_it_is_merely_late():
     sent looking for something that is already there.
     """
     o = outstanding()
-    if not o["filed_after"]:
+    if not o["stale"]:
         return
     text = prompt()
-    for rid in o["filed_after"]:
+    for rid in o["stale"]:
         assert f"does not mention {rid} at all" not in text
         assert f"never mentioned {rid}" not in text.lower()
 
@@ -102,55 +102,80 @@ def test_the_prompt_never_claims_an_id_is_unmentioned_when_it_is_merely_late():
 # test needs.
 
 def _fixture(tmp_path, monkeypatch, mentioned, answers):
-    """A synthesis record and answer set with known mention/mtime relationships.
+    """A synthesis record and answer set with known mention/banking relationships.
 
-    `mentioned` — ids the synthesis names. `answers` — {id: filed_before_synthesis}.
+    `mentioned` — ids the synthesis names in its prose.
+    `answers` — {id: banked}. A banked id is stamped with its hash and then LEFT ALONE; an
+    unbanked one never was.
+
+    ⛔ This fixture used to set modification times, because the check compared them. That was
+    F93: a fresh checkout writes every file at once, so all eighteen real answers read as
+    "filed after" on write-ordering alone.
     """
-    import os
     from factory import synthesis as S
 
     ans = tmp_path / "answers"
     ans.mkdir()
     syn = tmp_path / "SYNTHESIS.md"
-
-    old, new = 1_000_000, 2_000_000
-    for rid, before in answers.items():
-        f = ans / f"{rid}-answer-topic.md"
-        f.write_text("x", encoding="utf-8")
-        os.utime(f, (old, old) if before else (new, new))
     syn.write_text("Synthesis. " + " ".join(mentioned), encoding="utf-8")
-    os.utime(syn, ((old + new) // 2,) * 2)
+
+    for rid in answers:
+        (ans / f"{rid}-answer-topic.md").write_text("x", encoding="utf-8")
 
     monkeypatch.setattr(S, "SYNTHESIS", syn)
     monkeypatch.setattr(S, "ANSWERS", ans)
+    to_bank = [rid for rid, is_banked in answers.items() if is_banked]
+    if to_bank:
+        S.bank(to_bank)
     return S
 
 
 def test_union_is_proved_on_a_synthetic_record(tmp_path, monkeypatch):
-    """R18 mentioned-but-late, R19 never-mentioned — the exact 2026-08-29 shape.
+    """R18 banked-then-changed, R19 never banked — the exact 2026-08-29 shape.
 
-    The old logic returned only R19 here. Both must reach the prompt, because the write that
-    banks R19 clears the timestamp check for R18 too.
+    The old logic returned only R19 here. Both must reach the prompt.
     """
     S = _fixture(tmp_path, monkeypatch,
-                 mentioned=["R18"],                    # named, but named before its answer landed
-                 answers={"R18": False, "R19": False})  # both filed AFTER the synthesis
+                 mentioned=["R18"],
+                 answers={"R18": True, "R19": False})
+    # R18 was banked, then its answer changed — the record now describes an earlier version.
+    (tmp_path / "answers" / "R18-answer-topic.md").write_text("x, revised", encoding="utf-8")
 
     assert S.unsynthesised() == ["R19"], "only R19 is unmentioned"
-    assert S.unreconciled() == ["R18", "R19"], "both were filed after the synthesis"
+    assert S.unreconciled() == ["R18", "R19"], "R18 changed after banking; R19 never banked"
 
     o = S.outstanding()
-    assert o["never_mentioned"] == ["R19"]
-    assert o["filed_after"] == ["R18"], "R18 is late-but-mentioned and must not be dropped"
+    assert o["never_banked"] == ["R19"]
+    assert o["stale"] == ["R18"], "R18 is banked-but-changed and must not be dropped"
 
     text = S.prompt()
     assert "R18" in text and "R19" in text, "the prompt must name both or R18 is silently banked"
-    assert "does not mention R18 at all" not in text, "R18 IS mentioned — say why it is late"
+    assert "never banked R18" not in text, "R18 WAS banked — say that it changed"
 
 
 def test_a_fully_current_record_is_reported_clean(tmp_path, monkeypatch):
     """The negative control: the check must be able to say 'nothing outstanding' AND mean it."""
     S = _fixture(tmp_path, monkeypatch, mentioned=["R1"], answers={"R1": True})
     assert S.unsynthesised() == [] and S.unreconciled() == []
-    assert S.outstanding() == {"never_mentioned": [], "filed_after": []}
+    assert S.outstanding() == {"never_banked": [], "stale": [], "banked_but_unmentioned": []}
     assert "Nothing to reconcile" in S.prompt()
+
+
+def test_a_fresh_checkout_does_not_invent_a_backlog(tmp_path, monkeypatch):
+    """⭐ F93 itself, pinned so it cannot come back.
+
+    `git worktree add` wrote SYNTHESIS.md and all eighteen answers five milliseconds apart, so
+    every answer read as "filed after" and any fresh clone — including a first CI run — opened
+    with eighteen phantom outstanding items. Here every mtime is moved AHEAD of the synthesis and
+    the record must stay clean, because content is what was banked.
+    """
+    import os, time
+    S = _fixture(tmp_path, monkeypatch, mentioned=["R1", "R2"],
+                 answers={"R1": True, "R2": True})
+    now = time.time()
+    os.utime(S.SYNTHESIS, (now, now))
+    for i, f in enumerate(sorted(S.ANSWERS.glob("R*.md"))):
+        os.utime(f, (now + 0.005 + i * 0.001,) * 2)
+
+    assert S.unreconciled() == [], "a checkout's write order must not create a backlog"
+    assert S.outstanding()["stale"] == []
