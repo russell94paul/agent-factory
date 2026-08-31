@@ -26,11 +26,17 @@ false within the hour. A second session had a workstream open the whole time.
 
 | thread | prompt | `next:` |
 |---|---|---|
-| **execution plane** (this section) | none — RUN-03 executed, nothing scoped to replace it | **write one before you start** |
+| **execution plane** | [`bootstrap-and-instruments-2026-08-31.md`](bootstrap-and-instruments-2026-08-31.md) | **decide F90 remedy (a)** — thread the repository through `worktrees.ensure` and the providers, or accept that the first supervised run cannot happen |
 | **workflow library / client delivery** | [`workflow-library-2026-08-31.md`](workflow-library-2026-08-31.md) | run `keel` on the GEP marketing model **as an instrumented experiment** — §3a's five setup steps come before any agent spawns |
 
 They do not conflict: one owns *what the factory can execute*, the other owns *which workflow a
-ticket routes to* and the client-facing delivery. ⛔ **Both sessions were committing to this repo at
+ticket routes to* and the client-facing delivery.
+
+⚠ **The execution-plane row was `none — write one before you start` until 2026-08-31.** It now has
+a prompt: the bootstrap pack was installed (and deliberately left inert), three instruments were
+repaired, and the suite went **~2100s → 112s**. The remaining 15 suite failures are **not this
+repo's defect** — `prefect-connectors` is parked on `chore/artefact-homes` with 29 uncommitted
+files, and the mutation anchors do not exist on that branch. ⛔ **Both sessions were committing to this repo at
 once.** Run `git log --oneline -5` before assuming anything about HEAD — `presets.py` verifier states
 moved mid-session for one of them.
 
