@@ -1,0 +1,41 @@
+schema_version: 0.2
+project: agent-factory
+updated_at: null
+north_star: artificial-organization-platform
+
+repo:
+  commit: null
+  branch: null
+  dirty: null
+  scanned_at: null
+
+current_architecture:
+  run_plane: []
+  control_plane: []
+  ui: []
+  agents: []
+  skills: []
+  communication: []
+  knowledge: []
+  evals: []
+  observability: []
+  integrations: []
+  deployment: []
+
+capabilities: []
+known_gaps: []
+active_research: []
+completed_research: []
+active_missions: []
+blocked_missions: []
+decisions: []
+human_questions: []
+
+current_autonomy_rank: L0
+promotion_evidence: []
+
+next_wave:
+  id: null
+  objective: null
+  tasks: []
+  human_gates: []

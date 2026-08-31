@@ -1,0 +1,132 @@
+# Pack Manifest
+
+Active cost mode: **Claude subscription Research; no model API required.**
+
+## Key entry points
+
+- `KICKOFF_GUIDE.md`
+- `CLAUDE_KICKOFF_PROMPT.md`
+- `START_CLAUDE_HERE.md`
+- `docs/CLAUDE_RESEARCH_WORKFLOW.md`
+- `ROADMAP_TO_VISION.md`
+- `BUILD_START_TO_FINISH.md`
+
+## Research workflow (subscription mode)
+
+- `skills/claude-research-orchestrator/SKILL.md`
+- `skills/research-wave-runner/SKILL.md`
+- `skills/research-synthesizer/SKILL.md`
+- `scripts/prepare_claude_research_wave.py`
+- `scripts/ingest_claude_research.py`
+
+## All files
+
+- `BRANDING_NOTE.md`
+- `BUILD_START_TO_FINISH.md`
+- `CLAUDE_KICKOFF_PROMPT.md`
+- `HUMAN_QUESTIONS.template.md`
+- `INSTALL_SKILLS.md`
+- `KICKOFF_GUIDE.md`
+- `PROJECT_STATE.template.yaml`
+- `QUICKSTART.md`
+- `README.md`
+- `RELEASE_NOTES.md`
+- `ROADMAP_TO_VISION.md`
+- `START_CLAUDE_HERE.md`
+- `VISION.md`
+- `diagrams/AUTONOMOUS_VENTURE_FLYWHEEL.dot`
+- `diagrams/AUTONOMOUS_VENTURE_FLYWHEEL.png`
+- `diagrams/AUTONOMOUS_VENTURE_FLYWHEEL.svg`
+- `diagrams/BUILD_START_TO_FINISH.dot`
+- `diagrams/BUILD_START_TO_FINISH.md`
+- `diagrams/BUILD_START_TO_FINISH.png`
+- `diagrams/BUILD_START_TO_FINISH.svg`
+- `diagrams/BUILD_START_TO_FINISH_SIMPLE.dot`
+- `diagrams/BUILD_START_TO_FINISH_SIMPLE.png`
+- `diagrams/BUILD_START_TO_FINISH_SIMPLE.svg`
+- `diagrams/MISSION_ASSEMBLY_FLOW.md`
+- `diagrams/RESEARCH_AUTOMATION_FLOW.md`
+- `diagrams/RISING_THROUGH_THE_RANKS.dot`
+- `diagrams/RISING_THROUGH_THE_RANKS.md`
+- `diagrams/RISING_THROUGH_THE_RANKS.png`
+- `diagrams/RISING_THROUGH_THE_RANKS.svg`
+- `diagrams/VISION_ROADMAP.dot`
+- `diagrams/VISION_ROADMAP.png`
+- `diagrams/VISION_ROADMAP.svg`
+- `docs/AUTONOMOUS_PRODUCT_LIFECYCLE.md`
+- `docs/AUTONOMY_LADDER.md`
+- `docs/CLAUDE_RESEARCH_WORKFLOW.md`
+- `docs/COLLECTIVE_COGNITION.md`
+- `docs/COMMERCIAL_AUTONOMY_POLICY.md`
+- `docs/COMMUNICATION_PROTOCOL.md`
+- `docs/COMPUTE_AND_INTEGRATION_FABRIC.md`
+- `docs/ENTREPRENEUR_SCENARIOS.md`
+- `docs/EVALUATION_AND_GREEN.md`
+- `docs/EXECUTION_SURFACE_POLICY.md`
+- `docs/GAMIFIED_MISSION_CONTROL.md`
+- `docs/MISSION_ASSEMBLY_AND_SWARMING.md`
+- `docs/PATTERN_EXTRACTION_POLICY.md`
+- `docs/PLATFORM_COMPLETION_FEATURES.md`
+- `docs/PRODUCT_NAMING_AND_POSITIONING.md`
+- `docs/REFERENCE_IMPLEMENTATIONS.md`
+- `docs/REPO_INTEGRATION_PLAN.md`
+- `docs/REVENUE_AND_VENTURE_FLYWHEEL.md`
+- `docs/SELF_MAINTENANCE.md`
+- `docs/SESSION_UI_MVP.md`
+- `docs/WEB_REMOTE_SESSION_RUNBOOK.md`
+- `examples/autonomous-saas-venture.example.yaml`
+- `examples/mission-assembly.example.yaml`
+- `examples/research-manifest.example.yaml`
+- `research/RESEARCH_PROGRAM.md`
+- `research/manifests/REFERENCE_MINING.yaml`
+- `research/manifests/VENTURE_WAVE_0.yaml`
+- `research/manifests/VENTURE_WAVE_1.yaml`
+- `research/manifests/WAVE_0.yaml`
+- `research/manifests/WAVE_1.yaml`
+- `research/prompts/R03_ORG_IR.md`
+- `research/prompts/R06A_AGENT_COMMUNICATION.md`
+- `research/prompts/R06B_COLLECTIVE_COGNITION.md`
+- `research/prompts/R07_EVALUATION_GREEN.md`
+- `research/prompts/R16A_SESSION_UI.md`
+- `research/prompts/R22A_INTEGRATION_PROTOCOLS.md`
+- `research/prompts/R25_AUTONOMOUS_BOOTSTRAP.md`
+- `research/prompts/R26_MONETIZATION_OPPORTUNITY_INTELLIGENCE.md`
+- `research/prompts/R27_AUTONOMOUS_VENTURE_FACTORY.md`
+- `research/prompts/R28_AGENT_TEAM_MARKETPLACE.md`
+- `research/prompts/R29_CUSTOMER_MARKET_LEARNING.md`
+- `research/prompts/R30_GAMIFIED_MISSION_CONTROL.md`
+- `research/prompts/R31_COMMERCIAL_AUTONOMY_GOVERNANCE.md`
+- `research/prompts/RDGX_DGX_SPARK.md`
+- `research/prompts/RREF1_PAPERCLIP.md`
+- `research/prompts/RREF2_SUPER_SIMPLE_SOFTWARE_FACTORY.md`
+- `research/prompts/RREF3_INKWELL_FACTORY_SANDBOX.md`
+- `research/reference-implementations/INKWELL_FACTORY_IN_A_BOX.md`
+- `research/reference-implementations/SUPER_SIMPLE_SOFTWARE_FACTORY.md`
+- `schemas/capability-record.schema.json`
+- `schemas/compute-node.schema.json`
+- `schemas/message-event.schema.json`
+- `schemas/mission-assembly.schema.json`
+- `schemas/opportunity-hypothesis.schema.json`
+- `schemas/platform-progress.schema.json`
+- `schemas/research-job.schema.json`
+- `schemas/venture-plan.schema.json`
+- `scripts/cloud_wave_examples.sh`
+- `scripts/ingest_claude_research.py`
+- `scripts/prepare_claude_research_wave.py`
+- `scripts/requirements.txt`
+- `scripts/run_research_wave.py`
+- `scripts/start_remote_control_server.sh`
+- `skills/bootstrap-commander/SKILL.md`
+- `skills/claude-research-orchestrator/SKILL.md`
+- `skills/customer-learning-loop/SKILL.md`
+- `skills/mission-assembler/SKILL.md`
+- `skills/opportunity-intelligence/SKILL.md`
+- `skills/portfolio-experiment-manager/SKILL.md`
+- `skills/reference-implementation-miner/SKILL.md`
+- `skills/repo-context-compiler/SKILL.md`
+- `skills/research-synthesizer/SKILL.md`
+- `skills/research-wave-runner/SKILL.md`
+- `skills/roadmap-rank-tracker/SKILL.md`
+- `skills/session-console-planner/SKILL.md`
+- `skills/venture-compiler/SKILL.md`
+- `source/Agent Factory Vision.txt`

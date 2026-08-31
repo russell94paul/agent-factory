@@ -1,0 +1,23 @@
+wave: REFERENCE_MINING
+objective: Mine proven or plausible design patterns from adjacent systems without cloning their products.
+default_execution_surface: claude_research
+default_execution: source-review
+policy:
+  copy_code: false
+  copy_prompts: false
+  copy_ui: false
+  extract_patterns: true
+  require_provenance: true
+jobs:
+  - id: RREF1-paperclip
+    prompt: research/prompts/RREF1_PAPERCLIP.md
+    priority: high
+    depends_on: []
+  - id: RREF2-super-simple-software-factory
+    prompt: research/prompts/RREF2_SUPER_SIMPLE_SOFTWARE_FACTORY.md
+    priority: high
+    depends_on: []
+  - id: RREF3-inkwell-factory-sandbox
+    prompt: research/prompts/RREF3_INKWELL_FACTORY_SANDBOX.md
+    priority: high
+    depends_on: []

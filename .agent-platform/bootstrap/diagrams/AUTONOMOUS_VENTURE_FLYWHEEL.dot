@@ -1,0 +1,22 @@
+digraph G {
+  rankdir=LR;
+  graph [bgcolor="transparent", pad="0.3", nodesep="0.35", ranksep="0.55"];
+  node [shape=box, style="rounded", fontname="Arial", fontsize=10];
+  edge [fontname="Arial", fontsize=9];
+  Market [label="Market / Customer\nSignals"];
+  Intel [label="Opportunity\nIntelligence"];
+  Validate [label="Validation +\nFalsification"];
+  Venture [label="Venture Compiler"];
+  Assemble [label="Mission Assembly"];
+  Build [label="Factory Builds\nProduct"];
+  Launch [label="Controlled Launch\nExperiment"];
+  Evidence [label="Customer + Economic\nEvidence"];
+  Decision [label="Kill / Hold /\nImprove / Scale", shape=diamond];
+  Cognition [label="Collective Cognition"];
+  Evolution [label="Evolution Chamber"];
+
+  Market -> Intel -> Validate -> Venture -> Assemble -> Build -> Launch -> Evidence -> Decision;
+  Decision -> Cognition -> Evolution -> Assemble;
+  Evidence -> Cognition;
+  Decision -> Market [label=" next opportunity", style=dashed];
+}

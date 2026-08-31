@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "VenturePlan",
+  "type": "object",
+  "required": ["id", "opportunity_id", "stage", "mission_graph", "budgets", "gates", "success_criteria", "failure_criteria"],
+  "properties": {
+    "id": {"type": "string"},
+    "opportunity_id": {"type": "string"},
+    "stage": {"enum": ["discover", "validate", "design", "build", "launch", "learn", "operate", "improve", "decide"]},
+    "mission_graph": {"type": "object"},
+    "budgets": {"type": "object"},
+    "gates": {"type": "array", "items": {"type": "object"}},
+    "success_criteria": {"type": "array", "items": {"type": "string"}},
+    "failure_criteria": {"type": "array", "items": {"type": "string"}},
+    "required_signals": {"type": "array", "items": {"type": "string"}},
+    "deployment_policy": {"type": ["object", "null"]},
+    "authority_policy": {"type": ["object", "null"]}
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OpportunityHypothesis",
+  "type": "object",
+  "required": ["id", "version", "problem", "target_segment", "evidence", "assumptions", "falsification", "recommendation"],
+  "properties": {
+    "id": {"type": "string"},
+    "version": {"type": "string"},
+    "problem": {"type": "string"},
+    "target_segment": {"type": "string"},
+    "buyer": {"type": ["string", "null"]},
+    "value_proposition": {"type": ["string", "null"]},
+    "evidence": {"type": "array", "items": {"type": "object"}},
+    "alternatives": {"type": "array", "items": {"type": "string"}},
+    "monetization_hypotheses": {"type": "array", "items": {"type": "string"}},
+    "distribution_hypotheses": {"type": "array", "items": {"type": "string"}},
+    "assumptions": {"type": "array", "items": {"type": "string"}},
+    "risks": {"type": "array", "items": {"type": "string"}},
+    "falsification": {"type": "array", "items": {"type": "string"}},
+    "next_experiment": {"type": ["object", "null"]},
+    "recommendation": {"enum": ["BUILD_NOW", "VALIDATE_FIRST", "PARK", "REJECT"]}
+  },
+  "additionalProperties": true
+}

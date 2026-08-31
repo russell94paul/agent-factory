@@ -1,0 +1,13 @@
+digraph G {
+  graph [rankdir=LR, bgcolor="white", pad="0.25", nodesep="0.3", ranksep="0.5", fontname="Arial", splines=ortho];
+  node [shape=box, style="rounded", fontname="Arial", fontsize=10, margin="0.15,0.09"];
+  R0 [label="RECRUIT\nManual operator"];
+  R1 [label="SQUAD\nOne verified team"];
+  R2 [label="PLATOON\nReusable + parallel teams"];
+  R3 [label="COMPANY\nCommunication + cognition"];
+  R4 [label="BATTALION\nMission assembly"];
+  R5 [label="LOGISTICS\nIntegration + compute"];
+  R6 [label="COMMAND\nDebug + evolve"];
+  R7 [label="ARMY\nSelf-maintaining / federated"];
+  R0->R1->R2->R3->R4->R5->R6->R7;
+}

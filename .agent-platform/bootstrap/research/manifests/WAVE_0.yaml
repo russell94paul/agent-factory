@@ -1,0 +1,24 @@
+wave: WAVE_0
+objective: Resolve bootstrap and near-term architecture blockers while avoiding redundant research.
+default_execution_surface: claude_research
+jobs:
+  - id: R25-autonomous-bootstrap
+    prompt: research/prompts/R25_AUTONOMOUS_BOOTSTRAP.md
+    priority: critical
+    depends_on: []
+  - id: R06A-agent-communication
+    prompt: research/prompts/R06A_AGENT_COMMUNICATION.md
+    priority: critical
+    depends_on: []
+  - id: R06B-collective-cognition
+    prompt: research/prompts/R06B_COLLECTIVE_COGNITION.md
+    priority: critical
+    depends_on: []
+  - id: R16A-session-ui
+    prompt: research/prompts/R16A_SESSION_UI.md
+    priority: high
+    depends_on: []
+  - id: RREF1-paperclip
+    prompt: research/prompts/RREF1_PAPERCLIP.md
+    priority: high
+    depends_on: []

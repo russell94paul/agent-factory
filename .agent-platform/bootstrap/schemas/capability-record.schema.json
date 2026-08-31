@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CapabilityRecord",
+  "type": "object",
+  "required": [
+    "subject_id",
+    "task_family",
+    "evidence_count"
+  ],
+  "properties": {
+    "subject_id": {
+      "type": "string"
+    },
+    "task_family": {
+      "type": "string"
+    },
+    "conditions": {
+      "type": "object"
+    },
+    "success_rate": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 1
+    },
+    "evidence_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "confidence": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 1
+    },
+    "cost": {
+      "type": "object"
+    },
+    "latency": {
+      "type": "object"
+    },
+    "valid_from": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "valid_until": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

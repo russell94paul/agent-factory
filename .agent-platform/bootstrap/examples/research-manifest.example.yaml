@@ -1,0 +1,13 @@
+wave: EXAMPLE
+objective: Example parallel research wave
+default_execution_surface: claude_research
+max_concurrency: 2
+jobs:
+  - id: example-a
+    prompt: research/prompts/example-a.md
+    priority: high
+    depends_on: []
+  - id: example-b
+    prompt: research/prompts/example-b.md
+    priority: medium
+    depends_on: []

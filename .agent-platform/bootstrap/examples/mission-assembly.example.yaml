@@ -1,0 +1,24 @@
+mission_id: M-example
+mission_family: architecture_research
+risk: medium
+participants:
+  - id: repo-cartographer
+    mode: worker
+    reason: establish current implementation truth
+  - id: research-scout
+    mode: worker
+    reason: gather external prior art
+  - id: skeptic
+    mode: reviewer
+    reason: challenge complexity and novelty claims
+communication_routes:
+  - topic: evidence
+    subscribers: [repo-cartographer, research-scout, skeptic]
+context_packets:
+  - role: repo-cartographer
+    sources: [repo-map, architecture-docs, tests]
+  - role: research-scout
+    sources: [research-question, north-star-hypotheses]
+gates:
+  - type: synthesis_required
+  - type: human_architecture_decision

@@ -1,0 +1,30 @@
+
+digraph G {
+  graph [rankdir=TB, bgcolor="#ffffff", pad="0.3", nodesep="0.35", ranksep="0.45", fontname="Arial"];
+  node [shape=box, style="rounded", fontname="Arial", fontsize=10, margin="0.12,0.08"];
+  edge [fontname="Arial", fontsize=9];
+  A [label="0  BOOTSTRAP THE BOOTSTRAPPER\nProject state · repo context · Research queue"];
+  B [label="1  HARDEN CURRENT AGENT FACTORY\nGREEN · version locks · evals · gates"];
+  C [label="2  SESSION / MISSION CONSOLE MVP\nParallel tasks · research · artifacts · synthesis inbox"];
+  D [label="3  COMMUNICATION FABRIC v0\nTyped events · availability · help · handoffs"];
+  E [label="4  COLLECTIVE COGNITION v0\nMission graph · experience · context packets"];
+  F [label="5  CAPABILITY + MISSION ASSEMBLY v0\nBlueprints · bounded swarms · routing"];
+  Q [shape=diamond, label="Does Org-IR solve\na measured problem?"];
+  G [label="6  ORG COMPILER / Org-IR\nOnly if experiment justifies it"];
+  H [label="Keep blueprint/runtime model\nif IR adds no measurable value"];
+  I [label="7  INTEGRATION + COMPUTE FABRIC\nAdapters · deployment · future DGX Spark target"];
+  J [label="8  ORGANIZATIONAL DEBUGGER + SIMULATION\nCausal trace · replay · champion/challenger"];
+  K [label="9  EVOLUTION CHAMBER\nFrozen external eval · canary · rollback"];
+  L [label="10  SELF-MAINTENANCE\nObserve · diagnose · repair · verify · learn"];
+  M [label="11  HIGHER-ORDER / FEDERATED ORGS\nOnly when simpler organizations are insufficient"];
+  R [shape=ellipse, label="AUTOMATED RESEARCH ORGANIZATION\nClaude Research + Claude Code synthesis"];
+  A->B->C->D->E->F->Q;
+  Q->G [label=" yes"];
+  Q->H [label=" no"];
+  G->I; H->I; I->J->K->L->M;
+  R->A [style=dashed]; R->D [style=dashed]; R->E [style=dashed]; R->F [style=dashed]; R->Q [style=dashed]; R->I [style=dashed]; R->J [style=dashed]; R->K [style=dashed];
+  B->R [style=dotted, label=" production evidence"];
+  D->R [style=dotted, label=" traces"];
+  E->R [style=dotted, label=" retrieval outcomes"];
+  K->R [style=dotted, label=" experiment outcomes"];
+}

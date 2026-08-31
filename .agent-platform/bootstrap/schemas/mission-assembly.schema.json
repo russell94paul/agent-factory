@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MissionAssemblyPlan",
+  "type": "object",
+  "required": [
+    "mission_id",
+    "participants",
+    "communication_routes",
+    "context_packets",
+    "gates"
+  ],
+  "properties": {
+    "mission_id": {
+      "type": "string"
+    },
+    "mission_family": {
+      "type": "string"
+    },
+    "risk": {
+      "type": "string"
+    },
+    "participants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "mode",
+          "reason"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "mode": {
+            "enum": [
+              "owner",
+              "worker",
+              "reviewer",
+              "consulted_expert",
+              "subscriber"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "communication_routes": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "context_packets": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "budget": {
+      "type": "object"
+    },
+    "gates": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "evaluation_contract": {
+      "type": [
+        "object",
+        "null"
+      ]
+    }
+  }
+}

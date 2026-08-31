@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ResearchJob",
+  "type": "object",
+  "required": [
+    "id",
+    "prompt",
+    "execution_surface"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "prompt": {
+      "type": "string"
+    },
+    "execution_surface": {
+      "enum": [
+        "repo_only",
+        "claude_code_web_search",
+        "claude_research"
+      ]
+    },
+    "priority": {
+      "enum": [
+        "critical",
+        "high",
+        "medium",
+        "low"
+      ]
+    },
+    "depends_on": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "status": {
+      "enum": [
+        "planned",
+        "READY_FOR_CLAUDE_RESEARCH",
+        "BLOCKED_BY_RESEARCH",
+        "RESEARCH_RUNNING",
+        "AWAITING_RETURN",
+        "READY_FOR_SYNTHESIS",
+        "NEEDS_REVIEW",
+        "NEEDS_REPAIR",
+        "completed",
+        "failed"
+      ]
+    },
+    "run_dir": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-factory.local/schemas/platform-progress.schema.json",
+  "title": "PlatformProgress",
+  "type": "object",
+  "required": ["currentRank", "ranks", "updatedAt"],
+  "properties": {
+    "currentRank": {"type": "integer", "minimum": 0},
+    "updatedAt": {"type": "string"},
+    "ranks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["rank", "name", "state", "criteria"],
+        "properties": {
+          "rank": {"type": "integer", "minimum": 0},
+          "name": {"type": "string"},
+          "state": {"enum": ["LOCKED", "EXPERIMENTAL", "PROVISIONAL", "EARNED"]},
+          "criteria": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "description", "status"],
+              "properties": {
+                "id": {"type": "string"},
+                "description": {"type": "string"},
+                "status": {"enum": ["missing", "partial", "proven"]},
+                "evidenceRefs": {"type": "array", "items": {"type": "string"}}
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

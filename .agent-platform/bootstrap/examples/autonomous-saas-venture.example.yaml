@@ -1,0 +1,39 @@
+venture:
+  id: example-devtool-subscription
+  stage: validate
+  opportunity_ref: opp-example-001
+
+intent:
+  objective: "Test whether a recurring developer workflow is painful enough to justify a small paid automation product."
+  non_goal: "Do not build a production SaaS before demand evidence exists."
+
+organizations:
+  research:
+    preset: monetization-research-council
+  build_if_approved:
+    preset: product-ui-studio
+  reliability_if_launched:
+    preset: factory-reliability-corps
+
+research:
+  automate_external_runs: true
+  manifest: research/manifests/VENTURE_WAVE_0.yaml
+
+commercial_gates:
+  - id: demand-evidence
+    type: evidence
+    required: true
+  - id: public-launch
+    type: human_or_policy
+    required: true
+  - id: paid-spend
+    type: budget
+    required: true
+
+success_criteria:
+  - "Predeclared validation experiment meets its evidence threshold."
+  - "No hard privacy/security/commercial policy constraint is violated."
+
+failure_criteria:
+  - "Demand evidence is materially weaker than the minimum threshold."
+  - "Expected support/cost burden invalidates the value hypothesis."

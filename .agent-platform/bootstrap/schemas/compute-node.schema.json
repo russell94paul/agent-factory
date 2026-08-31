@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ComputeNode",
+  "type": "object",
+  "required": [
+    "id",
+    "kind",
+    "health",
+    "capabilities"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string"
+    },
+    "provider": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "health": {
+      "type": "string"
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "resources": {
+      "type": "object"
+    },
+    "runtime": {
+      "type": "object"
+    },
+    "permissions": {
+      "type": "object"
+    },
+    "cost": {
+      "type": "object"
+    },
+    "labels": {
+      "type": "object"
+    }
+  }
+}

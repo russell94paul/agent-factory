@@ -1,0 +1,30 @@
+digraph G {
+  rankdir=LR;
+  graph [bgcolor="transparent", pad="0.3", nodesep="0.35", ranksep="0.55"];
+  node [shape=box, style="rounded", fontname="Arial", fontsize=10];
+  edge [fontname="Arial", fontsize=9];
+
+  R0 [label="R0\nManual Command"];
+  R1 [label="R1\nAutomated Research\n+ Project Memory"];
+  R2 [label="R2\nHardened Factory"];
+  R3 [label="R3\nBuild Command\nOperations UI"];
+  R4 [label="R4\nCommunication Mesh"];
+  R5 [label="R5\nCollective Cognition"];
+  R6 [label="R6\nDynamic Mission\nAssembly"];
+  R7 [label="R7\nVenture Loop"];
+  R8 [label="R8\nPortfolio +\nCapability Economy"];
+  R9 [label="R9\nDebugger + Evolution"];
+  R10 [label="R10\nSelf-Maintenance"];
+  R11 [label="R11\nFederated Artificial\nOrganizations"];
+
+  R0 -> R1 -> R2 -> R3 -> R4 -> R5 -> R6 -> R7 -> R8 -> R9 -> R10 -> R11;
+
+  V1 [label="Revenue experiments\ncan begin here", shape=note];
+  V2 [label="Opportunity → MVP\n→ customer evidence", shape=note];
+  V3 [label="Multi-venture\nportfolio", shape=note];
+  R2 -> V1 [style=dashed];
+  V1 -> V2 [style=dashed];
+  V2 -> R7 [style=dashed];
+  R7 -> V3 [style=dashed];
+  V3 -> R8 [style=dashed];
+}

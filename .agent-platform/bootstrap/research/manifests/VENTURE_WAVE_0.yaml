@@ -1,0 +1,24 @@
+wave_id: venture-wave-0
+objective: "Research the minimum credible path from Agent Factory to a governed revenue-oriented autonomous software venture loop."
+default_execution_surface: claude_research
+run_policy:
+  parallel_when_independent: true
+  synthesize_after_all: true
+  human_gate_before_external_launch: true
+jobs:
+  - id: R26
+    prompt_file: research/prompts/R26_MONETIZATION_OPPORTUNITY_INTELLIGENCE.md
+    depends_on: []
+  - id: R27
+    prompt_file: research/prompts/R27_AUTONOMOUS_VENTURE_FACTORY.md
+    depends_on: []
+  - id: R28
+    prompt_file: research/prompts/R28_AGENT_TEAM_MARKETPLACE.md
+    depends_on: []
+synthesis:
+  output: research/results/venture-wave-0/SYNTHESIS.md
+  required_decisions:
+    - "Should Opportunity Intelligence be an early vertical?"
+    - "What is the minimum safe Venture Compiler?"
+    - "Which commercial actions remain human/policy gated?"
+    - "Is a capability marketplace near-term, later, or reject?"

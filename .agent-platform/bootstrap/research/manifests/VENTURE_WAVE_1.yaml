@@ -1,0 +1,16 @@
+wave: venture-wave-1
+purpose: Design the first bounded evidence-driven commercial loop on top of the hardened Agent Factory.
+default_execution_surface: claude_research
+parallel:
+  - R29_CUSTOMER_MARKET_LEARNING
+  - R31_COMMERCIAL_AUTONOMY_GOVERNANCE
+  - R30_GAMIFIED_MISSION_CONTROL
+serial_after_parallel:
+  - synthesize-commercial-platform-impact
+  - select-first-bounded-venture-experiment
+rules:
+  - do_not_build_a_business_from_internal_enthusiasm_alone
+  - external_market_evidence_required
+  - research_does_not_authorize_spend_or_publication
+  - preserve_negative_results
+  - use_existing_factory_capabilities_before_creating_new_subsystems
