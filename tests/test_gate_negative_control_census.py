@@ -6,7 +6,7 @@ shows it can fail. **The readiness board has thirty gates and no equivalent.** F
 returned PASS over an absence, and the reason all six survived is here: nobody had ever asked the
 other twenty-four to refuse.
 
-⛔ **This file does not pretend to close that.** Seventeen of thirty are proved; thirteen are not,
+⛔ **This file does not pretend to close that.** Twenty-three of thirty are proved; seven are not,
 and they are listed by name with the reason. A census whose gaps are invisible is the defect it
 was written about, so the gaps are the point of the file, not an omission from it — and one test
 prints the count into the suite's output so it cannot quietly rot.
@@ -50,6 +50,13 @@ _PROVED = {
     "truthful":  "this file::test_the_truthfulness_gate_refuses_three_different_ways",
     "tenancy":   "this file::test_tenancy_refuses_an_undeclared_blast_radius",
     "version":   "this file::test_version_hash_completeness_fails_on_a_stub",
+    # second pass
+    "attributable": "this file::test_attributable_refuses_when_it_cannot_see_the_session_names",
+    "breadth":      "this file::test_corpus_breadth_reaches_both_verdicts",
+    "ticket":       "this file::test_ticket_refuses_when_the_drafts_folder_is_not_there",
+    "grain":        "this file::test_grain_fails_while_the_grain_is_undeclared",
+    "rendered":     "this file::test_render_pass_fails_until_someone_has_actually_looked",
+    "chain":        "this file::test_skill_chain_precedence_reaches_all_three_verdicts",
     # ⚠ Covered by scripts/mutate_readiness_probes.py — and that harness is CURRENTLY INOPERATIVE.
     # Its anchors are copies of production source in prefect-connectors, which is parked on
     # `chore/artefact-homes` where the anchored lines do not exist; all 15 anchor tests fail.
@@ -67,21 +74,18 @@ _UNPROVEN = {
     "r1-followup":  "research-followup probe; no provocation designed",
     "r2-followup":  "research-followup probe; no provocation designed",
     "r3-followup":  "research-followup probe; no provocation designed",
-    "rendered":     "reads a render-pass artifact; needs a fixture artifact to provoke",
-    "chain":        "reads .impeccable precedence; no provocation designed",
-    "grain":        "reads a grain declaration; no provocation designed",
-    "ticket":       "reads ticket linkage; no provocation designed",
     "ceiling":      "⛔ the only real RED on the board, and the engine's sole budget symbol is a "
                     "TIME budget — the accounting must be fixed before a control means anything",
-    "breadth":      "corpus breadth; one corpus exists, so the population is degenerate",
-    "attributable": "reads worktree naming in the connectors repo",
-    "suite":        "shells out to pytest; provoking it means a nested suite run",
-    "certified":    "shells out to factory.certify; same cost problem, see F92",
-    "corpus":       "tamper-evidence over evals/MANIFEST.sha256; needs a corpus fixture",
+    "suite":        "shells out to pytest; provoking it means a nested suite run — the same cost "
+                    "F92 was about",
+    "certified":    "shells out to factory.certify, which reaches a pytest run in a second repo; "
+                    "same cost problem, see F92",
+    "corpus":       "tamper-evidence over evals/MANIFEST.sha256; needs a corpus fixture whose "
+                    "hash can be made to disagree without disturbing the real manifest",
 }
 
 #: The number proved today. ⭐ This may only ever go UP.
-_COVERAGE_FLOOR = 17
+_COVERAGE_FLOOR = 23
 
 
 # --------------------------------------------------------------------------------- the ratchet
@@ -120,7 +124,7 @@ def test_negative_control_coverage_does_not_regress():
 
 
 def test_the_gap_is_reported_rather_than_hidden():
-    """⚠ This test PASSES while thirteen gates are unproven, and says so out loud.
+    """⚠ This test PASSES while seven gates are unproven, and says so out loud.
 
     It exists so the number is in the suite's output and in this file's diff, not so it can be
     mistaken for coverage. `registry.unproven()` does the same for workflows.
@@ -228,3 +232,104 @@ def test_version_hash_completeness_fails_on_a_stub(tmp_path, monkeypatch):
     r = R.g_version_hash_is_complete()
     assert r.verdict == R.FAIL
     assert "dimensions absent" in r.headline
+
+
+# ------------------------------------------------- second pass: six more, 17 -> 23
+
+def test_attributable_refuses_when_it_cannot_see_the_session_names(tmp_path, monkeypatch):
+    """It attributes runs by parsing worktree names, so with no worktrees there is nothing to
+    parse — and nothing is not "all attributed".
+
+    ⚠ Order matters here and the first attempt got it wrong. `_audits()` is called BEFORE this
+    gate's own `.sessions` guard, so pointing CONNECTORS at an empty directory trips the *audit*
+    refusal instead of the one under test. The audits directory is created first so the guard
+    being exercised is the intended one.
+    """
+    (tmp_path / "orchestrator" / "data" / "audits").mkdir(parents=True)
+    monkeypatch.setattr(R, "CONNECTORS", tmp_path)
+    with pytest.raises(R.Unmeasurable):
+        R.g_work_is_attributable()          # no .sessions at all
+
+    (tmp_path / ".sessions").mkdir()
+    with pytest.raises(R.Unmeasurable):
+        R.g_work_is_attributable()          # .sessions exists and is empty
+
+
+def test_corpus_breadth_reaches_both_verdicts(monkeypatch):
+    """⭐ Both directions, which matters more here than usual.
+
+    This gate FAILS against the real corpus today — one case, below any calibration threshold —
+    so a refusal alone would not distinguish "working" from "stuck". The positive control shows
+    the PASS branch is reachable at its stated bar (>= 29 cases across >= 15 strata), which is
+    what makes the standing RED a finding about the corpus rather than about the gate.
+    """
+    from factory import corpus as _c
+    monkeypatch.setattr(_c, "load", lambda cid: {"strata": [f"s{i}" for i in range(15)]})
+
+    monkeypatch.setattr(_c, "available", lambda: [f"c{i}" for i in range(29)])
+    assert R.g_corpus_has_breadth().verdict == R.PASS
+
+    monkeypatch.setattr(_c, "available", lambda: ["c0"])
+    assert R.g_corpus_has_breadth().verdict == R.FAIL
+
+    def _boom():
+        raise _c.CorpusError("manifest does not verify")
+    monkeypatch.setattr(_c, "available", _boom)
+    assert R.g_corpus_has_breadth().verdict == R.FAIL
+
+
+def test_ticket_refuses_when_the_drafts_folder_is_not_there(tmp_path, monkeypatch):
+    """Its own standard: a ticket, or a recorded decision that none is needed. What is not
+    acceptable is neither — "an open question quietly aging in a drafts folder"."""
+    monkeypatch.setattr(R, "FACTORY", tmp_path / "nested")
+    with pytest.raises(R.Unmeasurable):
+        R.g_work_has_a_ticket()
+
+
+def test_grain_fails_while_the_grain_is_undeclared(monkeypatch):
+    """An unanswered question must not read as a settled one.
+
+    Its evidence spells out the stake: if the real table holds one account, the declared primary
+    key is wrong and the calibration world is built on a mistake.
+    """
+    monkeypatch.setattr(R, "_blueprint", lambda: {})
+    assert R.g_grain_declared().verdict == R.FAIL
+
+    monkeypatch.setattr(R, "_blueprint", lambda: {"grain_confirmed": "queried 2026-08-20"})
+    assert R.g_grain_declared().verdict == R.PASS          # positive control
+
+
+def test_render_pass_fails_until_someone_has_actually_looked(tmp_path, monkeypatch):
+    """The gate's own distinction: a static check proves a file parses, not that a visual painted.
+
+    Note both failing cases — no evidence directory at all, and a directory containing nothing
+    matching — reach FAIL rather than UNMEASURABLE. That is the right call for this gate: the
+    absence of a record IS the finding, not an instrument failure.
+    """
+    monkeypatch.setattr(R, "FACTORY", tmp_path)
+    assert R.g_render_pass_recorded().verdict == R.FAIL          # no docs/evidence at all
+
+    (tmp_path / "docs" / "evidence").mkdir(parents=True)
+    assert R.g_render_pass_recorded().verdict == R.FAIL          # directory, nothing in it
+
+    (tmp_path / "docs" / "evidence" / "render-pass-2026-01-01.md").write_text("looked",
+                                                                             encoding="utf-8")
+    assert R.g_render_pass_recorded().verdict == R.PASS          # positive control
+
+
+def test_skill_chain_precedence_reaches_all_three_verdicts(tmp_path, monkeypatch):
+    """Three outcomes, and the gate keeps them apart: the document is missing (UNMEASURABLE,
+    nothing to read), present but silent on precedence (FAIL, the question is open), or present
+    and settled (PASS)."""
+    import pathlib as _p
+    monkeypatch.setattr(_p.Path, "home", staticmethod(lambda: tmp_path))
+    with pytest.raises(R.Unmeasurable):
+        R.g_impeccable_precedence_settled()
+
+    sk = tmp_path / ".claude" / "skills" / "living-systems-ui"
+    sk.mkdir(parents=True)
+    (sk / "SKILL.md").write_text("no mention of the fifth authority", encoding="utf-8")
+    assert R.g_impeccable_precedence_settled().verdict == R.FAIL
+
+    (sk / "SKILL.md").write_text("precedence: impeccable comes after", encoding="utf-8")
+    assert R.g_impeccable_precedence_settled().verdict == R.PASS

@@ -8,7 +8,7 @@ thing that unblocks the first real run.
 `next:` **F90 remedy (a)** — unchanged, and still the only thing that unblocks a real dispatch.
 It needs Paul: it increases blast radius by letting an agent run in another repository.
 
-**Safe to continue unattended instead:** thirteen readiness gates still have no negative control.
+**Safe to continue unattended instead:** seven readiness gates still have no negative control.
 The census that names them is built and enforced (`tests/test_gate_negative_control_census.py`);
 raising the floor is mechanical from here, and the two hardest — `suite` and `certified` — are hard
 for the reason F92 was about, because provoking them means a subprocess.
@@ -28,7 +28,7 @@ d79fe41  feat(hooks): warn when the checkout moved under you, and pay nothing ex
 6263c91  test(gates): three more negative controls — coverage 14 -> 17 of 30
 ```
 
-**Negative-control coverage: 17 of 30**, up from 5. The suite prints the number and the thirteen
+**Negative-control coverage: 23 of 30**, up from 5. The suite prints the number and the seven
 unproven gates by name on every run.
 
 Suite: **16 failures before, the same 16 after** — no regression. (16 in a worktree, 15 in the
@@ -78,7 +78,7 @@ made, deliberately, while Paul was asleep.
   Paul**, with **29 uncommitted files**. The anchors and `mutate_control_plane.py` exist only on
   its `main`. Moving it is destructive to whatever those 29 files are — **Paul must decide**, and
   it is the only thing standing between the suite and green.
-- ⚠ **Thirteen readiness gates still have no negative control** — down from 25, but the gap is
+- ⚠ **Seven readiness gates still have no negative control** — down from 25, but the gap is
   real and it is the larger half of F94. They are named in the census with a reason each, and
   the suite prints them. `tests/test_readiness_probes_can_pass.py` says at `:14-19` why its own
   coverage does not count: it proves a PASS branch is *written*, and *"a probe guarded by
