@@ -21,6 +21,28 @@
 # and their own guidance says coding is less parallelisable. And our own measured failures were
 # ALL seam failures, so adding two mandatory LLM-to-LLM handoffs treats the wrong variable.
 #
+# ⚠ CORRECTED 2026-08-31 by Wave 0 (agent-army-research). THE DECISION BELOW STANDS. The
+# argument above was stronger than its evidence, and a decision record must not overstate.
+#
+#   * The -3.5% carries a 95% CI of [-18.6%, +25.7%] and sigma=45.2%. A mean whose interval
+#     spans zero is NOT evidence that multi-agent hurts on average. The interval IS stated at
+#     docs/research/answers/R2-answer-topology.md:15 — it was dropped on the way into this file.
+#   * The same study found a centralised system IMPROVED a parallelisable financial task by
+#     +80.9%. The effect is task-structure dependent in BOTH directions.
+#   * R2 labels it "OPEN RESEARCH, not production infrastructure evidence".
+#   * The figures above are v1. The paper is arXiv:2512.08296, now v3 (8 Apr 2026):
+#     260 configurations, six benchmarks, R^2 fallen 0.513 -> 0.373. v3 leads with
+#     architecture-task fit, not an average -- "+80.8% on decomposable financial reasoning
+#     to -70.0% on sequential planning".
+#   * Peer-reviewed as Nature Machine Intelligence 8(7):1157-1172,
+#     doi:10.1038/s42256-026-01268-y, and RETITLED "Capable language models can outgrow the
+#     benefits of collaboration". Capability saturation is what survived review.
+#
+# What actually carries this decision: the SEQUENTIAL degradation (-70.0% in v3, the pole named
+# in the paper's own abstract, and the class connector migration belongs to), plus our own
+# all-at-the-seams failures. Quote R2-answer-topology.md or the paper -- never this header's
+# mean. Verification: agent-army-research/research/sources/W0-citation-verification-partial.md
+#
 # THIS FILE IS KEPT, NOT DELETED. It is a hypothesis that was tested and rejected, and the
 # rejection is worth more than the file's absence would be. R2 also gives the threshold that
 # would unlock it — a same-budget A/B on the same connector tasks and the same authoritative
