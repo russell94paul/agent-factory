@@ -93,7 +93,12 @@ class CtxProbes(Probes):
         if val is None:
             raise Unmeasurable(f"no observation for '{key}'")
         if isinstance(val, Exception):
-            raise val
+            # An exception planted in the world models the INSTRUMENT failing to observe — a
+            # vendor timeout, an unreachable warehouse. That is the world declining to be
+            # measured (UNMEASURABLE), not our apparatus breaking (ERROR), so it must be
+            # declared here rather than escaping as a bare exception. Before the fifth verdict
+            # existed the two were indistinguishable and this line re-raised bare.
+            raise Unmeasurable(f"{key} unobservable: {val}") from val
         return val
 
     def config(self, ctx): return self._get(ctx, "config")
