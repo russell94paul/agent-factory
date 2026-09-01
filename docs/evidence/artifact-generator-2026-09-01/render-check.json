@@ -1,0 +1,75 @@
+{
+  "artifact": "docs/artifacts/delivery-001-case-study.html",
+  "bytes": 108487,
+  "shots": [
+    {
+      "file": "case-study-light-700.png",
+      "scheme": "light",
+      "width": 700,
+      "sections": 10,
+      "blank_sections": [],
+      "h_overflow_px": 0,
+      "console_errors": [],
+      "failed_requests": []
+    },
+    {
+      "file": "case-study-light-1000.png",
+      "scheme": "light",
+      "width": 1000,
+      "sections": 10,
+      "blank_sections": [],
+      "h_overflow_px": 0,
+      "console_errors": [],
+      "failed_requests": []
+    },
+    {
+      "file": "case-study-light-1400.png",
+      "scheme": "light",
+      "width": 1400,
+      "sections": 10,
+      "blank_sections": [],
+      "h_overflow_px": 0,
+      "console_errors": [],
+      "failed_requests": []
+    },
+    {
+      "file": "case-study-dark-700.png",
+      "scheme": "dark",
+      "width": 700,
+      "sections": 10,
+      "blank_sections": [],
+      "h_overflow_px": 0,
+      "console_errors": [],
+      "failed_requests": []
+    },
+    {
+      "file": "case-study-dark-1000.png",
+      "scheme": "dark",
+      "width": 1000,
+      "sections": 10,
+      "blank_sections": [],
+      "h_overflow_px": 0,
+      "console_errors": [],
+      "failed_requests": []
+    },
+    {
+      "file": "case-study-dark-1400.png",
+      "scheme": "dark",
+      "width": 1400,
+      "sections": 10,
+      "blank_sections": [],
+      "h_overflow_px": 0,
+      "console_errors": [],
+      "failed_requests": []
+    }
+  ],
+  "problems": [],
+  "no_javascript": {
+    "scenes": 9,
+    "choices": 36,
+    "conseq": 36,
+    "reveals": 27,
+    "cf": 27,
+    "text": 48385
+  }
+}

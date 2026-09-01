@@ -83,14 +83,14 @@ summary:
     why: A guard only as wide as the relation it derives over — the same class fixed hours earlier
     detected: Same session, self-caught
     ideal_interception: Before the extraction
-    capability: Known-Failure Preflight
+    capability: Shape-matched Findings Preflight
     benefit: Three credentials not exposed; one production rotation not owed
   - id: S-7
     issue: A search filtered the wrong field, returned zero, and the zero became a finding
     why: No positive control on a search that returned nothing
     detected: Self-caught, 3,611 seconds later
     ideal_interception: At the search
-    capability: Known-Failure Preflight (positive control)
+    capability: Shape-matched Findings Preflight (positive control)
     benefit: Escape 4 to 0. No duplicate tasks, no wrong provenance in the artifacts
   - id: S-8
     issue: "\"Three tasks ran in parallel\" is unproven by the record"
@@ -483,7 +483,7 @@ issues:
     basis: DOCUMENTED
     evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#sec-b"]
     counterfactual:
-      capability: Known-Failure Preflight
+      capability: Shape-matched Findings Preflight
       strength: NO_MATERIAL_EFFECT
       maturity: PROPOSED
       expected_effect: >-
@@ -510,10 +510,17 @@ issues:
     basis: MEASURED
     evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#step-b6"]
     counterfactual:
-      capability: Known-Failure Preflight (positive control)
+      capability: Shape-matched Findings Preflight (positive control)
       strength: WOULD_INTERCEPT
       maturity: PROPOSED
-      expected_effect: A zero is not actionable until the instrument has been shown able to return non-zero
+      expected_effect: >-
+        A zero is not actionable until the instrument has been shown able to return non-zero
+        SCOPE, so this is not read as covered: a ticket-keyed RECURRENCE preflight shipped
+        2026-08-31 (factory/preflight.py, wired at control.py:485) and is warn-only by design.
+        It reads run verdicts from .data/events.jsonl keyed on ticket. This incident was
+        interactive work with no ticket, no run and no contract verdict, so that module cannot
+        see it. What is needed here is a lookup over the findings ledger keyed on task SHAPE,
+        and that does not exist.
       remaining_human: Deciding what the correct search is
       confidence: HIGH — the findings ledger is machine-read today; the missing piece is a shape matcher
 
@@ -584,12 +591,16 @@ issues:
     basis: DOCUMENTED
     evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#step-b3"]
     counterfactual:
-      capability: Known-Failure Preflight
+      capability: Shape-matched Findings Preflight
       strength: WOULD_BLOCK
       maturity: PROPOSED
       expected_effect: >-
         The strongest interception claim available, because the knowledge existed in this repo in a
         finding filed hours earlier. Nothing consumed it. That is an operationalisation problem.
+        ⚠ WOULD_BLOCK is harder to defend since 2026-08-31, not easier: the recurrence preflight
+        that shipped is deliberately warn-only, and its own docstring argues that a hard refusal
+        built on eight runs would be a policy derived from a population too small to have seen a
+        false positive. A shape-matched preflight would inherit that argument.
       remaining_human: None for the known shape; a novel extraction shape still gets through
       confidence: HIGH
 
@@ -717,7 +728,7 @@ issues:
     basis: MEASURED
     evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#sec-k"]
     counterfactual:
-      capability: Known-Failure Preflight
+      capability: Shape-matched Findings Preflight
       strength: MAY_REDUCE_LIKELIHOOD
       maturity: PROPOSED
       expected_effect: >-
@@ -866,10 +877,17 @@ scenes:
       kpi_ref: K-14
     evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#scene-3"]
     counterfactual:
-      capability: Known-Failure Preflight
+      capability: Shape-matched Findings Preflight
       strength: WOULD_BLOCK
       maturity: PROPOSED
-      expected_effect: A deny-list filter over a credential source is refused before it runs
+      expected_effect: >-
+        A deny-list filter over a credential source is refused before it runs
+        SCOPE, so this is not read as covered: a ticket-keyed RECURRENCE preflight shipped
+        2026-08-31 (factory/preflight.py, wired at control.py:485) and is warn-only by design.
+        It reads run verdicts from .data/events.jsonl keyed on ticket. This incident was
+        interactive work with no ticket, no run and no contract verdict, so that module cannot
+        see it. What is needed here is a lookup over the findings ledger keyed on task SHAPE,
+        and that does not exist.
       remaining_human: None for the known shape
       confidence: HIGH — the knowledge existed in this repo hours earlier and nothing consumed it
 
@@ -970,10 +988,17 @@ scenes:
       kpi_ref: K-14
     evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#scene-5"]
     counterfactual:
-      capability: Known-Failure Preflight (positive control)
+      capability: Shape-matched Findings Preflight (positive control)
       strength: WOULD_INTERCEPT
       maturity: PROPOSED
-      expected_effect: A zero from an unproven instrument is not actionable until a positive control passes
+      expected_effect: >-
+        A zero from an unproven instrument is not actionable until a positive control passes
+        SCOPE, so this is not read as covered: a ticket-keyed RECURRENCE preflight shipped
+        2026-08-31 (factory/preflight.py, wired at control.py:485) and is warn-only by design.
+        It reads run verdicts from .data/events.jsonl keyed on ticket. This incident was
+        interactive work with no ticket, no run and no contract verdict, so that module cannot
+        see it. What is needed here is a lookup over the findings ledger keyed on task SHAPE,
+        and that does not exist.
       remaining_human: Deciding what the correct search is
       confidence: HIGH
 
@@ -1234,13 +1259,16 @@ scenes:
       kpi_ref: K-14
     evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#sec-k"]
     counterfactual:
-      capability: Known-Failure Preflight
+      capability: Shape-matched Findings Preflight
       strength: MAY_REDUCE_LIKELIHOOD
       maturity: PROPOSED
       expected_effect: >-
         MANUAL INVENTORY INTERCEPTED. A human sweep caught this at escape distance 0. A future
         automated preflight may reduce the likelihood of the next one; it cannot be credited with
-        this one, and no current code supports a stronger classification.
+        this one. ⛔ Re-checked 2026-09-01 after a preflight shipped: it is keyed on ticket and
+        reads run verdicts, this was a design decision with neither, and it is warn-only besides.
+        The classification is unchanged. A capability arriving under a matching name is not
+        evidence it covers the incident — checking the scope is the whole discipline here.
       remaining_human: Running or reading the inventory, and judging equivalence
       confidence: LOW that automation would have caught this specific case
 
@@ -1393,13 +1421,26 @@ lessons:
       issues. In the sharpest case a defect class was fixed in the morning and the identical class
       was committed against a credential file that afternoon.
     root_cause: KNOWLEDGE_AVAILABLE_BUT_NOT_CONSUMED — execution history is stored and not operationalised
-    capability: Known-Failure Preflight (new mechanism; the knowledge base exists today)
+    capability: >-
+      Shape-matched Findings Preflight — still PROPOSED. ⚠ Partially addressed 2026-08-31: a
+      ticket-keyed RECURRENCE preflight shipped (factory/preflight.py, wired at control.py:485,
+      IMPLEMENTED_NOT_EXERCISED, warn-only, `would_refuse` computed and never acted on). It closes
+      the run-repeats-its-own-failure half. It does NOT close this lesson's half — its lookup is
+      over recorded run verdicts keyed on ticket, and both baseline incidents were interactive
+      work with no ticket and no run. The nine failure families it classifies were clustered from
+      the findings ledger, so the taxonomy is shared even though the lookup is not.
     change: >-
       A shape matcher at task launch — task shape maps to matching prior findings, and the specific
       guard is shown AND required. Seed it with three proven shapes: a deny-list over a credential
       source, a zero from an unproven instrument, an unqualified object reference.
-    measurement: Known-failure recurrence rate per mission
-    baseline: "2 (the blind zero and the deny-list)"
+    measurement: >-
+      Known-failure recurrence rate per mission, split by whether the incident is reachable by the
+      shipped recurrence preflight (a run with a ticket and a verdict) or only by a shape-matched
+      one (interactive work). Reporting one number would hide that the shipped half covers neither
+      baseline incident.
+    baseline: >-
+      2 (the blind zero and the deny-list). Both are UNREACHABLE by the shipped recurrence
+      preflight. Reachable-by-shipped baseline: 0 of 2."
     target_002: >-
       0. A repeated known failure should never occur without the later run having been shown the
       prior evidence and having declined the guard explicitly.
