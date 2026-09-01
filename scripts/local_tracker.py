@@ -63,6 +63,8 @@ from factory import control as ctrl  # noqa: E402
 from factory import events as evlib  # noqa: E402
 from factory import presets as presetlib  # noqa: E402
 from factory import provider as provlib  # noqa: E402
+from factory import switchboard as sblib  # noqa: E402
+from factory import switchboard_render as sbr  # noqa: E402
 
 OUT = FACTORY / "tracker.html"
 
@@ -100,7 +102,8 @@ TABS = [
         ("roadmap", "/roadmap", "Roadmap"),
         ("flow", "/flow", "Flow"), ("lanes", "/lanes", "Lanes"),
         ("sessions", "/sessions", "Sessions"),
-        ("research", "/research", "Research"), ("handoff", "/handoff", "Handoff")]
+        ("research", "/research", "Research"), ("handoff", "/handoff", "Handoff"),
+        ("switchboard", "/switchboard", "Switchboard")]
 
 #: Modules whose source can change while the server is running — DERIVED from this file's own
 #: imports, never typed out.
@@ -910,7 +913,11 @@ def _tok(n) -> str:
 def render(when: datetime.datetime, tab: str = "tickets", team: str = "") -> str:
     # Research needs no measurement, and a full measure is ~10s of probes. Paying that to read a
     # prompt was the main reason this page felt slow.
-    results = measure() if tab != "research" else []
+    # ⛔ `switchboard` joins the same list as `research`, and for a stronger reason.
+    # `measure()` reaches `board.board()`, which did not return inside 120 s when timed on
+    # 2026-09-01. A command page that pays that per refresh is a page nobody opens, which is
+    # the failure control-room.md §3 already records against this tracker at ~19 s.
+    results = measure() if tab not in ("research", "switchboard") else []
     n = sum(1 for _, r in results if r.ok)
     total = len(results)
     pct = round(100 * n / total) if total else 0
@@ -2504,6 +2511,22 @@ def render(when: datetime.datetime, tab: str = "tickets", team: str = "") -> str
                   f'{st.st_size:,} bytes &middot; filed {e(_ago(st.st_mtime))}</p>')
                 w('</div>')
 
+    if tab == "switchboard":
+        # ⭐ One join over state that already existed, rendered by `factory.switchboard_render`.
+        # The tab body is deliberately thin: everything that could be wrong lives in the
+        # projection, where a test can reach it without parsing HTML.
+        try:
+            w(sbr.page(sblib.state()))
+        except Exception as _exc:                                  # noqa: BLE001
+            # A command page that 500s tells the operator nothing. A command page that says
+            # WHICH instrument failed tells them where to look, and keeps the nav reachable.
+            w('<div class="par" style="border-color:var(--fail)">'
+              '<h3 style="margin:0;color:var(--fail)">Switchboard could not measure</h3>'
+              '<p style="font-size:13px;margin:8px 0 0"><code>%s: %s</code></p>'
+              '<p style="font-size:13px;color:var(--ink3);margin:6px 0 0">Nothing was written. '
+              'The other tabs are unaffected.</p></div>'
+              % (e(type(_exc).__name__), e(_exc)))
+
     if tab == "handoff":
         w('<div class="head" style="margin-top:34px">')
         w('<h1>Hand this session on</h1>')
@@ -2814,7 +2837,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
                  "/gates": "gates", "/flow": "flow",
                  "/goals": "goals", "/roadmap": "roadmap",
                  "/lanes": "lanes", "/sessions": "sessions", "/research": "research",
-                 "/handoff": "handoff"}.get(parsed.path.rstrip("/") or "/")
+                 "/handoff": "handoff",
+                 "/switchboard": "switchboard"}.get(parsed.path.rstrip("/") or "/")
         if route is None:
             self.send_error(404)
             return

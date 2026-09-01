@@ -1,0 +1,664 @@
+"""One projection over state that already exists, so the operator can stop visiting terminals.
+
+⭐ **Nothing here is a new source of truth.** Every field is read, on every call, from something
+that was already authoritative before this file existed:
+
+    mission + DAG      TaskStore (.data/tasks.jsonl) + .data/missions/<id>.json
+    live ownership     factory.claims  (O_EXCL locks, verified against the process table)
+    sessions           factory.sessions.inventory()  (registry x jobs x process table)
+    human questions    factory.sessions.blocked()    (JOBS, so a question outlives its process)
+    upstream traffic   factory.bus.unread(reader)    (per-reader cursor, never advanced here)
+    worktrees/HEAD     git worktree list --porcelain, then rev-parse per worktree
+
+The projection is **derived and thrown away**. It is never written to disk, because a stored
+projection is the thing the boot prompts kept becoming: correct when written, confidently wrong an
+hour later.
+
+## ⛔ Two premises inherited from the brief that measurement killed
+
+**1. `session.brief()` cannot be a Switchboard data source.** The brief was named as "a likely
+primary source". It calls `board.board()`, which calls `readiness.measure()`. Timed on this
+checkout, 2026-09-01, one cold call each:
+
+    board.board()      413.79 s      30 gates
+    session.brief()    801.04 s      (board.board() plus the lane join)
+    switchboard.state()  2.01 s      the projection this module returns
+
+A live command page that pays 13 minutes per refresh is a page nobody opens — the exact failure
+`docs/specs/control-room.md` §3 records against this tracker at ~19 s, at 42x less. So the mission
+DAG is built from the TaskStore, which is a file read, and the gate board stays on the tabs that
+already render it.
+
+⚠ `brief()`'s critical path is `['cost', 'ceiling']` — **gate ids, not mission tasks.** It answers
+a different question (which of five research lanes to take next) from the one the Switchboard is
+for. Even at zero cost it would not have been the DAG the operator asked to see.
+
+**2. `Task.blocked_by` is not the dependency graph.** `TaskStore.unblock()` *removes* the edge:
+
+    D5  blocked_by = []        blocked events = ['D4']     unblock events = ['D4']
+
+so a satisfied dependency leaves no trace in the current field, and a DAG built from `blocked_by`
+shows every finished mission as a set of unrelated tasks. The edges are recovered from the
+append-only `block` events instead — the store keeps them because it keeps everything. Measured
+2026-09-01 against the live marketing-model mission.
+
+## What this deliberately does NOT do
+
+It does not schedule, dispatch, mutate a task, advance a bus cursor, or write a claim. It answers
+questions. Slices that act (START SYNCED, dispatch) call the *existing* mechanisms and are wired in
+`scripts/local_tracker.py`, where every other control on this estate already lives.
+"""
+from __future__ import annotations
+
+import datetime as _dt
+import json
+import pathlib
+import subprocess
+from typing import Dict, List, Optional, Tuple
+
+from . import bus as _bus
+from . import claims as _claims
+from . import repo as _repo
+from . import sessions as _sessions
+from .tasks import ABANDONED as _T_ABANDONED
+from .tasks import CLAIMED as _T_CLAIMED
+from .tasks import DONE as _T_DONE
+from .tasks import TaskStore
+
+# ---------------------------------------------------------------- the UI vocabulary
+#
+# Six words, and they are not interchangeable with the TaskStore's five. The store says what a
+# task *is*; these say what the operator can *do about it now*, which is a join over the store,
+# the claim table and the process table. Keeping one vocabulary for both would mean either the
+# store grew a scheduling concept or the UI silently reinterpreted `open`.
+DONE = "DONE"
+RUNNING = "RUNNING"
+READY = "READY"
+READY_IN_PARALLEL = "READY_IN_PARALLEL"
+BLOCKED = "BLOCKED"
+NEEDS_HUMAN = "NEEDS_HUMAN"
+ABANDONED = "ABANDONED"
+
+#: ⚠ The critical path here is the longest **dependency** chain, not the longest **duration**
+#: chain. The manifest does carry `estimate_minutes`, and its own `estimate_basis` says `ASSUMED`
+#: — a number written before the run as the hypothesis the run tests. Ranking a path by assumed
+#: minutes would publish an ETA derived from a guess, so the path is ordered by dependency depth
+#: and this constant is rendered beside it.
+CRITICAL_PATH_BASIS = "DEPENDENCY"
+
+#: Session liveness classes that must never be offered a `--resume`.
+#: `RUNNING-ATTACHED` and `RUNNING-ORPHANED` are alive — resuming spawns a second process against
+#: one transcript, which is the divergent-duplicate failure recorded in control-room.md §5.
+#: `UNKNOWN-INSTRUMENT-BLIND` means the process table could not be read at all, so "it exited"
+#: is not a measurement, it is the absence of one.
+_NOT_RESUMABLE = {_sessions.RUNNING_ATTACHED, _sessions.RUNNING_ORPHANED, _sessions.UNKNOWN}
+
+
+def _now() -> str:
+    return _dt.datetime.now().astimezone().isoformat(timespec="seconds")
+
+
+def store_path() -> pathlib.Path:
+    """The shared task store. `repo.data()` and not `__file__.parent.parent` — see repo.py."""
+    return _repo.data() / "tasks.jsonl"
+
+
+def missions_dir() -> pathlib.Path:
+    return _repo.data() / "missions"
+
+
+# ------------------------------------------------------------------------ missions
+
+
+def manifests() -> List[dict]:
+    """Every mission contract on disk, newest first. Empty list when there are none."""
+    d = missions_dir()
+    if not d.is_dir():
+        return []
+    out = []
+    for f in sorted(d.glob("*.json")):
+        try:
+            m = json.loads(f.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        m["_id"] = f.stem
+        m["_mtime"] = f.stat().st_mtime
+        out.append(m)
+    return sorted(out, key=lambda m: m["_mtime"], reverse=True)
+
+
+def _edges(store: TaskStore, ids: List[str]) -> Dict[str, List[str]]:
+    """task id -> the task ids it was ever blocked by, from the append-only event log.
+
+    ⛔ Not `Task.blocked_by`. See the module docstring: `unblock` deletes the edge from that field,
+    so a mission whose dependencies are all satisfied renders as eight unrelated tasks.
+    """
+    known = set(ids)
+    out: Dict[str, List[str]] = {}
+    for tid in ids:
+        try:
+            t = store.get(tid)
+        except KeyError:
+            out[tid] = []
+            continue
+        seen, deps = set(), []
+        for ev in t.events:
+            if ev.kind != "block":
+                continue
+            by = ev.data.get("by")
+            # Only edges INSIDE this mission. A block by something outside it is real, and it is
+            # reported as a warning rather than drawn into a graph the manifest cannot name.
+            if by in known and by not in seen:
+                seen.add(by)
+                deps.append(by)
+        out[tid] = deps
+    return out
+
+
+def waves(edges: Dict[str, List[str]]) -> List[List[str]]:
+    """Topological levels: everything whose blockers all landed in an earlier level.
+
+    Same derivation `scripts/mission_marketing_model.py::waves` uses for the plan, so the page and
+    the plan cannot disagree about what is parallel. A cycle (which the store permits, because it
+    never checked) leaves tasks unplaced rather than looping forever — the caller reports them.
+    """
+    placed: set = set()
+    remaining = {k: set(v) for k, v in edges.items()}
+    out: List[List[str]] = []
+    while remaining:
+        level = sorted(k for k, deps in remaining.items() if deps <= placed)
+        if not level:
+            break                      # a cycle, or an edge to something not in `edges`
+        out.append(level)
+        placed |= set(level)
+        for k in level:
+            remaining.pop(k)
+    return out
+
+
+def _longest_chain(edges: Dict[str, List[str]]) -> List[str]:
+    """The longest dependency chain, ending at whichever task nothing else depends on.
+
+    Depth-first with memoisation over a graph of eight nodes; the shape is `board.critical_path`'s,
+    which does the same thing over the gate graph. Ties break on the task id so the rendered path
+    does not jitter between refreshes for no reason.
+    """
+    depth: Dict[str, Tuple[int, List[str]]] = {}
+
+    def walk(tid: str, seen: frozenset) -> Tuple[int, List[str]]:
+        if tid in depth:
+            return depth[tid]
+        if tid in seen:
+            return (0, [])                             # cycle guard, never a crash
+        best: Tuple[int, List[str]] = (0, [])
+        for dep in edges.get(tid, []):
+            n, path = walk(dep, seen | {tid})
+            if (n, path) > best:
+                best = (n, path)
+        got = (best[0] + 1, best[1] + [tid])
+        depth[tid] = got
+        return got
+
+    if not edges:
+        return []
+    return max((walk(t, frozenset()) for t in sorted(edges)), key=lambda r: r[0])[1]
+
+
+def _chain_ties(edges: Dict[str, List[str]]) -> int:
+    """How many DISTINCT chains share the maximum length.
+
+    ⚠ Rendered beside the path, because printing one chain over a graph with three parallel roots
+    implies a linearity that is not there. On the live marketing-model mission R1, R2 and R3 all
+    feed D1 and all sit at depth 1, so the printed head is whichever one sorts first — a
+    presentation artefact that would otherwise read as a finding about the work.
+
+    ⛔ The first version of this counted *endpoints* at maximum depth and returned 1 for exactly
+    that graph, reporting no ambiguity in the one place the ambiguity lives. The tie is at the
+    head, not the tail, so the count has to be over paths: the number of longest chains ending at
+    a node is the sum over its deepest predecessors, or 1 when it has none.
+    """
+    if not edges:
+        return 0
+    depth: Dict[str, int] = {}
+    paths: Dict[str, int] = {}
+
+    def walk(tid: str, seen: frozenset) -> Tuple[int, int]:
+        if tid in depth:
+            return depth[tid], paths[tid]
+        if tid in seen:
+            return 0, 1                                    # cycle guard, never a crash
+        deps = [(d, walk(d, seen | {tid})) for d in edges.get(tid, [])]
+        best = max([r[0] for _d, r in deps] or [0])
+        depth[tid] = best + 1
+        paths[tid] = sum(n for _d, (dd, n) in deps if dd == best) or 1
+        return depth[tid], paths[tid]
+
+    for t in sorted(edges):
+        walk(t, frozenset())
+    top = max(depth.values())
+    return sum(paths[t] for t in edges if depth[t] == top)
+
+
+# ------------------------------------------------------------------- state mapping
+
+
+def _conflicts(contracts: Dict[str, dict], ids: List[str]) -> Dict[str, List[str]]:
+    """task id -> the other tasks it cannot safely run beside, from declared resource claims.
+
+    Two tasks conflict when they name the same `resource_claim` and **at least one of them writes
+    it**. Two readers of the same Snowflake role are not a conflict and must not be reported as
+    one — over-reporting a conflict is how a scheduler that nobody believes gets ignored, which is
+    the same end state as one that under-reports.
+
+    ⚠ A task with **no declared resource claim** conflicts with nothing here. That is a stated
+    limitation, not a safety property: absence of a declaration is not evidence of isolation. It
+    is surfaced as a warning by `state()`.
+    """
+    out: Dict[str, List[str]] = {t: [] for t in ids}
+    for a in ids:
+        ca = contracts.get(a) or {}
+        ra, wa = ca.get("resource_claim"), (ca.get("access") == "WRITE")
+        if not ra:
+            continue
+        for b in ids:
+            if b == a:
+                continue
+            cb = contracts.get(b) or {}
+            if cb.get("resource_claim") != ra:
+                continue
+            if wa or cb.get("access") == "WRITE":
+                out[a].append(b)
+    return {k: sorted(v) for k, v in out.items()}
+
+
+def _task_rows(store: TaskStore, manifest: dict) -> List[dict]:
+    """One row per labelled mission task, with its dependency edges and declared contract."""
+    labels: Dict[str, str] = manifest.get("labels") or {}
+    contracts: Dict[str, dict] = manifest.get("contracts") or {}
+    by_id = {tid: lbl for lbl, tid in labels.items()}
+    ids = list(by_id)
+    edges = _edges(store, ids)
+    clash = _conflicts(contracts, ids)
+
+    rows = []
+    for tid in ids:
+        try:
+            t = store.get(tid)
+        except KeyError:
+            rows.append({"task_id": tid, "label": by_id[tid], "title": "", "missing": True,
+                         "status": None, "owner": None, "evidence": 0,
+                         "depends_on": [], "conflicts_with": [], "contract": contracts.get(tid, {})})
+            continue
+        rows.append({
+            "task_id": tid,
+            "label": by_id[tid],
+            "title": t.title,
+            "missing": False,
+            "status": t.status,
+            "owner": t.owner,
+            "evidence": len(t.evidence),
+            "evidence_refs": [str(ev.get("ref", "")) for ev in t.evidence],
+            "depends_on": [by_id[d] for d in edges[tid]],
+            "depends_on_ids": list(edges[tid]),
+            "conflicts_with": [by_id[c] for c in clash.get(tid, [])],
+            "contract": contracts.get(tid, {}),
+        })
+    order = {lbl: i for i, lbl in enumerate(sorted(labels))}
+    rows.sort(key=lambda r: order.get(r["label"], 99))
+    return rows
+
+
+def classify(rows: List[dict], critical: List[str],
+             needs_by_label: Optional[Dict[str, List[dict]]] = None) -> List[dict]:
+    """Attach the UI state to every row. This is the only place a task becomes READY.
+
+    The order of the tests is the design, and each one has a reason it comes where it does:
+
+    1. `done` / `abandoned` are terminal. Nothing about liveness changes them.
+    2. **A written question outranks everything else.** A task whose session is blocked on a human
+       is `NEEDS_HUMAN` even while its process is alive — because the operator's next action is
+       the answer, not the observation that something is running.
+    3. `claimed` is `RUNNING`. It is what the store says, and the store is written by the agent.
+    4. An unsatisfied dependency is `BLOCKED`. Never READY.
+    5. ⛔ **A live conflicting writer is also `BLOCKED`**, even with every dependency satisfied.
+       This is the rule the brief calls out explicitly, and it is the one a dependency-only
+       scheduler gets wrong: two agents writing one resource is the collision the DAG cannot see.
+    6. What survives all of that is `READY`, and `READY_IN_PARALLEL` only if it is additionally
+       **off the critical path** — the operator's question is "what can I start that does not
+       fight the thing I care about", and a critical-path task is that thing, not a spare seat.
+    """
+    needs_by_label = needs_by_label or {}
+    running = {r["label"] for r in rows if r["status"] == _T_CLAIMED}
+    done = {r["label"] for r in rows if r["status"] == _T_DONE}
+    crit = set(critical)
+
+    for r in rows:
+        r["blocked_reason"] = ""
+        if r["status"] == _T_DONE:
+            r["state"] = DONE
+            continue
+        if r["status"] == _T_ABANDONED:
+            r["state"] = ABANDONED
+            continue
+        if needs_by_label.get(r["label"]):
+            r["state"] = NEEDS_HUMAN
+            continue
+        if r["status"] == _T_CLAIMED:
+            r["state"] = RUNNING
+            continue
+
+        unmet = [d for d in r["depends_on"] if d not in done]
+        if unmet:
+            r["state"] = BLOCKED
+            r["blocked_reason"] = "waits on " + ", ".join(unmet)
+            continue
+        live_clash = sorted(c for c in r["conflicts_with"] if c in running)
+        if live_clash:
+            r["state"] = BLOCKED
+            r["blocked_reason"] = ("a live writer holds "
+                                   + (r["contract"].get("resource_claim") or "the same resource")
+                                   + " — " + ", ".join(live_clash))
+            continue
+        r["state"] = READY if r["label"] in crit else READY_IN_PARALLEL
+    return rows
+
+
+# ------------------------------------------------------------------------ sessions
+
+
+def _needs_by_label(questions: List[dict], rows: List[dict]) -> Dict[str, List[dict]]:
+    """Best-effort join from a blocked session's question to a mission label.
+
+    ⚠ **Best-effort, and it says so.** A job's `state.json` carries no task id — nothing in the
+    substrate links a written question to a TaskStore row. The only join available is textual: a
+    label like `D5` appearing as a word in the session's own name/topic/detail. A question that
+    does not join is **never dropped**; it lands in `needs_you` unlabelled, because the inbox's
+    whole reason to exist is that a question must not be filtered by the thing that produced it.
+    """
+    import re
+    out: Dict[str, List[dict]] = {}
+    labels = [r["label"] for r in rows]
+    for q in questions:
+        hay = " ".join(str(q.get(k) or "") for k in ("name", "topic", "detail", "needs", "where"))
+        for lbl in labels:
+            if re.search(rf"\b{re.escape(lbl)}\b", hay):
+                out.setdefault(lbl, []).append(q)
+                q["mission_label"] = lbl
+                break
+    return out
+
+
+def session_cards(inventory: Optional[List[dict]] = None) -> List[dict]:
+    """Session rows with the actions their measured state actually supports.
+
+    ⛔ `resume` is False for every live class AND for `UNKNOWN-INSTRUMENT-BLIND`. Offering resume
+    on a live session spawns a second process against one transcript; offering it on UNKNOWN
+    claims the process table was read when it was not.
+    """
+    inv = _sessions.inventory() if inventory is None else inventory
+    out = []
+    for s in inv:
+        st = s.get("state")
+        out.append(dict(
+            s,
+            can_resume=(st == _sessions.EXITED_RESUMABLE),
+            can_open=(st == _sessions.RUNNING_ATTACHED),
+            is_live=(st in (_sessions.RUNNING_ATTACHED, _sessions.RUNNING_ORPHANED)),
+            liveness_trusted=(st != _sessions.UNKNOWN),
+            action=_action_for(st),
+        ))
+    return out
+
+
+def _action_for(st: Optional[str]) -> str:
+    return {
+        _sessions.RUNNING_ATTACHED: "OPEN",
+        _sessions.RUNNING_ORPHANED: "ATTACH VIA /agents — DO NOT DUPLICATE",
+        _sessions.EXITED_RESUMABLE: "RESUME",
+        _sessions.EXITED_GONE: "NEW SESSION",
+        _sessions.UNKNOWN: "⚠ LIVENESS UNKNOWN — do not resume",
+    }.get(st or "", "—")
+
+
+# ---------------------------------------------------------------------------- bus
+
+
+def bus_readers() -> List[str]:
+    """Every reader the bus knows about: anyone who has written, and anyone who has a cursor.
+
+    Both halves matter. A lane that has only ever *read* has a cursor and no file; a lane that has
+    only ever *written* has a file and no cursor. Taking one source lists half the estate.
+    """
+    root = _bus.ROOT
+    if not root.is_dir():
+        return []
+    names = {f.stem for f in root.glob("*.jsonl")}
+    names |= {f.name[len(".cursor-"):-len(".json")]
+              for f in root.glob(".cursor-*.json")}
+    return sorted(n for n in names if n)
+
+
+def upstream(readers: Optional[List[str]] = None) -> List[dict]:
+    """Unread peer traffic per reader. **Reads only — no cursor is advanced anywhere in here.**
+
+    `bus.mark_read` is called AFTER delivery, by the thing that delivered it (the lane-bus hook
+    injects it into a session's context). Marking on render would mean opening this page counts as
+    a session having seen the traffic, which is how a correction gets lost.
+    """
+    out = []
+    for r in (readers if readers is not None else bus_readers()):
+        try:
+            evs = _bus.unread(r)
+        except _bus.BusError:
+            continue
+        if not evs:
+            continue
+        out.append({
+            "reader": r,
+            "unread": len(evs),
+            "latest": evs[-1].get("at", ""),
+            "from": sorted({e.get("from", "?") for e in evs}),
+            "rendered": _bus.render(evs),
+            # Peer traffic is a nudge, not evidence. Carried on the row so the surface cannot
+            # render it without the caveat, and so a finding reference stays clickable.
+            "basis": "PEER-TRAFFIC — a nudge, not durable evidence; verify before acting",
+            "refs": sorted({ref for e in evs for ref in (e.get("refs") or [])}),
+        })
+    return sorted(out, key=lambda r: r["unread"], reverse=True)
+
+
+# ---------------------------------------------------------------------- worktrees
+
+
+def worktrees() -> List[dict]:
+    """Every git worktree with its branch and HEAD, read from git rather than the filesystem.
+
+    `factory.worktrees.status()` only sees directories directly under `<primary>/.worktrees` whose
+    name is a lane id, and computes `commits_ahead` against `lane/<id>` — a branch that does not
+    exist for a mission worktree, so it reports `?`. This asks git the general question instead,
+    because the Switchboard has to describe worktrees that are not lanes.
+    """
+    primary = _repo.primary()
+    try:
+        p = subprocess.run(["git", "-C", str(primary), "worktree", "list", "--porcelain"],
+                           capture_output=True, text=True, timeout=30)
+    except (OSError, subprocess.SubprocessError):
+        return []
+    out, cur = [], {}
+    for line in (p.stdout or "").splitlines():
+        if line.startswith("worktree "):
+            if cur:
+                out.append(cur)
+            cur = {"path": line[len("worktree "):].strip()}
+        elif line.startswith("HEAD "):
+            cur["head"] = line[len("HEAD "):].strip()[:7]
+        elif line.startswith("branch "):
+            cur["branch"] = line[len("branch "):].strip().replace("refs/heads/", "")
+        elif line.strip() == "detached":
+            cur["branch"] = "(detached)"
+    if cur:
+        out.append(cur)
+    for w in out:
+        w["primary"] = pathlib.Path(w["path"]).resolve() == primary.resolve()
+        w["dirty"] = _dirty(w["path"])
+    return out
+
+
+def _dirty(path: str) -> Optional[int]:
+    """Count of uncommitted entries, or None when git could not be asked.
+
+    None, not 0. A clean tree and an unreadable one must not render the same — that is the false
+    green `factory/repo.py` was written about.
+    """
+    try:
+        p = subprocess.run(["git", "-C", str(path), "status", "--porcelain"],
+                           capture_output=True, text=True, timeout=30)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if p.returncode != 0:
+        return None
+    return len([ln for ln in p.stdout.splitlines() if ln.strip()])
+
+
+# --------------------------------------------------------------------- the projection
+
+
+def state(mission_id: Optional[str] = None, cheap: bool = False) -> dict:
+    """The whole Switchboard, measured now. Derived on every call; never persisted.
+
+    `cheap=True` skips exactly one thing: the `git worktree list` subprocess, so a test can
+    exercise the join without a checkout. It is not an optimisation for the page — the page pays
+    for the truth — and it deliberately does **not** skip the session inventory or the human
+    inbox. An earlier version did, and that is a session-keyed filter on the inbox wearing a
+    performance flag's clothes.
+    """
+    warn: List[str] = []
+    mans = manifests()
+    chosen = None
+    if mans:
+        chosen = next((m for m in mans if m["_id"] == mission_id), None) if mission_id else mans[0]
+        if chosen is None:
+            warn.append(f"no mission manifest named {mission_id!r}; showing {mans[0]['_id']}")
+            chosen = mans[0]
+    else:
+        warn.append("no mission manifest under .data/missions — the DAG panel has nothing to show")
+
+    sp = store_path()
+    store = None
+    if sp.is_file():
+        try:
+            store = TaskStore(sp)
+        except Exception as exc:                                    # noqa: BLE001
+            warn.append(f"task store unreadable: {type(exc).__name__}: {exc}")
+    else:
+        warn.append(f"no task store at {sp}")
+
+    rows: List[dict] = []
+    critical: List[str] = []
+    ties = 0
+    lvls: List[List[str]] = []
+    mission: dict = {}
+    if chosen and store is not None:
+        rows = _task_rows(store, chosen)
+        ids = [r["task_id"] for r in rows]
+        edges = _edges(store, ids)
+        by_id = {r["task_id"]: r["label"] for r in rows}
+        lvls = [[by_id[t] for t in lvl] for lvl in waves(edges)]
+        critical = [by_id[t] for t in _longest_chain(edges)]
+        ties = _chain_ties(edges)
+        placed = {lbl for lvl in lvls for lbl in lvl}
+        cyc = sorted(set(by_id.values()) - placed)
+        if cyc:
+            warn.append("dependency cycle or dangling edge — unplaced: " + ", ".join(cyc))
+
+        mt = chosen.get("mission_task")
+        mtask = None
+        if mt:
+            try:
+                mtask = store.get(mt)
+            except KeyError:
+                warn.append(f"manifest names mission task {mt} which is not in the store")
+        mission = {"id": chosen["_id"], "title": chosen.get("mission", chosen["_id"]),
+                   "task_id": mt, "status": getattr(mtask, "status", None),
+                   "manifest_path": str(missions_dir() / (chosen["_id"] + ".json"))}
+
+        # Mission children the manifest does not name. Two exist on this machine from an earlier
+        # `--create`; the store is append-only so they cannot be deleted, only reported.
+        if mt:
+            named = set(chosen.get("labels", {}).values()) | {mt}
+            strays = [t for t in store.all() if t.parent == mt and t.id not in named]
+            if strays:
+                warn.append(f"{len(strays)} mission child task(s) are not in the manifest and are "
+                            f"not shown on the DAG: "
+                            + ", ".join(f"{t.id} ({t.status})" for t in strays[:6]))
+        undeclared = [r["label"] for r in rows
+                      if not (r["contract"] or {}).get("resource_claim")]
+        if undeclared:
+            warn.append("no resource claim declared for " + ", ".join(undeclared)
+                        + " — they are reported conflict-free, which is an absence of a "
+                          "declaration, not evidence of isolation")
+
+    # ---- sessions and the human inbox -----------------------------------------
+    # ⛔ `cheap` does NOT reach here, and the first version of it did — which is the exact defect
+    # this whole panel exists to prevent. A flag that quietly empties the human inbox is a
+    # session-keyed filter wearing a performance optimisation's clothes, and it was caught by
+    # `test_a_blocked_question_survives_the_process_that_asked_it` rather than by reading.
+    # `cheap` skips ONE thing: the git subprocess in `worktrees()`.
+    inv: List[dict] = []
+    questions: List[dict] = []
+    try:
+        inv = _sessions.inventory()
+    except Exception as exc:                                        # noqa: BLE001
+        warn.append(f"session inventory unreadable: {type(exc).__name__}: {exc}")
+    try:
+        questions = _sessions.blocked()
+    except Exception as exc:                                        # noqa: BLE001
+        warn.append(f"blocked-question inbox unreadable: {type(exc).__name__}: {exc}")
+    cards = session_cards(inv)
+    blind = [c for c in cards if not c["liveness_trusted"]]
+    if blind:
+        warn.append(f"{len(blind)} session(s) report UNKNOWN liveness — the process table could "
+                    f"not be read, so 'exited' is not a measurement for them")
+
+    nbl = _needs_by_label(questions, rows)
+    rows = classify(rows, critical, nbl)
+
+    # ---- live claims -----------------------------------------------------------
+    try:
+        held = _claims.active()
+    except Exception:                                               # noqa: BLE001
+        held = {}
+    claim_rows = [{"key": k, "who": getattr(c, "who", ""), "note": getattr(c, "note", ""),
+                   "age": c.human_age() if hasattr(c, "human_age") else "",
+                   "stale": bool(getattr(c, "stale", False))}
+                  for k, c in sorted(held.items())]
+
+    try:
+        traffic = upstream()
+    except Exception as exc:                                        # noqa: BLE001
+        traffic = []
+        warn.append(f"bus unreadable: {type(exc).__name__}: {exc}")
+
+    return {
+        "measured_at": _now(),
+        "mission": mission,
+        "missions": [{"id": m["_id"], "title": m.get("mission", m["_id"])} for m in mans],
+        "critical_path": critical,
+        "critical_path_basis": CRITICAL_PATH_BASIS,
+        # >1 means several chains are equally long and the printed one is just the first by id.
+        # Rendered, so the page cannot imply a linearity the graph does not have.
+        "critical_path_ties": ties,
+        "waves": lvls,
+        "tasks": rows,
+        "ready": [r["label"] for r in rows if r["state"] == READY],
+        "ready_in_parallel": [r["label"] for r in rows if r["state"] == READY_IN_PARALLEL],
+        "running": [r["label"] for r in rows if r["state"] == RUNNING],
+        "sessions": cards,
+        "needs_you": questions,
+        "needs_you_count": len(questions),
+        "claims": claim_rows,
+        "upstream": traffic,
+        "worktrees": [] if cheap else worktrees(),
+        "warnings": warn,
+    }
+
