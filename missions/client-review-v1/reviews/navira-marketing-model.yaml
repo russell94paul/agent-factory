@@ -1,0 +1,262 @@
+# Client Review narrative — Navira cross-channel marketing model
+#
+# ⛔ This file is NOT a system of record. It is the client-facing *wording* for state that lives
+#    in `.data/tasks.jsonl` and `.data/missions/marketing-model-reconstruction-v1.json`.
+#    `factory.client_review` checks every `evidence_refs` entry against the real filesystem and
+#    the real task-evidence rows; a claim whose evidence does not resolve is downgraded to
+#    UNSUBSTANTIATED here, not published as fact.
+#
+# ⭐ `origin:` is load-bearing. CLIENT means the client asked for it. FACTORY_PROPOSED means we
+#    are suggesting it. R1 found that most of the "design" in the record is ALDC-authored rather
+#    than client-requested, so conflating the two is the specific failure this field prevents.
+
+project:
+  id: marketing-model-reconstruction-v1
+  name: Navira Cross-Channel Marketing Model
+  client: GEP
+  subject: Navira (the modelled entity; GEP is the contracting client and Jira project)
+
+review:
+  status: In delivery — reconstruction phase
+  last_review_at: null   # no prior client review; this is the first
+
+intent:
+  objective: >-
+    Establish one agreed, evidence-backed definition of the Navira cross-channel marketing model —
+    what it must answer, at what grain, from which data — before any further build work is
+    committed to it.
+  requested_outcome: >-
+    A recommended dimensional design for cross-channel marketing measurement, with the reasoning
+    and the evidence behind each choice visible, ending in a recommendation you sign off.
+  requirements:
+    - Read-only against your systems. No client state is modified at any point in this phase.
+    - Every requirement traced to who actually said it — you, or us on your behalf.
+    - The design must state its grain explicitly before any measure is designed.
+    - An absence in the data must never render as a zero.
+  assumptions:
+    - Navira (HOUSE) and Lectric (AGENCY, sales-only, no ad spend) are the two entities in scope.
+    - Work targets the TEST environment; production is not read or written in this phase.
+  exclusions:
+    - No changes to the existing Power BI model or the marketing dashboard during reconstruction.
+    - No production deployment in this phase.
+  acceptance_criteria:
+    - Requirements are separated into what you confirmed, what we inferred, and what is unresolved.
+    - Each candidate design declares its grain and is tested against the questions it must answer.
+    - A named human signs off the recommendation before any build work follows from it.
+  unresolved_ambiguities:
+    - >-
+      The boundary between daily reporting metrics and marketing metrics rests on a recollection
+      of a request, not on a record of one. Reading the meeting transcript did not support it.
+      This needs your confirmation — see Decisions.
+    - >-
+      Ten referenced tickets and several email threads are not readable from our repositories, so
+      any requirement resting only on those is recorded as reported-to-us, never as confirmed.
+
+progress:
+  current_stage: Understanding
+  milestones:
+    - { title: "Reconstruct what was asked for", status: DONE }
+    - { title: "Diff the written record against the code", status: DONE }
+    - { title: "Map the available marketing data", status: BLOCKED }
+    - { title: "Synthesise requirements", status: NOT_STARTED }
+    - { title: "Candidate designs and skeptical review", status: NOT_STARTED }
+    - { title: "Recommendation and sign-off", status: NOT_STARTED }
+
+delivered:
+  - id: D-R1
+    title: What you actually asked for, reconstructed from primary sources
+    origin: CLIENT
+    status: Complete
+    summary: >-
+      A claim-by-claim ledger of the requirements on this model, each marked with who said it and
+      how strongly the record supports it — your own words, an internal paraphrase, something we
+      inferred from your data, or an assumption with no source.
+    business_impact: >-
+      You can see which parts of the current design you actually requested and which parts we
+      chose on your behalf, before committing further budget to either.
+    evidence_refs:
+      - docs/evidence/marketing-model-v1/R1-stakeholder-evidence.md
+
+  - id: D-R1a
+    title: A long-standing open question on the metric boundary has been settled against the record
+    origin: CLIENT
+    status: Complete
+    summary: >-
+      The split between daily reporting metrics and marketing metrics was recorded as resting on a
+      recollection, with a note that it should be confirmed against the meeting transcript before
+      going further. That confirmation had never been done. We have now read the transcript in
+      full: it does not contain that request. It contains a different, more specific one.
+    business_impact: >-
+      A design decision that has shaped the model for months turns out not to be traceable to
+      anything you said. Correcting it now is cheap; discovering it after the rebuild is not.
+    evidence_refs:
+      - docs/evidence/marketing-model-v1/R1-stakeholder-evidence.md
+
+  - id: D-R2
+    title: The written record checked line-by-line against the working code
+    origin: FACTORY_PROPOSED
+    status: Complete
+    summary: >-
+      Every documented claim about the model was re-checked against the two source repositories:
+      14 hold, 11 are out of date, 23 are documented nowhere, and 8 pieces of prior design work
+      already exist and were being overlooked.
+    business_impact: >-
+      Stops the redesign re-deriving work that already exists, and stops it inheriting eleven
+      statements that are no longer true of the running system.
+    evidence_refs:
+      - docs/evidence/marketing-model-v1/R2-repo-wiki-diff.md
+
+  - id: D-R2a
+    title: Confirmed that your dashboard and your Power BI reports do not share a data path
+    origin: FACTORY_PROPOSED
+    status: Complete
+    summary: >-
+      The marketing dashboard reads the warehouse directly; the Eclipse app reads Power BI. They
+      are separate routes to separately-defined objects — and for a period they were reading
+      objects with the same names and different contents. Four of those have since been corrected;
+      six have not.
+    business_impact: >-
+      Explains how the same metric can legitimately differ between the two surfaces you look at,
+      and identifies exactly which six objects can still disagree today.
+    evidence_refs:
+      - docs/evidence/marketing-model-v1/R2-repo-wiki-diff.md
+
+evidence:
+  - id: E-1
+    type: analysis
+    label: Stakeholder claim ledger — every requirement, with who said it
+    source: docs/evidence/marketing-model-v1/R1-stakeholder-evidence.md
+    summary: >-
+      Claims graded CONFIRMED (your own words or a contemporaneous minute) · SUPPORTED (one
+      internal record paraphrases you) · INFERRED (we derived it from your data) · ASSUMPTION
+      (no citable source) · UNKNOWN. Sources that we cannot read are listed explicitly rather
+      than guessed at.
+  - id: E-2
+    type: analysis
+    label: Record-versus-code diff — 14 locked, 11 stale, 23 undocumented, 8 prior designs
+    source: docs/evidence/marketing-model-v1/R2-repo-wiki-diff.md
+    summary: >-
+      Each finding cites the file and line it was read from. Includes the six warehouse objects
+      still resolving to a divergent copy, and the four already repointed.
+
+decisions:
+  - id: DEC-1
+    question: >-
+      Should the model keep the current split between daily reporting metrics and marketing
+      metrics — and if so, on what basis?
+    context: >-
+      This split has been treated as your requirement. Re-reading the meeting transcript in full,
+      we cannot find you asking for it. We found a different and more specific request instead.
+      Rather than quietly keeping a rule we cannot source, we would like you to settle it.
+    blocking: true
+    origin: CLIENT
+    recommendation: >-
+      Replace the unsourced split with the specific request the transcript does contain, and
+      record it as a confirmed requirement going forward.
+    options:
+      - "Adopt the requirement the transcript actually records (recommended)"
+      - "Keep the current split, and we record it as an ALDC design decision rather than your requirement"
+      - "Neither — tell us the rule you want and we record it as confirmed from this meeting"
+    status: OPEN
+    delivery_impact: >-
+      Blocks requirements synthesis, which every subsequent design task depends on. No effect on
+      the work already delivered.
+
+  - id: DEC-2
+    question: >-
+      Do you want the six remaining divergent warehouse objects repointed now, or as part of the
+      model rebuild?
+    context: >-
+      Six objects the dashboard reads still resolve to a second copy with different contents from
+      the one Power BI reads. Four equivalents were corrected previously. Until these six are
+      repointed, the two surfaces can legitimately show different numbers for the same metric.
+    blocking: false
+    origin: FACTORY_PROPOSED
+    recommendation: >-
+      Repoint them as part of the model rebuild, so the change is made once against an agreed
+      design rather than twice.
+    options:
+      - "Repoint as part of the rebuild (recommended)"
+      - "Repoint now as a separate corrective change"
+      - "Leave as-is and document the difference"
+    status: OPEN
+    delivery_impact: >-
+      No effect on the current delivery date either way. Repointing now would add a separate
+      validation cycle.
+
+risks:
+  - id: RISK-1
+    title: Two of your surfaces can still report different numbers for the same metric
+    severity: HIGH
+    origin: FACTORY_PROPOSED
+    impact: >-
+      Six warehouse objects read by the marketing dashboard resolve to a different copy from the
+      one Power BI reads. Where those copies differ, the same named metric can differ between the
+      dashboard and the Eclipse app. One previously-identified case was missing a five-figure sum
+      of Amazon spend.
+    mitigation: >-
+      All six are identified by name in the evidence. Repointing is a small, reversible change;
+      the open question is only when to make it — see the second decision above.
+    owner: ALDC
+    client_action_required: true
+
+  - id: RISK-2
+    title: Data cartography is paused pending an access-credential rotation
+    severity: MEDIUM
+    origin: FACTORY_PROPOSED
+    impact: >-
+      The task that maps what marketing data exists and at what grain cannot start until an
+      internal credential rotation is completed on our side. Requirements synthesis and the design
+      tasks all sit behind it.
+    mitigation: >-
+      Rotation is an ALDC-internal action already scoped and scheduled. The two reconstruction
+      tasks that did not need it are complete, so the pause has not idled the whole workstream.
+    owner: ALDC
+    client_action_required: false
+
+  - id: RISK-3
+    title: Part of the requirement record is not readable by us, and is graded accordingly
+    severity: MEDIUM
+    origin: FACTORY_PROPOSED
+    impact: >-
+      Ten referenced tickets, several Jira comment threads and two email threads are cited in our
+      internal record but are not in any repository we can read. Requirements resting only on
+      those are recorded as reported-to-us, never as confirmed by you.
+    mitigation: >-
+      Every such claim is listed explicitly in the evidence rather than being silently upgraded.
+      The fastest resolution is to confirm or correct them directly in the review meeting.
+    owner: ALDC
+    client_action_required: true
+
+next:
+  - id: N-1
+    title: Map what marketing data exists, at what grain, and where it disagrees
+    status: BLOCKED
+    dependency: Internal credential rotation
+    blocked_reason: Waiting on an ALDC-internal access rotation; no client action required.
+  - id: N-2
+    title: Synthesise the confirmed requirements, separated from what we inferred
+    status: NOT_STARTED
+    dependency: The data map, and your answer on the metric boundary
+  - id: N-3
+    title: Catalogue the analytical questions the model must be able to answer
+    status: NOT_STARTED
+    dependency: Requirements synthesis
+  - id: N-4
+    title: Produce candidate dimensional designs, each declaring its grain first
+    status: NOT_STARTED
+    dependency: The question catalogue
+  - id: N-5
+    title: Attempt to falsify the leading design before recommending it
+    status: NOT_STARTED
+    dependency: Candidate designs
+  - id: N-6
+    title: Recommendation, with a named human sign-off
+    status: NOT_STARTED
+    dependency: Skeptical review
+
+acceptance:
+  status: READY_FOR_REVIEW
+  notes: >-
+    This is a review of the reconstruction phase, not of the finished model. Acceptance of the
+    recommendation comes at the end of the design phase.

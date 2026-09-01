@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Navira Cross-Channel Marketing Model</title>
+<!-- No external resources. Everything this page needs is in the file. -->
+<style>
+:root{
+  --display:Cambria,"Palatino Linotype",Palatino,"Iowan Old Style",ui-serif,Georgia,"Times New Roman",serif;
+  --body:-apple-system,BlinkMacSystemFont,"Segoe UI Variable Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"Cascadia Mono","Cascadia Code",Consolas,"SF Mono",Menlo,"DejaVu Sans Mono",monospace;
+}
+:root{
+  --paper:#F7F8F7; --raise:#FFFFFF; --sunk:#EFF2F1;
+  --ink:#12181C; --ink2:#4A5559;
+  --muted:#6C777B; --rule:#D8DEDC; --rule2:#E7ECEA;
+  /* ⚠ --base MUST be applied to html, not body. Set on body it scales inherited text but not
+     anything sized in rem (every heading, every mono label), so meeting mode grew the paragraphs
+     and left the headings behind. Caught in the rendered page, not in review. */
+  --accent:#0E6E62; --accent-soft:#E2EFEC;
+  --verified:#1F7A4D; --verified-bg:#E6F2EA;
+  --claimed:#9A6B10; --claimed-bg:#F7EFDD;
+  --none:#8C8C93; --none-bg:#EDEDEF;
+  --risk:#A33A2A; --risk-bg:#F6E7E3;
+  --base:17px; --lede:1.24rem; --measure:74ch;
+  --shadow:0 1px 2px rgba(18,24,28,.05), 0 8px 24px -12px rgba(18,24,28,.12);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0E1316; --raise:#161D21; --sunk:#121A1D;
+    --ink:#E6EBEA; --ink2:#B4C0C0; --muted:#8A9799;
+    --rule:#26312F; --rule2:#1E2826;
+    --accent:#4FBFAC; --accent-soft:#12312D;
+    --verified:#5FBE8A; --verified-bg:#122A1E;
+    --claimed:#D6A94E; --claimed-bg:#2B2314;
+    --none:#8C979A; --none-bg:#1D2427;
+    --risk:#E08472; --risk-bg:#2E1A16;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0E1316; --raise:#161D21; --sunk:#121A1D;
+  --ink:#E6EBEA; --ink2:#B4C0C0; --muted:#8A9799;
+  --rule:#26312F; --rule2:#1E2826;
+  --accent:#4FBFAC; --accent-soft:#12312D;
+  --verified:#5FBE8A; --verified-bg:#122A1E;
+  --claimed:#D6A94E; --claimed-bg:#2B2314;
+  --none:#8C979A; --none-bg:#1D2427;
+  --risk:#E08472; --risk-bg:#2E1A16;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+}
+
+*{box-sizing:border-box}
+html{font-size:var(--base)}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:var(--body);
+  font-size:1rem; line-height:1.58; -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{font-family:var(--display); font-weight:600;
+         text-wrap:balance; margin:0; letter-spacing:-.005em}
+.mono{font-family:var(--mono)}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent); outline-offset:3px; border-radius:2px}
+
+.wrap{max-width:1080px; margin:0 auto; padding:0 32px 96px}
+
+/* ---- masthead ------------------------------------------------------------------------- */
+.mast{border-bottom:1px solid var(--rule); background:var(--raise); position:relative}
+.mast .wrap{padding-top:30px; padding-bottom:24px}
+.eyebrow{font-size:.72rem; letter-spacing:.14em; text-transform:uppercase; color:var(--muted)}
+.mast h1{font-size:2.05rem; margin:.28em 0 .1em}
+.subject{color:var(--ink2); font-size:.95rem; max-width:var(--measure)}
+
+.tiles{display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:1px;
+       background:var(--rule); border:1px solid var(--rule); margin-top:26px}
+.tile{background:var(--raise); padding:16px 18px}
+.tile .k{font-size:.7rem; letter-spacing:.13em; text-transform:uppercase; color:var(--muted)}
+.tile .v{font-family:var(--display); font-size:1.32rem; margin-top:5px;
+         line-height:1.25; font-weight:600}
+.tile .n{font-size:.84rem; color:var(--muted); margin-top:3px}
+
+.stamp{display:inline-flex; align-items:center; gap:.45em; font-size:.72rem; letter-spacing:.09em;
+       text-transform:uppercase; padding:.3em .62em; border:1px solid currentColor;
+       border-radius:2px; font-family:var(--mono)}
+.stamp::before{content:""; width:.5em; height:.5em; border-radius:50%; background:currentColor}
+.fresh-live{color:var(--verified)} .fresh-verified{color:var(--accent)}
+.fresh-stale{color:var(--claimed)} .fresh-none{color:var(--none)}
+
+/* ---- section rail --------------------------------------------------------------------- */
+.rail{position:sticky; top:0; z-index:20; background:var(--paper); border-bottom:1px solid var(--rule)}
+.rail .wrap{display:flex; gap:2px; padding:0 32px; overflow-x:auto; align-items:stretch}
+/* ⚠ Rail sizing is in px, NOT rem, deliberately. Meeting mode raises the rem scale for content;
+   if the nav scaled with it the links grew, overflowed, and pushed the mode button off the right
+   edge of its own scroll container — the presenter's one control, gone. Meeting mode is supposed
+   to REDUCE navigation noise, so chrome holds still while content grows. */
+.rail a{font-size:13px; letter-spacing:.1em; text-transform:uppercase; text-decoration:none;
+        color:var(--ink2); padding:13px 14px; white-space:nowrap; border-bottom:2px solid transparent}
+.rail a:hover{color:var(--ink); border-bottom-color:var(--rule)}
+.rail .spacer{flex:1}
+.modebtn{align-self:center; margin-left:auto; font-family:var(--mono);
+         font-size:12px; letter-spacing:.08em; text-transform:uppercase; cursor:pointer;
+         color:var(--ink2); border:1px solid var(--rule);
+         border-radius:2px; padding:7px 11px; white-space:nowrap;
+         /* Pinned to the right of the scroller so it survives any nav width. The fade makes a
+            nav item sliding underneath read as pinned rather than as a clipped label. */
+         position:sticky; right:0; background:var(--paper); flex:0 0 auto;
+         box-shadow:-14px 0 12px -6px var(--paper)}
+.modebtn:hover{color:var(--ink); border-color:var(--accent)}
+
+/* ---- sections ------------------------------------------------------------------------- */
+section{padding-top:52px; scroll-margin-top:60px}
+.shead{display:flex; align-items:baseline; gap:14px; border-bottom:2px solid var(--ink);
+       padding-bottom:9px; margin-bottom:8px}
+.shead h2{font-size:1.42rem}
+.shead .idx{font-family:var(--mono); font-size:.78rem;
+            color:var(--muted); letter-spacing:.06em}
+.slede{color:var(--ink2); max-width:var(--measure); margin:14px 0 26px; font-size:1.02rem}
+
+/* ---- the ledger: gutter + body -------------------------------------------------------- */
+.entry{display:grid; grid-template-columns:168px 1fr; gap:26px; padding:22px 0;
+       border-bottom:1px solid var(--rule2)}
+.entry:last-child{border-bottom:none}
+.gutter{border-left:3px solid var(--none); padding-left:13px}
+.gutter.verified{border-left-color:var(--verified)}
+.gutter.claimed{border-left-color:var(--claimed)}
+.gutter.none{border-left-color:var(--none)}
+.grade{font-family:var(--mono); font-size:.71rem; letter-spacing:.07em;
+       text-transform:uppercase; font-weight:500}
+.gutter.verified .grade{color:var(--verified)}
+.gutter.claimed .grade{color:var(--claimed)}
+.gutter.none .grade{color:var(--none)}
+.gnote{font-size:.79rem; color:var(--muted); margin-top:5px; line-height:1.42}
+.origin{display:inline-block; margin-top:9px; font-family:var(--mono);
+        font-size:.66rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);
+        border:1px dashed var(--rule); border-radius:2px; padding:.22em .5em}
+.entry h3{font-size:1.13rem; line-height:1.38}
+.entry p{margin:.55em 0 0; max-width:var(--measure); color:var(--ink2)}
+.impact{margin-top:12px; padding-left:14px; border-left:2px solid var(--accent-soft);
+        color:var(--ink); font-size:.97rem}
+.impact b{font-family:var(--mono); font-size:.68rem; letter-spacing:.1em;
+          text-transform:uppercase; color:var(--accent); display:block; margin-bottom:2px}
+
+details{margin-top:14px; border:1px solid var(--rule); border-radius:3px; background:var(--raise)}
+summary{cursor:pointer; padding:10px 14px; font-family:var(--mono);
+        font-size:.76rem; letter-spacing:.06em; text-transform:uppercase; color:var(--ink2);
+        list-style:none; display:flex; align-items:center; gap:.6em}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"+"; color:var(--accent); font-weight:700}
+details[open] summary::before{content:"−"}
+summary:hover{color:var(--ink)}
+.dbody{padding:2px 14px 14px; border-top:1px solid var(--rule2)}
+.dbody p{margin:.7em 0; font-size:.95rem}
+.src{font-family:var(--mono); font-size:.78rem; color:var(--muted);
+     word-break:break-all}
+
+/* ---- intent grid ---------------------------------------------------------------------- */
+.two{display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:1px;
+     background:var(--rule); border:1px solid var(--rule)}
+.pane{background:var(--raise); padding:18px 20px}
+.pane h3{font-size:.76rem; letter-spacing:.13em; text-transform:uppercase; color:var(--muted);
+         font-family:var(--mono); font-weight:500}
+.pane ul{margin:.75em 0 0; padding-left:1.15em}
+.pane li{margin:.42em 0; color:var(--ink2)}
+.pane p{margin:.7em 0 0; color:var(--ink2)}
+.objective{font-size:var(--lede); line-height:1.5; color:var(--ink);
+           font-family:var(--display); max-width:var(--measure)}
+
+/* ---- stage strip ---------------------------------------------------------------------- */
+.stages{display:flex; gap:1px; background:var(--rule); border:1px solid var(--rule);
+        margin:22px 0 0; overflow-x:auto}
+.stage{background:var(--raise); padding:12px 14px; flex:1; min-width:126px}
+.stage .sn{font-family:var(--mono); font-size:.66rem;
+           letter-spacing:.08em; color:var(--muted); text-transform:uppercase}
+.stage .st{margin-top:4px; font-size:.93rem; line-height:1.3}
+.stage.done{background:var(--verified-bg)} .stage.done .sn{color:var(--verified)}
+.stage.blocked{background:var(--claimed-bg)} .stage.blocked .sn{color:var(--claimed)}
+.stage.now{box-shadow:inset 0 3px 0 var(--accent)}
+
+/* ---- decisions ------------------------------------------------------------------------ */
+.decision{border:1px solid var(--rule); background:var(--raise); margin-bottom:20px;
+          box-shadow:var(--shadow)}
+.decision.blocking{border-left:4px solid var(--accent)}
+.dhead{padding:18px 22px 0}
+.dflag{font-family:var(--mono); font-size:.68rem; letter-spacing:.11em;
+       text-transform:uppercase; color:var(--accent)}
+.decision h3{font-size:1.18rem; margin-top:7px; max-width:var(--measure)}
+.dctx{padding:0 22px; color:var(--ink2); max-width:var(--measure); margin-top:.6em}
+.opts{list-style:none; margin:18px 0 0; padding:0 22px}
+.opts li{display:flex; gap:11px; align-items:flex-start; padding:10px 0;
+         border-top:1px solid var(--rule2); color:var(--ink2)}
+.opts li .r{width:.85em; height:.85em; border-radius:50%; border:1.5px solid var(--none);
+            margin-top:.42em; flex:0 0 auto}
+.opts li.rec{color:var(--ink); font-weight:600}
+.opts li.rec .r{border-color:var(--accent); background:radial-gradient(circle,var(--accent) 42%,transparent 46%)}
+.dfoot{margin-top:16px; padding:14px 22px; background:var(--sunk); border-top:1px solid var(--rule);
+       font-size:.93rem; color:var(--ink2)}
+.dfoot b{font-family:var(--mono); font-size:.68rem; letter-spacing:.1em;
+         text-transform:uppercase; color:var(--muted); display:block}
+
+/* ---- risks ---------------------------------------------------------------------------- */
+.risk{display:grid; grid-template-columns:168px 1fr; gap:26px; padding:22px 0;
+      border-bottom:1px solid var(--rule2)}
+.risk:last-child{border-bottom:none}
+.sev{font-family:var(--mono); font-size:.71rem; letter-spacing:.08em;
+     text-transform:uppercase; padding-left:13px; border-left:3px solid var(--none)}
+.sev-high{border-left-color:var(--risk); color:var(--risk)}
+.sev-med{border-left-color:var(--claimed); color:var(--claimed)}
+.sev-low{border-left-color:var(--none); color:var(--none)}
+.owner{font-size:.79rem; color:var(--muted); margin-top:6px}
+.needsyou{display:inline-block; margin-top:9px; font-family:var(--mono);
+          font-size:.66rem; letter-spacing:.08em; text-transform:uppercase; color:var(--risk);
+          background:var(--risk-bg); border-radius:2px; padding:.24em .55em}
+
+/* ---- next ----------------------------------------------------------------------------- */
+.nextlist{list-style:none; margin:0; padding:0; counter-reset:n}
+.nextlist li{display:grid; grid-template-columns:168px 1fr; gap:26px; padding:16px 0;
+             border-bottom:1px solid var(--rule2)}
+.nextlist li:last-child{border-bottom:none}
+.nstate{font-family:var(--mono); font-size:.71rem; letter-spacing:.07em;
+        text-transform:uppercase; color:var(--muted); padding-left:13px;
+        border-left:3px solid var(--rule)}
+.nstate.blocked{border-left-color:var(--claimed); color:var(--claimed)}
+.nextlist .t{font-size:1.03rem}
+.nextlist .d{font-size:.87rem; color:var(--muted); margin-top:3px}
+
+/* ---- acceptance ----------------------------------------------------------------------- */
+.accept{border:1px solid var(--rule); background:var(--raise); padding:24px 26px; margin-top:8px}
+.accept .st{font-family:var(--display); font-size:1.6rem; font-weight:600}
+.accept ul{margin:.9em 0 0; padding-left:1.2em; color:var(--ink2)}
+.accept li{margin:.35em 0}
+.accept .why{font-family:var(--mono); font-size:.7rem;
+             letter-spacing:.11em; text-transform:uppercase; color:var(--muted); margin-top:20px}
+
+footer{margin-top:64px; padding-top:20px; border-top:1px solid var(--rule); color:var(--muted);
+       font-size:.83rem; display:flex; flex-wrap:wrap; gap:10px 24px}
+
+/* ---- live meeting mode ----------------------------------------------------------------
+   The class lands on <html>, so --base moves the rem scale and every heading grows with the
+   body copy. On <body> it moved only inherited sizes — see the note beside --base. */
+:root.meeting{--base:20px; --measure:66ch; --lede:1.3rem}
+.meeting .opsonly{display:none}
+.meeting .entry,.meeting .risk,.meeting .nextlist li{grid-template-columns:190px 1fr}
+.meeting section{padding-top:66px}
+
+@media (max-width:760px){
+  .wrap{padding:0 20px 72px}
+  .entry,.risk,.nextlist li{grid-template-columns:1fr; gap:12px}
+  .gutter,.sev,.nstate{border-left:none; border-top:3px solid var(--none); padding-left:0;
+                       padding-top:9px}
+  .gutter.verified{border-top-color:var(--verified)} .gutter.claimed{border-top-color:var(--claimed)}
+  .sev-high{border-top-color:var(--risk)} .sev-med{border-top-color:var(--claimed)}
+  .nstate.blocked{border-top-color:var(--claimed)}
+}
+@media print{ .rail,.modebtn{display:none} body{--base:12pt} details{page-break-inside:avoid} }
+@media (prefers-reduced-motion:reduce){ *{animation:none!important; transition:none!important} }
+</style>
+</head>
+<body>
+
+<header class="mast">
+  <div class="wrap">
+    <div class="eyebrow">Client delivery review · GEP</div>
+    <h1>Navira Cross-Channel Marketing Model</h1>
+    <p class="subject">Navira (the modelled entity; GEP is the contracting client and Jira project)</p>
+    <div class="tiles">
+      <div class="tile"><div class="k">Overall status</div>
+        <div class="v">In delivery — reconstruction phase</div>
+        <div class="n">25% of this phase complete · Derived from completed workstreams</div></div>
+      <div class="tile"><div class="k">Review readiness</div>
+        <div class="v">Not Ready</div>
+        <div class="n">3 items outstanding</div></div>
+      <div class="tile"><div class="k">Needs your input</div>
+        <div class="v">3</div>
+        <div class="n">1 blocking · 1 non-blocking</div></div>
+      <div class="tile"><div class="k">State of this page</div>
+        <div class="v" style="font-size:1rem;margin-top:8px">
+          <span class="stamp fresh-verified">Last verified</span></div>
+        <div class="n">2026-09-01 03:14 UTC</div></div>
+    </div>
+  </div>
+</header>
+
+<nav class="rail"><div class="wrap">
+  <a href="#asked">What you asked for</a>
+  <a href="#delivered">Delivered</a>
+  <a href="#evidence">Evidence</a>
+  <a href="#decisions">Decisions</a>
+  <a href="#risks">Risks</a>
+  <a href="#next">What's next</a>
+  <a href="#acceptance">Acceptance</a>
+  <button class="modebtn" id="modebtn" type="button">Live meeting mode</button>
+</div></nav>
+
+<div class="wrap">
+
+<section id="summary">
+  <div class="shead"><span class="idx">00</span><h2>Where this stands</h2></div>
+  <p class="objective">4 outcomes delivered with evidence. 3 things need your input.</p>
+  <p class="slede">This is the first review of this project, so everything below is new.</p>
+  <div class="stages"><div class="stage done"><div class="sn">DONE</div><div class="st">Reconstruct what was asked for</div></div><div class="stage done"><div class="sn">DONE</div><div class="st">Diff the written record against the code</div></div><div class="stage blocked now"><div class="sn">BLOCKED</div><div class="st">Map the available marketing data</div></div><div class="stage "><div class="sn">NOT STARTED</div><div class="st">Synthesise requirements</div></div><div class="stage "><div class="sn">NOT STARTED</div><div class="st">Candidate designs and skeptical review</div></div><div class="stage "><div class="sn">NOT STARTED</div><div class="st">Recommendation and sign-off</div></div></div>
+</section>
+
+<section id="asked">
+  <div class="shead"><span class="idx">01</span><h2>What you asked for</h2></div><p class="slede">Our current understanding of the outcome you asked us to deliver. If any of this is wrong, it is the most valuable thing you can correct today.</p>
+  <p class="objective">Establish one agreed, evidence-backed definition of the Navira cross-channel marketing model — what it must answer, at what grain, from which data — before any further build work is committed to it.</p>
+  <div class="two" style="margin-top:26px">
+    <div class="pane"><h3>Acceptance criteria</h3><ul><li>Requirements are separated into what you confirmed, what we inferred, and what is unresolved.</li><li>Each candidate design declares its grain and is tested against the questions it must answer.</li><li>A named human signs off the recommendation before any build work follows from it.</li></ul></div>
+    <div class="pane"><h3>Requirements</h3><ul><li>Read-only against your systems. No client state is modified at any point in this phase.</li><li>Every requirement traced to who actually said it — you, or us on your behalf.</li><li>The design must state its grain explicitly before any measure is designed.</li><li>An absence in the data must never render as a zero.</li></ul></div>
+    <div class="pane"><h3>Assumptions we are working under</h3><ul><li>Navira (HOUSE) and Lectric (AGENCY, sales-only, no ad spend) are the two entities in scope.</li><li>Work targets the TEST environment; production is not read or written in this phase.</li></ul></div>
+    <div class="pane"><h3>Explicitly out of scope</h3><ul><li>No changes to the existing Power BI model or the marketing dashboard during reconstruction.</li><li>No production deployment in this phase.</li></ul></div>
+  </div>
+  <div class="two" style="margin-top:1px">
+    <div class="pane"><h3>Still unresolved</h3><ul><li>The boundary between daily reporting metrics and marketing metrics rests on a recollection of a request, not on a record of one. Reading the meeting transcript did not support it. This needs your confirmation — see Decisions.</li><li>Ten referenced tickets and several email threads are not readable from our repositories, so any requirement resting only on those is recorded as reported-to-us, never as confirmed.</li></ul></div>
+  </div>
+</section>
+
+<section id="delivered">
+  <div class="shead"><span class="idx">02</span><h2>What we delivered</h2></div><p class="slede">Outcomes, not tasks. The grade in the left margin says whether the claim is backed by an artefact we can show you, or is only our assertion.</p>
+  <div class="entry"><div class="gutter verified"><div class="grade">Evidence verified</div><div class="gnote">Backed by an artefact on file, measured or derived.</div><span class="origin">You asked for this</span></div><div><h3>What you actually asked for, reconstructed from primary sources</h3><p>A claim-by-claim ledger of the requirements on this model, each marked with who said it and how strongly the record supports it — your own words, an internal paraphrase, something we inferred from your data, or an assumption with no source.</p><div class="impact"><b>Why it matters to you</b>You can see which parts of the current design you actually requested and which parts we chose on your behalf, before committing further budget to either.</div><details><summary>Proof it works</summary><div class="dbody"><p><span class="grade" style="color:var(--verified)">Verified</span> — Stakeholder claim ledger — every requirement, with who said it</p><p>Claims graded CONFIRMED (your own words or a contemporaneous minute) · SUPPORTED (one internal record paraphrases you) · INFERRED (we derived it from your data) · ASSUMPTION (no citable source) · UNKNOWN. Sources that we cannot read are listed explicitly rather than guessed at.</p><p class="src">docs/evidence/marketing-model-v1/R1-stakeholder-evidence.md</p></div></details></div></div><div class="entry"><div class="gutter verified"><div class="grade">Evidence verified</div><div class="gnote">Backed by an artefact on file, measured or derived.</div><span class="origin">You asked for this</span></div><div><h3>A long-standing open question on the metric boundary has been settled against the record</h3><p>The split between daily reporting metrics and marketing metrics was recorded as resting on a recollection, with a note that it should be confirmed against the meeting transcript before going further. That confirmation had never been done. We have now read the transcript in full: it does not contain that request. It contains a different, more specific one.</p><div class="impact"><b>Why it matters to you</b>A design decision that has shaped the model for months turns out not to be traceable to anything you said. Correcting it now is cheap; discovering it after the rebuild is not.</div><details><summary>Proof it works</summary><div class="dbody"><p><span class="grade" style="color:var(--verified)">Verified</span> — Stakeholder claim ledger — every requirement, with who said it</p><p>Claims graded CONFIRMED (your own words or a contemporaneous minute) · SUPPORTED (one internal record paraphrases you) · INFERRED (we derived it from your data) · ASSUMPTION (no citable source) · UNKNOWN. Sources that we cannot read are listed explicitly rather than guessed at.</p><p class="src">docs/evidence/marketing-model-v1/R1-stakeholder-evidence.md</p></div></details></div></div><div class="entry"><div class="gutter verified"><div class="grade">Evidence verified</div><div class="gnote">Backed by an artefact on file, measured or derived.</div><span class="origin">We proposed this</span></div><div><h3>The written record checked line-by-line against the working code</h3><p>Every documented claim about the model was re-checked against the two source repositories: 14 hold, 11 are out of date, 23 are documented nowhere, and 8 pieces of prior design work already exist and were being overlooked.</p><div class="impact"><b>Why it matters to you</b>Stops the redesign re-deriving work that already exists, and stops it inheriting eleven statements that are no longer true of the running system.</div><details><summary>Proof it works</summary><div class="dbody"><p><span class="grade" style="color:var(--verified)">Verified</span> — Record-versus-code diff — 14 locked, 11 stale, 23 undocumented, 8 prior designs</p><p>Each finding cites the file and line it was read from. Includes the six warehouse objects still resolving to a divergent copy, and the four already repointed.</p><p class="src">docs/evidence/marketing-model-v1/R2-repo-wiki-diff.md</p></div></details></div></div><div class="entry"><div class="gutter verified"><div class="grade">Evidence verified</div><div class="gnote">Backed by an artefact on file, measured or derived.</div><span class="origin">We proposed this</span></div><div><h3>Confirmed that your dashboard and your Power BI reports do not share a data path</h3><p>The marketing dashboard reads the warehouse directly; the Eclipse app reads Power BI. They are separate routes to separately-defined objects — and for a period they were reading objects with the same names and different contents. Four of those have since been corrected; six have not.</p><div class="impact"><b>Why it matters to you</b>Explains how the same metric can legitimately differ between the two surfaces you look at, and identifies exactly which six objects can still disagree today.</div><details><summary>Proof it works</summary><div class="dbody"><p><span class="grade" style="color:var(--verified)">Verified</span> — Record-versus-code diff — 14 locked, 11 stale, 23 undocumented, 8 prior designs</p><p>Each finding cites the file and line it was read from. Includes the six warehouse objects still resolving to a divergent copy, and the four already repointed.</p><p class="src">docs/evidence/marketing-model-v1/R2-repo-wiki-diff.md</p></div></details></div></div>
+</section>
+
+<section id="evidence">
+  <div class="shead"><span class="idx">03</span><h2>Proof it works</h2></div><p class="slede">A green status should never mean &quot;trust us&quot;. Each artefact below is a file we can open in front of you, and each carries how it was established.</p>
+  <div class="entry"><div class="gutter verified"><div class="grade">Verified</div><div class="gnote">Measured evidence, target class</div></div><div><h3>Stakeholder claim ledger — every requirement, with who said it</h3><p>Claims graded CONFIRMED (your own words or a contemporaneous minute) · SUPPORTED (one internal record paraphrases you) · INFERRED (we derived it from your data) · ASSUMPTION (no citable source) · UNKNOWN. Sources that we cannot read are listed explicitly rather than guessed at.</p><p class="src">docs/evidence/marketing-model-v1/R1-stakeholder-evidence.md · verified 2026-09-01 03:14 UTC</p></div></div><div class="entry"><div class="gutter verified"><div class="grade">Verified</div><div class="gnote">Measured evidence, target class</div></div><div><h3>Record-versus-code diff — 14 locked, 11 stale, 23 undocumented, 8 prior designs</h3><p>Each finding cites the file and line it was read from. Includes the six warehouse objects still resolving to a divergent copy, and the four already repointed.</p><p class="src">docs/evidence/marketing-model-v1/R2-repo-wiki-diff.md · verified 2026-09-01 03:14 UTC</p></div></div>
+</section>
+
+<section id="decisions">
+  <div class="shead"><span class="idx">04</span><h2>What we need from you</h2></div><p class="slede">Only decisions that genuinely need you. Anything that can safely continue without an answer is continuing.</p>
+  <div class="decision blocking"><div class="dhead"><div class="dflag">Blocking — work behind this is paused</div><h3>Should the model keep the current split between daily reporting metrics and marketing metrics — and if so, on what basis?</h3></div><p class="dctx">This split has been treated as your requirement. Re-reading the meeting transcript in full, we cannot find you asking for it. We found a different and more specific request instead. Rather than quietly keeping a rule we cannot source, we would like you to settle it.</p><div class="dctx" style="margin-top:1em"><b>Our recommendation.</b> Replace the unsourced split with the specific request the transcript does contain, and record it as a confirmed requirement going forward.</div><ul class="opts"><li class="rec"><span class="r"></span><span>Adopt the requirement the transcript actually records (recommended)</span></li><li class=""><span class="r"></span><span>Keep the current split, and we record it as an ALDC design decision rather than your requirement</span></li><li class=""><span class="r"></span><span>Neither — tell us the rule you want and we record it as confirmed from this meeting</span></li></ul><div class="dfoot"><b>Effect on delivery</b>Blocks requirements synthesis, which every subsequent design task depends on. No effect on the work already delivered.</div></div><div class="decision "><div class="dhead"><div class="dflag">Not blocking — everything else continues</div><h3>Do you want the six remaining divergent warehouse objects repointed now, or as part of the model rebuild?</h3></div><p class="dctx">Six objects the dashboard reads still resolve to a second copy with different contents from the one Power BI reads. Four equivalents were corrected previously. Until these six are repointed, the two surfaces can legitimately show different numbers for the same metric.</p><div class="dctx" style="margin-top:1em"><b>Our recommendation.</b> Repoint them as part of the model rebuild, so the change is made once against an agreed design rather than twice.</div><ul class="opts"><li class="rec"><span class="r"></span><span>Repoint as part of the rebuild (recommended)</span></li><li class=""><span class="r"></span><span>Repoint now as a separate corrective change</span></li><li class=""><span class="r"></span><span>Leave as-is and document the difference</span></li></ul><div class="dfoot"><b>Effect on delivery</b>No effect on the current delivery date either way. Repointing now would add a separate validation cycle.</div></div>
+</section>
+
+<section id="risks">
+  <div class="shead"><span class="idx">05</span><h2>Risks and blockers</h2></div><p class="slede">Surfaced rather than left buried in an engineering tool. Where we own it, we say so.</p>
+  <div class="risk"><div class="sev sev-high">HIGH<div class="owner">Owned by ALDC</div><span class="needsyou">Needs a decision from you</span></div><div><h3>Two of your surfaces can still report different numbers for the same metric</h3><p>Six warehouse objects read by the marketing dashboard resolve to a different copy from the one Power BI reads. Where those copies differ, the same named metric can differ between the dashboard and the Eclipse app. One previously-identified case was missing a five-figure sum of Amazon spend.</p><div class="impact"><b>What we are doing about it</b>All six are identified by name in the evidence. Repointing is a small, reversible change; the open question is only when to make it — see the second decision above.</div></div></div><div class="risk"><div class="sev sev-med">MEDIUM<div class="owner">Owned by ALDC</div></div><div><h3>Data cartography is paused pending an access-credential rotation</h3><p>The task that maps what marketing data exists and at what grain cannot start until an internal credential rotation is completed on our side. Requirements synthesis and the design tasks all sit behind it.</p><div class="impact"><b>What we are doing about it</b>Rotation is an ALDC-internal action already scoped and scheduled. The two reconstruction tasks that did not need it are complete, so the pause has not idled the whole workstream.</div></div></div><div class="risk"><div class="sev sev-med">MEDIUM<div class="owner">Owned by ALDC</div><span class="needsyou">Needs a decision from you</span></div><div><h3>Part of the requirement record is not readable by us, and is graded accordingly</h3><p>Ten referenced tickets, several Jira comment threads and two email threads are cited in our internal record but are not in any repository we can read. Requirements resting only on those are recorded as reported-to-us, never as confirmed by you.</p><div class="impact"><b>What we are doing about it</b>Every such claim is listed explicitly in the evidence rather than being silently upgraded. The fastest resolution is to confirm or correct them directly in the review meeting.</div></div></div>
+</section>
+
+<section id="next">
+  <div class="shead"><span class="idx">06</span><h2>What happens next</h2></div><p class="slede">The next outcomes, not the next internal tasks.</p>
+  <ul class="nextlist"><li><div class="nstate blocked">BLOCKED</div><div><div class="t">Map what marketing data exists, at what grain, and where it disagrees</div><div class="d">Waiting on an ALDC-internal access rotation; no client action required.</div></div></li><li><div class="nstate ">NOT STARTED</div><div><div class="t">Synthesise the confirmed requirements, separated from what we inferred</div><div class="d">After: The data map, and your answer on the metric boundary</div></div></li><li><div class="nstate ">NOT STARTED</div><div><div class="t">Catalogue the analytical questions the model must be able to answer</div><div class="d">After: Requirements synthesis</div></div></li><li><div class="nstate ">NOT STARTED</div><div><div class="t">Produce candidate dimensional designs, each declaring its grain first</div><div class="d">After: The question catalogue</div></div></li><li><div class="nstate ">NOT STARTED</div><div><div class="t">Attempt to falsify the leading design before recommending it</div><div class="d">After: Candidate designs</div></div></li><li><div class="nstate ">NOT STARTED</div><div><div class="t">Recommendation, with a named human sign-off</div><div class="d">After: Skeptical review</div></div></li></ul>
+</section>
+
+<section id="acceptance">
+  <div class="shead"><span class="idx">07</span><h2>Review and acceptance</h2></div>
+  <div class="accept">
+    <div class="st">Not Ready</div>
+    <p style="max-width:var(--measure);color:var(--ink2)">This is a review of the reconstruction phase, not of the finished model. Acceptance of the recommendation comes at the end of the design phase.</p>
+    <div class="why">Not yet ready for acceptance because</div><ul><li>1 blocking decision awaiting your input</li><li>2 risks needing a decision from you</li><li>6 planned outcomes not yet delivered</li></ul>
+  </div>
+</section>
+
+<footer>
+  <span>Page generated 2026-09-01 03:57 UTC</span>
+  <span>Delivery state last verified 2026-09-01 03:14 UTC</span>
+  <span>Freshness: Last verified</span>
+  <span class="opsonly">Basis: DERIVED</span>
+</footer>
+
+</div>
+<script>
+(function(){
+  var b=document.documentElement, k='cr-meeting';
+  function set(on){ b.classList.toggle('meeting',on);
+    var t=document.getElementById('modebtn'); if(t) t.textContent = on ? 'Exit meeting mode' : 'Live meeting mode';
+    try{ localStorage.setItem(k, on?'1':'0'); }catch(e){} }
+  var q = location.search.indexOf('mode=meeting')>-1;
+  var s = null; try{ s = localStorage.getItem(k); }catch(e){}
+  set(q || s==='1');
+  var btn=document.getElementById('modebtn');
+  if(btn) btn.addEventListener('click', function(){ set(!b.classList.contains('meeting')); });
+  document.addEventListener('keydown', function(ev){
+    if(ev.key==='m' && !/^(INPUT|TEXTAREA)$/.test(ev.target.tagName)) set(!b.classList.contains('meeting'));
+  });
+})();
+</script>
+</body>
+</html>
