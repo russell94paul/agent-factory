@@ -114,10 +114,32 @@ Supervisor log: `restart requested by the UI -- exiting 97 for the supervisor`.
 | `POST` valid token, `Origin: https://evil.example.com` | `REFUSED: cross-origin restart refused` |
 | `POST token=…&command=calc.exe&cmd=whoami` | HTTP 202 — restarted; **`calc.exe` processes: 0**. The extra parameters have no effect because the handler reads none: its entire effect is a fixed exit code. |
 | unsupervised server | control renders as unavailable; endpoint refuses |
+| **through the phone tunnel**, same origin | **HTTP 202 — restarts** (see below) |
+| through the tunnel, `Origin: evil.example.com` | `REFUSED: … does not match the host this request was sent to, 'abc123.ngrok-free.app'` |
+| through the tunnel, no token | `REFUSED: missing or stale restart token` |
 | two restart POSTs in a row | second gets connection-refused (already exiting); **listeners on 8117: 1** — no duplicate server |
 
 `ngrok` needs no restart: the supervisor never binds a socket. The child owns the port, so a
 tunnel pointed at it survives every restart by construction.
+
+### ⛔ The tunnel path was broken, and every test passed anyway
+
+The first same-origin check compared `Origin` against a **loopback allow-list**. Reached through
+the phone tunnel the page's own origin IS the tunnel hostname, so the browser sends
+`Origin: https://<id>.ngrok-free.app` and the server refused its own button:
+
+```
+REFUSED: cross-origin restart refused (Origin: 'abc123.ngrok-free.app')
+```
+
+The button rendered, the tap would have done nothing, and the operator would have walked back to
+the laptop — the exact trip this control exists to remove. **Every security test passed while this
+was live**, because all of them hit `127.0.0.1` directly and sent no `Origin` header at all. The
+whole matrix was measuring a path nobody uses.
+
+Fixed by comparing `Origin` to the request's own `Host`, which is the standard same-origin check
+and strictly *stronger*: a third-party page carries its own origin, which cannot match our Host,
+on localhost or through any tunnel. Re-measured on both paths — table above.
 
 ### ⚠ Measured limitation — hard kill orphans the child
 

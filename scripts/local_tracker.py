@@ -3495,13 +3495,37 @@ class Handler(http.server.BaseHTTPRequestHandler):
         got = (urllib.parse.parse_qs(raw, keep_blank_values=True).get("token") or [""])[0]
         if not got or not _secrets.compare_digest(str(got), RESTART_TOKEN):
             return False, "missing or stale restart token — reload the page and try again"
+        # ⛔ SAME-ORIGIN means "matches the origin this request was sent TO" -- compared against
+        # the request's own Host header, NOT against a loopback allow-list.
+        #
+        # The first version compared against `_LOCAL_HOSTS` and it broke the one case this whole
+        # feature exists for. Reached through the phone tunnel the page's own origin IS the tunnel
+        # hostname, so the browser sends `Origin: https://<id>.ngrok-free.app` and the check
+        # refused the page's own button:
+        #
+        #     REFUSED: cross-origin restart refused (Origin: 'abc123.ngrok-free.app')
+        #
+        # The button rendered, the tap did nothing, and the operator would have walked back to the
+        # laptop -- which is precisely the trip the control was built to remove. Measured
+        # 2026-09-01; every earlier test hit 127.0.0.1 directly and sent no Origin at all, so the
+        # whole security suite passed while the real path was broken.
+        #
+        # Comparing to Host keeps the CSRF property intact and is in fact the stricter, standard
+        # check: a third-party page POSTing here carries ITS origin, which cannot match our Host,
+        # whether we are reached on localhost or through a tunnel.
+        host_hdr = (self.headers.get("Host") or "").strip()
+        want = urllib.parse.urlparse("//" + host_hdr).hostname or host_hdr.split(":")[0]
         for hdr in ("Origin", "Referer"):
             v = self.headers.get(hdr)
             if not v:
-                continue
-            host = urllib.parse.urlparse(v).hostname or ""
-            if host not in self._LOCAL_HOSTS:
-                return False, f"cross-origin restart refused ({hdr}: {host!r})"
+                continue                       # form POSTs may omit it; the token still gates
+            got = urllib.parse.urlparse(v).hostname or ""
+            if got and want and got.lower() == want.lower():
+                continue                       # same origin as the page that was served
+            if got in self._LOCAL_HOSTS and want in self._LOCAL_HOSTS:
+                continue                       # 127.0.0.1 vs localhost are the same server
+            return False, (f"cross-origin restart refused ({hdr} host {got!r} does not match the "
+                           f"host this request was sent to, {want!r})")
         return True, ""
 
     def log_message(self, fmt, *args):
