@@ -6,7 +6,16 @@ requires-python = ">=3.11"
 dependencies = ["pyyaml>=6.0"]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0"]
+# The browser that validates a rendered page. NOT optional for certifying a client-facing
+# artifact — `scripts/meeting_ready.py` refuses to say SAFE TO OPEN without a real browser pass —
+# but kept as a named extra because it is heavy and because `pip install` alone is not enough:
+# the browser binary needs `python -m playwright install chromium` as a separate step.
+# `factory.runtime_deps` checks for both, and says so in one message.
+render = ["playwright>=1.40"]
+# Listed explicitly rather than as a self-referencing extra, which not every pip resolves the
+# same way. If `render` changes, change it here too — `tests/test_runtime_deps.py` asserts they
+# have not drifted apart, so this comment is not the only thing holding them together.
+dev = ["pytest>=8.0", "playwright>=1.40"]
 
 [build-system]
 requires = ["setuptools>=68"]

@@ -17,6 +17,31 @@ python scripts/meeting_ready.py --root .worktrees/mission --open
 ⛔ **`--root .worktrees/mission` is the supported path, not a workaround.** See
 *"The mission branch is not merged, and must not be"* below before changing it.
 
+### First, on a machine that has not run this before
+
+```bash
+python scripts/meeting_ready.py --check-env
+```
+
+Stage 0 checks every runtime capability at once and, if anything is absent, prints the whole
+remedy in one message. It needs three things, and **the third is not installed by the second**:
+
+| capability | why | how |
+|---|---|---|
+| `yaml` | reads the authored narrative | `pip install -e ".[dev]"` |
+| `playwright` | drives the validating browser | `pip install -e ".[dev]"` |
+| `chromium` | **the browser itself** | `python -m playwright install chromium` |
+
+⭐ **Measured 2026-09-01, and the reason stage 0 exists.** An operator ran the command on a clean
+machine. It died on `yaml`. They installed it, re-ran, watched the compile and render succeed and
+all nine blocking gate checks pass, reached `READY_WITH_WARNINGS` — and lost it at stage 4 to a
+missing `playwright`, with a third round trip still queued behind it for the browser binary. Every
+one of those facts was knowable before any work started.
+
+⛔ **`--no-render` cannot certify.** It skips the browser, so it can never print SAFE TO OPEN and
+always exits non-zero, no matter how well the gate scores. A skipped instrument is not a passing
+one, and there is no flag that makes a client-facing page safe without a browser having loaded it.
+
 It does all five steps in order and refuses loudly if any of them is not true:
 
 ```text

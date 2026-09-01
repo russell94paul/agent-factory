@@ -65,8 +65,19 @@ a team has proved it can land rows.
 ```bash
 python -m venv .venv && . .venv/bin/activate     # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
+python -m playwright install chromium            # the browser; pip cannot fetch it
 pytest -q                                        # all four gates must pass
 python -m factory.demo                           # end-to-end on a fake connector
+```
+
+`scripts/bootstrap.sh` runs all of the above.
+
+⚠ **The browser step is a real step, not a nicety.** `pip install` provides the Playwright driver
+and not a browser, so anything that validates a rendered page — and no client-facing artifact is
+certified without one — fails without it. Check an environment before trusting it:
+
+```bash
+python scripts/meeting_ready.py --check-env      # names everything missing, in one message
 ```
 
 ## The five verdicts — never collapsed
