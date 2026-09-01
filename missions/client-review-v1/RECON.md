@@ -1,3 +1,31 @@
+> ## Where this landed, and why the commit message does not say so
+>
+> **Client Review v1 is committed in `b28c334`** — a commit titled *"docs(findings): three
+> evidenced findings filed, and the R3 identity prepared"*, which describes a different
+> workstream. The content is correct and complete; the message is another session's.
+>
+> **What happened, recorded because it will happen again.** This checkout is shared by four
+> sessions. I staged my eleven files and, in the seconds before my own `git commit` ran, a
+> concurrent session committed — taking everything in the shared index, mine included, under its
+> message. This is the exact hazard `boot-prompts/README.md` documents: *"Staging by path does
+> not protect you — another session's `git commit` takes whatever you have staged."* Staging by
+> path is not the control. **The worktree is the control.**
+>
+> **Not repaired by rewriting history.** `b28c334` is on shared `main` with other sessions
+> actively working; rebasing or amending it to split the commit would rewrite work that is not
+> mine. The record is corrected here instead, where the mission's own documentation lives.
+>
+> Client Review v1 in `b28c334` is exactly these paths — everything else in that commit belongs
+> to the findings/R3 workstream:
+>
+> ```
+> factory/client_review.py
+> factory/client_review_render.py
+> tests/test_client_review.py
+> missions/client-review-v1/**
+> docs/artifacts/client-review-navira.html
+> ```
+
 # Phase 1 — Repository reconnaissance
 
 **Measured 2026-08-31, `main @ ddea66d`.** Every row below was checked in code, not read from a
