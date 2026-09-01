@@ -374,6 +374,19 @@ def _needs_you(st: dict, view: str) -> str:
     o = []
 
     for r in live[:_sb.NOW_CAP]:
+        if r["kind"] == "DECISION" and r.get("work"):
+            w = r["work"]
+            o.append(
+                _why(r) +
+                f'<div class="card"><a class="cid" href="{_url(view, w["id"])}">{_e(w["id"])}</a>'
+                f'<div class="meta">'
+                f'<span class="tag" style="color:var(--fail)">! DECISION</span>'
+                f'<span class="vis">{_e(w.get("visibility_glyph",""))} '
+                f'{_e(w.get("visibility_label",""))}</span></div>'
+                f'<p class="ttl" style="color:var(--ink)">Held on: {_e(r.get("asks",""))}</p>'
+                f'<p class="empty">If you do not decide: {_e(r.get("consequence",""))}</p>'
+                f'<a class="btn wide" href="{_url(view, w["id"])}">RESOLVE</a></div>')
+            continue
         if r["kind"] == "WORK" and r.get("work"):
             o.append(_why(r) + work_card(r["work"], view=view))
             continue
@@ -433,13 +446,19 @@ def _next(st: dict, view: str) -> str:
     if wait:
         o.append('<div style="margin-top:11px">')
         for w in wait[:3]:
-            deps = ", ".join(w.get("depends_on") or [])
+            # ⛔ `blocked_reason` first, and `depends_on` only as a fallback. Listing the
+            # dependency ids was actively misleading: MARKETING-MODEL-FINALIZATION-01 rendered
+            # "Waiting on: 91088e54" -- a dependency that is DONE -- while the real hold, a
+            # decision only a human can make, was named nowhere.
+            why = w.get("blocked_reason") or (
+                "waits on " + ", ".join(w.get("depends_on") or []) if w.get("depends_on")
+                else "an unnamed blocker")
             o.append(f'<div class="card"><a class="cid" href="{_url(view, w["id"])}">'
                      f'{_e(w["id"])}</a><div class="meta">'
                      f'<span class="tag" style="color:var(--ink3)">× WAITING</span>'
                      f'<span class="vis">{_e(w.get("visibility_glyph",""))} '
                      f'{_e(w.get("visibility_label",""))}</span></div>'
-                     f'<p class="ttl">Waiting on: {_e(deps or "an unnamed blocker")}</p></div>')
+                     f'<p class="ttl">{_e(why[:200])}</p></div>')
         o.append("</div>")
     return "".join(o)
 

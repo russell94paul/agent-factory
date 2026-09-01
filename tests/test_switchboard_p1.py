@@ -657,3 +657,45 @@ def test_unblocking_restores_readiness(store):
     store.unblock("HELD-03", by="A-HOLD", actor="t")
     w = {x.id: x for x in W.project(store=store)}["HELD-03"]
     assert w.state == W.READY, f"releasing the hold left it {w.state}"
+
+
+def test_only_an_actionable_hold_becomes_a_human_decision(store):
+    """⛔ A hold reaches NEEDS YOU only when clearing it would actually release the work.
+
+    Measured while building this: surfacing every `blocked_by` took NEEDS YOU from 5 rows to 24,
+    nineteen of them historical mission tasks carrying labelled `block` events from finished work.
+    That is the exact "five old questions outrank one live blocker" failure the inbox was rebuilt
+    to prevent, arriving through a door this feature had just opened.
+    """
+    # Actionable: every other check passes, so the hold is the only thing stopping it.
+    _mk(store, "ACTIONABLE-HOLD")
+    store.block("ACTIONABLE-HOLD", by="AWAITING-A-HUMAN", actor="t")
+
+    # Not actionable: no repo declared, so `repo` is UNMEASURED regardless of the hold.
+    W.create("no repo", work_id="STALE-HOLD", store=store, repo="", resource_claim="res-y")
+    store.block("STALE-HOLD", by="SOME-OLD-LABEL", actor="t")
+
+    rows = [w.to_dict() for w in W.project(store=store)]
+    buckets = sb.now_buckets(rows, [])
+    decisions = [r for r in buckets["needs_you"] if r["kind"] == "DECISION"]
+    ids = [r["work"]["id"] for r in decisions]
+
+    assert "ACTIONABLE-HOLD" in ids, "an actionable human hold never reached the inbox"
+    assert "STALE-HOLD" not in ids, (
+        "a hold on work that is blocked for other reasons too was presented as a decision — "
+        "clearing it would change nothing, so asking a human is a false ask")
+
+
+def test_a_waiting_card_names_the_real_blocker_not_a_satisfied_dependency(store):
+    """⛔ The card said 'Waiting on: 91088e54' — a dependency that was DONE — while the actual
+    hold, a decision only a human could make, was named nowhere on the page."""
+    dep = _mk(store, "SATISFIED-DEP")
+    store.add_evidence(dep.id, "p", "docs/x.md", actor="t", basis="MEASURED")
+    store.close(dep.id, actor="t")
+    _mk(store, "HELD-WITH-DONE-DEP", depends_on=["SATISFIED-DEP"])
+    store.block("HELD-WITH-DONE-DEP", by="AWAITING-A-DECISION", actor="t")
+
+    w = {x.id: x for x in W.project(store=store)}["HELD-WITH-DONE-DEP"]
+    assert "AWAITING-A-DECISION" in w.blocked_reason
+    assert "SATISFIED-DEP" not in w.blocked_reason, (
+        "the card would name a dependency that is already satisfied")

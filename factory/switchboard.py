@@ -798,6 +798,38 @@ def now_buckets(work_rows: List[dict], questions: List[dict],
     for w in by_state.get(_work.NEEDS_HUMAN, []):
         needs.append({"kind": "WORK", "work": w, "live": bool(w.get("session_id")),
                       "questions": w.get("needs") or [], "orphan": False})
+    # ⭐ Work held by an EXPLICIT block is a human decision, and NEEDS YOU is the human decision
+    # inbox. Left only in `waiting` it rendered as "Waiting on: <dependency>" naming a dependency
+    # that was already satisfied, while the thing actually holding it -- a decision only a person
+    # can make -- appeared nowhere on the page. A blocker nobody can see is a blocker nobody
+    # clears.
+    known_ids = {w["id"] for w in work_rows}
+    for w in by_state.get(_work.BLOCKED, []):
+        # ⛔ ONLY holds that name something OUTSIDE the task store. A `blocked_by` naming another
+        # task is a DEPENDENCY -- it clears when that task closes, and no human is being asked
+        # anything. Treating those as decisions took NEEDS YOU from 5 rows to 24, nineteen of
+        # them historical mission tasks blocked on each other, which is precisely the "five old
+        # questions outrank one live blocker" failure wearing a new hat.
+        external = [b for b in (w.get("blocked_by") or []) if b not in known_ids]
+        if not external:
+            continue
+        # ⛔ And only when the hold is the ONLY thing stopping it. A hold on work that ALSO has an
+        # unmet dependency, no declared repo or an unmeasured check is not an actionable decision:
+        # clearing it changes nothing, so putting it in front of a human is a false ask.
+        #
+        # Measured: without this, NEEDS YOU went 5 -> 24 rows, nineteen of them historical mission
+        # tasks carrying labelled `block` events from finished work. That is the exact "five old
+        # questions outrank one live blocker" failure this inbox was rebuilt to prevent, arriving
+        # through a door I had just opened.
+        others = [c for c in (w.get("checks") or [])
+                  if c.get("name") != "hold" and c.get("verdict") in ("FAIL", "UNMEASURED")]
+        if others:
+            continue
+        needs.append({"kind": "DECISION", "work": w, "live": True, "questions": [],
+                      "orphan": False,
+                      "asks": "; ".join(external),
+                      "consequence": f"{w['id']} cannot proceed, and anything depending on it "
+                                     f"stays blocked behind it"})
     for q in orphan_q:
         live = str(q.get("state") or "").startswith("RUNNING")
         needs.append({"kind": "QUESTION", "work": None, "live": live, "questions": [q],
