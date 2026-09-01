@@ -467,23 +467,45 @@ def test_mission_integrity_is_unavailable_without_a_mission_record(root, store, 
 # --------------------------------------------------------------------------------------------
 
 def test_the_navira_review_assembles_and_renders():
+    """End to end against the real narrative, at the root the artifact is actually built from.
+
+    ⭐ **The root is not this checkout, and that is a decision rather than an accident.**
+    `mission/marketing-model-v1` carries client-identifying evidence and is deliberately not
+    merged (operator decision, 2026-09-01), so the mission's evidence is only ever read read-only
+    from its worktree. Asserting grounding against `repo` asserted a state that the approved
+    architecture guarantees will never hold — and it duly broke the moment the write-ups landed.
+    See `missions/client-review-v1/06-D5-REFRESH-CONTRACT.md`.
+    """
     repo = pathlib.Path(__file__).resolve().parent.parent
     y = repo / "missions" / "client-review-v1" / "reviews" / "navira-marketing-model.yaml"
     if not y.exists():                                      # pragma: no cover
         pytest.skip("narrative not present")
+    mission_root = repo / ".worktrees" / "mission"
+    root = mission_root if mission_root.exists() else repo
+
     review = cr.assemble(y, tasks_path=repo / ".data" / "tasks.jsonl",
                          mission_path=repo / ".data" / "missions"
-                         / "marketing-model-reconstruction-v1.json", root=repo)
+                         / "marketing-model-reconstruction-v1.json", root=root)
     from factory.client_review_render import render_html
     html = render_html(review)
     assert "Navira" in html
-    # Every *authored* outcome in the real review is backed by a file that exists. Outcomes the
-    # assembler synthesises for closed-but-unwritten work are excluded on purpose: their evidence
-    # may not have merged into this checkout yet, and the honest render for that is CLAIMED.
+
     authored = [o for o in review.delivered if o.writeup == "AUTHORED"]
     assert authored, "the narrative should carry authored outcomes"
-    assert all(o.grounding == cr.GROUNDED for o in authored)
-    # And an unwritten outcome never renders as a finished one.
+
+    if root == mission_root:
+        # The evidence is readable, so every authored outcome must actually be backed by it.
+        ungrounded = [(o.id, o.evidence_refs) for o in authored
+                      if o.grounding != cr.GROUNDED]
+        assert not ungrounded, f"authored outcomes with unresolved evidence: {ungrounded}"
+    else:                                                   # pragma: no cover
+        # No mission worktree here. The point is then the *degrade*, not the grounding: an
+        # outcome whose artefact cannot be read must never quietly keep a guarded word.
+        for o in authored:
+            if o.grounding != cr.GROUNDED:
+                assert o.status == cr.UNSUBSTANTIATED or not cr.is_guarded(o.status)
+
+    # An unwritten outcome never renders as a finished one, at either root.
     for o in review.delivered:
         if o.writeup == "PENDING":
             assert o.summary == "" and o.business_impact == ""
