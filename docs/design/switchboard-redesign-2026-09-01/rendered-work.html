@@ -1,0 +1,295 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Agent Factory</title>
+<style>
+:root{--paper:#faf9f7;--ink:#16150f;--ink2:#4a473d;--ink3:#84806f;--rule:#e2ddd2;
+ --raise:#f2efe8;--pass:#1f7a4d;--fail:#b3341f;--unmeas:#a06a12;--notrun:#84806f;--accent:#2b4c9b}
+@media(prefers-color-scheme:dark){:root{--paper:#12120f;--ink:#f2f0ea;--ink2:#b8b4a8;
+ --ink3:#7d7a6e;--rule:#2b2a24;--raise:#1b1a16;--pass:#5cc38a;--fail:#f2795e;--unmeas:#e0aa4a;
+ --notrun:#7d7a6e;--accent:#7ba0f0}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+ font:15px/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:34px 22px 70px}
+h1{font-size:27px;margin:0 0 4px;letter-spacing:-.01em}
+.sub{color:var(--ink3);font-size:13px;font-family:ui-monospace,"Cascadia Code",Consolas,monospace}
+.head{border-bottom:2px solid var(--ink);padding-bottom:16px;margin-bottom:24px}
+.score{display:flex;align-items:baseline;gap:12px;margin:18px 0 8px}
+.score b{font-size:40px;line-height:1;letter-spacing:-.02em}
+.score span{color:var(--ink2);font-size:15px}
+.bar{height:7px;background:var(--rule);position:relative;margin:10px 0 6px}
+.bar i{position:absolute;inset:0 auto 0 0;background:var(--pass);display:block}
+.phase{margin:30px 0 0;border:1px solid var(--rule);background:var(--raise)}
+.phase>header{display:flex;justify-content:space-between;align-items:baseline;gap:14px;
+ padding:13px 16px;border-bottom:1px solid var(--rule);flex-wrap:wrap}
+.phase h2{font-size:17px;margin:0}
+.count{font-family:ui-monospace,monospace;font-size:11.5px;letter-spacing:.09em;
+ text-transform:uppercase;color:var(--ink3);border:1px solid var(--rule);padding:2px 7px}
+.g{padding:15px 16px;border-bottom:1px solid var(--rule);display:grid;
+ grid-template-columns:104px 1fr;gap:14px}
+.g:last-child{border-bottom:0}
+.chip{font-family:ui-monospace,monospace;font-size:10.5px;letter-spacing:.09em;
+ text-transform:uppercase;border:1px solid currentColor;padding:3px 7px;display:inline-block}
+.chip.pass{color:var(--pass)}.chip.fail{color:var(--fail)}
+.chip.unmeas{color:var(--unmeas)}.chip.notrun{color:var(--notrun)}
+.q{font-weight:600}
+.hl{color:var(--ink2);margin-top:2px}
+ul{margin:8px 0 0 17px;padding:0;font-size:13.5px;color:var(--ink3);line-height:1.55}
+li{margin:2px 0}
+.why{margin-top:7px;font-size:12.5px;color:var(--ink3);font-style:italic}
+.src{margin-top:6px;font-family:ui-monospace,monospace;font-size:11.5px;color:var(--ink3)}
+footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--rule);
+ color:var(--ink3);font-size:13px}
+code{font-family:ui-monospace,monospace;background:var(--raise);padding:1px 5px;
+ border:1px solid var(--rule);font-size:12.5px}
+@media(max-width:620px){.g{grid-template-columns:1fr}}
+.t{padding:12px 16px;border-bottom:1px solid var(--rule);display:grid;
+ grid-template-columns:78px 26px 1fr;gap:12px;align-items:start}
+.t:last-child{border-bottom:0}
+.st{font-family:ui-monospace,monospace;font-size:10px;letter-spacing:.09em;text-transform:uppercase;
+ border:1px solid currentColor;padding:2px 5px;display:inline-block;white-space:nowrap}
+.st.done{color:var(--pass)}.st.ready{color:var(--accent)}
+.st.blocked{color:var(--ink3)}.st.declared{color:var(--unmeas)}
+.sz{font-family:ui-monospace,monospace;font-size:11px;color:var(--ink3);text-align:center;
+ border:1px solid var(--rule);padding:1px 0}
+.tt{font-weight:600}
+.tw{font-size:13px;color:var(--ink3);margin-top:3px;line-height:1.5}
+.dep{font-family:ui-monospace,monospace;font-size:11.5px;color:var(--ink3);margin-top:4px}
+.own{font-size:12px;color:var(--unmeas);margin-top:3px}
+.par{border:1px solid var(--accent);background:var(--raise);padding:15px 17px;margin:26px 0 0}
+.par h3{margin:0 0 8px;font-size:15px}
+.par ul{margin:0 0 0 17px;font-size:14px;color:var(--ink2)}
+.par li{margin:3px 0}
+</style></head><body><div class='wrap'>
+<nav style="padding:22px 0 4px"><a href="/" style="display:inline-block;padding:7px 14px;margin-right:6px;font-size:13px;text-decoration:none;border:1px solid var(--rule);border-radius:3px;background:var(--raise);color:var(--ink2)">Tickets</a><a href="/gates" style="display:inline-block;padding:7px 14px;margin-right:6px;font-size:13px;text-decoration:none;border:1px solid var(--rule);border-radius:3px;background:var(--raise);color:var(--ink2)">Gates</a><a href="/goals" style="display:inline-block;padding:7px 14px;margin-right:6px;font-size:13px;text-decoration:none;border:1px solid var(--rule);border-radius:3px;background:var(--raise);color:var(--ink2)">Goals</a><a href="/roadmap" style="display:inline-block;padding:7px 14px;margin-right:6px;font-size:13px;text-decoration:none;border:1px solid var(--rule);border-radius:3px;background:var(--raise);color:var(--ink2)">Roadmap</a><a href="/flow" style="display:inline-block;padding:7px 14px;margin-right:6px;font-size:13px;text-decoration:none;border:1px solid var(--rule);border-radius:3px;background:var(--raise);color:var(--ink2)">Flow</a><a href="/lanes" style="display:inline-block;padding:7px 14px;margin-right:6px;font-size:13px;text-decoration:none;border:1px solid var(--rule);border-radius:3px;background:var(--raise);color:var(--ink2)">Lanes</a><a href="/sessions" style="display:inline-block;padding:7px 14px;margin-right:6px;font-size:13px;text-decoration:none;border:1px solid var(--rule);border-radius:3px;background:var(--raise);color:var(--ink2)">Sessions</a><a href="/research" style="display:inline-block;padding:7px 14px;margin-right:6px;font-size:13px;text-decoration:none;border:1px solid var(--rule);border-radius:3px;background:var(--raise);color:var(--ink2)">Research</a><a href="/handoff" style="display:inline-block;padding:7px 14px;margin-right:6px;font-size:13px;text-decoration:none;border:1px solid var(--rule);border-radius:3px;background:var(--raise);color:var(--ink2)">Handoff</a><a href="/switchboard" style="display:inline-block;padding:7px 14px;margin-right:6px;font-size:13px;text-decoration:none;border:1px solid var(--rule);border-radius:3px;background:var(--ink);color:var(--paper)">Switchboard</a></nav>
+<div style="padding:2px 0 10px"><a href="/reload" style="display:inline-block;padding:6px 12px;border:1px solid var(--rule);border-radius:3px;background:var(--raise);color:var(--ink);text-decoration:none;font-size:13px">&#8635; reload code &amp; re-measure</a><a href="/sync" style="display:inline-block;margin-left:8px;padding:6px 12px;border:1px solid var(--rule);border-radius:3px;background:var(--raise);color:var(--ink);text-decoration:none;font-size:13px">&#8681; sync artifact file</a><span style="color:var(--ink3);font-size:12.5px">&nbsp; refresh re-measures &middot; code as at server start</span></div>
+<style>
+.p1{--gut:14px;font:13px/1.5 ui-monospace,"Cascadia Code",Consolas,monospace;
+ padding-bottom:64px}
+.p1 *{box-sizing:border-box;min-width:0}
+.p1 .shell{display:grid;grid-template-columns:1fr;gap:var(--gut)}
+.p1 .rail{display:none}
+.p1 .insp{display:none}
+.p1.has-insp .insp{display:block}
+
+/* ---- top bar ------------------------------------------------------------- */
+.p1 .top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+ border-bottom:2px solid var(--ink);padding:0 0 10px;margin:0 0 12px}
+.p1 .brand{font:700 13px/1 ui-monospace,monospace;letter-spacing:.14em;white-space:nowrap}
+.p1 .top form.cmd{flex:1 1 160px;display:flex;gap:6px;min-width:0}
+.p1 .top input[type=search]{flex:1;min-width:0;background:var(--paper);color:var(--ink);
+ border:1px solid var(--rule);padding:6px 9px;font:12px ui-monospace,monospace;border-radius:5px}
+.p1 .top .acts{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+
+/* ---- buttons ------------------------------------------------------------- */
+.p1 .btn{display:inline-block;padding:6px 11px;border:1px solid var(--rule);background:var(--paper);
+ color:var(--ink);text-decoration:none;font:600 11.5px/1.35 ui-monospace,monospace;
+ letter-spacing:.07em;border-radius:5px;cursor:pointer;white-space:nowrap}
+.p1 .btn:hover,.p1 .btn:focus-visible{border-color:var(--accent);color:var(--accent);outline:none}
+.p1 .btn.pri{border-color:var(--accent);color:var(--accent);border-width:2px;padding:5px 10px}
+.p1 .btn.pri:hover{background:var(--accent);color:var(--bg)}
+/* ⛔ A full-width button must WRAP. `.btn` sets white-space:nowrap so inline tags and
+   badges never break mid-label; inherited by `.wide` it made the P0 disclosure summary
+   524px wide inside a 344px column, which pushed documentElement.scrollWidth to 547 and
+   gave the whole page a horizontal scroll at both phone widths. Invisible in a
+   screenshot -- the button looked fine, the BODY scrolled sideways. Measured by
+   scripts/render_check_switchboard_p1.py. */
+.p1 .btn.wide{display:block;width:100%;text-align:center;padding:11px;
+ white-space:normal;overflow-wrap:anywhere}
+.p1 .btn[aria-disabled=true]{opacity:.45;pointer-events:none}
+/* ⛔ Decision buttons are the ones a thumb actually has to hit, at 2am, on a phone. Measured at
+   30px in the flex row, under the 40px floor every .btn.wide already meets — and APPROVE/REJECT
+   are the highest-consequence taps on the surface. Given their own minimum rather than relying on
+   the wide-button rule they do not match. */
+.p1 form button.btn{min-height:44px;padding:11px 12px}
+
+/* ---- sections ------------------------------------------------------------ */
+.p1 .sec{border:1px solid var(--rule);background:var(--raise);margin:0 0 var(--gut);
+ border-radius:7px;overflow:hidden}
+.p1 .sec>h2{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin:0;
+ font:600 11px/1 ui-monospace,monospace;letter-spacing:.15em;text-transform:uppercase;
+ color:var(--ink3);padding:10px 13px;border-bottom:1px solid var(--rule)}
+.p1 .sec>h2 .n{font-size:11px;color:var(--ink)}
+.p1 .sec>h2 .hint{font-weight:400;letter-spacing:0;text-transform:none;color:var(--ink3);
+ font-size:11px}
+.p1 .sec.alarm{border-color:var(--fail)}
+.p1 .sec.alarm>h2{color:var(--fail)}
+.p1 .bd{padding:12px 13px}
+.p1 .bd>*:first-child{margin-top:0}
+.p1 .bd>*:last-child{margin-bottom:0}
+
+/* ---- work card ----------------------------------------------------------- */
+.p1 .card{border:1px solid var(--rule);background:var(--paper);border-radius:6px;
+ padding:11px 12px;margin:0 0 9px;display:block;color:inherit;text-decoration:none}
+.p1 .card:last-child{margin-bottom:0}
+.p1 .card.sel{border-color:var(--accent);border-width:2px;padding:10px 11px}
+.p1 .card .cid{font:700 12.5px/1.3 ui-monospace,monospace;word-break:break-all;
+ display:block;margin:0 0 6px}
+.p1 .card .meta{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin:0 0 7px}
+.p1 .card .ttl{color:var(--ink3);font-size:12px;margin:0 0 8px;
+ overflow-wrap:anywhere}
+.p1 .card .checks{display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:var(--ink3);
+ margin:0 0 9px}
+.p1 .card .checks b{font-weight:600;color:var(--ink)}
+.p1 .tag{font-size:10px;letter-spacing:.09em;border:1px solid currentColor;padding:1px 6px;
+ border-radius:3px;white-space:nowrap;font-weight:600}
+.p1 .vis{font-size:10.5px;letter-spacing:.06em;color:var(--ink3);white-space:nowrap}
+.p1 .dim{color:var(--ink3)}
+.p1 .bad{color:var(--fail)}
+.p1 .ok{color:var(--pass)}
+.p1 .warn{color:var(--unmeas)}
+.p1 .empty{color:var(--ink3);font-size:12px;margin:0}
+
+/* ---- inspector ----------------------------------------------------------- */
+.p1 .insp .sec{margin-bottom:var(--gut)}
+.p1 .isec{border-top:1px dotted var(--rule);padding:10px 0 0;margin:10px 0 0}
+.p1 .isec:first-child{border-top:0;padding-top:0;margin-top:0}
+.p1 .isec h3{font:600 10.5px/1 ui-monospace,monospace;letter-spacing:.14em;color:var(--ink3);
+ margin:0 0 7px;text-transform:uppercase}
+.p1 .kv{display:grid;grid-template-columns:minmax(72px,auto) 1fr;gap:3px 10px;font-size:12px}
+.p1 .kv dt{color:var(--ink3)}
+.p1 .kv dd{margin:0;overflow-wrap:anywhere}
+.p1 code{font-size:11.5px;overflow-wrap:anywhere}
+
+/* ---- lists --------------------------------------------------------------- */
+.p1 ul.plain{list-style:none;margin:0;padding:0}
+.p1 ul.plain li{padding:6px 0;border-bottom:1px dotted var(--rule);font-size:12px}
+.p1 ul.plain li:last-child{border-bottom:0}
+.p1 .rec{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:baseline}
+.p1 .rec .when{color:var(--ink3);font-size:11px;white-space:nowrap}
+
+/* ---- forms --------------------------------------------------------------- */
+.p1 .field{margin:0 0 11px}
+.p1 .field label{display:block;font-size:11px;letter-spacing:.08em;color:var(--ink3);
+ margin:0 0 4px;text-transform:uppercase}
+.p1 input[type=text],.p1 textarea,.p1 select{width:100%;background:var(--paper);color:var(--ink);
+ border:1px solid var(--rule);padding:9px 10px;font:13px ui-monospace,monospace;border-radius:5px}
+.p1 textarea{min-height:64px;resize:vertical}
+.p1 details.adv{margin:10px 0 0;border-top:1px dotted var(--rule);padding-top:9px}
+.p1 details.adv summary{cursor:pointer;color:var(--ink3);font-size:11.5px;letter-spacing:.06em}
+.p1 details.adv[open] summary{margin-bottom:10px}
+
+/* ---- bottom nav (phone) --------------------------------------------------- */
+.p1 .bnav{position:fixed;left:0;right:0;bottom:0;z-index:40;display:grid;
+ grid-template-columns:repeat(5,1fr);background:var(--raise);
+ border-top:1px solid var(--rule);padding-bottom:env(safe-area-inset-bottom,0)}
+.p1 .bnav a{padding:11px 2px;text-align:center;text-decoration:none;color:var(--ink3);
+ font:600 9.5px/1.2 ui-monospace,monospace;letter-spacing:.06em}
+.p1 .bnav a.on{color:var(--accent);box-shadow:inset 0 2px 0 var(--accent)}
+.p1 .bnav a .g{display:block;font-size:14px;line-height:1.1;margin-bottom:2px}
+.p1 .bnav a .b{display:inline-block;min-width:15px;background:var(--fail);color:var(--bg);
+ border-radius:8px;font-size:9px;padding:0 4px;margin-left:2px}
+
+/* ---- flash --------------------------------------------------------------- */
+.p1 .flash{border:1px solid var(--rule);border-left-width:4px;border-radius:5px;padding:9px 12px;
+ margin:0 0 var(--gut);font-size:12px}
+.p1 .flash.good{border-left-color:var(--pass)}
+.p1 .flash.bad{border-left-color:var(--fail)}
+
+/* ---- restart banner ------------------------------------------------------- */
+.p1 #rst{display:none;margin:0 0 var(--gut)}
+.p1 #rst.on{display:block}
+
+/* ---- the retained P0 block --------------------------------------------------
+   ⛔ A COLLAPSED <details> still contributes to documentElement.scrollWidth in Chromium, so the
+   P0 panels blew the page 157px wide at 390px and 117px at 430px while being invisible. Measured
+   by scripts/render_check_switchboard_p1.py, not by looking at it -- a screenshot of the closed
+   page looks completely correct, and the overflow only shows as a body that scrolls sideways.
+   The single culprit was one unbreakable Windows path in a session topic.
+
+   Wide content scrolls inside its OWN container; the page body never scrolls horizontally. */
+.p1 details.p0{margin:0 0 var(--gut);max-width:100%}
+.p1 details.p0>summary{list-style:none;cursor:pointer}
+.p1 details.p0>summary::-webkit-details-marker{display:none}
+.p1 details.p0 .sw{max-width:100%;overflow-x:auto}
+.p1 details.p0 .sw .row,.p1 details.p0 .sw li,.p1 details.p0 .sw td{
+ overflow-wrap:anywhere;word-break:break-word}
+
+/* Any long unbreakable token -- a Windows path, a URL, a 64-char id -- wraps rather than widening
+   the page. Applied to the text carriers rather than to `*`, so `white-space:nowrap` on tags,
+   badges and the nav is not fought. */
+.p1 b,.p1 code,.p1 dd,.p1 li,.p1 p,.p1 summary,.p1 .ttl,.p1 .empty{overflow-wrap:anywhere}
+.p1 pre{max-width:100%;overflow-x:auto}
+
+/* ---- motion: only where it encodes a transition -------------------------- */
+@keyframes p1pulse{0%,100%{opacity:1}50%{opacity:.42}}
+.p1 .live{animation:p1pulse 2.4s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){
+  .p1 .live{animation:none}
+  .p1 *{transition:none!important}
+}
+
+/* ---- desktop ------------------------------------------------------------- */
+@media (min-width:900px){
+  .p1{padding-bottom:0}
+  .p1 .shell{grid-template-columns:minmax(140px,168px) minmax(0,1fr);align-items:start}
+  .p1.has-insp .shell{grid-template-columns:minmax(140px,168px) minmax(0,1fr) minmax(280px,340px)}
+  .p1 .rail{display:block;position:sticky;top:12px}
+  .p1 .rail a{display:block;padding:8px 11px;text-decoration:none;color:var(--ink3);
+   font:600 11px/1.2 ui-monospace,monospace;letter-spacing:.12em;border-left:2px solid transparent}
+  .p1 .rail a.on{color:var(--accent);border-left-color:var(--accent);background:var(--raise)}
+  .p1 .rail a:hover{color:var(--ink)}
+  .p1 .rail .grp{font-size:9.5px;color:var(--ink3);letter-spacing:.14em;padding:14px 11px 5px;
+   opacity:.72}
+  .p1 .insp{display:block;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
+  .p1 .bnav{display:none}
+}
+</style><div class="p1" data-runtime="0a146d85c5c1"><div class="top"><span class="brand">AGENT FACTORY</span><form class="cmd" method="GET" action="/switchboard" role="search"><input type="hidden" name="view" value="work"><input type="search" name="q" id="p1-cmd" placeholder="Search / command…" aria-label="Search work or run a command" autocomplete="off" list="p1-cmds"><button class="btn" type="submit">GO</button></form><div class="acts"><a class="btn" href="/switchboard?view=work" title="re-requests this page: the server re-measures, the loaded Python is unchanged" data-p1="refresh" rel="nofollow">↻ Refresh</a><a class="btn pri" href="/switchboard?view=create">+ CREATE</a><details class="adv" style="margin:0;border:0;padding:0;position:relative"><summary class="btn" style="list-style:none">•••</summary><div style="position:absolute;right:0;top:calc(100% + 5px);z-index:50;background:var(--raise);border:1px solid var(--rule);border-radius:6px;padding:8px;min-width:210px;display:grid;gap:6px"><form method="POST" action="/switchboard/restart" style="margin:0" id="p1-restart-form"><input type="hidden" name="token" value="40047b8c7a254f9f9069bf4a30b20aae"><button class="btn wide" type="submit" id="p1-restart" title="replaces the whole server process, so every edited file is re-imported">Restart Switchboard</button></form><a class="btn wide" href="/reload" title="re-imports the factory modules (not local_tracker.py itself), then re-measures">Re-measure (reload factory modules)</a><a class="btn wide" href="/switchboard?view=diagnostics">Diagnostics</a></div></details></div></div><datalist id="p1-cmds"><option value="ready">Work that is READY</option><option value="running">Work that is RUNNING</option><option value="needs">Work that needs a human</option><option value="blocked">Work that is blocked</option><option value="draft">Work that is DRAFT</option></datalist><div id="rst" class="flash bad" role="status" aria-live="polite"></div><div class="shell"><nav class="rail" aria-label="Sections"><a href="/switchboard?view=now" class="">NOW</a><a href="/switchboard?view=work" class="on">WORK</a><a href="/switchboard?view=sessions" class="">SESSIONS</a><a href="/switchboard?view=inbox" class="">INBOX</a><a href="/switchboard?view=mission" class="">MISSION</a><a href="/switchboard?view=more" class="">MORE</a><div class="grp">MORE</div><a href="/switchboard?view=activity" class="">Activity</a><a href="/switchboard?view=evidence" class="">Evidence</a><a href="/switchboard?view=worktrees" class="">Worktrees</a><a href="/switchboard?view=diagnostics" class="">Diagnostics</a><a href="/switchboard?view=health" class="">System health</a></nav><main><section class="sec"><h2>Work <span class="n">91</span> <span class="hint">every piece of canonical work in the task store</span></h2><div class="bd"><div class="card"><a class="cid" href="/switchboard?view=work&inspect=0304b21a">0304b21a</a><div class="meta"><span class="tag" style="color:var(--unmeas)">◌ DRAFT</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">AB-08 · R2 build/run manifest schema + permission topology — run record kept separate from build record</p><a class="btn wide" href="/switchboard?view=work&inspect=0304b21a">VALIDATE — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=0bc6f304">0bc6f304</a><div class="meta"><span class="tag" style="color:var(--ink3)">– ABANDONED</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">CIP-32 - P2 Denominate budgets in dollars, not tokens</p><a class="btn wide" href="/switchboard?view=work&inspect=0bc6f304">— — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=0bef1ce2">0bef1ce2</a><div class="meta"><span class="tag" style="color:var(--unmeas)">◌ DRAFT</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">CIP-30 - P3 Add tier field to AgentSpec and build Snowflake grant envelope</p><a class="btn wide" href="/switchboard?view=work&inspect=0bef1ce2">VALIDATE — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=0d26cd2f">0d26cd2f</a><div class="meta"><span class="tag" style="color:var(--pass)">✓ DONE</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">marketing-model-reconstruction-v1 — GEP cross-channel marketing model (READ ONLY)</p><a class="btn wide" href="/switchboard?view=work&inspect=0d26cd2f">REVIEW OUTCOME — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=1108baa0">1108baa0</a><div class="meta"><span class="tag" style="color:var(--ink3)">× BLOCKED</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">CIP-10 - P2 Form to frontmatter emitter, no manual editing</p><form method="POST" action="/switchboard/resolve" style="margin:0"><input type="hidden" name="work_id" value="1108baa0"><input type="hidden" name="hold" value="CIP-08"><div style="display:flex;gap:7px"><button class="btn pri" name="go" value="APPROVE" style="flex:1">APPROVE</button><button class="btn" name="go" value="REJECT" style="flex:1">REJECT</button></div><details style="margin-top:7px"><summary class="empty" style="cursor:pointer">add a reason (optional)</summary><input type="text" name="note" maxlength="500" placeholder="why" style="margin-top:6px"></details></form><a class="btn wide" href="/switchboard?view=work&inspect=1108baa0" style="margin-top:7px">DETAIL</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=16377467">16377467</a><div class="meta"><span class="tag" style="color:var(--unmeas)">◌ DRAFT</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">CIP-36 - P2 Fire-drill the blocked-question inbox - mechanism exists, latency unmeasured</p><a class="btn wide" href="/switchboard?view=work&inspect=16377467">VALIDATE — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=16eff46f">16eff46f</a><div class="meta"><span class="tag" style="color:var(--ink3)">× BLOCKED</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">CIP-17 - P4 Negative control for every new gate in this plan</p><form method="POST" action="/switchboard/resolve" style="margin:0"><input type="hidden" name="work_id" value="16eff46f"><input type="hidden" name="hold" value="CIP-14"><div style="display:flex;gap:7px"><button class="btn pri" name="go" value="APPROVE" style="flex:1">APPROVE</button><button class="btn" name="go" value="REJECT" style="flex:1">REJECT</button></div><details style="margin-top:7px"><summary class="empty" style="cursor:pointer">add a reason (optional)</summary><input type="text" name="note" maxlength="500" placeholder="why" style="margin-top:6px"></details></form><a class="btn wide" href="/switchboard?view=work&inspect=16eff46f" style="margin-top:7px">DETAIL</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=1785f5a9">1785f5a9</a><div class="meta"><span class="tag" style="color:var(--pass)">✓ DONE</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">D1 · Requirements &amp; uncertainty synthesis — CONFIRMED / SUPPORTED / INFERRED / ASSUMPTION / UNKNOWN</p><a class="btn wide" href="/switchboard?view=work&inspect=1785f5a9">REVIEW OUTCOME — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=18b4e7a1">18b4e7a1</a><div class="meta"><span class="tag" style="color:var(--unmeas)">◌ DRAFT</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">RUN-04 - R3 Add the ticket-to-team entry point, then the UI button</p><a class="btn wide" href="/switchboard?view=work&inspect=18b4e7a1">VALIDATE — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=1a2617eb">1a2617eb</a><div class="meta"><span class="tag" style="color:var(--unmeas)">◌ DRAFT</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">CIP-25 - P2 Fix finish.checks() dead ledger check — per-lane NOTHING TO REPORT</p><a class="btn wide" href="/switchboard?view=work&inspect=1a2617eb">VALIDATE — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=1a42acac">1a42acac</a><div class="meta"><span class="tag" style="color:var(--unmeas)">◌ DRAFT</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">AB-07 · R1 pass@k vs pass^k reporting set</p><a class="btn wide" href="/switchboard?view=work&inspect=1a42acac">VALIDATE — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=1ba2896d">1ba2896d</a><div class="meta"><span class="tag" style="color:var(--ink3)">× BLOCKED</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">CIP-04 - P1 Author the first real intake record end to end</p><form method="POST" action="/switchboard/resolve" style="margin:0"><input type="hidden" name="work_id" value="1ba2896d"><input type="hidden" name="hold" value="CIP-03"><div style="display:flex;gap:7px"><button class="btn pri" name="go" value="APPROVE" style="flex:1">APPROVE</button><button class="btn" name="go" value="REJECT" style="flex:1">REJECT</button></div><details style="margin-top:7px"><summary class="empty" style="cursor:pointer">add a reason (optional)</summary><input type="text" name="note" maxlength="500" placeholder="why" style="margin-top:6px"></details></form><a class="btn wide" href="/switchboard?view=work&inspect=1ba2896d" style="margin-top:7px">DETAIL</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=1e4ec1c0">1e4ec1c0</a><div class="meta"><span class="tag" style="color:var(--unmeas)">◌ DRAFT</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">OBS-06 - X0 The blueprint still describes a client data-isolation weakness, on a public repo</p><a class="btn wide" href="/switchboard?view=work&inspect=1e4ec1c0">VALIDATE — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=1f220a7c">1f220a7c</a><div class="meta"><span class="tag" style="color:var(--ink3)">× BLOCKED</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">CIP-05 - P1 Certify that connector A1-A12 against a recorded run</p><form method="POST" action="/switchboard/resolve" style="margin:0"><input type="hidden" name="work_id" value="1f220a7c"><input type="hidden" name="hold" value="CIP-04"><div style="display:flex;gap:7px"><button class="btn pri" name="go" value="APPROVE" style="flex:1">APPROVE</button><button class="btn" name="go" value="REJECT" style="flex:1">REJECT</button></div><details style="margin-top:7px"><summary class="empty" style="cursor:pointer">add a reason (optional)</summary><input type="text" name="note" maxlength="500" placeholder="why" style="margin-top:6px"></details></form><a class="btn wide" href="/switchboard?view=work&inspect=1f220a7c" style="margin-top:7px">DETAIL</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=200deda2">200deda2</a><div class="meta"><span class="tag" style="color:var(--pass)">✓ DONE</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">R2 · Repo + wiki DIFF, not reconstruction — what is locked, what is stale, what is missing (NAVIRA marketing model)</p><a class="btn wide" href="/switchboard?view=work&inspect=200deda2">REVIEW OUTCOME — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=223dc2a2">223dc2a2</a><div class="meta"><span class="tag" style="color:var(--unmeas)">◌ DRAFT</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">OBS-07 - X0 Git history still carries the client names the working tree no longer does</p><a class="btn wide" href="/switchboard?view=work&inspect=223dc2a2">VALIDATE — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=253d7fa9">253d7fa9</a><div class="meta"><span class="tag" style="color:var(--unmeas)">◌ DRAFT</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">AB-01 · R3 expected-work manifest + scope_hash — &#x27;the biggest missing control&#x27;; §5 has no such step</p><a class="btn wide" href="/switchboard?view=work&inspect=253d7fa9">VALIDATE — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=254a7e09">254a7e09</a><div class="meta"><span class="tag" style="color:var(--unmeas)">◌ DRAFT</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">AB-17 · R18 in its entirety — exists; every reference to it is in the future tense</p><a class="btn wide" href="/switchboard?view=work&inspect=254a7e09">VALIDATE — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=28dae6e6">28dae6e6</a><div class="meta"><span class="tag" style="color:var(--unmeas)">◌ DRAFT</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">AB-11 · R5 one canonical readout model, regenerated and diffed in CI</p><a class="btn wide" href="/switchboard?view=work&inspect=28dae6e6">VALIDATE — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=2b6facb4">2b6facb4</a><div class="meta"><span class="tag" style="color:var(--unmeas)">◌ DRAFT</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">CIP-34 - P2 Add FACPR (first-attempt contract pass rate) to metrics.py</p><a class="btn wide" href="/switchboard?view=work&inspect=2b6facb4">VALIDATE — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=2b9aae3b">2b9aae3b</a><div class="meta"><span class="tag" style="color:var(--pass)">✓ DONE</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">R1 · Stakeholder &amp; client-evidence reconstruction — what GEP actually asked for, and when</p><a class="btn wide" href="/switchboard?view=work&inspect=2b9aae3b">REVIEW OUTCOME — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=2da0c097">2da0c097</a><div class="meta"><span class="tag" style="color:var(--unmeas)">◌ DRAFT</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">Absorption backlog — SYNTHESIS §17.9 (imported 2026-08-29)</p><a class="btn wide" href="/switchboard?view=work&inspect=2da0c097">VALIDATE — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=2e6dd67d">2e6dd67d</a><div class="meta"><span class="tag" style="color:var(--ink3)">× BLOCKED</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">CIP-12 - P3 Submit to PR to Jira; portal mirrors and owns nothing</p><form method="POST" action="/switchboard/resolve" style="margin:0"><input type="hidden" name="work_id" value="2e6dd67d"><input type="hidden" name="hold" value="CIP-11"><div style="display:flex;gap:7px"><button class="btn pri" name="go" value="APPROVE" style="flex:1">APPROVE</button><button class="btn" name="go" value="REJECT" style="flex:1">REJECT</button></div><details style="margin-top:7px"><summary class="empty" style="cursor:pointer">add a reason (optional)</summary><input type="text" name="note" maxlength="500" placeholder="why" style="margin-top:6px"></details></form><a class="btn wide" href="/switchboard?view=work&inspect=2e6dd67d" style="margin-top:7px">DETAIL</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=33fccea3">33fccea3</a><div class="meta"><span class="tag" style="color:var(--unmeas)">◌ DRAFT</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">CIP-29 - P3 Introduce Snapshot as the measurement scope object</p><a class="btn wide" href="/switchboard?view=work&inspect=33fccea3">VALIDATE — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=377b70f0">377b70f0</a><div class="meta"><span class="tag" style="color:var(--unmeas)">◌ DRAFT</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">BVA-02 - P1 Replace claims.py hand-rolled _exclusive() with tox-dev/filelock</p><a class="btn wide" href="/switchboard?view=work&inspect=377b70f0">VALIDATE — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=387780b5">387780b5</a><div class="meta"><span class="tag" style="color:var(--pass)">✓ DONE</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">D3 · Candidate dimensional designs — run `keel`; declare the grain FIRST</p><a class="btn wide" href="/switchboard?view=work&inspect=387780b5">REVIEW OUTCOME — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=3a1f0b84">3a1f0b84</a><div class="meta"><span class="tag" style="color:var(--ink3)">– ABANDONED</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">CIP-31 - P2 Enable strictAllowlist + mask from managed settings</p><a class="btn wide" href="/switchboard?view=work&inspect=3a1f0b84">— — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=3ac5a1ec">3ac5a1ec</a><div class="meta"><span class="tag" style="color:var(--ink3)">× BLOCKED</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">CIP-14 - P4 Write gate: reject low-grounding writes; prove it rejects</p><form method="POST" action="/switchboard/resolve" style="margin:0"><input type="hidden" name="work_id" value="3ac5a1ec"><input type="hidden" name="hold" value="CIP-05"><div style="display:flex;gap:7px"><button class="btn pri" name="go" value="APPROVE" style="flex:1">APPROVE</button><button class="btn" name="go" value="REJECT" style="flex:1">REJECT</button></div><details style="margin-top:7px"><summary class="empty" style="cursor:pointer">add a reason (optional)</summary><input type="text" name="note" maxlength="500" placeholder="why" style="margin-top:6px"></details></form><a class="btn wide" href="/switchboard?view=work&inspect=3ac5a1ec" style="margin-top:7px">DETAIL</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=3d053975">3d053975</a><div class="meta"><span class="tag" style="color:var(--pass)">✓ DONE</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">R2 · Repo + wiki DIFF — read the two existing pages; what is locked, stale, missing</p><a class="btn wide" href="/switchboard?view=work&inspect=3d053975">REVIEW OUTCOME — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=3e38badf">3e38badf</a><div class="meta"><span class="tag" style="color:var(--ink3)">× BLOCKED</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">CIP-11 - P3 Portal render of intake + per-field status (5-term vocabulary)</p><form method="POST" action="/switchboard/resolve" style="margin:0"><input type="hidden" name="work_id" value="3e38badf"><input type="hidden" name="hold" value="CIP-10"><div style="display:flex;gap:7px"><button class="btn pri" name="go" value="APPROVE" style="flex:1">APPROVE</button><button class="btn" name="go" value="REJECT" style="flex:1">REJECT</button></div><details style="margin-top:7px"><summary class="empty" style="cursor:pointer">add a reason (optional)</summary><input type="text" name="note" maxlength="500" placeholder="why" style="margin-top:6px"></details></form><a class="btn wide" href="/switchboard?view=work&inspect=3e38badf" style="margin-top:7px">DETAIL</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=41ceeabc">41ceeabc</a><div class="meta"><span class="tag" style="color:var(--pass)">✓ DONE</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">Migrate exchangeratesapi</p><a class="btn wide" href="/switchboard?view=work&inspect=41ceeabc">REVIEW OUTCOME — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=46df379b">46df379b</a><div class="meta"><span class="tag" style="color:var(--ink3)">– ABANDONED</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">CIP-23 - P2 Surface the needs field from ~/.claude/jobs/*/state.json</p><a class="btn wide" href="/switchboard?view=work&inspect=46df379b">— — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=47113a09">47113a09</a><div class="meta"><span class="tag" style="color:var(--unmeas)">◌ DRAFT</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">RUN-03 - R2 Execute a TeamSpec — the missing middle</p><a class="btn wide" href="/switchboard?view=work&inspect=47113a09">VALIDATE — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=48eeed18">48eeed18</a><div class="meta"><span class="tag" style="color:var(--pass)">✓ DONE</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">Migrate exchangeratesapi</p><a class="btn wide" href="/switchboard?view=work&inspect=48eeed18">REVIEW OUTCOME — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=4d152c0d">4d152c0d</a><div class="meta"><span class="tag" style="color:var(--unmeas)">◌ DRAFT</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">OBS-08 - X0 main is 157+ commits behind and nothing has been merged</p><a class="btn wide" href="/switchboard?view=work&inspect=4d152c0d">VALIDATE — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=52407de5">52407de5</a><div class="meta"><span class="tag" style="color:var(--unmeas)">◌ DRAFT</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">AF-RELEASE-GATE-01 - Establish the safe integration/publication boundary for agent-factory before anything is pushed to the public remote</p><a class="btn wide" href="/switchboard?view=work&inspect=52407de5">VALIDATE — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=56546789">56546789</a><div class="meta"><span class="tag" style="color:var(--unmeas)">◌ DRAFT</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">BVA-04 - P2 Reshape ConnectorTarget onto ODCS as the contract artefact, keep our validator</p><a class="btn wide" href="/switchboard?view=work&inspect=56546789">VALIDATE — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=58309d3d">58309d3d</a><div class="meta"><span class="tag" style="color:var(--unmeas)">◌ DRAFT</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">AB-10 · R5 property-based + differential testing — aimed at the instruments that produced F5&#x27;s 3 false results</p><a class="btn wide" href="/switchboard?view=work&inspect=58309d3d">VALIDATE — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=58e62ed4">58e62ed4</a><div class="meta"><span class="tag" style="color:var(--unmeas)">◌ DRAFT</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">RUN-01 - R1 Enforce a spend ceiling before dispatch</p><a class="btn wide" href="/switchboard?view=work&inspect=58e62ed4">VALIDATE — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=5aea7b87">5aea7b87</a><div class="meta"><span class="tag" style="color:var(--unmeas)">◌ DRAFT</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">CIP-28 - P2 Move evidence packs to docs/research/.packs/</p><a class="btn wide" href="/switchboard?view=work&inspect=5aea7b87">VALIDATE — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=5d988caa">5d988caa</a><div class="meta"><span class="tag" style="color:var(--unmeas)">◌ DRAFT</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">AB-05 · R4 Fitness Qualification Gate — 5 pre-search tests; §11.4 and §16.6 rejected it without citing the design</p><a class="btn wide" href="/switchboard?view=work&inspect=5d988caa">VALIDATE — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=620df62f">620df62f</a><div class="meta"><span class="tag" style="color:var(--unmeas)">◌ DRAFT</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">RUN-02 - R1 Cap turns and reap dispatched work on the path that actually runs</p><a class="btn wide" href="/switchboard?view=work&inspect=620df62f">VALIDATE — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=711c9d13">711c9d13</a><div class="meta"><span class="tag" style="color:var(--ink3)">× BLOCKED</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">CIP-09 - P2 Schema-probe so clients confirm rather than type</p><form method="POST" action="/switchboard/resolve" style="margin:0"><input type="hidden" name="work_id" value="711c9d13"><input type="hidden" name="hold" value="CIP-08"><div style="display:flex;gap:7px"><button class="btn pri" name="go" value="APPROVE" style="flex:1">APPROVE</button><button class="btn" name="go" value="REJECT" style="flex:1">REJECT</button></div><details style="margin-top:7px"><summary class="empty" style="cursor:pointer">add a reason (optional)</summary><input type="text" name="note" maxlength="500" placeholder="why" style="margin-top:6px"></details></form><a class="btn wide" href="/switchboard?view=work&inspect=711c9d13" style="margin-top:7px">DETAIL</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=73b0a05e">73b0a05e</a><div class="meta"><span class="tag" style="color:var(--unmeas)">◌ DRAFT</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">AB-18 · R16 audit — nine findings are bare pointers with no content; fill in or delete</p><a class="btn wide" href="/switchboard?view=work&inspect=73b0a05e">VALIDATE — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=7452619e">7452619e</a><div class="meta"><span class="tag" style="color:var(--unmeas)">◌ DRAFT</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">CIP-35 - P3 Score a second connector end-to-end (breadth, not sensitivity)</p><a class="btn wide" href="/switchboard?view=work&inspect=7452619e">VALIDATE — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=75ffe3a3">75ffe3a3</a><div class="meta"><span class="tag" style="color:var(--unmeas)">◌ DRAFT</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">AB-12 · R13 run 2 — five of six findings untaken; APPROVE-becomes-a-GitHub-PR first, a decision rests on it</p><a class="btn wide" href="/switchboard?view=work&inspect=75ffe3a3">VALIDATE — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=771630bd">771630bd</a><div class="meta"><span class="tag" style="color:var(--unmeas)">◌ DRAFT</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">BVA-01 - P0 Add g_dependencies_are_pinned; lockfile gate, prerequisite to any ADOPT</p><a class="btn wide" href="/switchboard?view=work&inspect=771630bd">VALIDATE — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=77a65215">77a65215</a><div class="meta"><span class="tag" style="color:var(--unmeas)">◌ DRAFT</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">CIP-01 - P0 Action or reject AB-01..AB-19, each in writing</p><a class="btn wide" href="/switchboard?view=work&inspect=77a65215">VALIDATE — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=7b64fec7">7b64fec7</a><div class="meta"><span class="tag" style="color:var(--unmeas)">◌ DRAFT</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">OBS-05 - X0 D5 was never delivered — nobody has said what the external review could not judge</p><a class="btn wide" href="/switchboard?view=work&inspect=7b64fec7">VALIDATE — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=80671d48">80671d48</a><div class="meta"><span class="tag" style="color:var(--unmeas)">◌ DRAFT</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">AB-06 · R1 unintended-side-effect + reconciliation checks — graded High; R17 §4.7 rediscovered it unconnected</p><a class="btn wide" href="/switchboard?view=work&inspect=80671d48">VALIDATE — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=812c3c6a">812c3c6a</a><div class="meta"><span class="tag" style="color:var(--unmeas)">◌ DRAFT</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">CIP-26 - P2 Add tenancy-verified gate — confirm declared tenants against a live pull</p><a class="btn wide" href="/switchboard?view=work&inspect=812c3c6a">VALIDATE — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=859d609b">859d609b</a><div class="meta"><span class="tag" style="color:var(--pass)">✓ DONE</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">Migrate exchangeratesapi</p><a class="btn wide" href="/switchboard?view=work&inspect=859d609b">REVIEW OUTCOME — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=89c82c06">89c82c06</a><div class="meta"><span class="tag" style="color:var(--unmeas)">◌ DRAFT</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">AB-15 · R12 productivity list — prompt templates, session forking cost, cross-session search, checkpoints, queue</p><a class="btn wide" href="/switchboard?view=work&inspect=89c82c06">VALIDATE — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=8cb8cc05">8cb8cc05</a><div class="meta"><span class="tag" style="color:var(--ink3)">× BLOCKED</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">CIP-18 - P5 Within-topic fair test harness</p><form method="POST" action="/switchboard/resolve" style="margin:0"><input type="hidden" name="work_id" value="8cb8cc05"><input type="hidden" name="hold" value="CIP-15"><div style="display:flex;gap:7px"><button class="btn pri" name="go" value="APPROVE" style="flex:1">APPROVE</button><button class="btn" name="go" value="REJECT" style="flex:1">REJECT</button></div><details style="margin-top:7px"><summary class="empty" style="cursor:pointer">add a reason (optional)</summary><input type="text" name="note" maxlength="500" placeholder="why" style="margin-top:6px"></details></form><a class="btn wide" href="/switchboard?view=work&inspect=8cb8cc05" style="margin-top:7px">DETAIL</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=8d1b7ae1">8d1b7ae1</a><div class="meta"><span class="tag" style="color:var(--ink3)">× BLOCKED</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">CIP-15 - P4 Coverage metric (retooled AOR): question vs corpus, relevance-judged</p><form method="POST" action="/switchboard/resolve" style="margin:0"><input type="hidden" name="work_id" value="8d1b7ae1"><input type="hidden" name="hold" value="CIP-11"><div style="display:flex;gap:7px"><button class="btn pri" name="go" value="APPROVE" style="flex:1">APPROVE</button><button class="btn" name="go" value="REJECT" style="flex:1">REJECT</button></div><details style="margin-top:7px"><summary class="empty" style="cursor:pointer">add a reason (optional)</summary><input type="text" name="note" maxlength="500" placeholder="why" style="margin-top:6px"></details></form><a class="btn wide" href="/switchboard?view=work&inspect=8d1b7ae1" style="margin-top:7px">DETAIL</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=90f0f65b">90f0f65b</a><div class="meta"><span class="tag" style="color:var(--ink3)">× BLOCKED</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">CIP-16 - P4 Guarded helpfulness ranking; ship the guards, not the naive ratio</p><form method="POST" action="/switchboard/resolve" style="margin:0"><input type="hidden" name="work_id" value="90f0f65b"><input type="hidden" name="hold" value="CIP-14"><div style="display:flex;gap:7px"><button class="btn pri" name="go" value="APPROVE" style="flex:1">APPROVE</button><button class="btn" name="go" value="REJECT" style="flex:1">REJECT</button></div><details style="margin-top:7px"><summary class="empty" style="cursor:pointer">add a reason (optional)</summary><input type="text" name="note" maxlength="500" placeholder="why" style="margin-top:6px"></details></form><a class="btn wide" href="/switchboard?view=work&inspect=90f0f65b" style="margin-top:7px">DETAIL</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=91088e54">91088e54</a><div class="meta"><span class="tag" style="color:var(--pass)">✓ DONE</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">D5 · Recommendation + human sign-off</p><a class="btn wide" href="/switchboard?view=work&inspect=91088e54">REVIEW OUTCOME — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=933e6c33">933e6c33</a><div class="meta"><span class="tag" style="color:var(--pass)">✓ DONE</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">D2 · Analytical question catalogue — the questions the model must answer</p><a class="btn wide" href="/switchboard?view=work&inspect=933e6c33">REVIEW OUTCOME — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=9362749b">9362749b</a><div class="meta"><span class="tag" style="color:var(--unmeas)">◌ DRAFT</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">CIP-21 - P1 Wire deploy.py budget enforcement into the live launch path</p><a class="btn wide" href="/switchboard?view=work&inspect=9362749b">VALIDATE — open detail</a></div><div class="card"><a class="cid" href="/switchboard?view=work&inspect=9418f52c">9418f52c</a><div class="meta"><span class="tag" style="color:var(--ink3)">× BLOCKED</span><span class="vis">🔒 PRIVATE</span></div><p class="ttl">CIP-13 - P3 Reuse portal_provision.py auth + RLS; no new auth model</p><form method="POST" action="/switchboard/resolve" style="margin:0"><input type="hidden" name="work_id" value="9418f52c"><input type="hidden" name="hold" value="CIP-11"><div style="display:flex;gap:7px"><button class="btn pri" name="go" value="APPROVE" style="flex:1">APPROVE</button><button class="btn" name="go" value="REJECT" style="flex:1">REJECT</button></div><details style="margin-top:7px"><summary class="empty" style="cursor:pointer">add a reason (optional)</summary><input type="text" name="note" maxlength="500" placeholder="why" style="margin-top:6px"></details></form><a class="btn wide" href="/switchboard?view=work&inspect=9418f52c" style="margin-top:7px">DETAIL</a></div><p class="empty">31 more not shown — narrow the search.</p></div></section></main></div><nav class="bnav" aria-label="Primary"><a href="/switchboard?view=now" class=""><span class="g">▣</span>NOW</a><a href="/switchboard?view=work" class="on"><span class="g">▤</span>WORK</a><a href="/switchboard?view=create" class=""><span class="g">＋</span>CREATE</a><a href="/switchboard?view=sessions" class=""><span class="g">◉</span>SESSIONS</a><a href="/switchboard?view=more" class=""><span class="g">⋯</span>MORE</a></nav></div><script>
+(function(){
+ var f=document.getElementById('p1-restart-form');if(!f)return;
+ var b=document.getElementById('p1-restart'),n=document.getElementById('rst');
+ var was=document.body.getAttribute('data-runtime')||'';
+ f.addEventListener('submit',function(ev){
+  ev.preventDefault();
+  if(b.getAttribute('aria-disabled')==='true')return;      /* repeated clicks cannot stack */
+  b.setAttribute('aria-disabled','true');b.textContent='RESTARTING…';
+  if(n){n.className='on';n.textContent='RESTARTING SWITCHBOARD…';}
+  fetch(f.action,{method:'POST',body:new FormData(f),credentials:'same-origin'})
+   .catch(function(){})                    /* the server dies mid-response; that is the success */
+   .then(function(){setTimeout(poll,600);});
+  var tries=0;
+  function poll(){
+   if(++tries>40){if(n)n.textContent='RESTART DID NOT COMPLETE — the server did not come back. '
+     +'Check the supervisor terminal.';b.removeAttribute('aria-disabled');
+     b.textContent='Restart Switchboard';return;}
+   fetch('/healthz',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){
+    if(j&&j.runtime&&j.runtime!==was){
+     if(n)n.textContent='SWITCHBOARD UPDATED — reloading…';
+     location.reload();
+    }else{setTimeout(poll,400);}
+   }).catch(function(){setTimeout(poll,400);});
+  }
+ });
+})();
+
+(function(){document.addEventListener('keydown',function(e){
+ if((e.ctrlKey||e.metaKey)&&(e.key==='k'||e.key==='K')){
+  var i=document.getElementById('p1-cmd');if(i){e.preventDefault();i.focus();i.select();}}});})();
+</script>
+<footer>
+<p><b>UNMEASURABLE is not a pass.</b> A gate with no instrument says so rather than waving through; that distinction is the point of the whole harness.</p>
+<p>Every row is measured from a file at the moment shown above and names the path it came from. Nothing here is hand-maintained, so a wrong row means a wrong repo, not a stale page. Probes live in <code>factory/readiness.py</code>.</p>
+<p><b>The work list is the gate list.</b> Every gate that is not passing is a task, and a gate that passes stops being one. There is no second list to keep in sync, so the board cannot describe work nobody measures or omit work somebody does. The only authored part is which task must precede which, and a stale edge fails on import.</p>
+<p>Regenerate: <code>python scripts/local_tracker.py</code> &middot; serve and re-measure on refresh: <code>python scripts/local_tracker.py --serve</code> &middot; check the published artifact still matches: <code>python scripts/build_tracker.py --check</code></p>
+</footer></div>
+<script>
+document.querySelectorAll('[data-copy]').forEach(function (b) {
+  b.addEventListener('click', function () {
+    var el = document.getElementById(b.getAttribute('data-copy'));
+    if (!el) return;
+    var label = b.textContent;
+    var done = function () { b.textContent = 'copied';
+                             setTimeout(function () { b.textContent = label; }, 1200); };
+    // The textarea path is the fallback where the Clipboard API is unavailable. The text is
+    // selectable either way, so a failure is never a dead end.
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(el.textContent).then(done, function () {});
+    } else {
+      var ta = document.createElement('textarea');
+      ta.value = el.textContent; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); done(); } catch (err) {}
+      document.body.removeChild(ta);
+    }
+  });
+});
+</script></body></html>

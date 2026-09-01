@@ -1406,7 +1406,8 @@ def _tok(n) -> str:
 
 
 def render(when: datetime.datetime, tab: str = "tickets", team: str = "",
-           view: str = "now", inspect: str = "", q: str = "") -> str:
+           view: str = "now", inspect: str = "", q: str = "",
+           panes: str = "", lay: str = "1", popout: bool = False) -> str:
     # Research needs no measurement, and a full measure is ~10s of probes. Paying that to read a
     # prompt was the main reason this page felt slow.
     # ⛔ `switchboard` joins the same list as `research`, and for a stronger reason.
@@ -3030,7 +3031,8 @@ def render(when: datetime.datetime, tab: str = "tickets", team: str = "",
                 _flash, _SB_MSG = _SB_MSG, None
                 w(sbp1.page(_st, view=view, inspect=inspect, q=q,
                             token=RESTART_TOKEN, runtime=RUNTIME_ID,
-                            flash=_flash, repos=_repo_choices(), dispatch=_DISPATCH))
+                            flash=_flash, repos=_repo_choices(), dispatch=_DISPATCH,
+                            panes=panes, lay=lay, popout=popout))
         except Exception as _exc:                                  # noqa: BLE001
             # A command page that 500s tells the operator nothing. A command page that says
             # WHICH instrument failed tells them where to look, and keeps the nav reachable.
@@ -3500,9 +3502,17 @@ class Handler(http.server.BaseHTTPRequestHandler):
         if not re.fullmatch(r"[A-Za-z0-9._-]{0,64}", _insp or ""):
             _insp = ""
         _q = (qs.get("q") or [""])[0][:80]
+        # Console state. `panes` is a comma-separated list of session ids and reaches HTML and a
+        # filesystem glob, so it is constrained to the id character class here rather than escaped
+        # at each use -- the same closed-set rule `inspect` follows.
+        _panes = ",".join([x for x in (qs.get("panes") or [""])[0].split(",")
+                           if re.fullmatch(r"[A-Za-z0-9._-]{1,128}", x)][:4])
+        _lay = (qs.get("lay") or ["1"])[0][:4]
+        _popout = bool((qs.get("popout") or [""])[0])
         # Re-measure per request. Slower than serving a file, and the entire reason to serve.
         body = render(datetime.datetime.now(), route, team=sel,
-                      view=_view, inspect=_insp, q=_q).encode("utf-8")
+                      view=_view, inspect=_insp, q=_q,
+                      panes=_panes, lay=_lay, popout=_popout).encode("utf-8")
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))

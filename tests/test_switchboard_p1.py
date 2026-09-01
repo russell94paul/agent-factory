@@ -11,6 +11,7 @@ permanently changes the thing it is measuring.
 """
 from __future__ import annotations
 
+import json
 import pathlib
 
 import pytest
@@ -781,3 +782,103 @@ def test_reject_also_releases_and_records_the_verdict(store, monkeypatch):
     assert ok is True and "REJECT" in msg
     kinds = [e["kind"] for e in store.get("BTN-03").evidence]
     assert any("REJECT" in k for k in kinds)
+
+
+# ============================================================ 14. the session console
+
+
+def test_the_console_never_calls_itself_a_terminal(live_state):
+    """⛔ It cannot attach to a running process's TTY. Naming it a terminal would be the same
+    defect as a button wearing an imperative verb that only navigates — a label promising a
+    capability the thing does not have."""
+    import inspect as _i
+    from factory import console as K
+    html = p1.page(live_state, view="console", token="t", runtime="r")
+    low = html.lower()
+    assert "not a terminal" in low, "the page does not state what it is not"
+    # ⛔ Word boundaries, not a bare `in`. The first version asserted `"is a terminal" not in src`
+    # and tripped on its own docstring — "calling th·is a terminal· would be the same defect". That
+    # is the exact self-matching-substring failure fixed in two repository guards earlier today,
+    # reproduced here within the hour. A prose ban needs a boundary or it bans its own explanation.
+    import re as _re
+    src = _i.getsource(K) + _i.getsource(p1._view_console)
+    for claim in (r"\bthis is a terminal\b", r"\bterminal emulator\b",
+                  r"\battaches to the tty\b"):
+        assert not _re.search(claim, src, _re.I), f"the code claims {claim}"
+
+
+def test_redaction_removes_every_known_credential_shape():
+    """⛔ This surface is reachable through a phone tunnel and transcripts are a verbatim record
+    of everything a session was told. The `Authorization:` rule originally matched `\S+` and
+    redacted only the scheme word, leaving the JWT standing — a redactor that looks like it fired
+    and publishes the token anyway. Caught by enumerating real shapes rather than one.
+    """
+    from factory import console as K
+    leaks = [
+        ("Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9", "eyJhbGci"),
+        ("authorization:  Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==", "QWxhZGRpbj"),
+        ("X-Api-Key: abcd1234efgh5678ijkl", "abcd1234"),
+        ("sk-abc123def456ghi789jkl012", "abc123def"),
+        ("snowflake://paul:MyP4ssw0rd!@acct.snowflakecomputing.com", "MyP4ssw0rd"),
+        ("-----BEGIN RSA PRIVATE KEY-----", "PRIVATE KEY-----"),
+        ("ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ012345", "ABCDEFGHIJ"),
+    ]
+    for text, secret in leaks:
+        assert secret not in K.redact(text), f"{secret!r} survived redaction of {text[:40]!r}"
+
+    prose = "the ordinary sentence stays intact and readable"
+    assert K.redact(prose) == prose, "redaction damaged ordinary prose"
+
+
+def test_the_transcript_reader_is_bounded(tmp_path):
+    """The live transcript measured 6.4 MB. Four panes of a whole-file read on every refresh is a
+    page nobody can open, so the tail is read from the END within a bounded window."""
+    from factory import console as K
+    big = tmp_path / "big.jsonl"
+    with big.open("w", encoding="utf-8") as fh:
+        for i in range(60_000):
+            # ⚠ Built with json.dumps rather than hand-written. The first version was a literal
+            # short one closing brace — `message` was closed, the event was not — so every line
+            # was invalid JSON, tail_events correctly returned [], and the test read that as
+            # "the reader is broken". The fixture was the broken thing.
+            fh.write(json.dumps({"type": "assistant",
+                                 "message": {"role": "assistant",
+                                             "content": [{"type": "text",
+                                                          "text": f"line {i}"}]}}) + "\n")
+    assert big.stat().st_size > K.TAIL_BYTES, "the fixture is not big enough to test the bound"
+
+    evs = K.tail_events(big, limit=5)
+    assert len(evs) == 5
+    # It must be the END of the file, not the start.
+    assert "59999" in json.dumps(evs[-1])
+
+
+def test_a_session_with_no_transcript_reads_as_not_recorded():
+    """An empty pane and an unreadable one must not look identical."""
+    from factory import console as K
+    p = K.pane("definitely-not-a-session-id", {})
+    assert p["basis"] == "NOT-RECORDED"
+    assert p["messages"] == []
+    assert "not evidence that nothing was said" in p["note"]
+
+
+def test_every_console_layout_renders_the_right_number_of_panes(live_state):
+    from factory import console as K
+    ids = [str(c["session_id"]) for c in (live_state.get("sessions") or [])
+           if c.get("session_id")][:4]
+    if not ids:
+        pytest.skip("no sessions on this machine")
+    for name, spec in K.LAYOUTS.items():
+        html = p1.page(live_state, view="console", panes=",".join(ids), lay=name,
+                       token="t", runtime="r")
+        assert html.count('class="kpane"') == spec["n"], f"layout {name} rendered wrong pane count"
+        assert html.count('action="/switchboard/dispatch"') == spec["n"], (
+            f"layout {name}: a pane without a reply control")
+
+
+def test_a_popped_out_console_carries_no_competing_navigation(live_state):
+    """A pop-out is one thing in its own window. Nav inside it would be a second navigation state
+    the opener cannot see."""
+    html = p1.page(live_state, view="console", lay="1", popout=True, token="t", runtime="r")
+    assert '<nav class="bnav"' not in html and '<nav class="rail"' not in html
+    assert 'class="kpane"' in html and 'action="/switchboard/dispatch"' in html

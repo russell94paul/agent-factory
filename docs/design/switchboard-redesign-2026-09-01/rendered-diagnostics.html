@@ -1,0 +1,295 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Agent Factory</title>
+<style>
+:root{--paper:#faf9f7;--ink:#16150f;--ink2:#4a473d;--ink3:#84806f;--rule:#e2ddd2;
+ --raise:#f2efe8;--pass:#1f7a4d;--fail:#b3341f;--unmeas:#a06a12;--notrun:#84806f;--accent:#2b4c9b}
+@media(prefers-color-scheme:dark){:root{--paper:#12120f;--ink:#f2f0ea;--ink2:#b8b4a8;
+ --ink3:#7d7a6e;--rule:#2b2a24;--raise:#1b1a16;--pass:#5cc38a;--fail:#f2795e;--unmeas:#e0aa4a;
+ --notrun:#7d7a6e;--accent:#7ba0f0}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+ font:15px/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:34px 22px 70px}
+h1{font-size:27px;margin:0 0 4px;letter-spacing:-.01em}
+.sub{color:var(--ink3);font-size:13px;font-family:ui-monospace,"Cascadia Code",Consolas,monospace}
+.head{border-bottom:2px solid var(--ink);padding-bottom:16px;margin-bottom:24px}
+.score{display:flex;align-items:baseline;gap:12px;margin:18px 0 8px}
+.score b{font-size:40px;line-height:1;letter-spacing:-.02em}
+.score span{color:var(--ink2);font-size:15px}
+.bar{height:7px;background:var(--rule);position:relative;margin:10px 0 6px}
+.bar i{position:absolute;inset:0 auto 0 0;background:var(--pass);display:block}
+.phase{margin:30px 0 0;border:1px solid var(--rule);background:var(--raise)}
+.phase>header{display:flex;justify-content:space-between;align-items:baseline;gap:14px;
+ padding:13px 16px;border-bottom:1px solid var(--rule);flex-wrap:wrap}
+.phase h2{font-size:17px;margin:0}
+.count{font-family:ui-monospace,monospace;font-size:11.5px;letter-spacing:.09em;
+ text-transform:uppercase;color:var(--ink3);border:1px solid var(--rule);padding:2px 7px}
+.g{padding:15px 16px;border-bottom:1px solid var(--rule);display:grid;
+ grid-template-columns:104px 1fr;gap:14px}
+.g:last-child{border-bottom:0}
+.chip{font-family:ui-monospace,monospace;font-size:10.5px;letter-spacing:.09em;
+ text-transform:uppercase;border:1px solid currentColor;padding:3px 7px;display:inline-block}
+.chip.pass{color:var(--pass)}.chip.fail{color:var(--fail)}
+.chip.unmeas{color:var(--unmeas)}.chip.notrun{color:var(--notrun)}
+.q{font-weight:600}
+.hl{color:var(--ink2);margin-top:2px}
+ul{margin:8px 0 0 17px;padding:0;font-size:13.5px;color:var(--ink3);line-height:1.55}
+li{margin:2px 0}
+.why{margin-top:7px;font-size:12.5px;color:var(--ink3);font-style:italic}
+.src{margin-top:6px;font-family:ui-monospace,monospace;font-size:11.5px;color:var(--ink3)}
+footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--rule);
+ color:var(--ink3);font-size:13px}
+code{font-family:ui-monospace,monospace;background:var(--raise);padding:1px 5px;
+ border:1px solid var(--rule);font-size:12.5px}
+@media(max-width:620px){.g{grid-template-columns:1fr}}
+.t{padding:12px 16px;border-bottom:1px solid var(--rule);display:grid;
+ grid-template-columns:78px 26px 1fr;gap:12px;align-items:start}
+.t:last-child{border-bottom:0}
+.st{font-family:ui-monospace,monospace;font-size:10px;letter-spacing:.09em;text-transform:uppercase;
+ border:1px solid currentColor;padding:2px 5px;display:inline-block;white-space:nowrap}
+.st.done{color:var(--pass)}.st.ready{color:var(--accent)}
+.st.blocked{color:var(--ink3)}.st.declared{color:var(--unmeas)}
+.sz{font-family:ui-monospace,monospace;font-size:11px;color:var(--ink3);text-align:center;
+ border:1px solid var(--rule);padding:1px 0}
+.tt{font-weight:600}
+.tw{font-size:13px;color:var(--ink3);margin-top:3px;line-height:1.5}
+.dep{font-family:ui-monospace,monospace;font-size:11.5px;color:var(--ink3);margin-top:4px}
+.own{font-size:12px;color:var(--unmeas);margin-top:3px}
+.par{border:1px solid var(--accent);background:var(--raise);padding:15px 17px;margin:26px 0 0}
+.par h3{margin:0 0 8px;font-size:15px}
+.par ul{margin:0 0 0 17px;font-size:14px;color:var(--ink2)}
+.par li{margin:3px 0}
+</style></head><body><div class='wrap'>
+<nav style="padding:22px 0 4px"><a href="/" style="display:inline-block;padding:7px 14px;margin-right:6px;font-size:13px;text-decoration:none;border:1px solid var(--rule);border-radius:3px;background:var(--raise);color:var(--ink2)">Tickets</a><a href="/gates" style="display:inline-block;padding:7px 14px;margin-right:6px;font-size:13px;text-decoration:none;border:1px solid var(--rule);border-radius:3px;background:var(--raise);color:var(--ink2)">Gates</a><a href="/goals" style="display:inline-block;padding:7px 14px;margin-right:6px;font-size:13px;text-decoration:none;border:1px solid var(--rule);border-radius:3px;background:var(--raise);color:var(--ink2)">Goals</a><a href="/roadmap" style="display:inline-block;padding:7px 14px;margin-right:6px;font-size:13px;text-decoration:none;border:1px solid var(--rule);border-radius:3px;background:var(--raise);color:var(--ink2)">Roadmap</a><a href="/flow" style="display:inline-block;padding:7px 14px;margin-right:6px;font-size:13px;text-decoration:none;border:1px solid var(--rule);border-radius:3px;background:var(--raise);color:var(--ink2)">Flow</a><a href="/lanes" style="display:inline-block;padding:7px 14px;margin-right:6px;font-size:13px;text-decoration:none;border:1px solid var(--rule);border-radius:3px;background:var(--raise);color:var(--ink2)">Lanes</a><a href="/sessions" style="display:inline-block;padding:7px 14px;margin-right:6px;font-size:13px;text-decoration:none;border:1px solid var(--rule);border-radius:3px;background:var(--raise);color:var(--ink2)">Sessions</a><a href="/research" style="display:inline-block;padding:7px 14px;margin-right:6px;font-size:13px;text-decoration:none;border:1px solid var(--rule);border-radius:3px;background:var(--raise);color:var(--ink2)">Research</a><a href="/handoff" style="display:inline-block;padding:7px 14px;margin-right:6px;font-size:13px;text-decoration:none;border:1px solid var(--rule);border-radius:3px;background:var(--raise);color:var(--ink2)">Handoff</a><a href="/switchboard" style="display:inline-block;padding:7px 14px;margin-right:6px;font-size:13px;text-decoration:none;border:1px solid var(--rule);border-radius:3px;background:var(--ink);color:var(--paper)">Switchboard</a></nav>
+<div style="padding:2px 0 10px"><a href="/reload" style="display:inline-block;padding:6px 12px;border:1px solid var(--rule);border-radius:3px;background:var(--raise);color:var(--ink);text-decoration:none;font-size:13px">&#8635; reload code &amp; re-measure</a><a href="/sync" style="display:inline-block;margin-left:8px;padding:6px 12px;border:1px solid var(--rule);border-radius:3px;background:var(--raise);color:var(--ink);text-decoration:none;font-size:13px">&#8681; sync artifact file</a><span style="color:var(--ink3);font-size:12.5px">&nbsp; refresh re-measures &middot; code as at server start</span></div>
+<style>
+.p1{--gut:14px;font:13px/1.5 ui-monospace,"Cascadia Code",Consolas,monospace;
+ padding-bottom:64px}
+.p1 *{box-sizing:border-box;min-width:0}
+.p1 .shell{display:grid;grid-template-columns:1fr;gap:var(--gut)}
+.p1 .rail{display:none}
+.p1 .insp{display:none}
+.p1.has-insp .insp{display:block}
+
+/* ---- top bar ------------------------------------------------------------- */
+.p1 .top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+ border-bottom:2px solid var(--ink);padding:0 0 10px;margin:0 0 12px}
+.p1 .brand{font:700 13px/1 ui-monospace,monospace;letter-spacing:.14em;white-space:nowrap}
+.p1 .top form.cmd{flex:1 1 160px;display:flex;gap:6px;min-width:0}
+.p1 .top input[type=search]{flex:1;min-width:0;background:var(--paper);color:var(--ink);
+ border:1px solid var(--rule);padding:6px 9px;font:12px ui-monospace,monospace;border-radius:5px}
+.p1 .top .acts{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+
+/* ---- buttons ------------------------------------------------------------- */
+.p1 .btn{display:inline-block;padding:6px 11px;border:1px solid var(--rule);background:var(--paper);
+ color:var(--ink);text-decoration:none;font:600 11.5px/1.35 ui-monospace,monospace;
+ letter-spacing:.07em;border-radius:5px;cursor:pointer;white-space:nowrap}
+.p1 .btn:hover,.p1 .btn:focus-visible{border-color:var(--accent);color:var(--accent);outline:none}
+.p1 .btn.pri{border-color:var(--accent);color:var(--accent);border-width:2px;padding:5px 10px}
+.p1 .btn.pri:hover{background:var(--accent);color:var(--bg)}
+/* ⛔ A full-width button must WRAP. `.btn` sets white-space:nowrap so inline tags and
+   badges never break mid-label; inherited by `.wide` it made the P0 disclosure summary
+   524px wide inside a 344px column, which pushed documentElement.scrollWidth to 547 and
+   gave the whole page a horizontal scroll at both phone widths. Invisible in a
+   screenshot -- the button looked fine, the BODY scrolled sideways. Measured by
+   scripts/render_check_switchboard_p1.py. */
+.p1 .btn.wide{display:block;width:100%;text-align:center;padding:11px;
+ white-space:normal;overflow-wrap:anywhere}
+.p1 .btn[aria-disabled=true]{opacity:.45;pointer-events:none}
+/* ⛔ Decision buttons are the ones a thumb actually has to hit, at 2am, on a phone. Measured at
+   30px in the flex row, under the 40px floor every .btn.wide already meets — and APPROVE/REJECT
+   are the highest-consequence taps on the surface. Given their own minimum rather than relying on
+   the wide-button rule they do not match. */
+.p1 form button.btn{min-height:44px;padding:11px 12px}
+
+/* ---- sections ------------------------------------------------------------ */
+.p1 .sec{border:1px solid var(--rule);background:var(--raise);margin:0 0 var(--gut);
+ border-radius:7px;overflow:hidden}
+.p1 .sec>h2{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin:0;
+ font:600 11px/1 ui-monospace,monospace;letter-spacing:.15em;text-transform:uppercase;
+ color:var(--ink3);padding:10px 13px;border-bottom:1px solid var(--rule)}
+.p1 .sec>h2 .n{font-size:11px;color:var(--ink)}
+.p1 .sec>h2 .hint{font-weight:400;letter-spacing:0;text-transform:none;color:var(--ink3);
+ font-size:11px}
+.p1 .sec.alarm{border-color:var(--fail)}
+.p1 .sec.alarm>h2{color:var(--fail)}
+.p1 .bd{padding:12px 13px}
+.p1 .bd>*:first-child{margin-top:0}
+.p1 .bd>*:last-child{margin-bottom:0}
+
+/* ---- work card ----------------------------------------------------------- */
+.p1 .card{border:1px solid var(--rule);background:var(--paper);border-radius:6px;
+ padding:11px 12px;margin:0 0 9px;display:block;color:inherit;text-decoration:none}
+.p1 .card:last-child{margin-bottom:0}
+.p1 .card.sel{border-color:var(--accent);border-width:2px;padding:10px 11px}
+.p1 .card .cid{font:700 12.5px/1.3 ui-monospace,monospace;word-break:break-all;
+ display:block;margin:0 0 6px}
+.p1 .card .meta{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin:0 0 7px}
+.p1 .card .ttl{color:var(--ink3);font-size:12px;margin:0 0 8px;
+ overflow-wrap:anywhere}
+.p1 .card .checks{display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:var(--ink3);
+ margin:0 0 9px}
+.p1 .card .checks b{font-weight:600;color:var(--ink)}
+.p1 .tag{font-size:10px;letter-spacing:.09em;border:1px solid currentColor;padding:1px 6px;
+ border-radius:3px;white-space:nowrap;font-weight:600}
+.p1 .vis{font-size:10.5px;letter-spacing:.06em;color:var(--ink3);white-space:nowrap}
+.p1 .dim{color:var(--ink3)}
+.p1 .bad{color:var(--fail)}
+.p1 .ok{color:var(--pass)}
+.p1 .warn{color:var(--unmeas)}
+.p1 .empty{color:var(--ink3);font-size:12px;margin:0}
+
+/* ---- inspector ----------------------------------------------------------- */
+.p1 .insp .sec{margin-bottom:var(--gut)}
+.p1 .isec{border-top:1px dotted var(--rule);padding:10px 0 0;margin:10px 0 0}
+.p1 .isec:first-child{border-top:0;padding-top:0;margin-top:0}
+.p1 .isec h3{font:600 10.5px/1 ui-monospace,monospace;letter-spacing:.14em;color:var(--ink3);
+ margin:0 0 7px;text-transform:uppercase}
+.p1 .kv{display:grid;grid-template-columns:minmax(72px,auto) 1fr;gap:3px 10px;font-size:12px}
+.p1 .kv dt{color:var(--ink3)}
+.p1 .kv dd{margin:0;overflow-wrap:anywhere}
+.p1 code{font-size:11.5px;overflow-wrap:anywhere}
+
+/* ---- lists --------------------------------------------------------------- */
+.p1 ul.plain{list-style:none;margin:0;padding:0}
+.p1 ul.plain li{padding:6px 0;border-bottom:1px dotted var(--rule);font-size:12px}
+.p1 ul.plain li:last-child{border-bottom:0}
+.p1 .rec{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:baseline}
+.p1 .rec .when{color:var(--ink3);font-size:11px;white-space:nowrap}
+
+/* ---- forms --------------------------------------------------------------- */
+.p1 .field{margin:0 0 11px}
+.p1 .field label{display:block;font-size:11px;letter-spacing:.08em;color:var(--ink3);
+ margin:0 0 4px;text-transform:uppercase}
+.p1 input[type=text],.p1 textarea,.p1 select{width:100%;background:var(--paper);color:var(--ink);
+ border:1px solid var(--rule);padding:9px 10px;font:13px ui-monospace,monospace;border-radius:5px}
+.p1 textarea{min-height:64px;resize:vertical}
+.p1 details.adv{margin:10px 0 0;border-top:1px dotted var(--rule);padding-top:9px}
+.p1 details.adv summary{cursor:pointer;color:var(--ink3);font-size:11.5px;letter-spacing:.06em}
+.p1 details.adv[open] summary{margin-bottom:10px}
+
+/* ---- bottom nav (phone) --------------------------------------------------- */
+.p1 .bnav{position:fixed;left:0;right:0;bottom:0;z-index:40;display:grid;
+ grid-template-columns:repeat(5,1fr);background:var(--raise);
+ border-top:1px solid var(--rule);padding-bottom:env(safe-area-inset-bottom,0)}
+.p1 .bnav a{padding:11px 2px;text-align:center;text-decoration:none;color:var(--ink3);
+ font:600 9.5px/1.2 ui-monospace,monospace;letter-spacing:.06em}
+.p1 .bnav a.on{color:var(--accent);box-shadow:inset 0 2px 0 var(--accent)}
+.p1 .bnav a .g{display:block;font-size:14px;line-height:1.1;margin-bottom:2px}
+.p1 .bnav a .b{display:inline-block;min-width:15px;background:var(--fail);color:var(--bg);
+ border-radius:8px;font-size:9px;padding:0 4px;margin-left:2px}
+
+/* ---- flash --------------------------------------------------------------- */
+.p1 .flash{border:1px solid var(--rule);border-left-width:4px;border-radius:5px;padding:9px 12px;
+ margin:0 0 var(--gut);font-size:12px}
+.p1 .flash.good{border-left-color:var(--pass)}
+.p1 .flash.bad{border-left-color:var(--fail)}
+
+/* ---- restart banner ------------------------------------------------------- */
+.p1 #rst{display:none;margin:0 0 var(--gut)}
+.p1 #rst.on{display:block}
+
+/* ---- the retained P0 block --------------------------------------------------
+   ⛔ A COLLAPSED <details> still contributes to documentElement.scrollWidth in Chromium, so the
+   P0 panels blew the page 157px wide at 390px and 117px at 430px while being invisible. Measured
+   by scripts/render_check_switchboard_p1.py, not by looking at it -- a screenshot of the closed
+   page looks completely correct, and the overflow only shows as a body that scrolls sideways.
+   The single culprit was one unbreakable Windows path in a session topic.
+
+   Wide content scrolls inside its OWN container; the page body never scrolls horizontally. */
+.p1 details.p0{margin:0 0 var(--gut);max-width:100%}
+.p1 details.p0>summary{list-style:none;cursor:pointer}
+.p1 details.p0>summary::-webkit-details-marker{display:none}
+.p1 details.p0 .sw{max-width:100%;overflow-x:auto}
+.p1 details.p0 .sw .row,.p1 details.p0 .sw li,.p1 details.p0 .sw td{
+ overflow-wrap:anywhere;word-break:break-word}
+
+/* Any long unbreakable token -- a Windows path, a URL, a 64-char id -- wraps rather than widening
+   the page. Applied to the text carriers rather than to `*`, so `white-space:nowrap` on tags,
+   badges and the nav is not fought. */
+.p1 b,.p1 code,.p1 dd,.p1 li,.p1 p,.p1 summary,.p1 .ttl,.p1 .empty{overflow-wrap:anywhere}
+.p1 pre{max-width:100%;overflow-x:auto}
+
+/* ---- motion: only where it encodes a transition -------------------------- */
+@keyframes p1pulse{0%,100%{opacity:1}50%{opacity:.42}}
+.p1 .live{animation:p1pulse 2.4s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){
+  .p1 .live{animation:none}
+  .p1 *{transition:none!important}
+}
+
+/* ---- desktop ------------------------------------------------------------- */
+@media (min-width:900px){
+  .p1{padding-bottom:0}
+  .p1 .shell{grid-template-columns:minmax(140px,168px) minmax(0,1fr);align-items:start}
+  .p1.has-insp .shell{grid-template-columns:minmax(140px,168px) minmax(0,1fr) minmax(280px,340px)}
+  .p1 .rail{display:block;position:sticky;top:12px}
+  .p1 .rail a{display:block;padding:8px 11px;text-decoration:none;color:var(--ink3);
+   font:600 11px/1.2 ui-monospace,monospace;letter-spacing:.12em;border-left:2px solid transparent}
+  .p1 .rail a.on{color:var(--accent);border-left-color:var(--accent);background:var(--raise)}
+  .p1 .rail a:hover{color:var(--ink)}
+  .p1 .rail .grp{font-size:9.5px;color:var(--ink3);letter-spacing:.14em;padding:14px 11px 5px;
+   opacity:.72}
+  .p1 .insp{display:block;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
+  .p1 .bnav{display:none}
+}
+</style><div class="p1" data-runtime="0a146d85c5c1"><div class="top"><span class="brand">AGENT FACTORY</span><form class="cmd" method="GET" action="/switchboard" role="search"><input type="hidden" name="view" value="work"><input type="search" name="q" id="p1-cmd" placeholder="Search / command…" aria-label="Search work or run a command" autocomplete="off" list="p1-cmds"><button class="btn" type="submit">GO</button></form><div class="acts"><a class="btn" href="/switchboard?view=diagnostics" title="re-requests this page: the server re-measures, the loaded Python is unchanged" data-p1="refresh" rel="nofollow">↻ Refresh</a><a class="btn pri" href="/switchboard?view=create">+ CREATE</a><details class="adv" style="margin:0;border:0;padding:0;position:relative"><summary class="btn" style="list-style:none">•••</summary><div style="position:absolute;right:0;top:calc(100% + 5px);z-index:50;background:var(--raise);border:1px solid var(--rule);border-radius:6px;padding:8px;min-width:210px;display:grid;gap:6px"><form method="POST" action="/switchboard/restart" style="margin:0" id="p1-restart-form"><input type="hidden" name="token" value="40047b8c7a254f9f9069bf4a30b20aae"><button class="btn wide" type="submit" id="p1-restart" title="replaces the whole server process, so every edited file is re-imported">Restart Switchboard</button></form><a class="btn wide" href="/reload" title="re-imports the factory modules (not local_tracker.py itself), then re-measures">Re-measure (reload factory modules)</a><a class="btn wide" href="/switchboard?view=diagnostics">Diagnostics</a></div></details></div></div><datalist id="p1-cmds"><option value="ready">Work that is READY</option><option value="running">Work that is RUNNING</option><option value="needs">Work that needs a human</option><option value="blocked">Work that is blocked</option><option value="draft">Work that is DRAFT</option></datalist><div id="rst" class="flash bad" role="status" aria-live="polite"></div><div class="shell"><nav class="rail" aria-label="Sections"><a href="/switchboard?view=now" class="">NOW</a><a href="/switchboard?view=work" class="">WORK</a><a href="/switchboard?view=sessions" class="">SESSIONS</a><a href="/switchboard?view=inbox" class="">INBOX</a><a href="/switchboard?view=mission" class="">MISSION</a><a href="/switchboard?view=more" class="">MORE</a><div class="grp">MORE</div><a href="/switchboard?view=activity" class="">Activity</a><a href="/switchboard?view=evidence" class="">Evidence</a><a href="/switchboard?view=worktrees" class="">Worktrees</a><a href="/switchboard?view=diagnostics" class="on">Diagnostics</a><a href="/switchboard?view=health" class="">System health</a></nav><main><section class="sec"><h2>Warnings <span class="n">1</span></h2><div class="bd"><ul class="plain"><li class="warn">2 mission child task(s) are not in the manifest and are not shown on the DAG: fbe2ea4c (done), 200deda2 (done)</li></ul></div></section><section class="sec"><h2>Coordination <span class="n">10</span> <span class="hint">directly measured signals — deliberately NOT summed into one percentage; the denominator for that is not yet defined</span></h2><div class="bd"><ul class="plain"><li class="rec"><span><b>active human interventions</b><br><span class="dim">counts questions a session WROTE — a session stuck without writing one is invisible here, so this is not a measure of how many are stuck</span></span><span class="when ">0 <span class="dim">[MEASURED]</span></span></li><li class="rec"><span><b>stale / orphaned NEEDS YOU</b><br><span class="dim">the asking session is not live; the question may still be worth answering</span></span><span class="when ">5 <span class="dim">[MEASURED]</span></span></li><li class="rec"><span><b>longest wait for a human</b><br><span class="dim">time since the question was WRITTEN, not since anyone saw it</span></span><span class="when warn">NOT RECORDED <span class="dim">[NOT-RECORDED]</span></span></li><li class="rec"><span><b>work blocked on a dependency</b><br><span class="dim">counts declared dependencies only</span></span><span class="when ">1 <span class="dim">[MEASURED]</span></span></li><li class="rec"><span><b>active resource conflicts</b><br><span class="dim">81 work item(s) declare no resource claim and are reported conflict-free — an absence of a declaration, not evidence of isolation</span></span><span class="when ">0 <span class="dim">[MEASURED]</span></span></li><li class="rec"><span><b>session handoffs</b><br><span class="dim">counts session attachments; work run without being associated with a session contributes zero, truthfully</span></span><span class="when ">0 <span class="dim">[MEASURED]</span></span></li><li class="rec"><span><b>manual launches</b><br><span class="dim">recorded MANUAL_START events</span></span><span class="when ">1 <span class="dim">[MEASURED]</span></span></li><li class="rec"><span><b>autonomous launches</b><br><span class="dim">recorded AUTO_START events</span></span><span class="when ">0 <span class="dim">[MEASURED]</span></span></li><li class="rec"><span><b>starts with no recorded mode</b><br><span class="dim">started before the mode was recorded — counted as NEITHER manual nor autonomous, because folding them into MANUAL would invent an operator decision that was never made</span></span><span class="when warn">5 <span class="dim">[NOT-RECORDED]</span></span></li><li class="rec"><span><b>reopened / reworked work</b><br><span class="dim">a close followed by further activity</span></span><span class="when ">0 <span class="dim">[MEASURED]</span></span></li></ul></div></section><section class="sec"><h2>Measurement</h2><div class="bd"><dl class="kv"><dt>measured</dt><dd>2026-09-01T10:27:22-07:00</dd><dt>work rows</dt><dd>91</dd><dt>sessions</dt><dd>6</dd><dt>store</dt><dd><code>C:\Users\PaulRussell\repos\agent-factory\.data\tasks.jsonl</code></dd></dl><p class="empty" style="margin-top:8px">Every figure above was derived on this request. The one cached value in this page's dependency closure is the repository root, which is a path that cannot change while the process lives.</p></div></section></main></div><nav class="bnav" aria-label="Primary"><a href="/switchboard?view=now" class=""><span class="g">▣</span>NOW</a><a href="/switchboard?view=work" class=""><span class="g">▤</span>WORK</a><a href="/switchboard?view=create" class=""><span class="g">＋</span>CREATE</a><a href="/switchboard?view=sessions" class=""><span class="g">◉</span>SESSIONS</a><a href="/switchboard?view=more" class="on"><span class="g">⋯</span>MORE</a></nav></div><script>
+(function(){
+ var f=document.getElementById('p1-restart-form');if(!f)return;
+ var b=document.getElementById('p1-restart'),n=document.getElementById('rst');
+ var was=document.body.getAttribute('data-runtime')||'';
+ f.addEventListener('submit',function(ev){
+  ev.preventDefault();
+  if(b.getAttribute('aria-disabled')==='true')return;      /* repeated clicks cannot stack */
+  b.setAttribute('aria-disabled','true');b.textContent='RESTARTING…';
+  if(n){n.className='on';n.textContent='RESTARTING SWITCHBOARD…';}
+  fetch(f.action,{method:'POST',body:new FormData(f),credentials:'same-origin'})
+   .catch(function(){})                    /* the server dies mid-response; that is the success */
+   .then(function(){setTimeout(poll,600);});
+  var tries=0;
+  function poll(){
+   if(++tries>40){if(n)n.textContent='RESTART DID NOT COMPLETE — the server did not come back. '
+     +'Check the supervisor terminal.';b.removeAttribute('aria-disabled');
+     b.textContent='Restart Switchboard';return;}
+   fetch('/healthz',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){
+    if(j&&j.runtime&&j.runtime!==was){
+     if(n)n.textContent='SWITCHBOARD UPDATED — reloading…';
+     location.reload();
+    }else{setTimeout(poll,400);}
+   }).catch(function(){setTimeout(poll,400);});
+  }
+ });
+})();
+
+(function(){document.addEventListener('keydown',function(e){
+ if((e.ctrlKey||e.metaKey)&&(e.key==='k'||e.key==='K')){
+  var i=document.getElementById('p1-cmd');if(i){e.preventDefault();i.focus();i.select();}}});})();
+</script>
+<footer>
+<p><b>UNMEASURABLE is not a pass.</b> A gate with no instrument says so rather than waving through; that distinction is the point of the whole harness.</p>
+<p>Every row is measured from a file at the moment shown above and names the path it came from. Nothing here is hand-maintained, so a wrong row means a wrong repo, not a stale page. Probes live in <code>factory/readiness.py</code>.</p>
+<p><b>The work list is the gate list.</b> Every gate that is not passing is a task, and a gate that passes stops being one. There is no second list to keep in sync, so the board cannot describe work nobody measures or omit work somebody does. The only authored part is which task must precede which, and a stale edge fails on import.</p>
+<p>Regenerate: <code>python scripts/local_tracker.py</code> &middot; serve and re-measure on refresh: <code>python scripts/local_tracker.py --serve</code> &middot; check the published artifact still matches: <code>python scripts/build_tracker.py --check</code></p>
+</footer></div>
+<script>
+document.querySelectorAll('[data-copy]').forEach(function (b) {
+  b.addEventListener('click', function () {
+    var el = document.getElementById(b.getAttribute('data-copy'));
+    if (!el) return;
+    var label = b.textContent;
+    var done = function () { b.textContent = 'copied';
+                             setTimeout(function () { b.textContent = label; }, 1200); };
+    // The textarea path is the fallback where the Clipboard API is unavailable. The text is
+    // selectable either way, so a failure is never a dead end.
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(el.textContent).then(done, function () {});
+    } else {
+      var ta = document.createElement('textarea');
+      ta.value = el.textContent; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); done(); } catch (err) {}
+      document.body.removeChild(ta);
+    }
+  });
+});
+</script></body></html>

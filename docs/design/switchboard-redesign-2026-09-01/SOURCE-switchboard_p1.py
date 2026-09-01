@@ -68,9 +68,8 @@ VIEWS = [("now", "NOW"), ("work", "WORK"), ("sessions", "SESSIONS"),
 
 #: Views reachable only from MORE. Kept off the bottom nav so the phone's four slots stay for the
 #: things an operator taps, not the things they occasionally inspect.
-MORE_VIEWS = [("console", "Console"), ("activity", "Activity"), ("evidence", "Evidence"),
-              ("worktrees", "Worktrees"), ("diagnostics", "Diagnostics"),
-              ("health", "System health")]
+MORE_VIEWS = [("activity", "Activity"), ("evidence", "Evidence"), ("worktrees", "Worktrees"),
+              ("diagnostics", "Diagnostics"), ("health", "System health")]
 
 CSS = """
 .p1{--gut:14px;font:13px/1.5 ui-monospace,"Cascadia Code",Consolas,monospace;
@@ -219,31 +218,6 @@ CSS = """
    badges and the nav is not fought. */
 .p1 b,.p1 code,.p1 dd,.p1 li,.p1 p,.p1 summary,.p1 .ttl,.p1 .empty{overflow-wrap:anywhere}
 .p1 pre{max-width:100%;overflow-x:auto}
-
-/* ---- console ------------------------------------------------------------- */
-.p1 .klay{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:0 0 11px}
-.p1 .klay label{font-size:11px;letter-spacing:.08em;color:var(--ink3);text-transform:uppercase}
-.p1 .klay select{width:auto;min-width:120px}
-.p1 .kgrid{display:grid;gap:10px;grid-template-columns:1fr}
-.p1 .kpane{border:1px solid var(--rule);border-radius:6px;background:var(--paper);
- display:flex;flex-direction:column;min-height:230px;overflow:hidden}
-.p1 .khead{padding:8px;border-bottom:1px solid var(--rule)}
-.p1 .khead select{width:100%}
-.p1 .kmeta{padding:6px 9px;font-size:11px;color:var(--ink3);border-bottom:1px dotted var(--rule);
- overflow-wrap:anywhere}
-.p1 .klog{flex:1;overflow-y:auto;max-height:44vh;padding:9px;display:flex;
- flex-direction:column;gap:8px}
-.p1 .kmsg{border-left:2px solid var(--rule);padding-left:8px}
-.p1 .kmsg.k-you{border-left-color:var(--accent)}
-.p1 .kwho{display:block;font:600 9.5px/1 ui-monospace,monospace;letter-spacing:.12em;
- text-transform:uppercase;color:var(--ink3);margin-bottom:3px}
-.p1 .kmsg pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:11.5px;
- background:none;border:0;padding:0}
-.p1 .kreply{padding:8px;border-top:1px solid var(--rule)}
-.p1 .kreply textarea{min-height:44px}
-@media (min-width:760px){
-  .p1 .kgrid{grid-template-columns:repeat(var(--kc),minmax(0,1fr))}
-}
 
 /* ---- motion: only where it encodes a transition -------------------------- */
 @keyframes p1pulse{0%,100%{opacity:1}50%{opacity:.42}}
@@ -996,108 +970,6 @@ def _view_sessions(st: dict) -> str:
                 hint="a live session is never offered RESUME — that spawns a second process")
 
 
-def _view_console(st: dict, panes: str = "", lay: str = "1", popout: bool = False) -> str:
-    """Session panes: pick a session per pane, read what it said, reply to it.
-
-    ⛔ **Never called a terminal, on the page or in the code.** It cannot attach to a running
-    process's TTY — the sessions are `claude` inside Windows Terminal tabs and nothing in a browser
-    can take that over. It reads each session's transcript from disk and sends a reply through the
-    dispatch route that already exists. That is a conversation pane, which is a smaller claim than
-    a terminal and the true one. Labelling it otherwise would be the same defect as a button
-    wearing an imperative verb that only navigates.
-    """
-    from . import console as _k
-    cards = st.get("sessions") or []
-    by_id = {str(c.get("session_id")): c for c in cards if c.get("session_id")}
-    order = [c for c in cards if c.get("session_id")]
-    order.sort(key=lambda c: (not c.get("is_live"), str(c.get("topic") or c.get("name") or "")))
-
-    L = _k.layout(lay)
-    chosen = [x for x in (panes or "").split(",") if x][:L["n"]]
-    while len(chosen) < L["n"]:
-        nxt = next((str(c["session_id"]) for c in order
-                    if str(c["session_id"]) not in chosen), "")
-        chosen.append(nxt)
-
-    o = []
-    if not popout:
-        o.append('<form method="GET" action="/switchboard" class="klay">'
-                 '<input type="hidden" name="view" value="console">'
-                 '<input type="hidden" name="panes" value="' + _e(",".join(chosen)) + '">'
-                 '<label>Layout</label><select name="lay" onchange="this.form.submit()">')
-        for k, v in _k.LAYOUTS.items():
-            o.append(f'<option value="{k}"{" selected" if k == lay else ""}>{_e(v["label"])}'
-                     f'</option>')
-        o.append('</select><button class="btn" type="submit">APPLY</button>'
-                 f'<a class="btn" href="{_url("console")}&panes={_e(",".join(chosen))}'
-                 f'&lay={_e(lay)}&popout=1" target="_blank" rel="noopener">POP OUT ↗</a>'
-                 '</form>')
-
-    o.append(f'<div class="kgrid" style="--kc:{L["cols"]};--kr:{L["rows"]}">')
-    for idx, sid in enumerate(chosen):
-        o.append(_console_pane(sid, by_id, order, idx, chosen, lay))
-    o.append("</div>")
-
-    o.append('<p class="empty" style="margin-top:10px">Read from each session\'s own transcript on '
-             'disk, newest last. <b>This is not a terminal</b> — it cannot attach to a running '
-             'process. Replies go through the same dispatch that refuses rather than guess a '
-             'target. Credential-shaped text is redacted best-effort; that is a reducer, not a '
-             'guarantee.</p>')
-    return _sec("Console", "".join(o), n=f'{L["n"]} pane' + ("s" if L["n"] > 1 else ""),
-                hint="conversation panes over live sessions")
-
-
-def _console_pane(sid: str, by_id: dict, order: list, idx: int, chosen: list, lay: str) -> str:
-    from . import console as _k
-    p = _k.pane(sid, by_id) if sid else {
-        "session_id": "", "title": "no session", "state": "—", "is_live": False,
-        "messages": [], "basis": "NOT-RECORDED", "note": "pick a session", "age": None,
-        "cwd": "", "needs": ""}
-
-    o = ['<div class="kpane">']
-    # the per-pane chooser: changing it rewrites only this slot
-    o.append('<form method="GET" action="/switchboard" class="khead">'
-             '<input type="hidden" name="view" value="console">'
-             f'<input type="hidden" name="lay" value="{_e(lay)}">'
-             '<select name="panes" onchange="this.form.submit()" aria-label="session for this pane">')
-    for c in order:
-        cid = str(c["session_id"])
-        slot = list(chosen)
-        slot[idx] = cid
-        live = "● " if c.get("is_live") else "○ "
-        lbl = str(c.get("topic") or c.get("name") or cid)[:44]
-        o.append(f'<option value="{_e(",".join(slot))}"{" selected" if cid == sid else ""}>'
-                 f'{live}{_e(lbl)}</option>')
-    o.append('</select></form>')
-
-    dot = "var(--pass)" if p["is_live"] else "var(--ink3)"
-    o.append(f'<div class="kmeta"><span style="color:{dot}">●</span> {_e(p["state"])}'
-             + (f' · {_e(str(p["age"] // 60))}m ago' if p.get("age") is not None else "")
-             + (f' · <code>{_e(p["cwd"][-34:])}</code>' if p.get("cwd") else "") + '</div>')
-
-    o.append('<div class="klog">')
-    if not p["messages"]:
-        o.append(f'<p class="empty">{_e(p["note"] or "nothing recorded yet")} '
-                 f'<span class="warn">[{_e(p["basis"])}]</span></p>')
-    for m in p["messages"]:
-        who = "you" if m["role"] == "user" else "agent"
-        o.append(f'<div class="kmsg k-{who}"><span class="kwho">{who}</span>'
-                 f'<pre>{_e(m["text"])}</pre></div>')
-    o.append("</div>")
-
-    if sid:
-        o.append(f'<form method="POST" action="/switchboard/dispatch" class="kreply">'
-                 f'<input type="hidden" name="session" value="{_e(sid)}">'
-                 f'<textarea name="prompt" rows="2" placeholder="reply to this session…" '
-                 f'required></textarea>'
-                 f'<div style="display:flex;gap:6px;margin-top:6px">'
-                 f'<button class="btn pri" name="go" value="1" style="flex:1">SEND</button>'
-                 f'<button class="btn" name="dry" value="1">PREVIEW</button>'
-                 f'</div></form>')
-    o.append("</div>")
-    return "".join(o)
-
-
 def _view_more(st: dict) -> str:
     o = ['<ul class="plain">']
     for key, label in MORE_VIEWS:
@@ -1218,8 +1090,7 @@ CMDK_JS = """
 
 def page(st: Optional[dict] = None, view: str = "now", inspect: str = "", q: str = "",
          token: str = "", runtime: str = "", flash: Optional[tuple] = None,
-         repos: Optional[List[str]] = None, dispatch=None,
-         panes: str = "", lay: str = "1", popout: bool = False) -> str:
+         repos: Optional[List[str]] = None, dispatch=None) -> str:
     """The whole P1 Switchboard. One DOM; CSS decides whether it is a phone or a desk.
 
     `runtime` is the server's per-process id. It is stamped on `<body>` so the restart poll can
@@ -1239,13 +1110,6 @@ def page(st: Optional[dict] = None, view: str = "now", inspect: str = "", q: str
         ok, msg = flash
         o.append(f'<div class="flash {"good" if ok else "bad"}">{_e(msg)}</div>')
 
-    if popout and view == "console":
-        # A pop-out is one thing in its own window. Nav in it would be a second, competing
-        # navigation state that the opener cannot see.
-        o.append(_view_console(st, panes=panes, lay=lay, popout=True))
-        o.append("</div>")
-        o.append(f"<script>{RESTART_JS}{CMDK_JS}</script>")
-        return "".join(o)
     o.append('<div class="shell">')
     o.append(_rail(view, st))
     o.append('<main>')
@@ -1264,8 +1128,6 @@ def page(st: Optional[dict] = None, view: str = "now", inspect: str = "", q: str
         o.append(p0_block(st, dispatch=_DISPATCH_HOLDER.get("plan"), expanded=True))
     elif view == "more":
         o.append(_view_more(st))
-    elif view == "console":
-        o.append(_view_console(st, panes=panes, lay=lay, popout=popout))
     elif view == "diagnostics":
         o.append(_view_diagnostics(st))
     elif view == "worktrees":
