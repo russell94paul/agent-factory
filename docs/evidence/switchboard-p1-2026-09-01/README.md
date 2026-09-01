@@ -24,12 +24,12 @@ python scripts/render_check_switchboard_p1.py --url http://127.0.0.1:8117/switch
 
 | viewport | scheme | horizontal overflow | NEEDS YOU top | console errors | failed requests |
 |---|---|---|---|---|---|
-| 390×844 | light | 0 px | 539 / 844 px | 0 | 0 |
-| 390×844 | dark | 0 px | 539 / 844 px | 0 | 0 |
-| 430×932 | light | 0 px | 539 / 932 px | 0 | 0 |
-| 430×932 | dark | 0 px | 539 / 932 px | 0 | 0 |
-| 1440×900 | light | 0 px | 384 / 900 px | 0 | 0 |
-| 1440×900 | dark | 0 px | 384 / 900 px | 0 | 0 |
+| 390×844 | light | 0 px | 487 / 844 px | 0 | 0 |
+| 390×844 | dark | 0 px | 487 / 844 px | 0 | 0 |
+| 430×932 | light | 0 px | 487 / 932 px | 0 | 0 |
+| 430×932 | dark | 0 px | 487 / 932 px | 0 | 0 |
+| 1440×900 | light | 0 px | 332 / 900 px | 0 | 0 |
+| 1440×900 | dark | 0 px | 332 / 900 px | 0 | 0 |
 
 `PHONE VIEWPORT = RENDERED_CONFIRMED` · `PHYSICAL PHONE = HUMAN_CONFIRMATION_REQUIRED`
 (no physical device was used).
@@ -49,6 +49,23 @@ scrolled sideways while every panel looked correct:
    summary rendered 524 px wide inside a 344 px column. Fixed by letting full-width buttons wrap.
 
 A screenshot of either state looks completely correct. Only the measurement found them.
+
+### ⭐ And one the measurement could not find — reading the rendered page did
+
+With every metric green, the 390px page still opened on **five orphaned questions**, one full card
+each, pushing NEXT and its START SYNCED button several screens down. That is precisely the failure
+the brief names: five old questions must not visually outrank one live delivery blocker. No
+overflow check, and no unit test, can see it — it is only visible by looking.
+
+Stale questions now collapse to one line (never deleted, never hidden), and the alarm border, the
+top-bar flash and the bottom-nav badge all count **live questions only** — a permanent red dot is
+one the operator stops seeing. Measured effect on the phone page:
+
+| | before | after |
+|---|---|---|
+| full page height @390 | 8742 px | 5770 px |
+| NEEDS YOU heading top | 539 px | 487 px |
+| NEXT / START SYNCED | several screens down | second screen |
 
 ### Negative control — the check can refuse
 

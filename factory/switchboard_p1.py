@@ -349,31 +349,69 @@ def _why(r: dict) -> str:
 
 
 def _needs_you(st: dict, view: str) -> str:
+    """NEEDS YOU, with stale questions COLLAPSED so they cannot outrank a live one.
+
+    ⛔ **Found by looking at the rendered phone, not by reading the numbers.** The overflow check
+    passed and every unit test was green while the 390px page opened on five orphaned questions —
+    each a full card, each repeating that it has no live session — which pushed NEXT, and the
+    READY work item carrying START SYNCED, entirely below several screens of scrolling. That is
+    exactly the failure the brief names: five old questions must not visually outrank one real
+    live delivery blocker.
+
+    So the split is structural rather than a sort order. A question whose asking session is ALIVE
+    is a card, because answering it unblocks something running right now. A question whose session
+    is gone is real, is never deleted and is never hidden — it collapses into one line with a
+    count and a link to the full inbox, because its honest claim on the operator's attention is
+    "these exist", not a screenful.
+    """
     rows = (st.get("now") or {}).get("needs_you") or []
     if not rows:
         return ('<p class="empty">Nothing is waiting on you. No session has written a question '
                 'and no work is in NEEDS_HUMAN.</p>')
+
+    live = [r for r in rows if r.get("live")]
+    stale = [r for r in rows if not r.get("live")]
     o = []
-    for r in rows[:_sb.NOW_CAP]:
+
+    for r in live[:_sb.NOW_CAP]:
         if r["kind"] == "WORK" and r.get("work"):
             o.append(_why(r) + work_card(r["work"], view=view))
             continue
         q = (r.get("questions") or [{}])[0]
-        live = r.get("live")
-        badge = ('<span class="tag live" style="color:var(--fail)">! ACTIVE</span>' if live
-                 else '<span class="tag" style="color:var(--ink3)">NO SESSION / STALE</span>')
         who = q.get("topic") or q.get("name") or q.get("session_id") or "unattributed"
         o.append(
             _why(r) +
-            f'<div class="card"><div class="meta">{badge}'
+            f'<div class="card"><div class="meta">'
+            f'<span class="tag live" style="color:var(--fail)">! ACTIVE</span>'
             f'<span class="vis">{_e(str(q.get("state") or "state unknown"))}</span></div>'
-            f'<p class="ttl" style="color:var(--ink)">{_e(str(q.get("needs") or q.get("detail") or "a question with no text"))[:260]}</p>'
-            f'<p class="ttl">from {_e(str(who)[:90])} · joined to no canonical work, so it '
-            f'is shown unattributed rather than filtered</p>'
+            f'<p class="ttl" style="color:var(--ink)">'
+            f'{_e(str(q.get("needs") or q.get("detail") or "a question with no text"))[:260]}</p>'
+            f'<p class="ttl">from {_e(str(who)[:90])}</p>'
             f'<a class="btn wide" href="{_url("inbox")}">RESPOND</a></div>')
-    if len(rows) > _sb.NOW_CAP:
+    if len(live) > _sb.NOW_CAP:
         o.append(f'<a class="btn wide" href="{_url("inbox")}">'
-                 f'{len(rows) - _sb.NOW_CAP} more in INBOX</a>')
+                 f'{len(live) - _sb.NOW_CAP} more live question(s) in INBOX</a>')
+
+    if not live:
+        o.append('<p class="empty">No session is currently blocked on you.</p>')
+
+    if stale:
+        # One line, not one card each. Never deleted, never hidden -- just not shouting.
+        o.append(
+            f'<details style="margin-top:10px"><summary class="empty" style="cursor:pointer">'
+            f'{len(stale)} question(s) from sessions that are no longer live '
+            f'— answering them unblocks nothing running right now</summary>'
+            f'<div style="margin-top:9px">'
+            + "".join(
+                f'<div class="card"><div class="meta">'
+                f'<span class="tag" style="color:var(--ink3)">NO SESSION / STALE</span></div>'
+                f'<p class="ttl">'
+                f'{_e(str((r.get("questions") or [{}])[0].get("needs") or (r.get("questions") or [{}])[0].get("detail") or "a question with no text"))[:150]}'
+                f'</p></div>'
+                for r in stale[:4])
+            + (f'<p class="empty">{len(stale) - 4} more in INBOX.</p>' if len(stale) > 4 else "")
+            + f'<a class="btn wide" href="{_url("inbox")}">OPEN INBOX</a>'
+            f'</div></details>')
     return "".join(o)
 
 
@@ -688,19 +726,21 @@ def _topbar(st: dict, view: str, token: str = "") -> str:
              '<option value="blocked">Work that is blocked</option>'
              '<option value="draft">Work that is DRAFT</option>'
              '</datalist>')
-    if n:
-        o.append(f'<div class="flash bad"><b>{n}</b> item(s) need you. '
-                 f'<a href="{_url("inbox")}">Open the inbox →</a></div>')
+    live_n = sum(1 for r in ((st.get("now") or {}).get("needs_you") or []) if r.get("live"))
+    if live_n:
+        o.append(f'<div class="flash bad"><b>{live_n}</b> live question(s) are blocking a '
+                 f'session. <a href="{_url("inbox")}">Open the inbox →</a></div>')
     return "".join(o)
 
 
 def _rail(view: str, st: dict) -> str:
     now = st.get("now") or {}
     o = ['<nav class="rail" aria-label="Sections">']
+    live_n = sum(1 for r in (now.get("needs_you") or []) if r.get("live"))
     for key, label in VIEWS:
         badge = ""
-        if key == "now" and (now.get("needs_you_count") or 0):
-            badge = f' ({now["needs_you_count"]})'
+        if key == "now" and live_n:
+            badge = f' ({live_n})'
         o.append(f'<a href="{_url(key)}" class="{"on" if view == key else ""}">'
                  f'{_e(label)}{badge}</a>')
     o.append('<div class="grp">MORE</div>')
@@ -717,7 +757,9 @@ BOTTOM = [("now", "NOW", "▣"), ("work", "WORK", "▤"), ("create", "CREATE", "
 
 
 def _bottomnav(view: str, st: dict) -> str:
-    n = (st.get("now") or {}).get("needs_you_count") or 0
+    # ⛔ LIVE only. A badge counting stale questions is a permanent red dot, and a permanent
+    # red dot is one the operator stops seeing.
+    n = sum(1 for r in ((st.get("now") or {}).get("needs_you") or []) if r.get("live"))
     o = ['<nav class="bnav" aria-label="Primary">']
     for key, label, glyph in BOTTOM:
         on = "on" if view == key or (view in dict(MORE_VIEWS) and key == "more") else ""
@@ -755,9 +797,16 @@ def p0_block(st: dict, dispatch=None, expanded: bool = False) -> str:
 def _view_now(st: dict, view: str) -> str:
     now = st.get("now") or {}
     o = [_repo_health(st)]
-    o.append(_sec("Needs you", _needs_you(st, view), n=str(now.get("needs_you_count") or 0),
-                  hint="live questions first; stale ones are marked, never hidden",
-                  alarm=bool(now.get("needs_you_count")), sid="needs-you"))
+    rows = now.get("needs_you") or []
+    live_n = sum(1 for r in rows if r.get("live"))
+    stale_n = len(rows) - live_n
+    o.append(_sec("Needs you", _needs_you(st, view),
+                  n=(f"{live_n} live" + (f" · {stale_n} stale" if stale_n else "")),
+                  hint="stale questions are collapsed, never hidden — they unblock nothing "
+                       "running right now",
+                  # ⛔ The alarm border is for a LIVE blocker only. Five stale questions turning
+                  # the panel red teaches the operator that red means nothing.
+                  alarm=bool(live_n), sid="needs-you"))
     o.append(_sec("Next", _next(st, view), n=str(now.get("next_count") or 0),
                   hint="READY is derived from the checks, never chosen", sid="next"))
     o.append(_sec("Running", _running(st, view), n=str(now.get("running_count") or 0),
