@@ -26,3 +26,9 @@ docs/research/R14-evidence-pack.md
 
 # Generated evidence bundle for R16. Rebuild with scripts/build_r16_pack.py.
 docs/research/R16-evidence-pack.md
+
+# Live Power BI capture for a named client: workspace and model names for a production
+# tenant, plus measured sales, cost and conversion rows. LOCAL_ONLY, unconditionally —
+# the DAX result rows are the client's commercial data. Kept on disk as authoritative
+# evidence for the PBI verification, ignored so no `git add -A` can stage it.
+docs/evidence/marketing-model-v1/pbi-ad-sales-live-2026-09-01/
