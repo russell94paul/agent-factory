@@ -477,8 +477,16 @@ def test_the_navira_review_assembles_and_renders():
     from factory.client_review_render import render_html
     html = render_html(review)
     assert "Navira" in html
-    # Every delivered outcome in the real review is backed by a file that exists.
-    assert all(o.grounding == cr.GROUNDED for o in review.delivered)
+    # Every *authored* outcome in the real review is backed by a file that exists. Outcomes the
+    # assembler synthesises for closed-but-unwritten work are excluded on purpose: their evidence
+    # may not have merged into this checkout yet, and the honest render for that is CLAIMED.
+    authored = [o for o in review.delivered if o.writeup == "AUTHORED"]
+    assert authored, "the narrative should carry authored outcomes"
+    assert all(o.grounding == cr.GROUNDED for o in authored)
+    # And an unwritten outcome never renders as a finished one.
+    for o in review.delivered:
+        if o.writeup == "PENDING":
+            assert o.summary == "" and o.business_impact == ""
     # And nothing operator-only leaked into the page.
     for needle in ("diagnostics", "tasks_readable", str(repo)):
         assert needle not in html

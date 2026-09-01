@@ -1,0 +1,114 @@
+{
+  "measured_at": "2026-09-01T01:21:24",
+  "narrative": "missions/client-review-v1/reviews/navira-marketing-model.yaml",
+  "tasks": ".data/tasks.jsonl",
+  "narrative_drift": [
+    {
+      "section": "next",
+      "id": "N-1",
+      "title": "Map what marketing data exists, at what grain, and where it disagrees",
+      "task": "R3",
+      "narrative_says": "BLOCKED",
+      "canonical_says": "DONE"
+    },
+    {
+      "section": "next",
+      "id": "N-2",
+      "title": "Synthesise the confirmed requirements, separated from what we inferred",
+      "task": "D1",
+      "narrative_says": "NOT_STARTED",
+      "canonical_says": "DONE"
+    },
+    {
+      "section": "next",
+      "id": "N-3",
+      "title": "Catalogue the analytical questions the model must be able to answer",
+      "task": "D2",
+      "narrative_says": "NOT_STARTED",
+      "canonical_says": "DONE"
+    },
+    {
+      "section": "next",
+      "id": "N-4",
+      "title": "Produce candidate dimensional designs, each declaring its grain first",
+      "task": "D3",
+      "narrative_says": "NOT_STARTED",
+      "canonical_says": "DONE"
+    },
+    {
+      "section": "next",
+      "id": "N-5",
+      "title": "Attempt to falsify the leading design before recommending it",
+      "task": "D4",
+      "narrative_says": "NOT_STARTED",
+      "canonical_says": "DONE"
+    },
+    {
+      "section": "next",
+      "id": "N-6",
+      "title": "Recommendation, with a named human sign-off",
+      "task": "D5",
+      "narrative_says": "NOT_STARTED",
+      "canonical_says": "IN_PROGRESS"
+    },
+    {
+      "section": "milestone",
+      "id": "",
+      "title": "Map the available marketing data",
+      "task": "R3",
+      "narrative_says": "BLOCKED",
+      "canonical_says": "DONE"
+    },
+    {
+      "section": "milestone",
+      "id": "",
+      "title": "Synthesise requirements",
+      "task": "['D1', 'D2']",
+      "narrative_says": "NOT_STARTED",
+      "canonical_says": "DONE"
+    },
+    {
+      "section": "milestone",
+      "id": "",
+      "title": "Candidate designs and skeptical review",
+      "task": "['D3', 'D4']",
+      "narrative_says": "NOT_STARTED",
+      "canonical_says": "DONE"
+    },
+    {
+      "section": "milestone",
+      "id": "",
+      "title": "Recommendation and sign-off",
+      "task": "D5",
+      "narrative_says": "NOT_STARTED",
+      "canonical_says": "IN_PROGRESS"
+    }
+  ],
+  "undeclared_completions": [
+    {
+      "label": "R3",
+      "id": "e397be46",
+      "title": "R3 \u00b7 Snowflake / data cartography \u2014 what marketing data exists, at what grain, what keys"
+    },
+    {
+      "label": "D1",
+      "id": "1785f5a9",
+      "title": "D1 \u00b7 Requirements & uncertainty synthesis \u2014 CONFIRMED / SUPPORTED / INFERRED / ASSUMPTION / UNKNOWN"
+    },
+    {
+      "label": "D2",
+      "id": "933e6c33",
+      "title": "D2 \u00b7 Analytical question catalogue \u2014 the questions the model must answer"
+    },
+    {
+      "label": "D3",
+      "id": "387780b5",
+      "title": "D3 \u00b7 Candidate dimensional designs \u2014 run `keel`; declare the grain FIRST"
+    },
+    {
+      "label": "D4",
+      "id": "b1f38c1c",
+      "title": "D4 \u00b7 Skeptical review \u2014 try to falsify D3's grain and key claims"
+    }
+  ]
+}

@@ -20,7 +20,8 @@ import html
 from typing import Any, Dict, List
 
 from .client_review import (CLAIMED, GROUNDED, LIVE, LAST_VERIFIED, STALE, UNAVAILABLE,
-                            UNGROUNDED, UNSUBSTANTIATED, FACTORY_PROPOSED, ClientReview)
+                            UNGROUNDED, UNSUBSTANTIATED, FACTORY_PROPOSED, ClientReview,
+                            PLAN_DERIVED as DERIVED)
 
 # --------------------------------------------------------------------------------------------
 # Vocabulary → presentation. One table, so a grade cannot be styled two ways in two places.
@@ -201,6 +202,12 @@ section{padding-top:52px; scroll-margin-top:60px}
 .gutter.verified .grade{color:var(--verified)}
 .gutter.claimed .grade{color:var(--claimed)}
 .gutter.none .grade{color:var(--none)}
+/* An outcome that is complete in the record and not yet written up for the client.
+   Deliberately quieter than a delivered outcome and deliberately not hidden. */
+.entry.awaiting .gutter{border-left-style:dashed}
+.entry.awaiting .grade{color:var(--muted)}
+.pending{color:var(--muted); font-style:italic; border-left:2px solid var(--rule);
+  padding-left:12px; margin:0 0 .7em}
 .gnote{font-size:.79rem; color:var(--muted); margin-top:5px; line-height:1.42}
 .origin{display:inline-block; margin-top:9px; font-family:var(--mono);
         font-size:.66rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);
@@ -278,6 +285,11 @@ summary:hover{color:var(--ink)}
 .sev-high{border-left-color:var(--risk); color:var(--risk)}
 .sev-med{border-left-color:var(--claimed); color:var(--claimed)}
 .sev-low{border-left-color:var(--none); color:var(--none)}
+/* A risk the delivery record shows as closed. Kept on the page, styled so it cannot be
+   mistaken for something still asking the client for a decision. */
+.sev-done{border-left-color:var(--verified); color:var(--verified)}
+.risk.resolved h3{text-decoration:line-through; text-decoration-thickness:1px;
+  text-decoration-color:var(--rule)}
 .owner{font-size:.79rem; color:var(--muted); margin-top:6px}
 .needsyou{display:inline-block; margin-top:9px; font-family:var(--mono);
           font-size:.66rem; letter-spacing:.08em; text-transform:uppercase; color:var(--risk);
@@ -292,6 +304,11 @@ summary:hover{color:var(--ink)}
         text-transform:uppercase; color:var(--muted); padding-left:13px;
         border-left:3px solid var(--rule)}
 .nstate.blocked{border-left-color:var(--claimed); color:var(--claimed)}
+.nstate.ndone{border-left-color:var(--verified); color:var(--verified)}
+/* A status nothing in the delivery record verifies. It still renders — dropping it
+   would empty the section and look like 'nothing planned' — but it says so. */
+.unver{display:block; margin-top:5px; font-size:.62rem; letter-spacing:.04em;
+  color:var(--muted); text-transform:none; font-style:italic}
 .nextlist .t{font-size:1.03rem}
 .nextlist .d{font-size:.87rem; color:var(--muted); margin-top:3px}
 
@@ -389,12 +406,23 @@ def _delivered(rows: List[dict], evidence: List[dict]) -> str:
                     f'<p class="src">{e(ref)}</p>')
             drill = ('<details><summary>Proof it works</summary>'
                      f'<div class="dbody">{"".join(items)}</div></details>')
+        # A closed piece of work nobody has written up yet. It renders as an explicit non-final
+        # state with its real evidence attached — never as a finished outcome, and never omitted,
+        # because an omission is indistinguishable from a section that is complete.
+        pending = r.get("writeup") == "PENDING"
+        body = (f'<p class="pending">This work is complete in our delivery record and its '
+                f'evidence is attached below. The write-up of what it means for you is still '
+                f'being prepared — it is not final and is not being presented as a conclusion.</p>'
+                if pending else f'<p>{_para(r.get("summary"))}</p>')
         out.append(
-            f'<div class="entry"><div class="gutter {cls}">'
-            f'<div class="grade">{e(label)}</div>'
-            f'<div class="gnote">{e(note)}</div>{origin}</div>'
+            f'<div class="entry{" awaiting" if pending else ""}"><div class="gutter {cls}">'
+            + ('<div class="grade">AWAITING WRITE-UP</div>'
+               '<div class="gnote">complete in the record; not yet written up</div>'
+               if pending else
+               f'<div class="grade">{e(label)}</div><div class="gnote">{e(note)}</div>')
+            + f'{origin}</div>'
             f'<div><h3>{e(r.get("title"))}</h3>'
-            f'<p>{_para(r.get("summary"))}</p>'
+            + body
             + (f'<div class="impact"><b>Why it matters to you</b>{_para(r.get("business_impact"))}</div>'
                if r.get("business_impact") else "")
             + (f'<p class="src opsonly">Status: {e(status)}</p>'
@@ -435,16 +463,28 @@ def _risks(rows: List[dict]) -> str:
     out = []
     for r in rows:
         sev = (r.get("severity") or "MEDIUM").upper()
+        # A risk the delivery record shows as closed is not deleted — deleting it would erase the
+        # fact that we found it and cleared it — but it must stop asking the client to act.
+        resolved = r.get("state") == "RESOLVED"
         out.append(
-            f'<div class="risk"><div class="sev {_SEVERITY.get(sev, "sev-med")}">{e(sev)}'
+            f'<div class="risk{" resolved" if resolved else ""}">'
+            f'<div class="sev {"sev-done" if resolved else _SEVERITY.get(sev, "sev-med")}">'
+            f'{e("RESOLVED" if resolved else sev)}'
             f'<div class="owner">Owned by {e(r.get("owner") or "ALDC")}</div>'
             + ('<span class="needsyou">Needs a decision from you</span>'
-               if r.get("client_action_required") else "")
+               if r.get("client_action_required") and not resolved else "")
             + '</div><div>'
             f'<h3>{e(r.get("title"))}</h3>'
-            f'<p>{_para(r.get("impact"))}</p>'
-            + (f'<div class="impact"><b>What we are doing about it</b>'
-               f'{_para(r.get("mitigation"))}</div>' if r.get("mitigation") else "")
+            + ('<p class="pending">Cleared. The work this risk was about has since completed in '
+               'our delivery record; it is kept here so the record of it stays visible.</p>'
+               if resolved else "")
+            # A resolved risk keeps its original wording — rewriting it would erase what we
+            # actually said — but the labels change tense so the prose cannot read as current.
+            + (f'<div class="impact"><b>What the risk was</b>{_para(r.get("impact"))}</div>'
+               if resolved else f'<p>{_para(r.get("impact"))}</p>')
+            + (f'<div class="impact"><b>'
+               + ("How it was cleared" if resolved else "What we are doing about it")
+               + f'</b>{_para(r.get("mitigation"))}</div>' if r.get("mitigation") else "")
             + '</div></div>')
     return "".join(out)
 
@@ -456,8 +496,14 @@ def _next(rows: List[dict]) -> str:
     for n in rows:
         st = (n.get("status") or "NOT_STARTED").replace("_", " ")
         blocked = (n.get("status") == "BLOCKED")
+        done = (n.get("status") == "DONE")
+        # A status that nothing in the delivery record verifies must not look like one that is.
+        unverified = n.get("status_basis") != DERIVED
         out.append(
-            f'<li><div class="nstate {"blocked" if blocked else ""}">{e(st)}</div>'
+            f'<li><div class="nstate {"blocked" if blocked else ("ndone" if done else "")}">'
+            f'{e(st)}'
+            + ('<span class="unver">not verified against the record</span>' if unverified else "")
+            + '</div>'
             f'<div><div class="t">{e(n.get("title"))}</div>'
             f'<div class="d">{_para(n.get("blocked_reason") or ("After: " + n["dependency"] if n.get("dependency") else ""))}</div>'
             f'</div></li>')
@@ -493,7 +539,12 @@ def render_html(cr: ClientReview) -> str:
     blocking_n = sum(1 for x in d["decisions"] if x.get("blocking")
                      and (x.get("status") or "OPEN").upper() == "OPEN")
     open_n = len(d["decisions"])
-    grounded_n = sum(1 for x in d["delivered"] if x.get("grounding") == GROUNDED)
+    # ⛔ An outcome awaiting its write-up is NOT a delivered outcome, however well its evidence
+    # grounds. Counting it here would inflate the single largest number on the page — the one the
+    # client reads first — with work whose meaning has not been stated yet.
+    written = [x for x in d["delivered"] if x.get("writeup") != "PENDING"]
+    awaiting_n = len(d["delivered"]) - len(written)
+    grounded_n = sum(1 for x in written if x.get("grounding") == GROUNDED)
     needs_you = blocking_n + sum(1 for r in d["risks"] if r.get("client_action_required"))
 
     pct = prog.get("completion_percent")
@@ -503,6 +554,8 @@ def render_html(cr: ClientReview) -> str:
 
     hero_line = (f"{grounded_n} outcome{'s' if grounded_n != 1 else ''} delivered with evidence"
                  if grounded_n else "No evidence-backed outcomes yet")
+    if awaiting_n:
+        hero_line += (f" · {awaiting_n} further complete and awaiting write-up")
     hero_sub = (f"{needs_you} thing{'s' if needs_you != 1 else ''} need"
                 f"{'' if needs_you != 1 else 's'} your input" if needs_you
                 else "Nothing currently needs your input")

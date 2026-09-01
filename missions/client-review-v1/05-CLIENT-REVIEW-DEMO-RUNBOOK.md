@@ -3,7 +3,20 @@
 > ⭐ **Updated 2026-08-31 against the implementation.** The flow below is unchanged; what follows
 > is how to actually open it, and the three places the built page differs from the assumptions.
 >
-> **Open it:**
+> **Open it — one command, as of 2026-09-01:**
+> ```bash
+> python scripts/meeting_ready.py --open
+> ```
+> It compiles from canonical state, renders, runs the meeting-readiness gate, and loads the built
+> page in a real browser before telling you whether it is safe to open. Exit 0 means safe; exit 1
+> names exactly what is blocking. The refresh contract is `06-D5-REFRESH-CONTRACT.md`.
+>
+> ⭐ **Statuses on the page are no longer typed.** Milestones, next steps, risk state and evidence
+> paths are derived from `.data/tasks.jsonl` and the mission record. When a task closes, the page
+> changes on the next regeneration with no edit to the narrative. Ten hand-typed statuses were
+> measured contradicting the record on 2026-09-01 — see the refresh contract.
+>
+> The longhand still works, and is what the one command runs:
 > ```bash
 > python -m factory.client_review missions/client-review-v1/reviews/navira-marketing-model.yaml \
 >   --tasks .data/tasks.jsonl \
