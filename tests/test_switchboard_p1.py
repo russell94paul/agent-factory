@@ -559,8 +559,42 @@ def test_the_real_follow_on_work_exists_canonically(wid):
     w = rows[wid]
     assert w.visibility == "PRIVATE"
     assert w.repo == "agent-factory"
-    assert w.start_mode is None, "the dogfood work was STARTED — it must not be"
-    assert w.status != "claimed", "the dogfood work is running"
+
+
+def test_p1_5_has_still_not_been_started():
+    """⛔ P1.5 must not begin before its predecessor completes. This one IS a standing invariant.
+
+    ⚠ Its sibling assertion — that MARKETING-MODEL-FINALIZATION-01 was never started — has been
+    removed, and deliberately rather than to get a green. It encoded the P1 mission's own stop
+    condition ("create both, start neither"), which Paul explicitly lifted afterwards. A test that
+    keeps enforcing a withdrawn instruction is not a guard, it is a stale rule that will be deleted
+    in a hurry by whoever meets it next. What replaces it is the property that still matters:
+    a start must be RECORDED, never silent — see below.
+    """
+    rows = {w.id: w for w in W.project(manifests=sb.manifests())}
+    if "AF-CLIENT-REVIEW-P1.5" not in rows:
+        pytest.skip("dogfood work not in this machine's store")
+    p15 = rows["AF-CLIENT-REVIEW-P1.5"]
+    assert p15.start_mode is None, "P1.5 was started before its predecessor completed"
+    assert p15.status != "claimed"
+    assert p15.state != W.READY
+
+
+def test_any_start_of_the_finalization_work_was_recorded_not_silent():
+    """A start is allowed; an UNRECORDED one is not.
+
+    `claim` says work began. `record_start` says who decided it should. Work that is claimed with
+    no recorded mode is the state `coordination.signals` reports as `starts with no recorded mode`
+    and refuses to fold into MANUAL — because that would invent an operator decision nobody made.
+    """
+    rows = {w.id: w for w in W.project(manifests=sb.manifests())}
+    if "MARKETING-MODEL-FINALIZATION-01" not in rows:
+        pytest.skip("dogfood work not in this machine's store")
+    w = rows["MARKETING-MODEL-FINALIZATION-01"]
+    if w.start_mode is None and w.status not in ("claimed", "blocked"):
+        pytest.skip("not started on this machine")
+    assert w.start_mode in (T.MANUAL_START, T.AUTO_START), (
+        f"{w.id} was started but its mode was never recorded ({w.start_mode!r})")
 
 
 def test_the_dependency_between_them_is_real():
@@ -573,3 +607,53 @@ def test_the_dependency_between_them_is_real():
     fin = rows["MARKETING-MODEL-FINALIZATION-01"]
     for dep in fin.depends_on:
         assert dep in rows, f"{fin.id} depends on {dep}, which is not in the store"
+
+
+# ============================================================ 12. explicit holds
+
+
+def test_an_explicit_block_is_never_ready(store):
+    """⛔ Found by dogfooding P1 against real work, not by reading.
+
+    Blocking MARKETING-MODEL-FINALIZATION-01 on a human credential decision wrote
+    `status=blocked` and `blocked_by=[...]` to the store — and the projection still rendered it
+    READY, with a live START SYNCED button. Two gaps lined up: `_state_for` only knew about
+    done/abandoned/claimed, and `_legacy_edges` drops a `block` naming anything not in the store,
+    which is exactly how a hold on a PERSON rather than a task disappears.
+
+    A readiness layer whose entire purpose is to refuse cannot be blind to the store's own word
+    for refusal.
+    """
+    _mk(store, "HELD-01")
+    assert {x.id: x for x in W.project(store=store)}["HELD-01"].state == W.READY
+
+    store.block("HELD-01", by="AWAITING-A-HUMAN-DECISION", actor="t")
+    w = {x.id: x for x in W.project(store=store)}["HELD-01"]
+    assert w.state == W.BLOCKED, f"an explicitly blocked task rendered as {w.state}"
+    assert "AWAITING-A-HUMAN-DECISION" in w.blocked_reason
+    assert not w.is_ready
+    hold = next(c for c in w.checks if c.name == "hold")
+    assert hold.verdict == W.FAIL
+
+    allowed, why = W.guarded_start(w)
+    assert allowed is False and any("blocked" in r.lower() for r in why)
+
+
+def test_a_claimed_then_blocked_task_is_not_reported_running(store):
+    """`block` sets status=blocked OVER a claim. Reading it as RUNNING would show a live session
+    that does not exist."""
+    _mk(store, "HELD-02")
+    store.claim("HELD-02", actor="agent")
+    assert {x.id: x for x in W.project(store=store)}["HELD-02"].state == W.RUNNING
+    store.block("HELD-02", by="SOMETHING-EXTERNAL", actor="t")
+    assert {x.id: x for x in W.project(store=store)}["HELD-02"].state == W.BLOCKED
+
+
+def test_unblocking_restores_readiness(store):
+    """The hold must be releasable, or it is a wedge rather than a gate."""
+    _mk(store, "HELD-03")
+    store.block("HELD-03", by="A-HOLD", actor="t")
+    assert {x.id: x for x in W.project(store=store)}["HELD-03"].state == W.BLOCKED
+    store.unblock("HELD-03", by="A-HOLD", actor="t")
+    w = {x.id: x for x in W.project(store=store)}["HELD-03"]
+    assert w.state == W.READY, f"releasing the hold left it {w.state}"

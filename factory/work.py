@@ -121,6 +121,9 @@ class Work:
     start_mode: Optional[str] = None
     #: The operator's stop. Outranks the policy, always.
     autonomy_paused: bool = False
+    #: Live `block` holds from the store that are NOT satisfied dependencies -- an explicit
+    #: "this cannot proceed", including holds naming something outside the task store.
+    blocked_by: List[str] = dataclasses.field(default_factory=list)
     #: True when this row's label/contract came from a mission manifest rather than the task.
     from_manifest: bool = False
     mission: str = ""
@@ -348,6 +351,18 @@ def readiness(w: Work, rows: Dict[str, Work], running: set) -> List[Check]:
     else:
         checks.append(Check("artifacts", NOT_APPLICABLE, "none declared"))
 
+    # ⛔ An explicit `block` hold. Found by dogfooding P1 against real work: blocking
+    # MARKETING-MODEL-FINALIZATION-01 on a human credential decision wrote `status=blocked` and
+    # `blocked_by=[...]` to the store, and the projection still rendered it READY with a live
+    # START SYNCED button. `_state_for` only knew about done/abandoned/claimed, and `_edges`
+    # drops a `block` naming anything not in the store -- which is exactly how a hold on a
+    # PERSON rather than a task disappears. A readiness layer whose whole purpose is to refuse
+    # cannot be blind to the store's own word for refusal.
+    if w.blocked_by:
+        checks.append(Check("hold", FAIL, "explicitly blocked on " + ", ".join(w.blocked_by)))
+    else:
+        checks.append(Check("hold", NOT_APPLICABLE, "no explicit hold"))
+
     checks.append(Check("target", PASS, f"resolves to store row {w.id}"))
 
     # ⚠ UNMEASURED, not FAIL. A task that never declared a repository has not failed a check —
@@ -398,6 +413,13 @@ def _state_for(w: Work) -> str:
         return ABANDONED
     if w.needs:
         return NEEDS_HUMAN
+    # ⛔ Before RUNNING. A task that was claimed and then blocked is NOT running: the store's
+    # `block` sets status=blocked over the claim, and reading it as RUNNING would show a live
+    # session that does not exist.
+    if w.status == _tasks.BLOCKED or w.blocked_by:
+        w.blocked_reason = ("explicitly blocked on " + ", ".join(w.blocked_by)
+                            if w.blocked_by else "the store holds this task blocked")
+        return BLOCKED
     if w.status == _tasks.CLAIMED:
         return RUNNING
     fails = [c for c in w.checks if c.verdict == FAIL]
@@ -440,6 +462,7 @@ def project(store: Optional[TaskStore] = None, manifests: Optional[List[dict]] =
             session_id=t.session_id, parent=t.parent, owner=t.owner,
             autonomy=t.autonomy, start_mode=t.start_mode,
             autonomy_paused=bool(t.autonomy_paused),
+            blocked_by=list(t.blocked_by),
             from_manifest=bool(ov), mission=ov.get("mission", ""),
             needs=list(needs_by_id.get(t.id) or []))
 
