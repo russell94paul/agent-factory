@@ -150,6 +150,116 @@ delivered:
     evidence_refs:
       - docs/evidence/marketing-model-v1/R2-repo-wiki-diff.md
 
+  - id: D-R3
+    task: R3
+    title: A measured map of the marketing data you actually have
+    origin: FACTORY_PROPOSED
+    summary: >-
+      We read the marketing estate directly rather than working from its documentation, using an
+      access identity created for the purpose and proved read-only before a single figure was
+      taken — it was watched refusing a write. What it found: 84 marketing objects across 7
+      separate areas, carrying 34 distinct names, with the central marketing activity table
+      existing in five copies. Each advertising channel starts on a different date, so any figure
+      spanning all of them is comparing periods that do not overlap.
+    business_impact: >-
+      Duplication on this scale is the reason two reports can both be "right" and still disagree.
+      Knowing the real shape — and that the copies are not identical — is what makes the rest of
+      the work a repair rather than a rebuild.
+
+  - id: D-D1
+    task: D1
+    title: Your requirements, separated from what we inferred on your behalf
+    origin: CLIENT
+    summary: >-
+      Every requirement on this model is now labelled with how strongly it is supported: your own
+      words, a contemporaneous document, something we measured, something we reasoned to, or
+      something believed with no source at all. Where two sources disagree the disagreement is
+      carried forward rather than settled quietly. Seven gaps are named explicitly, including one
+      that matters more than the rest — the dimensions table describing your brands, portfolios,
+      ad types and targeting has never arrived, so no design can claim to be complete on those
+      axes. We also confirmed, rather than assumed, that no sign-off exists on any part of this
+      model to date.
+    business_impact: >-
+      You can see which parts of the current model you asked for and which we chose for you,
+      before any further budget goes into either. A requirement with no source is a decision
+      someone made without telling you, and there are some.
+
+  - id: D-D2
+    task: D2
+    title: The questions the model must be able to answer, and who has to answer each one
+    origin: FACTORY_PROPOSED
+    summary: >-
+      Before designing anything we wrote down the questions the model has to be able to answer —
+      44 in total — and, for each one, what changes depending on the answer. Each is labelled with
+      whose question it actually is: something you asked for, a constraint the data imposes, a
+      choice we made internally, or a decision only you can take. That separation is the point.
+      Several questions we had been treating as things to ask you turned out to be our own naming
+      and design choices, which we should resolve ourselves rather than bring to you.
+    business_impact: >-
+      It shortens your list. Work that looks like it needs your input often does not, and the
+      questions that genuinely do need you are worth more of your time once the rest are cleared
+      out of the way.
+
+  - id: D-D3
+    task: D3
+    title: Candidate designs, each declaring its grain before it was drawn
+    origin: CLIENT
+    summary: >-
+      Three candidate designs were produced, with the level of detail each row represents written
+      down and committed before any design work began, so the answer could not be shaped to fit
+      the preferred conclusion. The finding was not that one candidate beat the others. It was
+      that the underlying structure is sound — the existing level of detail is both correct and
+      minimal, verified on the exact copy your dashboard reads — and that the problems live in
+      naming, definitions and delivery rather than in the shape of the data. Four of our own
+      standards of proof were unmet when the candidates were first scored; three of those were
+      then measured rather than waived, and the fourth was carried into the review stage.
+    business_impact: >-
+      The cheapest possible answer to "the model needs rebuilding" is that it does not. That
+      conclusion is only worth having because it was tested rather than assumed, which is what the
+      next item did.
+
+  - id: D-D4
+    task: D4
+    title: We tried to break the leading design before recommending it
+    origin: FACTORY_PROPOSED
+    summary: >-
+      The recommendation was attacked across nine specific ways a model of this kind fails —
+      double counting, lost detail, a gap shown as a zero, filters nobody can see, figures that
+      cannot be reconciled, and others. It survived, with one amendment: one new conformed
+      reference table for marketplaces is needed, because today several parts of the system each
+      build their own version of that list. The review also overturned five claims made by the
+      design stage itself, which is why it exists. Two things it found are worth your attention.
+      Your dashboard and your Power BI reporting do not see the same advertising population — one
+      channel is present in one and absent from the other — and the dashboard adds amounts in
+      three different currencies as though they were one. Separately, a correct fix made earlier
+      to stop missing data being shown as zero has the side effect of blanking a group of derived
+      return-on-spend figures across most of the reporting history, which then display as zero at
+      the far end.
+    business_impact: >-
+      Two reports disagreeing about advertising spend is not a reporting preference; it is two
+      different answers to the same question, and until now neither surface said so. These are
+      correctable without rebuilding anything, and they are the difference between numbers you can
+      quote and numbers you have to caveat.
+
+  - id: D-D5
+    task: D5
+    title: The recommendation, and the three decisions that are genuinely yours
+    origin: CLIENT
+    summary: >-
+      The recommendation is to keep the existing marketing structure, add an explicit contract for
+      what each measure means, point the dashboard at the agreed source, and add one shared
+      marketplace reference table. No new central table is proposed. Nine specific repairs are
+      listed, each naming the problem it closes and how that problem was measured. The list of
+      things we need from you has been reduced to three: which quantity the phrase "advertising
+      cost" should mean, whether the calibrated return-on-spend figure should be capped, and which
+      of the return-on-spend measures should be the headline — that last one to be put to you only
+      once we have enumerated the set properly, because the number of them we have previously
+      quoted could not be reproduced.
+    business_impact: >-
+      The expensive option was never necessary. What is needed is agreement on meaning and one
+      delivery change, which is a smaller and far more reversible commitment than a rebuild — and
+      it turns three open questions into three decisions you can actually make.
+
 evidence:
   - id: E-1
     type: analysis
@@ -233,16 +343,18 @@ risks:
     # The risk is entirely about whether R3 has been able to run. Linking it means the review
     # stops asking for a decision the task store shows was already reached.
     task: R3
-    title: Data cartography is paused pending an access-credential rotation
-    severity: MEDIUM
+    title: Data mapping was held up by internal access, and has since completed
+    severity: LOW
     origin: FACTORY_PROPOSED
     impact: >-
-      The task that maps what marketing data exists and at what grain cannot start until an
-      internal credential rotation is completed on our side. Requirements synthesis and the design
-      tasks all sit behind it.
+      Mapping what marketing data exists, and at what grain, could not begin until an access
+      question on our side was resolved, and the requirements and design work all sat behind it.
+      That is no longer the position: the mapping ran, and every task that was waiting on it has
+      since completed.
     mitigation: >-
-      Rotation is an ALDC-internal action already scoped and scheduled. The two reconstruction
-      tasks that did not need it are complete, so the pause has not idled the whole workstream.
+      Rather than widen an existing account, we created a dedicated read-only identity for the
+      work and confirmed it could not write before taking a single figure — it was watched
+      refusing a write. The delay cost the schedule some time and cost the evidence nothing.
     owner: ALDC
     client_action_required: false
 
