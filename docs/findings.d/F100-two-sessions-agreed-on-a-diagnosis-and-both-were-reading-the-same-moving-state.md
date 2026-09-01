@@ -67,6 +67,36 @@ that it was measuring a different commit.
 ⚠ **A diagnosis about changing state must be re-measured against current state before being
 promoted to a defect.** Re-measuring cost one command here.
 
+## ⭐ A second instance, the same day, sharper
+
+Landing RAPID-RELIABILITY-01 produced one failure on the merged main:
+
+```
+tests/test_tree_moved_advisory.py::test_an_unmoved_tree_is_silent
+assert advisory(payload) is None   # "nothing moved since"
+AssertionError: '⚠ This checkout moved since you last wrote to git...' is None
+```
+
+It reads the **live repo HEAD** between two `advisory()` calls — and the commander session
+committed D1 *while the suite was running*. Re-run on a stable HEAD: **15 passed**. Classified
+`STATE_DEPENDENT`, not `MERGE_REGRESSION`.
+
+This one is worse than the Client Review episode, because the observer and the mutator were **the
+same session**: the measurement was invalidated by the measurer writing to the thing being
+measured. No amount of cross-session agreement would have caught it, and no amount of care about
+*other* sessions' writes either.
+
+⚠ **And the first report of that run said `exit code 0`.** It was the *compound command's* status —
+`pytest … > file; echo "EXIT=$?"` had the redirect and a following `echo` between pytest and `$?`.
+pytest had failed. This is the repo's own chained-verdict rule (*any command whose output carries a
+verdict runs on its own line*) being broken **in the act of reporting a suite result**. The
+corrected form writes pytest's own status: `pytest …; echo "PYTEST_EXIT=$?" >> file`.
+
+⭐ Three distinct instruments lied in one session — a task search on the wrong field ([[F96]]), a
+shell chain reporting a check that never ran, and a test invalidated by its own observer. The
+common shape is not carelessness; it is **reading a result without asking what the result was
+capable of saying.**
+
 ## Smallest future enforcement seam
 
 ⛔ **Do not build a snapshot system for this.** The cheap seam already exists: `factory/handoff.py`
