@@ -1,0 +1,119 @@
+8 run(s) in C:\Users\PaulRussell\repos\agent-factory\.data\events.jsonl
+
+attempt 1  20260830T133448-a1ffafae  ticket=GP-327
+   actually ended  FAIL  (family re-derived: DECLARATION_WITHOUT_MECHANISM)
+   would be told   (nothing)   prior=0   family=NOT-RECORDED   same_as_prior=None
+   prevention      NOT-RECORDED — no prior attempts
+   would_refuse    False   [WARN_ONLY_V0]   packet=0 words
+
+attempt 2  20260830T133548-76230bbb  ticket=GP-327
+   actually ended  UNMEASURABLE  (family re-derived: DECLARATION_WITHOUT_MECHANISM)
+   would be told   WARNING   prior=1   family=DECLARATION_WITHOUT_MECHANISM   same_as_prior=None
+   prevention      STILL_PRESENT — preset 'ui-control' verifier_state=available, registry callable=no
+   would_refuse    True   [WARN_ONLY_V0]   packet=95 words
+   ----- packet as the agent would receive it -----
+   | KNOWN_FAILURE_MATCH
+   | previous_attempt: 20260830T133448-a1ffafae at 2026-08-30T13:34:48.979339+00:00 (attempt 1 of this ticket)
+   | failure_family: DECLARATION_WITHOUT_MECHANISM [verifier_declared_not_wired (re-derived; field NOT-RECORDED)]
+   | previous_verdict: FAIL
+   | previous_reason: ticket_verifier: preset 'ui-control' declares a WIRED verifier but the controller was given no callable to run. The declaration and the wiring disagree.
+   | required_prevention: preset 'ui-control' verifier_state=available, registry callable=no -> STILL_PRESENT
+   | would_refuse_under_policy: true
+   | 
+   | This is a WARNING, not a refusal — this run has started. It is here because this ticket has failed before and the record survived. Verify it rather than assuming it: a family of UNCLASSIFIED means the previous failure was recorded but not understood.
+
+attempt 3  20260831T034120-d9f606a8  ticket=GP-327
+   actually ended  NOT_RUN  (family re-derived: UNBOUNDED_RETRY)
+   would be told   WARNING   prior=2   family=DECLARATION_WITHOUT_MECHANISM   same_as_prior=True
+   prevention      STILL_PRESENT — preset 'ui-control' verifier_state=available, registry callable=no
+   would_refuse    True   [WARN_ONLY_V0]   packet=95 words
+   ----- packet as the agent would receive it -----
+   | KNOWN_FAILURE_MATCH
+   | previous_attempt: 20260830T133548-76230bbb at 2026-08-30T13:35:49.939974+00:00 (attempt 2 of this ticket)
+   | failure_family: DECLARATION_WITHOUT_MECHANISM [verifier_declared_not_wired (re-derived; field NOT-RECORDED)]
+   | previous_verdict: UNMEASURABLE
+   | previous_reason: ticket_verifier: preset 'ui-control' declares a WIRED verifier but the controller was given no callable to run. The declaration and the wiring disagree.
+   | required_prevention: preset 'ui-control' verifier_state=available, registry callable=no -> STILL_PRESENT
+   | would_refuse_under_policy: true
+   | 
+   | This is a WARNING, not a refusal — this run has started. It is here because this ticket has failed before and the record survived. Verify it rather than assuming it: a family of UNCLASSIFIED means the previous failure was recorded but not understood.
+
+attempt 4  20260831T034638-1a0176a8  ticket=GP-327
+   actually ended  UNMEASURABLE  (family re-derived: DECLARATION_WITHOUT_MECHANISM)
+   would be told   WARNING   prior=3   family=UNBOUNDED_RETRY   same_as_prior=False
+   prevention      NOT-RECORDED — no prevention check exists for UNBOUNDED_RETRY
+   would_refuse    False   [WARN_ONLY_V0]   packet=94 words
+   ----- packet as the agent would receive it -----
+   | KNOWN_FAILURE_MATCH
+   | previous_attempt: 20260831T034120-d9f606a8 at 2026-08-31T03:41:21.020580+00:00 (attempt 3 of this ticket)
+   | failure_family: UNBOUNDED_RETRY [provider_cap (re-derived; field NOT-RECORDED)]
+   | previous_verdict: NOT_RUN
+   | previous_reason: attempt cap reached for ui-control-agent:gp-327 (2/2). Escalate to a human — do not raise the cap to get past this.
+   | required_prevention: no prevention check exists for UNBOUNDED_RETRY -> NOT-RECORDED
+   | would_refuse_under_policy: false
+   | 
+   | This is a WARNING, not a refusal — this run has started. It is here because this ticket has failed before and the record survived. Verify it rather than assuming it: a family of UNCLASSIFIED means the previous failure was recorded but not understood.
+
+attempt 5  20260831T034640-d39718fa  ticket=GP-327
+   actually ended  UNMEASURABLE  (family re-derived: DECLARATION_WITHOUT_MECHANISM)
+   would be told   WARNING   prior=4   family=DECLARATION_WITHOUT_MECHANISM   same_as_prior=False
+   prevention      STILL_PRESENT — preset 'ui-control' verifier_state=available, registry callable=no
+   would_refuse    True   [WARN_ONLY_V0]   packet=95 words
+   ----- packet as the agent would receive it -----
+   | KNOWN_FAILURE_MATCH
+   | previous_attempt: 20260831T034638-1a0176a8 at 2026-08-31T03:46:38.943390+00:00 (attempt 4 of this ticket)
+   | failure_family: DECLARATION_WITHOUT_MECHANISM [verifier_declared_not_wired (re-derived; field NOT-RECORDED)]
+   | previous_verdict: UNMEASURABLE
+   | previous_reason: ticket_verifier: preset 'ui-control' declares a WIRED verifier but the controller was given no callable to run. The declaration and the wiring disagree.
+   | required_prevention: preset 'ui-control' verifier_state=available, registry callable=no -> STILL_PRESENT
+   | would_refuse_under_policy: true
+   | 
+   | This is a WARNING, not a refusal — this run has started. It is here because this ticket has failed before and the record survived. Verify it rather than assuming it: a family of UNCLASSIFIED means the previous failure was recorded but not understood.
+
+attempt 6  20260831T034641-226e9417  ticket=GP-327
+   actually ended  UNMEASURABLE  (family re-derived: DECLARATION_WITHOUT_MECHANISM)
+   would be told   WARNING   prior=5   family=DECLARATION_WITHOUT_MECHANISM   same_as_prior=True
+   prevention      STILL_PRESENT — preset 'ui-control' verifier_state=available, registry callable=no
+   would_refuse    True   [WARN_ONLY_V0]   packet=95 words
+   ----- packet as the agent would receive it -----
+   | KNOWN_FAILURE_MATCH
+   | previous_attempt: 20260831T034640-d39718fa at 2026-08-31T03:46:40.465433+00:00 (attempt 5 of this ticket)
+   | failure_family: DECLARATION_WITHOUT_MECHANISM [verifier_declared_not_wired (re-derived; field NOT-RECORDED)]
+   | previous_verdict: UNMEASURABLE
+   | previous_reason: ticket_verifier: preset 'ui-control' declares a WIRED verifier but the controller was given no callable to run. The declaration and the wiring disagree.
+   | required_prevention: preset 'ui-control' verifier_state=available, registry callable=no -> STILL_PRESENT
+   | would_refuse_under_policy: true
+   | 
+   | This is a WARNING, not a refusal — this run has started. It is here because this ticket has failed before and the record survived. Verify it rather than assuming it: a family of UNCLASSIFIED means the previous failure was recorded but not understood.
+
+attempt 7  20260831T044024-46467dfe  ticket=GP-327
+   actually ended  UNMEASURABLE  (family re-derived: DECLARATION_WITHOUT_MECHANISM)
+   would be told   WARNING   prior=6   family=DECLARATION_WITHOUT_MECHANISM   same_as_prior=True
+   prevention      STILL_PRESENT — preset 'ui-control' verifier_state=available, registry callable=no
+   would_refuse    True   [WARN_ONLY_V0]   packet=95 words
+   ----- packet as the agent would receive it -----
+   | KNOWN_FAILURE_MATCH
+   | previous_attempt: 20260831T034641-226e9417 at 2026-08-31T03:46:42.263010+00:00 (attempt 6 of this ticket)
+   | failure_family: DECLARATION_WITHOUT_MECHANISM [verifier_declared_not_wired (re-derived; field NOT-RECORDED)]
+   | previous_verdict: UNMEASURABLE
+   | previous_reason: ticket_verifier: preset 'ui-control' declares a WIRED verifier but the controller was given no callable to run. The declaration and the wiring disagree.
+   | required_prevention: preset 'ui-control' verifier_state=available, registry callable=no -> STILL_PRESENT
+   | would_refuse_under_policy: true
+   | 
+   | This is a WARNING, not a refusal — this run has started. It is here because this ticket has failed before and the record survived. Verify it rather than assuming it: a family of UNCLASSIFIED means the previous failure was recorded but not understood.
+
+attempt 1  20260831T045033-76220aa7  ticket=GP-401
+   actually ended  UNMEASURABLE  (family re-derived: UNCLASSIFIED)
+   would be told   (nothing)   prior=0   family=NOT-RECORDED   same_as_prior=None
+   prevention      NOT-RECORDED — no prior attempts
+   would_refuse    False   [WARN_ONLY_V0]   packet=0 words
+
+==============================================================================
+warnings that would have been emitted   6 of 8 run(s)
+marked would_refuse (shadow, not acted) 5
+packet size                             mean 94.8 words, max budget 200
+
+classification of the recorded failures:
+  {'failures': 8, 'classified': 0, 'unclassified': 0, 'not_recorded': 8, 'unclassified_share': None, 'basis': 'NOT-RECORDED'}
+
+⛔ Every number above is shadow. No historical run was affected, and in V0 no future run is refused.

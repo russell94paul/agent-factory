@@ -60,14 +60,15 @@ from .contract import Verdict
 #: reports a run as having skipped a step it actually took.
 KINDS = (
     "run_started",        # ⭐ carries the eligible set. Refused without one.
+    "preflight_checked",  # what this run was told about its own prior failures — see preflight.py
     "worktree_ready",
     "claim_taken",
     "agent_dispatched",
     "agent_returned",
     "evidence_gathered",
-    "verdict_assigned",   # terminal — carries a Verdict
-    "run_finished",       # terminal — carries a Verdict
-    "run_aborted",        # terminal — carries a Verdict (ERROR or NOT_RUN)
+    "verdict_assigned",   # terminal — carries a Verdict AND a failure_family when not PASS
+    "run_finished",       # terminal — carries a Verdict AND a failure_family when not PASS
+    "run_aborted",        # terminal — carries a Verdict (ERROR or NOT_RUN) + a failure_family
 )
 
 #: Kinds that state an outcome. Each MUST carry a verdict; the writer refuses otherwise.
@@ -185,26 +186,42 @@ class RunLog:
         return self._emit(kind, **fields)
 
     def verdict(self, verdict: Verdict, contract: str, results: Optional[List[dict]] = None,
+                failure_family: Optional[str] = None, classified_by: str = "",
                 **fields: Any) -> Dict[str, Any]:
         """Record the verdict a `GreenContract` assigned, with the per-assertion detail."""
         return self._emit("verdict_assigned", verdict=_verdict_value(verdict),
-                          contract=contract, results=list(results or []), **fields)
+                          contract=contract, results=list(results or []),
+                          **_family_fields(verdict, failure_family, classified_by), **fields)
 
-    def finish(self, verdict: Verdict, **fields: Any) -> Dict[str, Any]:
-        return self._emit("run_finished", verdict=_verdict_value(verdict), **fields)
+    def finish(self, verdict: Verdict, failure_family: Optional[str] = None,
+               classified_by: str = "", **fields: Any) -> Dict[str, Any]:
+        return self._emit("run_finished", verdict=_verdict_value(verdict),
+                          **_family_fields(verdict, failure_family, classified_by), **fields)
 
-    def abort(self, verdict: Verdict, why: str, **fields: Any) -> Dict[str, Any]:
+    def abort(self, verdict: Verdict, why: str, failure_family: Optional[str] = None,
+              classified_by: str = "", **fields: Any) -> Dict[str, Any]:
         """End a run that never got as far as a verdict of its own.
 
         ⚠ `verdict` is still required and still comes from the enum. An abort is ERROR when our
         apparatus broke and NOT_RUN when it never started — those are different remedies (fix the
         harness, versus nothing happened) and a single "aborted" flag cannot tell them apart.
         """
-        return self._emit("run_aborted", verdict=_verdict_value(verdict), why=why, **fields)
+        return self._emit("run_aborted", verdict=_verdict_value(verdict), why=why,
+                          **_family_fields(verdict, failure_family, classified_by), **fields)
+
+    def preflight(self, **fields: Any) -> Dict[str, Any]:
+        """What this run was told about its own prior failures, before anything was dispatched.
+
+        ⛔ Non-terminal on purpose: a preflight states no outcome, carries no verdict, and — in V0
+        — cannot stop anything. `preflight.Match.would_refuse` rides along as a recorded shadow of
+        a policy that is not in force. See `factory.preflight`.
+        """
+        return self._emit("preflight_checked", **fields)
 
 
 def aborted(ticket: str, considered: Iterable[Dict[str, Any]], rule: str,
-            verdict: Verdict, why: str, **fields: Any) -> Dict[str, Any]:
+            verdict: Verdict, why: str, failure_family: Optional[str] = None,
+            classified_by: str = "", **fields: Any) -> Dict[str, Any]:
     """A selection that never became a run — recorded without opening one.
 
     ⚠ There is no `run_started` here on purpose. Nothing started, and writing one so the schema
@@ -219,7 +236,28 @@ def aborted(ticket: str, considered: Iterable[Dict[str, Any]], rule: str,
     return _append({"at": _now(), "run": new_run_id(), "seq": 1, "kind": "run_aborted",
                     "ticket": ticket, "considered": [dict(c) for c in considered],
                     "rule": rule, "verdict": _verdict_value(verdict), "why": why,
-                    "started": False, **fields})
+                    "started": False,
+                    **_family_fields(verdict, failure_family, classified_by), **fields})
+
+
+def _family_fields(verdict: Verdict, family: Optional[str], classified_by: str) -> Dict[str, Any]:
+    """The failure-family half of a terminal event, validated before it is written.
+
+    ⭐ **Presence is the difference between UNCLASSIFIED and NOT-RECORDED.** Every terminal event
+    written from here on carries the key: `UNCLASSIFIED` when the classifier could not place the
+    failure, and a named family when it could. An event with *no* key at all is one written before
+    this field existed, and a reader must report that as NOT-RECORDED rather than as an
+    unclassified failure. Defaulting the key in the reader would erase that distinction — the same
+    collapse as reporting UNMEASURABLE as FAIL, one level up.
+
+    A PASS carries neither key. Nothing failed, so there is nothing to classify, and allowing a
+    family on a green run would let a success be filed under a defect.
+    """
+    from .preflight import check_family
+    fam = check_family(family, verdict)
+    if fam is None:
+        return {}
+    return {"failure_family": fam, "classified_by": classified_by or "unspecified"}
 
 
 def _verdict_value(v: Any) -> str:
@@ -275,7 +313,32 @@ def fold(run: str) -> dict:
     reporting that as NOT_RUN would claim the run never happened, when the stream plainly says it
     started. `terminal` says which it is.
     """
-    evs = read(run)
+    return _fold(run, read(run))
+
+
+def fold_all() -> Dict[str, dict]:
+    """Every run's state, from ONE pass over the file, in first-appearance order.
+
+    ⭐ Added because `fold()` per run is quadratic and a caller had already crossed a published
+    budget with it. `preflight.prior_attempts` called `runs()` then `fold()` for each id, and each
+    `fold()` re-read the whole stream: **MEASURED 84 ms at 8 runs, 3.7 s at 500, 12.7 s at 1000**,
+    against a stated 200 ms preflight budget. A start-time check that costs seconds is one people
+    route around, and the routing-around is invisible.
+
+    ⚠ It delegates to the same `_fold` as `fold()` rather than reimplementing the reduction. Two
+    copies of a fold drift, and the one people read is the one that is wrong — this estate has
+    lost three hand-maintained lists that way.
+    """
+    by: Dict[str, List[dict]] = {}
+    for rec in read():
+        r = rec.get("run")
+        if r:
+            by.setdefault(r, []).append(rec)
+    return {r: _fold(r, evs) for r, evs in by.items()}
+
+
+def _fold(run: str, evs: List[dict]) -> dict:
+    """The reduction itself, over events already read. The single definition of a run's state."""
     if not evs:
         return {"run": run, "found": False}
     first = evs[0]
@@ -291,6 +354,11 @@ def fold(run: str) -> dict:
         "kinds": [e.get("kind") for e in evs],
         "terminal": term[-1].get("kind") if term else None,
         "verdict": term[-1].get("verdict") if term else None,
+        # ⚠ `.get`, and absent when the terminal event predates the field — that absence is what
+        # `preflight` reads as NOT-RECORDED rather than as UNCLASSIFIED. Do not default it here.
+        "failure_family": term[-1].get("failure_family") if term else None,
+        "classified_by": term[-1].get("classified_by") if term else None,
+        "why": term[-1].get("why") if term else None,
         "at": evs[-1].get("at"),
     }
     for key in ("team", "team_version", "agent_versions", "repo", "provider", "job"):

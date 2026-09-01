@@ -137,7 +137,8 @@ def record(lane: str, outcome: str, detail: str = "", problems: Optional[List[st
            branch: str = "", commits: Optional[int] = None, cwd=None,
            job: Optional[str] = None, team: Optional[str] = None,
            team_version: Optional[str] = None,
-           agent_versions: Optional[dict] = None) -> dict:
+           agent_versions: Optional[dict] = None,
+           run: Optional[str] = None) -> dict:
     """Append one run. Called by `finish()` on BOTH success and refusal.
 
     A refusal is the row you most want later. "control-plane refused to finish: worktree dirty"
@@ -158,6 +159,13 @@ def record(lane: str, outcome: str, detail: str = "", problems: Optional[List[st
     and a lane whose run was never recorded.
     """
     attribution = {
+        # ⭐ The join. `events.py` describes this file as the FOLD of the event stream, and until
+        # 2026-08-31 not one row carried the id that would make that true: 8 runs in the stream,
+        # 7 controller rows here, and no key between them. The two files agreed on `lane` — which
+        # holds a *lane id* in rows written by `finish()` and a *ticket id* in rows written by the
+        # controller, so even that was two populations under one name. Without this every metric
+        # that needs "what did this run go on to do" is NOT-RECORDED rather than zero.
+        "run": run or NOT_RECORDED,
         "job": job or NOT_RECORDED,
         "team": team or NOT_RECORDED,
         "team_version": team_version or NOT_RECORDED,
@@ -243,7 +251,7 @@ def reconstruct(lane: str) -> dict:
     # these stay NOT-RECORDED here by construction, not by omission.
     return {"lane": lane, "outcome": None, "basis": basis, "branch": branch,
             "commits": commits, "dirty": dirty, "cost": c, "problems": [], "detail": "",
-            "job": NOT_RECORDED, "team": NOT_RECORDED,
+            "run": NOT_RECORDED, "job": NOT_RECORDED, "team": NOT_RECORDED,
             "team_version": NOT_RECORDED, "agent_versions": NOT_RECORDED}
 
 
@@ -271,7 +279,11 @@ def report() -> List[dict]:
 
 #: The join keys every later question needs. Named so a caller can ask how many rows carry them
 #: without hardcoding the list in four places.
-ATTRIBUTION = ("job", "team", "team_version", "agent_versions")
+#:
+#: ⭐ `run` is first because it is the only one that joins this file to `.data/events.jsonl`.
+#: The other four say *which configuration*; this one says *which stream of events*, and without
+#: it "what did this run go on to do" cannot be asked at all.
+ATTRIBUTION = ("run", "job", "team", "team_version", "agent_versions")
 
 
 def unattributed() -> dict:

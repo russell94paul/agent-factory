@@ -38,6 +38,7 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 from . import claims as _claims
 from . import events as _events
+from . import preflight as _preflight
 from . import presets as _presets
 from . import repo as _repo
 from . import runs as _runs
@@ -424,6 +425,9 @@ class RunResult:
     ledger_row: Optional[dict] = None
     detail: str = ""
     eligible: List[dict] = field(default_factory=list)
+    #: What the known-failure preflight found. ⛔ Never consulted by any branch of `run()` — it is
+    #: carried so a caller and the CLI can show it, and so a test can assert it was recorded.
+    preflight: Optional[Any] = None
 
     def summary(self) -> str:
         head = f"{self.ticket.id}  {self.verdict.value}"
@@ -478,6 +482,37 @@ class RunController:
             return self._release(ticket.key)
         return _claims.task_release(ticket.key)
 
+    def _run_preflight(self, ticket: Ticket, preset: Preset, log):
+        """The known-failure preflight, and the guarantee that it cannot take a run down with it.
+
+        ⛔ **WARN-ONLY has to mean inert on failure, not only inert on a match.** The first version
+        called `preflight.check()` unguarded, outside every `try`. A raise anywhere inside it — a
+        torn line the fold choked on, a preset the classifier could not resolve, a full disk on the
+        event append — propagated straight out of `run()`: no terminal event, a run left dangling
+        in the stream with no verdict, and the caller receiving an exception instead of a result.
+
+        That is a reliability mechanism becoming the estate's most expensive failure mode, and it
+        would have been indistinguishable from the agent failing. So every exception is caught
+        here, recorded as a preflight that could not run, and the run proceeds exactly as it would
+        have without one.
+
+        ⚠ The recorded row says `prevention_check_result: CHECK_ERROR`, never a clean skip: a
+        preflight that crashed and a preflight that had nothing to say are different facts, and
+        collapsing them would hide a broken instrument behind a quiet one.
+        """
+        try:
+            match = _preflight.check(ticket.id, {"preset": preset}, before=log.run_id)
+        except Exception as exc:                                   # noqa: BLE001
+            match = _preflight.unavailable(ticket.id, exc)
+        try:
+            log.preflight(ticket=ticket.id, **match.as_event())
+        except Exception:                                          # noqa: BLE001
+            # The packet still reaches the agent; only the record of it was lost. Refusing to run
+            # because we could not write a warning would be strictly worse than running without
+            # the record — and `invocations()` reads absence as NOT-RECORDED, which is true.
+            pass
+        return match
+
     @staticmethod
     def _changed(wt: pathlib.Path) -> Optional[str]:
         """What the worktree looks like after the run, or None when it cannot be measured.
@@ -512,6 +547,8 @@ class RunController:
             _events.aborted(ticket.id, considered=[{"id": p.type_id, "chosen": False}
                                                    for p in _presets.PRESETS],
                             rule=rule, verdict=Verdict.NOT_RUN,
+                            failure_family=_preflight.UNCLASSIFIED,
+                            classified_by="no_eligible_preset",
                             why=(f"no preset was eligible for ticket {ticket.id!r} under: {rule}. "
                                  f"Declared type={ticket.type_id!r}, layers={list(ticket.layers)!r}."))
             return RunResult(ticket, Verdict.NOT_RUN, eligible=[],
@@ -528,15 +565,24 @@ class RunController:
             title=ticket.title, team=team.name, team_version=team.version,
             agent_versions=team.pinned(), repo=team.repo, provider=self.provider.name)
 
+        # ⭐ The preflight, immediately after the run is openable and BEFORE the repo check, the
+        # worktree, the claim or the agent. It reads this ticket's own prior runs from the stream
+        # and records what it found. ⛔ WARN-ONLY: it cannot refuse, and no branch below reads its
+        # verdict. `would_refuse` rides along as a recorded shadow so the policy can be argued
+        # from evidence later instead of chosen now — see factory/preflight.py.
+        match = self._run_preflight(ticket, preset, log)
+
         # ⛔ F90 — refuse before the worktree, not after. The eligible set is already on disk
         # above, so the refusal is recorded rather than vanishing; but nothing is created, no
         # claim is taken, and no attempt is spent. NOT_RUN because nothing was attempted: the
         # apparatus did not break (ERROR) and no assertion failed (FAIL).
         mismatch = unreachable_repo(ticket)
         if mismatch:
-            log.abort(Verdict.NOT_RUN, why=mismatch)
+            c = _preflight.classify(_preflight.SITUATION_REPO_MISMATCH, verdict=Verdict.NOT_RUN,
+                                    why=mismatch)
+            log.abort(Verdict.NOT_RUN, why=mismatch, **c.as_dict())
             return RunResult(ticket, Verdict.NOT_RUN, run_id=log.run_id, preset_id=chosen_id,
-                             eligible=el, team_version=team.version,
+                             eligible=el, team_version=team.version, preflight=match,
                              detail=f"refused: {mismatch}")
 
         wt: Optional[pathlib.Path] = None
@@ -556,11 +602,12 @@ class RunController:
         except Exception as exc:                                   # noqa: BLE001
             # Our apparatus, not the agent. TTCN-3 `error`: once the harness has broken we cannot
             # claim anything about the work it was supposed to measure.
-            log.abort(Verdict.ERROR, why=f"{type(exc).__name__}: {exc}")
+            c = _preflight.classify(_preflight.SITUATION_HARNESS_EXCEPTION, verdict=Verdict.ERROR)
+            log.abort(Verdict.ERROR, why=f"{type(exc).__name__}: {exc}", **c.as_dict())
             if claimed:
                 self._drop_claim(ticket)
             return RunResult(ticket, Verdict.ERROR, run_id=log.run_id, preset_id=chosen_id,
-                             eligible=el, team_version=team.version,
+                             eligible=el, team_version=team.version, preflight=match,
                              detail=f"harness failed before dispatch: {type(exc).__name__}: {exc}")
 
         try:
@@ -568,14 +615,24 @@ class RunController:
                      model=agent.model, effort=agent.effort, max_turns=agent.max_turns,
                      budget_usd=agent.budget_usd, prohibition=agent.prohibition)
             try:
-                result = self.provider.run(agent, ticket.prompt_task(), wt)
+                # ⭐ The packet goes to the agent, not just to the ledger. A finding recorded and
+                # never delivered is CHANNEL_WITH_NO_READER — this repository's most-repeated
+                # family — and building the preflight without this line would reproduce it.
+                # Empty string when there is nothing to say, so a first attempt is unchanged.
+                task_text = ticket.prompt_task()
+                if match.packet:
+                    task_text = f"{match.packet}\n\n{task_text}"
+                result = self.provider.run(agent, task_text, wt)
             except ProviderError as exc:
                 # The provider refused to dispatch — an exhausted attempt cap, a terminal that
                 # would not open. That is not the agent failing and it is not our harness
                 # breaking; nothing ran, so nothing was measured.
-                log.abort(Verdict.NOT_RUN, why=str(exc))
+                c = _preflight.classify(_preflight.SITUATION_PROVIDER_REFUSED,
+                                        verdict=Verdict.NOT_RUN, why=str(exc))
+                log.abort(Verdict.NOT_RUN, why=str(exc), **c.as_dict())
                 return RunResult(ticket, Verdict.NOT_RUN, run_id=log.run_id, preset_id=chosen_id,
                                  eligible=el, worktree=wt, team_version=team.version,
+                                 preflight=match,
                                  detail=f"provider refused to dispatch: {exc}")
             in_flight = result.dispatched and result.in_flight
             log.emit("agent_returned", claim_retained=in_flight, **result.as_event())
@@ -593,9 +650,17 @@ class RunController:
             # to PASS and to FAIL without the registry in the way.
             verifier = self.verifier or _verifiers.for_type(preset.type_id)
             cres = assertions(preset, verifier).run(ctx)
-            log.verdict(cres.verdict, contract=cres.contract,
-                        results=[{"name": r.name, "verdict": r.verdict.value, "detail": r.detail}
-                                 for r in cres.results])
+            results = [{"name": r.name, "verdict": r.verdict.value, "detail": r.detail}
+                       for r in cres.results]
+            # ⚠ Classified from the preset field and the resolved callable — never from the
+            # assertion's prose. A rule that read the detail string would be F19: a guard that
+            # stops matching the moment somebody rewords the message it was written to catch.
+            fam = ({} if cres.verdict is Verdict.PASS else
+                   _preflight.classify(
+                       _preflight.SITUATION_CONTRACT, verdict=cres.verdict, results=results,
+                       verifier_declared_wired=(preset.verifier_state == WIRED),
+                       verifier_callable_present=(verifier is not None)).as_dict())
+            log.verdict(cres.verdict, contract=cres.contract, results=results, **fam)
 
             row = self._record(
                 lane=ticket.id, outcome=cres.verdict.value, detail=cres.summary(),
@@ -607,16 +672,20 @@ class RunController:
                 # made every lane report `commits=None` and read as "no work".
                 branch=_branch_of(wt), commits=None, cwd=wt,
                 job=ticket.id, team=team.name, team_version=team.version,
-                agent_versions=team.pinned())
-            log.finish(cres.verdict, ledger_row=True)
+                agent_versions=team.pinned(),
+                # ⭐ The join. Without it this row cannot be tied back to the events above it.
+                run=log.run_id)
+            log.finish(cres.verdict, ledger_row=True, **fam)
             return RunResult(ticket, cres.verdict, run_id=log.run_id, preset_id=chosen_id,
                              contract=cres, worktree=wt, team_version=team.version,
-                             ledger_row=row, eligible=el, detail=cres.summary())
+                             ledger_row=row, eligible=el, preflight=match,
+                             detail=cres.summary())
         except Exception as exc:                                   # noqa: BLE001
-            log.abort(Verdict.ERROR, why=f"{type(exc).__name__}: {exc}")
+            c = _preflight.classify(_preflight.SITUATION_HARNESS_EXCEPTION, verdict=Verdict.ERROR)
+            log.abort(Verdict.ERROR, why=f"{type(exc).__name__}: {exc}", **c.as_dict())
             return RunResult(ticket, Verdict.ERROR, run_id=log.run_id, preset_id=chosen_id,
                              eligible=el, worktree=wt, team_version=team.version,
-                             detail=f"{type(exc).__name__}: {exc}")
+                             preflight=match, detail=f"{type(exc).__name__}: {exc}")
         finally:
             if claimed and not in_flight:
                 self._drop_claim(ticket)
