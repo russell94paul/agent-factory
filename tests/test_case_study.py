@@ -24,12 +24,22 @@ from factory import case_study as CS
 from factory import context as CTX
 from factory import forensic_source as FS
 from factory import projection as P
+from factory import repo as _repo
 
+#: Git-tracked content is checkout-relative and correctly so -- these tests assert on the source
+#: in the checkout they are running in.
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 NARRATIVE = ROOT / "missions" / "delivery-001" / "case-study.yaml"
-TASKS = ROOT / ".data" / "tasks.jsonl"
-MISSION = ROOT / ".data" / "missions" / "marketing-model-reconstruction-v1.json"
 PROSE = ROOT / "docs" / "case-studies" / "delivery-001-marketing-model.md"
+
+#: ⛔ `.data/` is ESTATE-WIDE state and must resolve through `factory.repo`, not from this file.
+#: As `ROOT / ".data"` these two pointed at the worktree's own `.data/`, which holds no task store
+#: and no mission manifest -- so `assemble()` got zero tasks, every outcome fell back to a default,
+#: and both assertions below failed in EVERY worktree while passing in the primary checkout. The
+#: test was detecting its own broken input and reporting it as a grounding regression.
+#: This is the two-line form of the defect `tests/test_repo_root.py` now measures and reports.
+TASKS = _repo.data() / "tasks.jsonl"
+MISSION = _repo.data() / "missions" / "marketing-model-reconstruction-v1.json"
 
 
 @pytest.fixture(scope="module")

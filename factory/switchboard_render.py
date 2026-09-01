@@ -454,8 +454,19 @@ def page(st: Optional[dict] = None, dispatch: Optional[dict] = None) -> str:
         '<div style="font:700 15px/1.2 ui-monospace,monospace;letter-spacing:.1em">SWITCHBOARD</div>'
         f'<div class="dim" style="margin-top:3px">{_e(title[:96])}</div></div>'
         f'<div class="needs" style="color:{ncol}">NEEDS YOU — {n}</div></div>')
+    # ⛔ NOT "nothing on this page is cached". That phrasing is banned by
+    # tests/test_suite_cache.py and the ban is CORRECT here rather than a false positive: this is
+    # rendered UI text making an absolute freshness claim, not prose describing a rule. The claim
+    # was also very nearly true and that is exactly what makes it dangerous — `repo.primary()` is
+    # `lru_cache`d for the process lifetime, so "nothing" was already an overstatement, and the
+    # first panel anyone later borrows from the Gates tab would make it a live falsehood. A reader
+    # who catches one absolute claim being false has no way to know which other number to trust.
+    #
+    # So the honest form states what IS re-derived and names the exception, which is the shape the
+    # guard's own docstring asks for.
     o.append(f'<div class="dim" style="margin:-6px 0 12px">measured {_e(st["measured_at"])} '
-             f'· nothing on this page is cached · refresh re-measures</div>')
+             f'· every figure re-derived on this request · no gate cache is read here '
+             f'· refresh re-measures</div>')
 
     ties = st.get("critical_path_ties") or 0
     tie_note = (f' · ⚠ {ties} chains are equally long, so the head shown is only the first by id'

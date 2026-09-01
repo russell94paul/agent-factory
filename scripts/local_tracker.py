@@ -26,6 +26,8 @@ from __future__ import annotations
 import datetime
 import html
 import json
+import os
+import uuid
 import ast
 import http.server
 import pathlib
@@ -63,8 +65,11 @@ from factory import control as ctrl  # noqa: E402
 from factory import events as evlib  # noqa: E402
 from factory import presets as presetlib  # noqa: E402
 from factory import provider as provlib  # noqa: E402
+from factory import repo as rp  # noqa: E402
 from factory import switchboard as sblib  # noqa: E402
 from factory import switchboard_render as sbr  # noqa: E402
+from factory import switchboard_p1 as sbp1  # noqa: E402
+from factory import work as worklib  # noqa: E402
 
 OUT = FACTORY / "tracker.html"
 
@@ -330,6 +335,30 @@ def start_session_from_handoff(note: str, dry: bool = False):
 
 _SB_MSG = None
 
+# ------------------------------------------------------------------ restart / runtime identity
+#
+# ⭐ `RUNTIME_ID` is generated once per PROCESS. It is what makes "did the restart actually
+# happen?" a measurement rather than an assumption: `/healthz` returns it, and the browser only
+# reloads when the value it gets back DIFFERS from the one the page was rendered with. A plain
+# 200 is not evidence of a restart — the dying process answers 200 too, right up until it exits.
+RUNTIME_ID = uuid.uuid4().hex[:12]
+
+#: Exit code the child uses to ask its supervisor for a fresh process. Any other exit means stop.
+#: A distinct code is what lets `scripts/switchboard_dev.py` tell "restart me" from "I crashed"
+#: without parsing output, so a crash-loop cannot masquerade as a restart loop.
+RESTART_EXIT = 97
+
+#: ⛔ Per-process, random, and NEVER derived from anything an attacker can predict or replay
+#: across restarts. Present in the served HTML, so it is not a secret from anyone who can already
+#: load the page — it is a CSRF token, and that is exactly the threat it closes: a third-party
+#: page can make your browser POST here, but it cannot read this value out of our HTML to include
+#: it. Set to "" when there is no supervisor, which makes the restart control render as
+#: unavailable rather than as a button that kills the server with nothing to bring it back.
+RESTART_TOKEN = uuid.uuid4().hex if os.environ.get("SWITCHBOARD_SUPERVISED") == "1" else ""
+
+#: Set by the restart handler; read by `main()` after the server loop ends.
+_RESTART_REQUESTED = False
+
 
 def _spawn(cmd, cwd):
     """The one place the Switchboard opens a terminal. Every spawn here goes through it.
@@ -345,18 +374,48 @@ def _spawn(cmd, cwd):
 
 
 def start_synced(target: str = "", note: str = "", reader: str = "", worktree: str = "",
-                 dry: bool = False, gate_handoff: bool = False):
-    """Write a measured startup packet and open a session already holding it.
+                 dry: bool = False, gate_handoff: bool = False, require_ready: bool = True,
+                 start_mode: str = worklib._tasks.MANUAL_START):
+    """Resolve a target canonically, then open a session already holding a measured packet.
 
     Replaces: generate handoff -> copy -> find terminal -> launch -> paste.
 
-    Order matters and is the same order `start_session_from_handoff` uses for the same reason: the
-    packet and its boundary are on disk BEFORE the terminal opens, so a failed spawn leaves the
-    work recoverable instead of losing it with the click.
+    ⛔ **The target is resolved BEFORE any context is compiled, and an unresolved one is REFUSED.**
+    This is the measured P0 defect. `switchboard._packet_target` returns `{}` for a target it does
+    not recognise, and every downstream branch reads that as "no single task" — so a typo produced
+    a packet titled `# Session start — MARKETING-MODEL-FINALIZATON-01` (one letter wrong) carrying
+    the whole mission's critical path, and a session opened believing it was grounded in a piece of
+    work that does not exist. Nothing downstream could detect it: the packet was internally
+    consistent, and its title was the operator's own typo reflected back.
+
+    The order below is the safety property, and each step gates the next:
+
+        target -> canonical resolution -> readiness -> repo -> conflict -> worktree
+        -> context packet -> spawn -> confirm live -> associate -> RUNNING
 
     ⛔ The bus cursor is advanced LAST, and only on a real spawn that succeeded. Marking traffic
     read before delivery is how a correction gets marked seen by a session that never started.
     """
+    # ---- resolve, or refuse -------------------------------------------------------
+    resolved = None
+    if target:
+        try:
+            resolved = worklib.resolve(target)
+        except worklib.TargetRefused as exc:
+            return False, (f"{exc} Nothing was written, no context was compiled and no terminal "
+                           f"was opened.")
+        except Exception as exc:                                   # noqa: BLE001
+            return False, (f"REFUSED: the target {target!r} could not be resolved "
+                           f"({type(exc).__name__}: {exc}) — an unresolvable target is not a "
+                           f"whole-mission session.")
+        if require_ready and not resolved.is_ready:
+            bad = [f"{c.name}={c.verdict}" for c in resolved.checks
+                   if c.verdict in (worklib.FAIL, worklib.UNMEASURED)]
+            return False, (f"REFUSED: {resolved.id} is {resolved.state}, not READY "
+                           f"({', '.join(bad) or 'no failing check recorded'}). "
+                           f"{resolved.blocked_reason or ''} Readiness is derived; it cannot be "
+                           f"overridden from the page.")
+        target = resolved.id          # canonical spelling from here on, never the operator's
     d = FACTORY / ".data" / "handoffs"
     d.mkdir(parents=True, exist_ok=True)
     stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -392,10 +451,42 @@ def start_synced(target: str = "", note: str = "", reader: str = "", worktree: s
            ["cmd", "/c", "start", f"switchboard {target or 'session'}", "powershell", "-NoExit",
             "-ExecutionPolicy", "Bypass", "-File", str(ps1)])
     try:
-        _spawn(cmd, cwd)
+        proc = _spawn(cmd, cwd)
     except Exception as exc:                                       # noqa: BLE001
         return False, (f"packet saved to {f.name} but no terminal opened "
                        f"({type(exc).__name__}: {exc}) — nothing was marked read")
+
+    # ---- confirm the spawn, then associate ----------------------------------------
+    # ⚠ `Popen` returning is not evidence a session started; it is evidence a process was
+    # created. A launcher that exits instantly (wt handing off to an existing window, a missing
+    # PowerShell) returns a healthy object and leaves nothing running. So the association below
+    # is gated on the process still being alive a moment later, and the Claude session id is
+    # recorded ONLY when the registry actually shows it — never assumed from the spawn.
+    assoc = ""
+    if resolved is not None:
+        alive = _confirm_spawn(proc)
+        try:
+            store = worklib.open_store()
+            if alive:
+                store.claim(resolved.id, actor="switchboard")
+                # ⭐ Recorded separately from `claim`. `claim` says work began; this says who
+                # DECIDED it should. The pair is what makes autonomy performance measurable later
+                # rather than reconstructed from timestamps and guesswork.
+                store.record_start(resolved.id, start_mode, actor="switchboard")
+                sid = _await_session(resolved.id)
+                if sid:
+                    store.attach_session(resolved.id, sid, actor="switchboard")
+                    assoc = f"; {resolved.id} is RUNNING, attached to session {sid[:8]}"
+                else:
+                    assoc = (f"; {resolved.id} is RUNNING — the terminal is alive but no Claude "
+                             f"session has registered under it yet, so no session id was "
+                             f"attached (it is not claimed to be known)")
+            else:
+                assoc = (f"; ⚠ the launcher exited immediately, so {resolved.id} was NOT moved to "
+                         f"RUNNING and no session was associated — check the terminal")
+        except Exception as exc:                                   # noqa: BLE001
+            assoc = (f"; ⚠ {resolved.id} could not be moved to RUNNING "
+                     f"({type(exc).__name__}: {exc}) — the session is open regardless")
 
     marked = None
     if reader and events:
@@ -406,8 +497,179 @@ def start_synced(target: str = "", note: str = "", reader: str = "", worktree: s
                           f"not be advanced ({type(exc).__name__}: {exc}) — that traffic will be "
                           f"delivered again, which is the safe direction")
     return True, (f"session opened in {cwd}, holding {f.name}"
+                  + assoc
                   + (f"; delivered {len(events)} bus event(s) to {reader} and advanced its cursor "
                      f"to {marked}" if marked else ""))
+
+
+#: How long to wait before deciding a launcher that exited was a failed spawn. Short, because the
+#: only thing being distinguished is "died instantly" from "is running" — a real terminal lives for
+#: minutes, a broken launcher is gone in milliseconds.
+_SPAWN_CONFIRM_S = 0.8
+
+#: Bounded wait for the Claude session to register itself. `claude` takes a second or two to write
+#: its registry entry. Not waiting longer on purpose: an unattached-but-RUNNING piece of work is a
+#: true statement the next refresh will improve on, whereas blocking the POST for ten seconds makes
+#: the page feel broken and still guarantees nothing.
+_SESSION_WAIT_S = 6.0
+
+
+def _confirm_spawn(proc) -> bool:
+    """True when the launched process is still alive shortly after spawn.
+
+    A `Popen` that returns is not evidence of a live session — it is evidence a process was
+    created. This is the smallest check that separates the two.
+    """
+    import time as _t
+    if proc is None:
+        return False
+    deadline = _t.time() + _SPAWN_CONFIRM_S
+    while _t.time() < deadline:
+        if proc.poll() is not None:
+            return False
+        _t.sleep(0.1)
+    return proc.poll() is None
+
+
+def _await_session(work_id: str):
+    """The Claude session id whose name carries `work_id`, or None. Never guesses.
+
+    The launcher sets `CLAUDE_CODE_SESSION_NAME` to a string containing the work id, so this is a
+    real join rather than "the newest session", which would attach whichever session happened to
+    start last — including one a human opened by hand.
+    """
+    import re as _re
+    import time as _t
+    pat = _re.compile(r"(?<![A-Za-z0-9])" + _re.escape(work_id) + r"(?![A-Za-z0-9])", _re.I)
+    deadline = _t.time() + _SESSION_WAIT_S
+    while _t.time() < deadline:
+        try:
+            for srow in sesslib.inventory():
+                hay = " ".join(str(srow.get(k) or "") for k in ("name", "topic", "detail"))
+                if pat.search(hay) and srow.get("session_id"):
+                    return str(srow["session_id"])
+        except Exception:                                          # noqa: BLE001
+            return None
+        _t.sleep(0.4)
+    return None
+
+
+def resolve_hold(work_id: str, hold: str = "", decision: str = "", note: str = ""):
+    """Release an explicit hold on a piece of work — the operator's decision, recorded.
+
+    ⛔ **This exists because the button did not.** The NEEDS YOU decision card rendered a control
+    labelled RESOLVE that was an `<a href>` to the Inspector, and the Inspector carried no control
+    to release a hold either. So the page stated that a decision was required, named the person
+    required to make it, and offered no way to make it — an inbox that can only ever accumulate.
+    Paul hit exactly that on a phone with no laptop access, which is the situation the whole
+    surface exists to serve.
+
+    The release is `unblock`, which is already the store's inverse of `block`, plus an evidence row
+    so the decision has an author, a time and a reason. `decision` is recorded verbatim: APPROVE
+    and REJECT are different answers and both are answers.
+    """
+    work_id, hold = (work_id or "").strip(), (hold or "").strip()
+    if not work_id or not hold:
+        return False, "REFUSED: a resolve needs both the work id and the hold it releases."
+    try:
+        store = worklib.open_store()
+        t = store.get(work_id)
+    except KeyError:
+        return False, f"REFUSED: no canonical work named {work_id!r}."
+    except Exception as exc:                                       # noqa: BLE001
+        return False, f"could not read the store: {type(exc).__name__}: {exc}"
+    if hold not in (t.blocked_by or []):
+        return False, (f"REFUSED: {work_id} is not held on {hold!r}. Current holds: "
+                       + (", ".join(t.blocked_by) or "none") + ". The page was stale.")
+    verdict = (decision or "RESOLVED").upper()[:32]
+    try:
+        # ⭐ Evidence FIRST. A release that lands with no record of who decided or why is the
+        # thing this estate keeps finding: a state change nobody can reconstruct afterwards.
+        store.add_evidence(work_id, kind=f"operator decision: {verdict}",
+                           ref=f"hold:{hold}", actor="operator", basis="MEASURED")
+        if note.strip():
+            store._emit({"ts": __import__("time").time(), "actor": "operator", "kind": "note",
+                         "task": work_id, "data": {"text": note.strip()[:2000], "hold": hold,
+                                                   "decision": verdict}})
+        store.unblock(work_id, by=hold, actor="operator")
+    except Exception as exc:                                       # noqa: BLE001
+        return False, f"could not release the hold: {type(exc).__name__}: {exc}"
+    w = next((x for x in worklib.project() if x.id == work_id), None)
+    return True, (f"{verdict}: released {hold} on {work_id}"
+                  + (f" — now {w.state}" + (f" ({w.blocked_reason[:90]})"
+                                            if w.blocked_reason else "") if w else "")
+                  + (f'; note recorded' if note.strip() else ""))
+
+
+def set_autonomy(work_id: str, to: str = "", go: str = "set"):
+    """Set the execution policy, or PAUSE / RESUME it.
+
+    ⭐ PAUSE is always available and never conditional. A stop that could be refused because of the
+    state it is trying to stop would not be a stop, so it does not check readiness, policy, or
+    whether the work is running -- it records the operator's decision and that is that.
+    """
+    work_id = (work_id or "").strip()
+    if not work_id:
+        return False, "REFUSED: no work id."
+    try:
+        store = worklib.open_store()
+        store.get(work_id)
+    except KeyError:
+        return False, f"REFUSED: no canonical work named {work_id!r}."
+    except Exception as exc:                                       # noqa: BLE001
+        return False, f"could not read the store: {type(exc).__name__}: {exc}"
+    try:
+        if go == "pause":
+            store.pause_autonomy(work_id, True, actor="operator")
+            return True, f"{work_id}: autonomy PAUSED — it will not start without you."
+        if go == "resume":
+            store.pause_autonomy(work_id, False, actor="operator")
+            return True, f"{work_id}: autonomy resumed; the policy applies again."
+        store.set_autonomy(work_id, to, actor="operator")
+    except ValueError as exc:
+        return False, f"REFUSED: {exc}"
+    except Exception as exc:                                       # noqa: BLE001
+        return False, f"could not set autonomy: {type(exc).__name__}: {exc}"
+    w = next((x for x in worklib.project() if x.id == work_id), None)
+    allowed, why = worklib.guarded_start(w) if w else (False, ["work not found after write"])
+    return True, (f"{work_id}: autonomy set to {to}. "
+                  + ("It may start without a human when READY."
+                     if allowed else
+                     "It will still NOT start without a human: " + "; ".join(why[:3])))
+
+
+def create_work(title: str, objective: str = "", repo: str = "", visibility: str = "PRIVATE",
+                work_id: str = "", depends_on: str = "", resource_claim: str = "",
+                access: str = "WRITE"):
+    """The operator-facing CREATE WORK path. One TaskStore write; no manifest anywhere.
+
+    ⭐ This is the whole of `MANIFEST_CREATION_TOOL_MISSING`. Before it, arbitrary work needed a
+    bespoke Python script to build `.data/missions/<id>.json` before the Switchboard could see it.
+    Now the work IS the store row, and the manifest is an optional overlay for the one legacy
+    mission that predates this.
+    """
+    title = (title or "").strip()
+    if not title:
+        return False, "REFUSED: work needs a title — 'what needs doing?' cannot be blank."
+    if not (repo or "").strip():
+        return False, ("REFUSED: work needs a repository. Without one there is no worktree to "
+                       "open, and readiness could never be measured.")
+    deps = [d.strip() for d in (depends_on or "").replace(",", " ").split() if d.strip()]
+    try:
+        w = worklib.create(
+            title=title, objective=(objective or "").strip(), repo=repo.strip(),
+            visibility=visibility if visibility in worklib._tasks.VISIBILITIES else "PRIVATE",
+            work_id=(work_id or "").strip() or None, depends_on=deps,
+            resource_claim=(resource_claim or "").strip(),
+            access=access if access in ("READ", "WRITE") else "WRITE",
+            actor="operator")
+    except Exception as exc:                                       # noqa: BLE001
+        return False, f"could not create work: {type(exc).__name__}: {exc}"
+    return True, (f"created {w.id} — {w.state}"
+                  + (f" ({w.blocked_reason})" if w.blocked_reason else "")
+                  + f"; visibility {w.visibility}"
+                  + (f"; depends on {', '.join(deps)}" if deps else "")
+                  + ". Readiness is derived, so it was not created READY.")
 
 
 def resume_session(session_id: str, dry: bool = False):
@@ -708,6 +970,33 @@ claude{model_flag} (Get-Content -Raw -Encoding UTF8 -LiteralPath '{prompt_file}'
     # utf-8-SIG: PowerShell 5.1 reads a BOM-less .ps1 as ANSI and mangles the box rules.
     f.write_text(body, encoding="utf-8-sig")
     return f
+
+
+#: Repositories this estate operates on. A closed list, not a free-text field: a repo that does
+#: not exist is a readiness check that can never pass and a worktree that can never open.
+KNOWN_REPOS = ("agent-factory", "clients", "connector", "core_api", "wiki")
+
+
+def _repo_choices():
+    """Repositories CREATE WORK may name, this checkout's own repo first.
+
+    ⛔ NOT the worktree list. `git worktree list` reports `.worktrees/p1`, `.worktrees/mission`
+    and so on, and their directory names are *lanes of one repository*, not repositories. An
+    earlier version derived the choices from them and offered `p1` and `reliability` as repos to
+    create work against — four plausible-looking options that name nothing an operator could ever
+    clone. The primary checkout's own directory name is the only one of the pair that is a repo.
+    """
+    seen = []
+    try:
+        nm = pathlib.Path(str(rp.primary())).name
+        if nm:
+            seen.append(nm)
+    except Exception:                                              # noqa: BLE001
+        pass
+    for known in KNOWN_REPOS:
+        if known not in seen:
+            seen.append(known)
+    return seen
 
 
 def _wt() -> str:
@@ -1116,7 +1405,9 @@ def _tok(n) -> str:
     return str(n)
 
 
-def render(when: datetime.datetime, tab: str = "tickets", team: str = "") -> str:
+def render(when: datetime.datetime, tab: str = "tickets", team: str = "",
+           view: str = "now", inspect: str = "", q: str = "",
+           panes: str = "", lay: str = "1", popout: bool = False) -> str:
     # Research needs no measurement, and a full measure is ~10s of probes. Paying that to read a
     # prompt was the main reason this page felt slow.
     # ⛔ `switchboard` joins the same list as `research`, and for a stronger reason.
@@ -1175,7 +1466,12 @@ def render(when: datetime.datetime, tab: str = "tickets", team: str = "") -> str
         import collections as _c
         try:
             from factory.tasks import TaskStore as _TS
-            _tasks = _TS(pathlib.Path(__file__).resolve().parent.parent / ".data" / "tasks.jsonl").all()
+            # ⛔ `rp.data()` and not a `__file__`-relative path. This read the store out of
+            # whichever checkout the server happened to run from, so serving the tracker from a
+            # worktree showed ZERO closed tickets on the Tickets tab -- an empty store rendering
+            # as "no progress" rather than as "no store". Caught by the widened structural guard
+            # in tests/test_repo_root.py, not by anyone looking at the page.
+            _tasks = _TS(rp.data() / "tasks.jsonl").all()
         except Exception as _exc:                                  # noqa: BLE001
             _tasks = None
             _terr = "%s: %s" % (type(_exc).__name__, _exc)
@@ -1270,7 +1566,7 @@ def render(when: datetime.datetime, tab: str = "tickets", team: str = "") -> str
           'reconstructed afterwards.</p>')
         w('<form method="POST" action="/run-ticket" style="display:flex;gap:7px;flex-wrap:wrap;'
           'align-items:center;font-size:13px">')
-        w('<input name="ticket" placeholder="ticket id, e.g. GP-327" required '
+        w('<input name="ticket" placeholder="ticket id" required '
           'style="padding:6px 9px;border:1px solid var(--rule);border-radius:5px;'
           'background:var(--bg);color:var(--ink);font-family:ui-monospace,monospace;width:200px">')
         w('<input name="title" placeholder="what it asks for" '
@@ -2718,11 +3014,25 @@ def render(when: datetime.datetime, tab: str = "tickets", team: str = "") -> str
                 w('</div>')
 
     if tab == "switchboard":
-        # ⭐ One join over state that already existed, rendered by `factory.switchboard_render`.
+        # ⭐ One join over state that already existed, rendered by `factory.switchboard_p1`.
         # The tab body is deliberately thin: everything that could be wrong lives in the
         # projection, where a test can reach it without parsing HTML.
+        #
+        # P0's `switchboard_render.page` is NOT deleted — it is the MISSION view, reached from
+        # the nav. Every panel it renders is still on the estate; none of them is first.
         try:
-            w(sbr.page(sblib.state(), dispatch=_DISPATCH))
+            _st = sblib.state()
+            if view == "dispatch":
+                w(sbr.page(_st, dispatch=_DISPATCH))
+            else:
+                # Read-and-clear: a flash that survived a refresh would read as a live condition
+                # rather than as the outcome of the act that produced it.
+                global _SB_MSG
+                _flash, _SB_MSG = _SB_MSG, None
+                w(sbp1.page(_st, view=view, inspect=inspect, q=q,
+                            token=RESTART_TOKEN, runtime=RUNTIME_ID,
+                            flash=_flash, repos=_repo_choices(), dispatch=_DISPATCH,
+                            panes=panes, lay=lay, popout=popout))
         except Exception as _exc:                                  # noqa: BLE001
             # A command page that 500s tells the operator nothing. A command page that says
             # WHICH instrument failed tells them where to look, and keeps the nav reachable.
@@ -2812,7 +3122,7 @@ document.querySelectorAll('[data-copy]').forEach(function (b) {
 
 class Handler(http.server.BaseHTTPRequestHandler):
     def do_POST(self):
-        global _ANSWER_MSG, _CLAIM_MSG, _HANDOFF_NOTE
+        global _ANSWER_MSG, _CLAIM_MSG, _HANDOFF_NOTE, _SB_MSG
         import urllib.parse
         if self.path.rstrip("/") == "/finish":
             raw = self.rfile.read(int(self.headers.get("Content-Length") or 0)).decode("utf-8", "replace")
@@ -2842,6 +3152,83 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.send_response(303); self.send_header("Location", "/switchboard")
             self.send_header("Cache-Control", "no-store"); self.end_headers()
             return
+        if self.path.rstrip("/") == "/switchboard/create":
+            raw = self.rfile.read(int(self.headers.get("Content-Length") or 0)).decode("utf-8", "replace")
+            q = urllib.parse.parse_qs(raw, keep_blank_values=True)
+            _SB_MSG = create_work(
+                title=(q.get("title") or [""])[0],
+                objective=(q.get("objective") or [""])[0],
+                repo=(q.get("repo") or [""])[0],
+                visibility=(q.get("visibility") or ["PRIVATE"])[0],
+                work_id=(q.get("work_id") or [""])[0],
+                depends_on=(q.get("depends_on") or [""])[0],
+                resource_claim=(q.get("resource_claim") or [""])[0],
+                access=(q.get("access") or ["WRITE"])[0])
+            print(f"  switchboard/create: {_SB_MSG[1]}")
+            self.send_response(303)
+            self.send_header("Location", "/switchboard?view=now" if _SB_MSG[0]
+                             else "/switchboard?view=create")
+            self.send_header("Cache-Control", "no-store"); self.end_headers()
+            return
+        if self.path.rstrip("/") == "/switchboard/resolve":
+            raw = self.rfile.read(int(self.headers.get("Content-Length") or 0)).decode("utf-8", "replace")
+            q = urllib.parse.parse_qs(raw, keep_blank_values=True)
+            _SB_MSG = resolve_hold(
+                (q.get("work_id") or [""])[0],
+                hold=(q.get("hold") or [""])[0],
+                decision=(q.get("go") or [""])[0],
+                note=(q.get("note") or [""])[0])
+            print(f"  switchboard/resolve: {_SB_MSG[1]}")
+            self.send_response(303)
+            self.send_header("Location", "/switchboard?view=now")
+            self.send_header("Cache-Control", "no-store"); self.end_headers()
+            return
+        if self.path.rstrip("/") == "/switchboard/autonomy":
+            raw = self.rfile.read(int(self.headers.get("Content-Length") or 0)).decode("utf-8", "replace")
+            q = urllib.parse.parse_qs(raw, keep_blank_values=True)
+            _SB_MSG = set_autonomy(
+                (q.get("work_id") or [""])[0].strip(),
+                to=(q.get("to") or [""])[0].strip(),
+                go=(q.get("go") or [""])[0].strip())
+            print(f"  switchboard/autonomy: {_SB_MSG[1]}")
+            self.send_response(303)
+            self.send_header("Location", "/switchboard?view=now&inspect="
+                             + urllib.parse.quote((q.get("work_id") or [""])[0].strip()[:64]))
+            self.send_header("Cache-Control", "no-store"); self.end_headers()
+            return
+        if self.path.rstrip("/") == "/switchboard/restart":
+            ok, why = self._restart_allowed()
+            if not ok:
+                print(f"  switchboard/restart: REFUSED — {why}")
+                self.send_response(403)
+                self.send_header("Content-Type", "text/plain; charset=utf-8")
+                self.send_header("Cache-Control", "no-store")
+                self.end_headers()
+                self.wfile.write(f"REFUSED: {why}\n".encode("utf-8"))
+                return
+            # ⛔ The action is FIXED. Nothing from the request reaches it — no command, no path,
+            # no argument, no shell. The only effect this endpoint can have is "this process
+            # exits with RESTART_EXIT", and the supervisor decides what that means.
+            globals()["_RESTART_REQUESTED"] = True
+            print("  switchboard/restart: accepted — exiting for the supervisor to replace")
+            body = json.dumps({"restarting": True, "runtime": RUNTIME_ID}).encode("utf-8")
+            self.send_response(202)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Connection", "close")
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(body)
+            try:
+                self.wfile.flush()
+            except Exception:                                       # noqa: BLE001
+                pass
+            # Shut the accept loop down from another thread; `shutdown()` blocks if called from
+            # inside a handler on the serving thread, which would deadlock the very request that
+            # is trying to answer.
+            import threading as _th
+            _th.Thread(target=self.server.shutdown, daemon=True).start()
+            return
         if self.path.rstrip("/") == "/switchboard/start":
             raw = self.rfile.read(int(self.headers.get("Content-Length") or 0)).decode("utf-8", "replace")
             q = urllib.parse.parse_qs(raw, keep_blank_values=True)
@@ -2854,6 +3241,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 # A dry run that dispatches is worse than none at all.
                 dry=bool((q.get("dry") or [""])[0]),
                 gate_handoff=bool((q.get("gate") or [""])[0]))
+            _SB_MSG = _CLAIM_MSG
             print(f"  switchboard/start: {_CLAIM_MSG[1]}")
             self.send_response(303); self.send_header("Location", "/switchboard")
             self.send_header("Cache-Control", "no-store"); self.end_headers()
@@ -2954,6 +3342,22 @@ class Handler(http.server.BaseHTTPRequestHandler):
         global _SYNC_MSG
         global _CLAIM_MSG
         import urllib.parse
+        # ⭐ The readiness endpoint the restart poll reads. It returns the PROCESS identity, not
+        # merely a 200: the browser reloads only when `runtime` differs from the one its page was
+        # rendered with, so the dying process answering one last 200 cannot be mistaken for a
+        # completed restart. Deliberately the cheapest handler on the server — it measures
+        # nothing, because a health check that runs the projection would be unavailable during
+        # exactly the moments it exists to observe.
+        if urllib.parse.urlparse(self.path).path.rstrip("/") == "/healthz":
+            payload = json.dumps({"ok": True, "runtime": RUNTIME_ID, "pid": os.getpid(),
+                                  "supervised": bool(RESTART_TOKEN)}).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(payload)))
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(payload)
+            return
         # The escape hatch for a task claim whose session is gone. A guard with no release is a
         # wedged button, and this module's own rule is that a stale claim blocks but always says
         # how to clear it — never expires quietly.
@@ -3084,9 +3488,31 @@ class Handler(http.server.BaseHTTPRequestHandler):
         if route is None:
             self.send_error(404)
             return
-        sel = (urllib.parse.parse_qs(parsed.query or "").get("team") or [""])[0]
+        qs = urllib.parse.parse_qs(parsed.query or "")
+        sel = (qs.get("team") or [""])[0]
+        # ⛔ Every one of these reaches HTML. `view` and `inspect` are constrained here rather
+        # than escaped at each use: `view` to the known set, `inspect` to the task-id character
+        # class. A reflected value that reaches an attribute is the one injection this page could
+        # actually have, and the closed set removes the class rather than the instance.
+        _view = (qs.get("view") or ["now"])[0][:32]
+        if _view not in dict(sbp1.VIEWS) and _view not in dict(sbp1.MORE_VIEWS) \
+                and _view not in ("create", "dispatch"):
+            _view = "now"
+        _insp = (qs.get("inspect") or [""])[0][:64]
+        if not re.fullmatch(r"[A-Za-z0-9._-]{0,64}", _insp or ""):
+            _insp = ""
+        _q = (qs.get("q") or [""])[0][:80]
+        # Console state. `panes` is a comma-separated list of session ids and reaches HTML and a
+        # filesystem glob, so it is constrained to the id character class here rather than escaped
+        # at each use -- the same closed-set rule `inspect` follows.
+        _panes = ",".join([x for x in (qs.get("panes") or [""])[0].split(",")
+                           if re.fullmatch(r"[A-Za-z0-9._-]{1,128}", x)][:4])
+        _lay = (qs.get("lay") or ["1"])[0][:4]
+        _popout = bool((qs.get("popout") or [""])[0])
         # Re-measure per request. Slower than serving a file, and the entire reason to serve.
-        body = render(datetime.datetime.now(), route, team=sel).encode("utf-8")
+        body = render(datetime.datetime.now(), route, team=sel,
+                      view=_view, inspect=_insp, q=_q,
+                      panes=_panes, lay=_lay, popout=_popout).encode("utf-8")
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
@@ -3094,8 +3520,95 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    #: Hosts a same-origin request may legitimately carry. The server binds loopback only, so a
+    #: request whose Origin names anything else is either a cross-site POST or a proxy that is
+    #: rewriting the origin — and neither is a case where killing the server is the right answer.
+    _LOCAL_HOSTS = ("127.0.0.1", "localhost", "[::1]", "::1")
+
+    def _restart_allowed(self):
+        """Four independent conditions, ALL required. Returns (ok, why-not).
+
+        ⭐ This is a remote-control action: the Switchboard is reachable from a phone through a
+        tunnel, so "it is local" is a property of the *socket*, not of the person. Each condition
+        closes a different door and none of them is sufficient alone:
+
+        1. **Supervised.** With no supervisor there is nothing to bring the server back, so the
+           honest answer to "restart" is that it cannot, not a process that exits into silence.
+        2. **Loopback peer.** The listening socket is bound to loopback, and this re-checks the
+           actual peer address rather than trusting that.
+        3. **Token match.** A per-process random value embedded in our own HTML. This is the CSRF
+           control: another site can make the browser POST here, but the same-origin policy stops
+           it reading this value to include. Compared with `secrets.compare_digest`, because a
+           token compared with `==` leaks its prefix through timing.
+        4. **Same-origin.** `Origin`/`Referer`, when present, must name a loopback host. A
+           form-encoded POST is not preflighted, so this is the header that distinguishes a click
+           on our page from a cross-site form submission.
+
+        ⛔ Note what is NOT here: nothing reads a command, a path, an argument or an environment
+        variable from the request. There is no `/restart?command=` because there is no parameter
+        at all — the handler's whole effect is a fixed exit code.
+        """
+        import secrets as _secrets
+        if not RESTART_TOKEN:
+            return False, ("this server is not supervised, so a restart would exit into nothing. "
+                           "Start it with scripts/switchboard_dev.py.")
+        peer = (self.client_address[0] if self.client_address else "") or ""
+        if peer not in self._LOCAL_HOSTS:
+            return False, f"restart is loopback-only; this request came from {peer!r}"
+        try:
+            n = int(self.headers.get("Content-Length") or 0)
+        except ValueError:
+            return False, "unreadable Content-Length"
+        if n > 4096:
+            return False, "restart takes no payload beyond its token"
+        raw = self.rfile.read(n).decode("utf-8", "replace")
+        got = (urllib.parse.parse_qs(raw, keep_blank_values=True).get("token") or [""])[0]
+        if not got or not _secrets.compare_digest(str(got), RESTART_TOKEN):
+            return False, "missing or stale restart token — reload the page and try again"
+        # ⛔ SAME-ORIGIN means "matches the origin this request was sent TO" -- compared against
+        # the request's own Host header, NOT against a loopback allow-list.
+        #
+        # The first version compared against `_LOCAL_HOSTS` and it broke the one case this whole
+        # feature exists for. Reached through the phone tunnel the page's own origin IS the tunnel
+        # hostname, so the browser sends `Origin: https://<id>.ngrok-free.app` and the check
+        # refused the page's own button:
+        #
+        #     REFUSED: cross-origin restart refused (Origin: 'abc123.ngrok-free.app')
+        #
+        # The button rendered, the tap did nothing, and the operator would have walked back to the
+        # laptop -- which is precisely the trip the control was built to remove. Measured
+        # 2026-09-01; every earlier test hit 127.0.0.1 directly and sent no Origin at all, so the
+        # whole security suite passed while the real path was broken.
+        #
+        # Comparing to Host keeps the CSRF property intact and is in fact the stricter, standard
+        # check: a third-party page POSTing here carries ITS origin, which cannot match our Host,
+        # whether we are reached on localhost or through a tunnel.
+        host_hdr = (self.headers.get("Host") or "").strip()
+        want = urllib.parse.urlparse("//" + host_hdr).hostname or host_hdr.split(":")[0]
+        for hdr in ("Origin", "Referer"):
+            v = self.headers.get(hdr)
+            if not v:
+                continue                       # form POSTs may omit it; the token still gates
+            got = urllib.parse.urlparse(v).hostname or ""
+            if got and want and got.lower() == want.lower():
+                continue                       # same origin as the page that was served
+            if got in self._LOCAL_HOSTS and want in self._LOCAL_HOSTS:
+                continue                       # 127.0.0.1 vs localhost are the same server
+            return False, (f"cross-origin restart refused ({hdr} host {got!r} does not match the "
+                           f"host this request was sent to, {want!r})")
+        return True, ""
+
     def log_message(self, fmt, *args):
         print(f"  re-measured for {self.address_string()}")
+
+
+def _exit_code_for_supervisor() -> int:
+    """`RESTART_EXIT` when the UI asked for a restart, 0 for an ordinary stop.
+
+    The supervisor distinguishes the two by code alone, so a crash can never be mistaken for a
+    restart request and re-launched forever.
+    """
+    return RESTART_EXIT if _RESTART_REQUESTED else 0
 
 
 def main(argv=None) -> int:
@@ -3140,8 +3653,18 @@ def main(argv=None) -> int:
         try:
             httpd.serve_forever()
         except KeyboardInterrupt:
+            # Ctrl+C stops the child AND, because the supervisor sees exit 0, stops the
+            # supervisor too. A wrapper that survived Ctrl+C would be a process the operator
+            # cannot kill from the terminal they started it in.
             print("\nstopped.")
-    return 0
+            return 0
+    # serve_forever() also returns when the restart handler calls shutdown(). The exit CODE is
+    # what tells the supervisor which of the two happened -- a crash must never be replaced with
+    # a fresh child, or a broken build becomes an infinite relaunch loop.
+    code = _exit_code_for_supervisor()
+    if code == RESTART_EXIT:
+        print(f"restart requested by the UI -- exiting {code} for the supervisor")
+    return code
 
 
 if __name__ == "__main__":
