@@ -115,6 +115,12 @@ class Work:
     session_id: Optional[str] = None
     parent: Optional[str] = None
     owner: Optional[str] = None
+    #: MANUAL | GUARDED | AUTO. Defaults closed; see `tasks.DEFAULT_AUTONOMY`.
+    autonomy: str = _tasks.DEFAULT_AUTONOMY
+    #: MANUAL_START | AUTO_START | None -- how the last start was decided.
+    start_mode: Optional[str] = None
+    #: The operator's stop. Outranks the policy, always.
+    autonomy_paused: bool = False
     #: True when this row's label/contract came from a mission manifest rather than the task.
     from_manifest: bool = False
     mission: str = ""
@@ -141,6 +147,9 @@ class Work:
         d["action"] = self.action
         d["is_ready"] = self.is_ready
         d["visibility_glyph"], d["visibility_label"] = self.visibility_mark
+        allowed, reasons = guarded_start(self)
+        d["guarded_start_allowed"] = allowed
+        d["guarded_stop_reasons"] = reasons
         return d
 
 
@@ -429,6 +438,8 @@ def project(store: Optional[TaskStore] = None, manifests: Optional[List[dict]] =
             contract=contract, evidence=len(t.evidence),
             evidence_refs=[str(e.get("ref", "")) for e in t.evidence],
             session_id=t.session_id, parent=t.parent, owner=t.owner,
+            autonomy=t.autonomy, start_mode=t.start_mode,
+            autonomy_paused=bool(t.autonomy_paused),
             from_manifest=bool(ov), mission=ov.get("mission", ""),
             needs=list(needs_by_id.get(t.id) or []))
 
@@ -438,6 +449,65 @@ def project(store: Optional[TaskStore] = None, manifests: Optional[List[dict]] =
         w.checks = readiness(w, rows, running)
         w.state = _state_for(w)
     return sorted(rows.values(), key=lambda w: (w.state != NEEDS_HUMAN, w.state != READY, w.id))
+
+
+# --------------------------------------------------------------------- autonomy policy
+
+
+#: Contract keys that mean a human must decide before this runs, whatever the policy says. Each is
+#: a category the brief names explicitly; they are listed rather than inferred so that adding one
+#: is a visible edit rather than a change in behaviour nobody can point at.
+_HUMAN_GATE_KEYS = ("blocking_gate", "requires_approval", "approval_required",
+                    "security_review", "publication_gate", "budget_ceiling", "risk_ceiling")
+
+
+def guarded_start(w: "Work") -> tuple:
+    """May the system start this WITHOUT a human? Returns (allowed, reasons-it-must-not).
+
+    ⭐ **Deny by default, and every condition below is a stop rather than a score.** The function
+    returns True only when it has run out of reasons to say no — there is no threshold, no
+    weighting and no "probably fine". An unmeasured condition is a stop, which is the whole
+    difference between GUARDED and unattended.
+
+    ⛔ **This decides; it does not act.** P1 deliberately ships no loop that calls this on a timer
+    and spawns sessions. The brief's line is "do not implement uncontrolled recursive autonomous
+    execution", and the honest way to honour it is that the *policy, the decision and the recorded
+    outcome* exist and are inspectable, while the thing that would pull the trigger does not exist
+    yet. A GUARDED item today tells the operator it COULD start and why it may; starting it is
+    still a tap.
+
+    The stops, in the order the brief names them:
+      human gates, security, publication, unresolved conflicts, unknown/unmeasured conditions,
+      explicit approval, configured budget/risk boundaries — plus the operator's own pause.
+    """
+    reasons: List[str] = []
+    if w.autonomy_paused:
+        reasons.append("autonomy is PAUSED for this work by the operator")
+    if w.autonomy == _tasks.MANUAL:
+        reasons.append("policy is MANUAL — it waits for an explicit START SYNCED")
+    if w.state != READY:
+        reasons.append(f"state is {w.state}, not READY")
+
+    for c in w.checks:
+        if c.verdict == FAIL:
+            reasons.append(f"{c.name} FAILED: {c.detail}")
+        elif c.verdict == UNMEASURED:
+            # ⭐ The rule that makes GUARDED safe rather than optimistic.
+            reasons.append(f"{c.name} is UNMEASURED — an unknown condition is a stop, not a pass")
+
+    contract = w.contract or {}
+    for key in _HUMAN_GATE_KEYS:
+        if contract.get(key):
+            reasons.append(f"contract declares {key}={contract[key]!r} — a human decides")
+
+    if w.visibility != _tasks.PRIVATE:
+        # PUBLIC or REVIEW_REQUIRED work touches the publication boundary.
+        reasons.append(f"visibility is {w.visibility} — anything that is not PRIVATE crosses the "
+                       f"publication boundary and a human decides")
+    if w.conflicts_with:
+        reasons.append("declares a resource conflict with "
+                       + ", ".join(w.conflicts_with[:4]))
+    return (not reasons), reasons
 
 
 # ------------------------------------------------------------------- target resolution

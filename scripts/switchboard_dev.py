@@ -72,6 +72,88 @@ MAX_FAST_RESTARTS = 5
 MIN_UPTIME_S = 3.0
 
 
+def _kill_on_close_job():
+    """A Windows Job Object that kills its children when this process dies. None elsewhere.
+
+    ⭐ **Measured, not assumed.** Stopping the supervisor with `Stop-Process` on 2026-09-01 left
+    the child ALIVE and still holding port 8117 — an orphan the operator then has to hunt with
+    `netstat`, and which makes the next launch fail to bind for a reason that looks like "the port
+    is in use by something else". Ctrl+C is handled correctly by the signal path below, but a hard
+    kill, a closed terminal or a crashed supervisor are not signals and never reach it.
+
+    A job object with `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE` makes the guarantee structural rather
+    than conditional on the parent getting a chance to clean up: when the last handle to the job
+    closes — including because the process holding it was killed — Windows terminates everything
+    in it. The child cannot outlive the supervisor by any path.
+
+    Returns None on non-Windows or if any step fails; the supervisor still works, it just falls
+    back to the signal path. A best-effort hardening must not be able to stop the tool starting.
+    """
+    if not sys.platform.startswith("win"):
+        return None
+    try:
+        import ctypes
+        from ctypes import wintypes
+
+        k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        job = k32.CreateJobObjectW(None, None)
+        if not job:
+            return None
+
+        class _BASIC(ctypes.Structure):
+            _fields_ = [("PerProcessUserTimeLimit", ctypes.c_int64),
+                        ("PerJobUserTimeLimit", ctypes.c_int64),
+                        ("LimitFlags", wintypes.DWORD),
+                        ("MinimumWorkingSetSize", ctypes.c_size_t),
+                        ("MaximumWorkingSetSize", ctypes.c_size_t),
+                        ("ActiveProcessLimit", wintypes.DWORD),
+                        ("Affinity", ctypes.POINTER(ctypes.c_ulong)),
+                        ("PriorityClass", wintypes.DWORD),
+                        ("SchedulingClass", wintypes.DWORD)]
+
+        class _IOC(ctypes.Structure):
+            _fields_ = [("ReadOperationCount", ctypes.c_uint64),
+                        ("WriteOperationCount", ctypes.c_uint64),
+                        ("OtherOperationCount", ctypes.c_uint64),
+                        ("ReadTransferCount", ctypes.c_uint64),
+                        ("WriteTransferCount", ctypes.c_uint64),
+                        ("OtherTransferCount", ctypes.c_uint64)]
+
+        class _EXT(ctypes.Structure):
+            _fields_ = [("BasicLimitInformation", _BASIC),
+                        ("IoInfo", _IOC),
+                        ("ProcessMemoryLimit", ctypes.c_size_t),
+                        ("JobMemoryLimit", ctypes.c_size_t),
+                        ("PeakProcessMemoryUsed", ctypes.c_size_t),
+                        ("PeakJobMemoryUsed", ctypes.c_size_t)]
+
+        info = _EXT()
+        info.BasicLimitInformation.LimitFlags = 0x2000   # KILL_ON_JOB_CLOSE
+        if not k32.SetInformationJobObject(job, 9, ctypes.byref(info), ctypes.sizeof(info)):
+            return None
+        return job
+    except Exception:                                    # noqa: BLE001
+        return None
+
+
+def _assign_to_job(job, pid) -> bool:
+    """Put the child in the job. False if it could not be done — reported, never assumed."""
+    if not job:
+        return False
+    try:
+        import ctypes
+        k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        h = k32.OpenProcess(0x0200 | 0x1000 | 0x0400, False, int(pid))  # SET_QUOTA|SET_INFO|QUERY
+        if not h:
+            return False
+        try:
+            return bool(k32.AssignProcessToJobObject(job, h))
+        finally:
+            k32.CloseHandle(h)
+    except Exception:                                    # noqa: BLE001
+        return False
+
+
 def _child_env() -> dict:
     env = dict(os.environ)
     # The one switch that arms the restart control. Without it the child mints no token and the
@@ -86,9 +168,13 @@ def run(port: int, open_browser: bool = False) -> int:
     if open_browser:
         argv.append("--open")
     fast = 0
+    job = _kill_on_close_job()
     print(f"switchboard supervisor · port {port} · child {TRACKER.name}")
     print("the supervisor binds nothing; the child owns the port, so a tunnel survives restarts")
-    print("ctrl-c to stop both\n")
+    print("ctrl-c to stop both"
+          + ("" if job else "  (⚠ no kill-on-close job: if this process is HARD-killed the child "
+                            "may survive and keep the port)"))
+    print()
 
     while True:
         import time
@@ -98,6 +184,11 @@ def run(port: int, open_browser: bool = False) -> int:
         except OSError as exc:
             print(f"supervisor: could not start the child: {exc}", file=sys.stderr)
             return 1
+        if job and not _assign_to_job(job, proc.pid):
+            # Say so rather than let the operator believe in a guarantee that is not in force.
+            print("supervisor: ⚠ could not put the child in the kill-on-close job — if this "
+                  "process is hard-killed the child may survive and keep the port",
+                  file=sys.stderr)
         try:
             code = proc.wait()
         except KeyboardInterrupt:

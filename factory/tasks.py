@@ -56,6 +56,33 @@ VISIBILITIES = (PUBLIC, PRIVATE, REVIEW_REQUIRED)
 #: existed — silently became publishable the moment the field was added.
 DEFAULT_VISIBILITY = PRIVATE
 
+# ------------------------------------------------------------------------- autonomy policy
+#
+# ⭐ How a piece of work is ALLOWED to start. It is a property of the work, recorded in the same
+# append-only log as everything else, so "who decided this could run unattended" is answerable
+# after the fact rather than being a setting somebody remembers changing.
+#
+#: The operator starts it. READY work waits, indefinitely, for an explicit START SYNCED.
+MANUAL = "MANUAL"
+#: The system MAY start it — only when every deterministic safety condition passes. See
+#: `factory.work.guarded_start`. Anything unmeasured, gated, conflicted or needing approval stops
+#: it, and the stop is the default rather than the exception.
+GUARDED = "GUARDED"
+#: Reserved. P1 implements MANUAL and GUARDED semantics; AUTO is accepted and recorded so the
+#: vocabulary does not have to change later, and it currently behaves exactly as GUARDED.
+#: ⛔ It is deliberately NOT "GUARDED without the guards" — an unconditional autonomous start is
+#: the uncontrolled recursive execution this design refuses to build.
+AUTO = "AUTO"
+AUTONOMIES = (MANUAL, GUARDED, AUTO)
+
+#: ⛔ MANUAL. Every row written before this field existed replays through the fold with this
+#: value, so adding autonomy to the model cannot make anything eligible to start on its own.
+DEFAULT_AUTONOMY = MANUAL
+
+#: How a start was decided. Recorded on the `start` event so autonomy performance can be evaluated
+#: later against outcomes, rather than reconstructed from timestamps and guesswork.
+MANUAL_START, AUTO_START = "MANUAL_START", "AUTO_START"
+
 
 @dataclass
 class Task:
@@ -89,6 +116,13 @@ class Task:
     session_id: Optional[str] = None
     #: Declared resource claim + access, for the conflict check. `{"resource_claim":…,"access":…}`
     contract: Dict[str, Any] = field(default_factory=dict)
+    #: MANUAL | GUARDED | AUTO. Defaults closed — see DEFAULT_AUTONOMY.
+    autonomy: str = DEFAULT_AUTONOMY
+    #: How this work was last started, if it has been. MANUAL_START | AUTO_START | None.
+    start_mode: Optional[str] = None
+    #: Set by `pause_autonomy`. A paused item is never eligible for a guarded start, whatever its
+    #: policy says — the operator's stop outranks the policy, at all times.
+    autonomy_paused: bool = False
 
     def to_dict(self) -> dict:
         d = {k: v for k, v in self.__dict__.items() if k != "events"}
@@ -129,6 +163,7 @@ class TaskStore:
                 # ⛔ `or DEFAULT_VISIBILITY` and not `d.get("visibility", DEFAULT_VISIBILITY)`:
                 # a row carrying an explicit null must also fall closed.
                 visibility=d.get("visibility") or DEFAULT_VISIBILITY,
+                autonomy=d.get("autonomy") or DEFAULT_AUTONOMY,
                 contract=dict(d.get("contract") or {}))
         t = self._tasks.get(tid)
         if t is None:
@@ -144,6 +179,13 @@ class TaskStore:
         elif kind == "visibility":
             if d.get("to") in VISIBILITIES:
                 t.visibility = d["to"]
+        elif kind == "autonomy":
+            if d.get("to") in AUTONOMIES:
+                t.autonomy = d["to"]
+        elif kind == "autonomy_pause":
+            t.autonomy_paused = bool(d.get("paused", True))
+        elif kind == "start":
+            t.start_mode = d.get("mode") or MANUAL_START
         elif kind == "session":
             # None is meaningful: it detaches a session that is no longer live.
             t.session_id = d.get("session_id") or None
@@ -233,6 +275,30 @@ class TaskStore:
         """
         self._emit({"ts": time.time(), "actor": actor, "kind": "depend_artifact", "task": tid,
                     "data": {"ref": ref, "kind": kind, "satisfied_when": satisfied_when}})
+
+    def set_autonomy(self, tid: str, to: str, actor: str = "human") -> None:
+        """Set the execution policy. Recorded, so the decision has an author and a time."""
+        if to not in AUTONOMIES:
+            raise ValueError(f"autonomy must be one of {AUTONOMIES}, got {to!r}")
+        self._emit({"ts": time.time(), "actor": actor, "kind": "autonomy",
+                    "task": tid, "data": {"to": to}})
+
+    def pause_autonomy(self, tid: str, paused: bool = True, actor: str = "human") -> None:
+        """⭐ Available at ALL times, and it outranks the policy. A pause that could be refused
+        because of the very state it is trying to stop would not be a pause."""
+        self._emit({"ts": time.time(), "actor": actor, "kind": "autonomy_pause",
+                    "task": tid, "data": {"paused": bool(paused)}})
+
+    def record_start(self, tid: str, mode: str, actor: str = "system") -> None:
+        """Record HOW a start was decided — MANUAL_START or AUTO_START.
+
+        Separate from `claim`, which records that work began. This records who decided it should:
+        the pair is what makes autonomy performance measurable later instead of inferred.
+        """
+        if mode not in (MANUAL_START, AUTO_START):
+            raise ValueError(f"start mode must be {MANUAL_START} or {AUTO_START}, got {mode!r}")
+        self._emit({"ts": time.time(), "actor": actor, "kind": "start",
+                    "task": tid, "data": {"mode": mode}})
 
     def set_visibility(self, tid: str, to: str, actor: str = "human") -> None:
         if to not in VISIBILITIES:

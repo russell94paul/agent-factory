@@ -60,6 +60,7 @@ from . import bus as _bus
 from . import claims as _claims
 from . import repo as _repo
 from . import sessions as _sessions
+from . import coordination as _coord
 from . import work as _work
 from .tasks import ABANDONED as _T_ABANDONED
 from .tasks import CLAIMED as _T_CLAIMED
@@ -754,9 +755,11 @@ def state(mission_id: Optional[str] = None, cheap: bool = False) -> dict:
         "warnings": warn,
         # ---- P1: canonical work + the NOW buckets -------------------------------
         "work": work_rows,
-        "now": now_buckets(work_rows, questions),
+        "now": now_buckets(work_rows, questions, critical),
         "recent": recent(store, work_rows),
         "repo_health": repo_health([] if cheap else worktrees()),
+        "coordination": [g.to_dict() for g in _coord.signals(
+            {"work": work_rows, "now": now_buckets(work_rows, questions, critical)}, store)],
     }
 
 
@@ -771,7 +774,8 @@ def state(mission_id: Optional[str] = None, cheap: bool = False) -> dict:
 NOW_CAP = 6
 
 
-def now_buckets(work_rows: List[dict], questions: List[dict]) -> dict:
+def now_buckets(work_rows: List[dict], questions: List[dict],
+                critical: Optional[List[str]] = None) -> dict:
     """The four NOW lists, each ordered by what the operator should look at first.
 
     An unattributed question is NOT dropped. `needs_you` is the union of work in `NEEDS_HUMAN`
@@ -798,8 +802,15 @@ def now_buckets(work_rows: List[dict], questions: List[dict]) -> dict:
         live = str(q.get("state") or "").startswith("RUNNING")
         needs.append({"kind": "QUESTION", "work": None, "live": live, "questions": [q],
                       "orphan": True})
-    # Live first -- a question whose session is still waiting is the one that unblocks work.
-    needs.sort(key=lambda r: (not r["live"], r["kind"] != "WORK"))
+    # ⭐ Ordered by what an ANSWER WOULD UNBLOCK, not by age and not merely by liveness.
+    # `coordination.prioritise` attaches the factors that placed each row, and the page renders
+    # them: an ordering nobody can check is an ordering nobody trusts. Falls back to the plain
+    # live-first sort if prioritisation raises, because a NEEDS YOU list that fails to render is
+    # strictly worse than one in a less useful order.
+    try:
+        needs = _coord.prioritise(needs, work_rows, critical)
+    except Exception:                                               # noqa: BLE001
+        needs.sort(key=lambda r: (not r["live"], r["kind"] != "WORK"))
 
     nxt = by_state.get(_work.READY, [])
     waiting = [w for w in by_state.get(_work.BLOCKED, []) + by_state.get(_work.WAITING_GATE, [])

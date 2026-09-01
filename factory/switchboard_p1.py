@@ -96,7 +96,14 @@ CSS = """
 .p1 .btn:hover,.p1 .btn:focus-visible{border-color:var(--accent);color:var(--accent);outline:none}
 .p1 .btn.pri{border-color:var(--accent);color:var(--accent);border-width:2px;padding:5px 10px}
 .p1 .btn.pri:hover{background:var(--accent);color:var(--bg)}
-.p1 .btn.wide{display:block;width:100%;text-align:center;padding:11px}
+/* ⛔ A full-width button must WRAP. `.btn` sets white-space:nowrap so inline tags and
+   badges never break mid-label; inherited by `.wide` it made the P0 disclosure summary
+   524px wide inside a 344px column, which pushed documentElement.scrollWidth to 547 and
+   gave the whole page a horizontal scroll at both phone widths. Invisible in a
+   screenshot -- the button looked fine, the BODY scrolled sideways. Measured by
+   scripts/render_check_switchboard_p1.py. */
+.p1 .btn.wide{display:block;width:100%;text-align:center;padding:11px;
+ white-space:normal;overflow-wrap:anywhere}
 .p1 .btn[aria-disabled=true]{opacity:.45;pointer-events:none}
 
 /* ---- sections ------------------------------------------------------------ */
@@ -186,9 +193,26 @@ CSS = """
 .p1 #rst{display:none;margin:0 0 var(--gut)}
 .p1 #rst.on{display:block}
 
-.p1 details.p0{margin:0 0 var(--gut)}
+/* ---- the retained P0 block --------------------------------------------------
+   ⛔ A COLLAPSED <details> still contributes to documentElement.scrollWidth in Chromium, so the
+   P0 panels blew the page 157px wide at 390px and 117px at 430px while being invisible. Measured
+   by scripts/render_check_switchboard_p1.py, not by looking at it -- a screenshot of the closed
+   page looks completely correct, and the overflow only shows as a body that scrolls sideways.
+   The single culprit was one unbreakable Windows path in a session topic.
+
+   Wide content scrolls inside its OWN container; the page body never scrolls horizontally. */
+.p1 details.p0{margin:0 0 var(--gut);max-width:100%}
 .p1 details.p0>summary{list-style:none;cursor:pointer}
 .p1 details.p0>summary::-webkit-details-marker{display:none}
+.p1 details.p0 .sw{max-width:100%;overflow-x:auto}
+.p1 details.p0 .sw .row,.p1 details.p0 .sw li,.p1 details.p0 .sw td{
+ overflow-wrap:anywhere;word-break:break-word}
+
+/* Any long unbreakable token -- a Windows path, a URL, a 64-char id -- wraps rather than widening
+   the page. Applied to the text carriers rather than to `*`, so `white-space:nowrap` on tags,
+   badges and the nav is not fought. */
+.p1 b,.p1 code,.p1 dd,.p1 li,.p1 p,.p1 summary,.p1 .ttl,.p1 .empty{overflow-wrap:anywhere}
+.p1 pre{max-width:100%;overflow-x:auto}
 
 /* ---- motion: only where it encodes a transition -------------------------- */
 @keyframes p1pulse{0%,100%{opacity:1}50%{opacity:.42}}
@@ -307,6 +331,23 @@ def _primary_action(w: dict, view: str) -> str:
 # --------------------------------------------------------------------------- NOW
 
 
+#: Priority band -> colour. The band is coarse ON PURPOSE (see `coordination.prioritise`): the
+#: factors are measured, the weighting between them is not validated, and a decimal score would
+#: present an unvalidated judgement as precision.
+_BAND_COLOUR = {"HIGH PRIORITY": "var(--fail)", "MEDIUM": "var(--unmeas)", "LOW": "var(--ink3)"}
+
+
+def _why(r: dict) -> str:
+    """The priority band and the measured factors that produced it. Never a bare score."""
+    band = r.get("priority")
+    if not band:
+        return ""
+    col = _BAND_COLOUR.get(band, "var(--ink3)")
+    why = " · ".join(_e(x) for x in (r.get("why") or []))
+    return (f'<div style="margin:0 0 5px"><span class="tag" style="color:{col}">{_e(band)}</span>'
+            f'<div class="empty" style="margin-top:4px">{why}</div></div>')
+
+
 def _needs_you(st: dict, view: str) -> str:
     rows = (st.get("now") or {}).get("needs_you") or []
     if not rows:
@@ -315,7 +356,7 @@ def _needs_you(st: dict, view: str) -> str:
     o = []
     for r in rows[:_sb.NOW_CAP]:
         if r["kind"] == "WORK" and r.get("work"):
-            o.append(work_card(r["work"], view=view))
+            o.append(_why(r) + work_card(r["work"], view=view))
             continue
         q = (r.get("questions") or [{}])[0]
         live = r.get("live")
@@ -323,6 +364,7 @@ def _needs_you(st: dict, view: str) -> str:
                  else '<span class="tag" style="color:var(--ink3)">NO SESSION / STALE</span>')
         who = q.get("topic") or q.get("name") or q.get("session_id") or "unattributed"
         o.append(
+            _why(r) +
             f'<div class="card"><div class="meta">{badge}'
             f'<span class="vis">{_e(str(q.get("state") or "state unknown"))}</span></div>'
             f'<p class="ttl" style="color:var(--ink)">{_e(str(q.get("needs") or q.get("detail") or "a question with no text"))[:260]}</p>'
@@ -458,6 +500,14 @@ def create_form(st: dict, repos: Optional[List[str]] = None) -> str:
 # ------------------------------------------------------------------------- INSPECTOR
 
 
+def _downstream(st: dict, wid: str) -> List[str]:
+    from . import coordination as _coord
+    try:
+        return _coord.downstream_blocked(wid, st.get("work") or [])
+    except Exception:                                              # noqa: BLE001
+        return []
+
+
 def inspector(st: dict, wid: str, view: str) -> str:
     """The universal Inspector. Detail lives here so the centre column stays a list of decisions.
 
@@ -500,6 +550,37 @@ def inspector(st: dict, wid: str, view: str) -> str:
                  f'<span class="dim">{_e(c.get("detail",""))}</span></li>')
     o.append('</ul><p class="empty" style="margin-top:7px">READY requires every check to be an '
              'explicit PASS. UNMEASURED is not a pass.</p></div>')
+
+    o.append('<div class="isec"><h3>Autonomy</h3><dl class="kv">')
+    o.append(f'<dt>policy</dt><dd>{_e(w.get("autonomy", "MANUAL"))}</dd>')
+    o.append(f'<dt>paused</dt><dd>{"YES — the operator stop outranks the policy" if w.get("autonomy_paused") else "no"}</dd>')
+    o.append(f'<dt>last start</dt><dd>{_e(w.get("start_mode") or "— never started, or started before the mode was recorded")}</dd>')
+    allowed = w.get("guarded_start_allowed")
+    o.append(f'<dt>guarded</dt><dd>{"may start without a human" if allowed else "will NOT start without a human"}</dd>')
+    o.append("</dl>")
+    stops = w.get("guarded_stop_reasons") or []
+    if stops:
+        o.append('<ul class="plain">'
+                 + "".join(f'<li class="dim">{_e(x)}</li>' for x in stops[:8]) + "</ul>")
+    o.append('<p class="empty" style="margin-top:6px">GUARDED decides; it does not act. P1 ships '
+             'no loop that starts work on a timer — starting is still a tap.</p>')
+    o.append(f'<form method="POST" action="/switchboard/autonomy" style="margin-top:8px;'
+             f'display:flex;gap:6px;flex-wrap:wrap">'
+             f'<input type="hidden" name="work_id" value="{_e(w["id"])}">'
+             f'<select name="to" aria-label="Autonomy policy">'
+             + "".join(f'<option value="{a}"{" selected" if w.get("autonomy") == a else ""}>{a}'
+                       f'</option>' for a in ("MANUAL", "GUARDED", "AUTO"))
+             + '</select><button class="btn" name="go" value="set">SET</button>'
+             f'<button class="btn" name="go" value="{"resume" if w.get("autonomy_paused") else "pause"}">'
+             f'{"RESUME AUTONOMY" if w.get("autonomy_paused") else "PAUSE AUTONOMY"}</button>'
+             f'</form>')
+    o.append("</div>")
+
+    o.append('<div class="isec"><h3>Coordination</h3><dl class="kv">')
+    o.append(f'<dt>blocks</dt><dd>{len(_downstream(st, w["id"]))} downstream item(s)</dd>')
+    o.append(f'<dt>handoffs</dt><dd>{"session attached" if w.get("session_id") else "none recorded"}</dd>')
+    o.append(f'<dt>conflicts</dt><dd>{_e(", ".join(w.get("conflicts_with") or []) or "none declared")}</dd>')
+    o.append("</dl></div>")
 
     o.append('<div class="isec"><h3>Dependencies</h3>')
     if w.get("depends_on") or w.get("depends_on_artifacts"):
@@ -767,6 +848,19 @@ def _view_diagnostics(st: dict) -> str:
                                + "".join(f'<li class="warn">{_e(x)}</li>' for x in warn)
                                + "</ul>") if warn else
                   '<p class="empty">No warnings.</p>', n=str(len(warn))))
+    sig = st.get("coordination") or []
+    if sig:
+        rows = ['<ul class="plain">']
+        for g in sig:
+            cls = "warn" if g["basis"] not in ("MEASURED", "DERIVED") else ""
+            rows.append(f'<li class="rec"><span><b>{_e(g["name"])}</b><br>'
+                        f'<span class="dim">{_e(g.get("limit",""))}</span></span>'
+                        f'<span class="when {cls}">{_e(g["value"])} '
+                        f'<span class="dim">[{_e(g["basis"])}]</span></span></li>')
+        rows.append("</ul>")
+        o.append(_sec("Coordination", "".join(rows), n=str(len(sig)),
+                      hint="directly measured signals — deliberately NOT summed into one "
+                           "percentage; the denominator for that is not yet defined"))
     o.append(_sec("Measurement", (
         f'<dl class="kv"><dt>measured</dt><dd>{_e(st.get("measured_at",""))}</dd>'
         f'<dt>work rows</dt><dd>{len(st.get("work") or [])}</dd>'

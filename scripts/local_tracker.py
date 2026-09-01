@@ -374,7 +374,8 @@ def _spawn(cmd, cwd):
 
 
 def start_synced(target: str = "", note: str = "", reader: str = "", worktree: str = "",
-                 dry: bool = False, gate_handoff: bool = False, require_ready: bool = True):
+                 dry: bool = False, gate_handoff: bool = False, require_ready: bool = True,
+                 start_mode: str = worklib._tasks.MANUAL_START):
     """Resolve a target canonically, then open a session already holding a measured packet.
 
     Replaces: generate handoff -> copy -> find terminal -> launch -> paste.
@@ -468,6 +469,10 @@ def start_synced(target: str = "", note: str = "", reader: str = "", worktree: s
             store = worklib.open_store()
             if alive:
                 store.claim(resolved.id, actor="switchboard")
+                # ⭐ Recorded separately from `claim`. `claim` says work began; this says who
+                # DECIDED it should. The pair is what makes autonomy performance measurable later
+                # rather than reconstructed from timestamps and guesswork.
+                store.record_start(resolved.id, start_mode, actor="switchboard")
                 sid = _await_session(resolved.id)
                 if sid:
                     store.attach_session(resolved.id, sid, actor="switchboard")
@@ -547,6 +552,43 @@ def _await_session(work_id: str):
             return None
         _t.sleep(0.4)
     return None
+
+
+def set_autonomy(work_id: str, to: str = "", go: str = "set"):
+    """Set the execution policy, or PAUSE / RESUME it.
+
+    ⭐ PAUSE is always available and never conditional. A stop that could be refused because of the
+    state it is trying to stop would not be a stop, so it does not check readiness, policy, or
+    whether the work is running -- it records the operator's decision and that is that.
+    """
+    work_id = (work_id or "").strip()
+    if not work_id:
+        return False, "REFUSED: no work id."
+    try:
+        store = worklib.open_store()
+        store.get(work_id)
+    except KeyError:
+        return False, f"REFUSED: no canonical work named {work_id!r}."
+    except Exception as exc:                                       # noqa: BLE001
+        return False, f"could not read the store: {type(exc).__name__}: {exc}"
+    try:
+        if go == "pause":
+            store.pause_autonomy(work_id, True, actor="operator")
+            return True, f"{work_id}: autonomy PAUSED — it will not start without you."
+        if go == "resume":
+            store.pause_autonomy(work_id, False, actor="operator")
+            return True, f"{work_id}: autonomy resumed; the policy applies again."
+        store.set_autonomy(work_id, to, actor="operator")
+    except ValueError as exc:
+        return False, f"REFUSED: {exc}"
+    except Exception as exc:                                       # noqa: BLE001
+        return False, f"could not set autonomy: {type(exc).__name__}: {exc}"
+    w = next((x for x in worklib.project() if x.id == work_id), None)
+    allowed, why = worklib.guarded_start(w) if w else (False, ["work not found after write"])
+    return True, (f"{work_id}: autonomy set to {to}. "
+                  + ("It may start without a human when READY."
+                     if allowed else
+                     "It will still NOT start without a human: " + "; ".join(why[:3])))
 
 
 def create_work(title: str, objective: str = "", repo: str = "", visibility: str = "PRIVATE",
@@ -3077,6 +3119,19 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.send_response(303)
             self.send_header("Location", "/switchboard?view=now" if _SB_MSG[0]
                              else "/switchboard?view=create")
+            self.send_header("Cache-Control", "no-store"); self.end_headers()
+            return
+        if self.path.rstrip("/") == "/switchboard/autonomy":
+            raw = self.rfile.read(int(self.headers.get("Content-Length") or 0)).decode("utf-8", "replace")
+            q = urllib.parse.parse_qs(raw, keep_blank_values=True)
+            _SB_MSG = set_autonomy(
+                (q.get("work_id") or [""])[0].strip(),
+                to=(q.get("to") or [""])[0].strip(),
+                go=(q.get("go") or [""])[0].strip())
+            print(f"  switchboard/autonomy: {_SB_MSG[1]}")
+            self.send_response(303)
+            self.send_header("Location", "/switchboard?view=now&inspect="
+                             + urllib.parse.quote((q.get("work_id") or [""])[0].strip()[:64]))
             self.send_header("Cache-Control", "no-store"); self.end_headers()
             return
         if self.path.rstrip("/") == "/switchboard/restart":
