@@ -26,7 +26,8 @@ false within the hour. A second session had a workstream open the whole time.
 
 | thread | prompt | `next:` |
 |---|---|---|
-| **⭐ MISSION (current)** | [`mission-handoff-2026-09-01.md`](mission-handoff-2026-09-01.md) | **R3 read-only access, then D1.** Wave 1 done — R1/R2 closed with evidence. ⛔ §0 corrects two claims I made that measurement refuted |
+| **⭐ MISSION (current)** | [`mission-commander-2026-09-01.md`](mission-commander-2026-09-01.md) | **The R3 human gate, then R3, then the DAG.** Read `mission-handoff-2026-09-01.md` alongside it for the evidence detail |
+| mission — evidence detail + §0 self-corrections | [`mission-handoff-2026-09-01.md`](mission-handoff-2026-09-01.md) | **R3 read-only access, then D1.** Wave 1 done — R1/R2 closed with evidence. ⛔ §0 corrects two claims I made that measurement refuted |
 | mission — earlier checkpoint (§1 credential exposure still stands) | [`mission-wave1-checkpoint-2026-09-01.md`](mission-wave1-checkpoint-2026-09-01.md) | **Paul's credential decision, then Wave 1.** R1/R2 unblocked, R3 blocked. ⛔ Read §1 first — three credentials were exposed into a transcript and one reaches PROD |
 | **execution plane** (paused for the mission) | [`first-real-dispatch-2026-08-31.md`](first-real-dispatch-2026-08-31.md) | **F90 remedy (a) + sparse-checkout, then one live dispatch.** The credential problem is solved, not deferred — sparse-checkout excludes all three credential files from the worktree, tested against the real repo |
 | **workflow library / client delivery** | [`workflow-library-2026-08-31.md`](workflow-library-2026-08-31.md) | run `keel` on the GEP marketing model **as an instrumented experiment** — §3a's five setup steps come before any agent spawns |
