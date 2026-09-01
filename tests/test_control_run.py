@@ -292,8 +292,12 @@ def test_one_ticket_runs_end_to_end_and_lands_in_both_ledgers(git_worktree, tmp_
 
     # the stream
     kinds = [e["kind"] for e in events.read(res.run_id)]
-    assert kinds == ["run_started", "worktree_ready", "claim_taken", "agent_dispatched",
-                     "agent_returned", "evidence_gathered", "verdict_assigned", "run_finished"]
+    # ⚠ `preflight_checked` was inserted here on 2026-08-31. It sits AFTER run_started (so the
+    # eligible set is on disk before anything else can fail) and BEFORE the worktree, the claim
+    # and the agent — a preflight that ran after the dispatch would be a post-mortem.
+    assert kinds == ["run_started", "preflight_checked", "worktree_ready", "claim_taken",
+                     "agent_dispatched", "agent_returned", "evidence_gathered",
+                     "verdict_assigned", "run_finished"]
     fold = events.fold(res.run_id)
     assert fold["verdict"] == "PASS"
     assert fold["chosen"] == WIRED_TYPE
@@ -318,6 +322,134 @@ def test_the_agent_is_configured_from_the_preset_not_from_a_default(git_worktree
     assert spec.prohibition == UI.prohibition
     assert UI.prohibition in spec.prompt and UI.escalate_when in spec.prompt
     assert pathlib.Path(wt) == git_worktree
+
+
+def test_a_repeat_attempt_receives_the_known_failure_packet_and_a_first_one_does_not(
+        git_worktree, tmp_path):
+    """⭐ The BUILD_NOW wire, exercised end to end: the packet reaches the AGENT, not just the log.
+
+    A finding that is recorded and never delivered is CHANNEL_WITH_NO_READER — this repository's
+    most-repeated failure family — so building the preflight without asserting delivery would
+    reproduce the defect inside its own remedy. `fake.calls[n]` is the exact task text the provider
+    was handed, which is the only place this can be checked honestly.
+
+    ⚠ Both halves matter. A first attempt must receive **nothing**: a preflight that prepends a
+    block to every run is one people stop reading, and the run with something to say is then the
+    one that gets skimmed.
+    """
+    from factory import preflight
+
+    def _fails(_ctx):
+        return False, "the two filters are still populated"
+
+    fake, _rows, ctl = _controller(git_worktree, tmp_path, verifier=_fails)
+    first = ctl.run(control.Ticket(id="gp-327", title="remove two filters", type_id=WIRED_TYPE,
+                                   task="Remove the two empty filters."))
+    assert first.verdict is Verdict.FAIL, first.summary()
+    assert "KNOWN_FAILURE_MATCH" not in fake.calls[0][1], (
+        "a first attempt has no history and must be handed an unmodified task")
+    assert first.preflight is not None and first.preflight.matched is False
+
+    second = ctl.run(control.Ticket(id="gp-327", title="remove two filters", type_id=WIRED_TYPE,
+                                    task="Remove the two empty filters."))
+    task_text = fake.calls[1][1]
+    assert task_text.startswith("KNOWN_FAILURE_MATCH"), task_text[:200]
+    assert "previous_verdict: FAIL" in task_text
+    assert "Remove the two empty filters." in task_text, "the original task must survive intact"
+    assert second.preflight.matched is True
+    assert second.preflight.attempt_number == 2
+    assert len(task_text.split()) - len(fake.calls[0][1].split()) <= preflight.MAX_PACKET_WORDS
+
+    # ⛔ WARN-ONLY: the second run was dispatched, whatever the shadow policy computed.
+    assert fake.calls[1] is not None
+    assert "preflight_checked" in [e["kind"] for e in events.read(second.run_id)]
+
+
+def test_the_ledger_row_joins_back_to_its_own_event_stream(git_worktree, tmp_path):
+    """⭐ End-to-end identity, not a field on one writer.
+
+    `events.py` calls `runs.jsonl` the fold of the stream, and before this patch **not one of the
+    ten rows carried a run id** — 8 runs in the stream, 7 controller rows, no key between them.
+    Asserting the field is merely non-empty (as the ATTRIBUTION loop above does) would pass on a
+    literal `"x"`. This walks the join: row -> run id -> the stream -> the same ticket and verdict.
+    """
+    _fake, rows, ctl = _controller(git_worktree, tmp_path)
+    res = ctl.run(control.Ticket(id="gp-401", title="t", type_id=WIRED_TYPE))
+
+    row = rows[0]
+    assert row["run"] == res.run_id, "the ledger row must carry THIS run's id, not any id"
+    fold = events.fold(row["run"])
+    assert fold["found"] is True, "the id in the ledger resolves to a real run in the stream"
+    assert fold["ticket"] == "gp-401" == row["lane"]
+    assert fold["verdict"] == row["outcome"], (
+        "the two ledgers must agree about the outcome of the run they now share a key for")
+
+
+def test_a_run_that_never_reaches_the_ledger_is_still_identified_in_the_stream(git_worktree,
+                                                                               tmp_path):
+    """⚠ A known and deliberate asymmetry, pinned so nobody reads the ledger as complete.
+
+    An aborted run emits `run_aborted` and returns BEFORE `self._record`, so it has an event-stream
+    identity and no ledger row. That is why the stream holds 8 GP-327-era runs and the ledger holds
+    7. Recurrence reads the STREAM, so nothing is lost to the preflight — but an operator counting
+    ledger rows is counting a smaller population, and that must be visible rather than surprising.
+    """
+    _fake, rows, ctl = _controller(git_worktree, tmp_path)
+    elsewhere = tmp_path / "not-this-repo"
+    elsewhere.mkdir()
+    res = ctl.run(control.Ticket(id="gp-402", title="t", type_id=WIRED_TYPE, repo=str(elsewhere)))
+
+    assert res.verdict is Verdict.NOT_RUN
+    assert rows == [], "an aborted run writes no ledger row"
+    assert events.fold(res.run_id)["found"] is True, "but it is fully identified in the stream"
+    # ...and the preflight, which reads the stream, can still see it as a prior attempt.
+    from factory import preflight
+    assert [a.run for a in preflight.prior_attempts("gp-402")] == [res.run_id]
+
+
+def test_a_broken_preflight_cannot_take_a_run_down_with_it(git_worktree, tmp_path, monkeypatch):
+    """⛔ WARN-ONLY must mean inert on FAILURE, not only inert on a match.
+
+    The first version called `preflight.check()` unguarded and outside every `try`. Any raise —
+    a torn line, an unresolvable preset, a full disk — propagated out of `run()`: no terminal
+    event, a run dangling in the stream with no verdict, and the caller handed an exception
+    instead of a result. A reliability mechanism becoming the most expensive failure mode in the
+    controller is the worst available outcome for this patch.
+    """
+    from factory import preflight
+
+    def _boom(*_a, **_kw):
+        raise RuntimeError("the event stream is unreadable")
+
+    monkeypatch.setattr(preflight, "check", _boom)
+    _fake, rows, ctl = _controller(git_worktree, tmp_path)
+    res = ctl.run(control.Ticket(id="gp-403", title="t", type_id=WIRED_TYPE))
+
+    assert res.verdict is Verdict.PASS, "the run completed exactly as it would have without one"
+    assert len(rows) == 1
+    kinds = [e["kind"] for e in events.read(res.run_id)]
+    assert kinds[-1] == "run_finished", "the run still reached a terminal event"
+    pre = [e for e in events.read(res.run_id) if e["kind"] == "preflight_checked"]
+    assert pre and pre[0]["prevention_check_result"] == "CHECK_ERROR", (
+        "and the broken preflight is recorded as broken, not as a quiet one with nothing to say")
+
+
+def test_a_non_pass_terminal_event_carries_a_family_and_a_pass_does_not(git_worktree, tmp_path):
+    """The classifier is wired at the call site, not merely importable."""
+    from factory import preflight
+
+    fake, _rows, ctl = _controller(git_worktree, tmp_path,
+                                   verifier=lambda _c: (False, "still populated"))
+    bad = ctl.run(control.Ticket(id="gp-330", title="t", type_id=WIRED_TYPE))
+    term = [e for e in events.read(bad.run_id) if e["kind"] in events.TERMINAL]
+    assert term and all(e["failure_family"] in preflight.FAMILIES for e in term)
+
+    _f2, _r2, ok = _controller(git_worktree, tmp_path)
+    good = ok.run(control.Ticket(id="gp-331", title="t", type_id=WIRED_TYPE))
+    assert good.verdict is Verdict.PASS, good.summary()
+    for e in events.read(good.run_id):
+        assert "failure_family" not in e, "a green run has no failure to classify"
+    del fake
 
 
 def test_the_provider_boundary_is_real(git_worktree, tmp_path):
@@ -475,8 +607,10 @@ def test_a_ticket_naming_another_repo_is_refused_before_anything_is_created(git_
     # nothing was attempted: no agent, no worktree, no claim
     assert not fake.calls, "the agent was dispatched into the wrong repository"
     kinds = [e["kind"] for e in events.read(res.run_id)]
-    assert kinds == ["run_started", "run_aborted"], kinds
-    assert "worktree_ready" not in kinds and "claim_taken" not in kinds
+    # `preflight_checked` reads this ticket's history; it creates nothing and attempts nothing, so
+    # it is allowed here while every kind that represents an ATTEMPT is still forbidden below.
+    assert kinds == ["run_started", "preflight_checked", "run_aborted"], kinds
+    assert not ({"worktree_ready", "claim_taken", "agent_dispatched"} & set(kinds))
 
 
 def test_the_refusal_names_both_repositories_so_the_operator_can_act(git_worktree, tmp_path):

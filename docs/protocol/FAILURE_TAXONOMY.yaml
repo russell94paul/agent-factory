@@ -1,0 +1,191 @@
+# Failure taxonomy — the index over docs/findings.d/, not a second findings system.
+#
+# ✅ BUILT: the closed set of family ids is `factory.preflight.FAMILIES` and the writer refuses a
+#    value outside it. This file is the human-readable index and the home for the fields the code
+#    does not need at write time (known_repair, known_bad_approach, regression_test).
+#
+# ⛔ The prose stays canonical. A family row POINTS AT findings; it never restates them. Two
+#    records of the same fact drift, and the one people read is the one that is wrong.
+#
+# ⭐ Counts are DERIVED, never typed. `recurrence_count` and `last_seen` come from the event
+#    stream. A hand-maintained count re-rots and the re-rot is invisible because the number still
+#    looks authoritative — proven twice in ~/.claude/skills/INDEX.md. Regenerate with:
+#      python -c "from factory import preflight; print(preflight.unclassified_share())"
+#      python scripts/replay_recurrence.py
+#
+# ⚠ MEASURED 2026-08-31: every terminal event in .data/events.jsonl predates the failure_family
+#    field, so recurrence_count for every family below is NOT-RECORDED rather than zero. The
+#    `findings` lists ARE measured — they name real files in docs/findings.d/ and docs/findings.md.
+
+version: 1
+basis:
+  families: DERIVED          # clustered by mechanism from the ~95 recorded findings
+  findings_lists: MEASURED   # every id below names a real entry
+  recurrence_count: NOT-RECORDED
+  regeneration: "python scripts/replay_recurrence.py"
+
+# ---------------------------------------------------------------------------------------------
+# ⛔ ADDING A FAMILY
+# Add one when TWO recorded failures share a mechanism AND a repair. Not when a failure "sort of
+# fits" — that is what UNCLASSIFIED is for, and `unclassified_share()` is how we learn the set is
+# too narrow. A family invented for one occurrence is a bucket with a sample size of one.
+# ---------------------------------------------------------------------------------------------
+
+families:
+
+  - family: BLIND_INSTRUMENT
+    symptom: a probe reports PASS or zero over something it structurally cannot see
+    root_cause: the check's only observation path cannot reach the thing it judges
+    detectability: JUDGEMENT      # a mutation control makes it DETERMINISTIC
+    preventability: HIGH
+    retryability: NEVER           # retrying re-runs the same blind probe
+    affected_component: readiness probes, gates, contracts
+    task_type: [any]
+    known_repair: run the defect the instrument exists to catch THROUGH it, and watch it fail
+    known_bad_approach: reading the probe's source and concluding it looks correct
+    regression_test: tests/test_gate_negative_control_census.py
+    findings: [F18, F19, F24, F31, F34, F81, F84, F89]
+    note: >-
+      F89 is the sharpest and the one to read: the blind instrument was the newest and most careful
+      file in the estate, not an old thin one. Care is not coverage.
+
+  - family: DECLARATION_WITHOUT_MECHANISM
+    symptom: a config declares a check, and no code performs it
+    root_cause: the declaration and the wiring are maintained in two places with nothing joining them
+    detectability: DETERMINISTIC
+    preventability: HIGH
+    retryability: AFTER_CHANGE    # only once something is actually wired
+    affected_component: presets.verifier_state, registry rows, skill frontmatter
+    task_type: [ui-control, dimension-gap, wrong-number, model-design]
+    known_repair: add the registry entry, and a test that checks the declaration against it
+    known_bad_approach: raising the declaration to WIRED so the message goes away
+    regression_test: tests/test_verifiers.py
+    findings: [F79, F87, F14]
+    prevention_check: factory.preflight._prevent_declaration_without_mechanism   # the only one built
+    note: >-
+      ⭐ This is the family behind six of the eight recorded runs. GP-327 attempts 1,2,4,5,6,7 all
+      ended with `ticket_verifier` UNMEASURABLE on the same declaration.
+
+  - family: WRONG_POPULATION
+    symptom: the right measurement, taken in the wrong repo, branch, directory or layer
+    root_cause: a path or ref resolved from the wrong root, or a target inherited rather than walked
+    detectability: DETERMINISTIC
+    preventability: HIGH
+    retryability: AFTER_CHANGE
+    affected_component: readiness.CONNECTORS, worktree-relative paths, gate acceptance criteria
+    task_type: [any]
+    known_repair: stamp every board with the branch@sha it measured; resolve shared state to primary()
+    known_bad_approach: assuming the object a ticket or handoff names is the one the consumer reads
+    regression_test: tests/test_repo_root.py
+    findings: [F26, F72, F77, F78, F80, F90, F91]
+
+  - family: COLLAPSED_STATE
+    symptom: two different situations reported as one value
+    root_cause: a boolean, or a default, answering two questions
+    detectability: JUDGEMENT
+    preventability: HIGH
+    retryability: NEVER
+    affected_component: verdict enums, evidence coverage, any "0" that might be "not recorded"
+    task_type: [any]
+    known_repair: name the states separately and refuse the collapsed value at write time
+    known_bad_approach: documenting the distinction in a comment beside the collapsed field
+    regression_test: tests/test_evidence_classes.py
+    findings: [F13, F16, F34, F83, F94]
+    note: >-
+      The whole reason factory/contract.py has five verdicts, and the reason UNCLASSIFIED and
+      NOT-RECORDED are separate values in preflight.py.
+
+  - family: SHARED_MUTABLE_STATE
+    symptom: concurrent writers to one path; work lost or two agents in one checkout
+    root_cause: a single file or checkout asked to serve several independent processes
+    detectability: DETERMINISTIC
+    preventability: HIGH
+    retryability: IDEMPOTENT
+    affected_component: findings ledger, git index, worktrees, claims
+    task_type: [any]
+    known_repair: one append-only file per writer; readers hold their own cursor
+    known_bad_approach: a locking convention nobody can enforce from another process
+    regression_test: tests/test_claim_race.py
+    findings: [F70, F21, F73]
+
+  - family: CHANNEL_WITH_NO_READER
+    symptom: something true was written down and never reached anyone who needed it
+    root_cause: delivery left to a person or an agent remembering to look
+    detectability: DETERMINISTIC
+    preventability: HIGH
+    retryability: IDEMPOTENT
+    affected_component: findings, the bus, the attempt ledger, boot prompts
+    task_type: [any]
+    known_repair: make delivery structural — a hook, or prepended context — not a polling instruction
+    known_bad_approach: telling the agent to check the channel at checkpoints
+    regression_test: tests/test_bus_and_finish.py
+    findings: [F71, F74, F75, F86]
+    note: >-
+      ⚠ The family this patch is most at risk of reproducing. The preflight packet is PREPENDED to
+      the agent's task text rather than only written to the stream, for exactly this reason. If
+      recurrence stays flat while warnings fire, this is what happened.
+
+  - family: UNBOUNDED_RETRY
+    symptom: attempts with no cap, or a cap spent by something that was never a real attempt
+    root_cause: the counter and the thing it is meant to bound are not the same population
+    detectability: DETERMINISTIC
+    preventability: HIGH
+    retryability: NEVER
+    affected_component: deploy.AttemptLedger, dispatch loops
+    task_type: [any]
+    known_repair: exclude plan-only and dry runs from the counter, or count them separately
+    known_bad_approach: raising the cap to get past it — the ledger's own message forbids this
+    regression_test: tests/test_retry_context.py
+    findings: [F32, F85]
+    note: >-
+      GP-327 attempt 3 is this family: two dry runs had spent a cap of 2, and the third dispatch
+      was refused for a ticket nobody had actually attempted yet.
+
+  - family: STALE_ARTEFACT
+    symptom: a derived thing outliving the source it was derived from
+    root_cause: no ref back to the origin, or no recorded check date
+    detectability: DETERMINISTIC
+    preventability: MEDIUM
+    retryability: AFTER_CHANGE
+    affected_component: trackers, pinned corpora, mutation anchors, boot prompts
+    task_type: [any]
+    known_repair: every ref names its source and when it was last checked; default status UNVERIFIED
+    known_bad_approach: updating the copy — the next divergence is silent again
+    regression_test: tests/test_mutation_anchors_still_match.py
+    findings: [F29, F82, F93]
+
+  - family: HARNESS_FAULT
+    symptom: our own apparatus raised; the run's observations are untrustworthy
+    root_cause: anything — this family is about WHOSE fault, not which mechanism
+    detectability: DETERMINISTIC       # contract.py sets Verdict.ERROR only here
+    preventability: LOW
+    retryability: IDEMPOTENT
+    affected_component: the controller, the provider, the test system
+    task_type: [any]
+    known_repair: fix the harness, then re-run — the previous verdict is not evidence about the work
+    known_bad_approach: treating the observed FAIL as real; ERROR outranks FAIL in TTCN-3 for this reason
+    regression_test: tests/test_control_run.py
+    findings: [F92, F95]
+
+  # -------------------------------------------------------------------------------------------
+  - family: UNCLASSIFIED
+    symptom: a failure was observed and recorded, and does not confidently map onto the nine above
+    root_cause: unknown — that is the entire content of this value
+    detectability: n/a
+    preventability: n/a
+    retryability: AFTER_CHANGE
+    affected_component: any
+    task_type: [any]
+    known_repair: none. Investigate; if two of these share a mechanism and a repair, add a family
+    known_bad_approach: >-
+      mapping it to the nearest-looking family. A misclassified failure is a gap that looks filled,
+      which is strictly worse than a gap you can see.
+    regression_test: tests/test_recurrence_preflight.py::test_an_unmapped_failure_is_unclassified_not_the_nearest_family
+    findings: []
+    note: >-
+      ⚠ NOT the same as NOT-RECORDED. NOT-RECORDED means the field was never captured — every
+      terminal event written before 2026-08-31. UNCLASSIFIED means we captured it and could not
+      place it. Collapsing them makes a taxonomy gap look like a measurement gap.
+      MEASURED example: GP-401 ended UNMEASURABLE with a WIRED verifier and a callable present —
+      the agent simply left no evidence file. It must not be filed as
+      DECLARATION_WITHOUT_MECHANISM merely because the same assertion reported UNMEASURABLE.

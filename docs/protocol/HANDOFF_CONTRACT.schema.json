@@ -1,0 +1,183 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-factory/protocol/HandoffContract/v1",
+  "title": "HandoffContract v1",
+  "status": "DESIGN — NOT BUILT. Priority NEXT. Nothing writes or validates this today.",
+  "x-notes": [
+    "NOT a new store. A HandoffContract is written as a TaskStore.add_evidence row (kind='handoff', evidence_class per factory/evidence.py) plus one HANDOFF event. It inherits append-only, the evidence gate and the existing close refusal for free.",
+    "NAME COLLISION, deliberate and load-bearing: factory/handoff.py generates PROSE lane and session closing notes into .data/handoffs/. It is a different concept wearing the same word and must not be renamed into this one.",
+    "The six write-time refusals are listed in x-refusals. Three are expressible in JSON Schema and are encoded below; three need the writer.",
+    "not_done MUST be present. An empty list is a claim that nothing was left undone; an absent key is nobody having asked. That is the ZERO vs NOT-RECORDED distinction the whole estate turns on."
+  ],
+  "x-refusals": [
+    "requested is empty                                    -> schema (minLength)",
+    "not_done absent                                       -> schema (required)",
+    "permits absent while access is WRITE                  -> schema (dependentSchemas)",
+    "a CONFIRMED claim with no evidence_ref                -> schema (if/then)",
+    "verification.verdict PASS not produced by a GreenContract -> writer; events._verdict_value already forces the enum",
+    "an artifacts_to_consume ref that does not resolve on disk -> writer"
+  ],
+  "type": "object",
+  "required": [
+    "protocol_version", "handoff_id", "mission_id", "run", "from_task", "to_task",
+    "from", "to", "at", "seq",
+    "requested", "done", "not_done",
+    "evidence", "artifacts_to_consume", "claims",
+    "verification", "required_receiver_behavior", "ack_required"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "protocol_version": { "const": "1" },
+    "handoff_id": { "type": "string", "minLength": 1 },
+    "mission_id": { "type": "string", "description": "the parent TaskStore task id" },
+    "run": { "type": "string", "description": "factory.events run id — the join to the stream" },
+    "from_task": { "type": "string" },
+    "to_task": { "type": "string" },
+    "from": { "$ref": "#/$defs/party" },
+    "to": { "$ref": "#/$defs/party" },
+    "at": { "type": "string", "format": "date-time" },
+    "seq": { "type": "integer", "minimum": 1,
+             "description": "monotonic per RunLog. Ordering authority; NOT the timestamp — two events in one run share a timestamp to the microsecond." },
+
+    "requested": {
+      "type": "string", "minLength": 1,
+      "description": "The objective AS GIVEN, verbatim from the task contract. Not restated: a restatement is where a brief quietly narrows."
+    },
+    "done": { "type": "string", "minLength": 1, "description": "What was actually executed." },
+    "not_done": {
+      "type": "array", "items": { "type": "string" },
+      "description": "In scope and not completed. REQUIRED. [] is an assertion, never a default."
+    },
+
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["class", "basis", "ref"],
+        "additionalProperties": false,
+        "properties": {
+          "class": { "enum": ["TARGET", "CONSUMER", "REGRESSION", "ROLLBACK"],
+                     "description": "factory/evidence.py. Coverage is ABSENT | ASSERTED | SATISFIED — three states, never two." },
+          "basis": { "enum": ["MEASURED", "DERIVED", "ASSUMED"] },
+          "ref": { "type": "string", "minLength": 1 },
+          "detail": { "type": "string" }
+        }
+      }
+    },
+
+    "artifacts_to_consume": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["ref", "sha"],
+        "additionalProperties": false,
+        "properties": {
+          "ref": { "type": "string", "minLength": 1 },
+          "sha": { "type": "string", "minLength": 1,
+                   "description": "The NACK_STALE discriminator. Without it 'stale context' is a judgement call." },
+          "kind": { "type": "string" }
+        }
+      }
+    },
+
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["text", "state"],
+        "additionalProperties": false,
+        "properties": {
+          "text": { "type": "string", "minLength": 1 },
+          "state": { "enum": ["CONFIRMED", "INFERRED", "UNKNOWN", "ASSUMPTION", "CONTRADICTED"] },
+          "evidence_ref": { "type": "string" }
+        },
+        "allOf": [
+          {
+            "if": { "properties": { "state": { "const": "CONFIRMED" } } },
+            "then": {
+              "required": ["evidence_ref"],
+              "description": "⭐ The rule that stops a suggestion becoming a requirement, and an UNKNOWN becoming a FACT across a boundary. A claim cannot be upgraded to CONFIRMED without naming new evidence."
+            }
+          }
+        ]
+      }
+    },
+
+    "dangerous_assumptions": {
+      "type": "array", "items": { "type": "string" },
+      "description": "An ASSUMPTION whose falsity would change the output. Distinguished from ordinary assumptions because only these justify stopping."
+    },
+    "failures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["failure_family", "symptom", "verdict"],
+        "additionalProperties": false,
+        "properties": {
+          "failure_family": {
+            "enum": ["BLIND_INSTRUMENT", "DECLARATION_WITHOUT_MECHANISM", "WRONG_POPULATION",
+                     "COLLAPSED_STATE", "SHARED_MUTABLE_STATE", "CHANNEL_WITH_NO_READER",
+                     "UNBOUNDED_RETRY", "STALE_ARTEFACT", "HARNESS_FAULT", "UNCLASSIFIED"],
+            "description": "✅ BUILT — mirrors factory.preflight.FAMILIES. UNCLASSIFIED is a legitimate answer; it is NOT the same as the key being absent (NOT-RECORDED)."
+          },
+          "symptom": { "type": "string" },
+          "verdict": { "enum": ["FAIL", "UNMEASURABLE", "ERROR"] }
+        }
+      }
+    },
+    "unresolved": { "type": "array", "items": { "type": "string" } },
+
+    "verification": {
+      "type": "object",
+      "required": ["verdict", "contract"],
+      "additionalProperties": false,
+      "properties": {
+        "verdict": { "enum": ["PASS", "FAIL", "UNMEASURABLE", "ERROR", "NOT_RUN"],
+                     "description": "Five, never four. ERROR outranks FAIL (TTCN-3 ITU-T Z.140 §24.2): once the apparatus broke we cannot claim the failure we saw was real." },
+        "contract": { "type": "string", "description": "The GreenContract name that assigned it. Never the agent, never the provider." },
+        "results": { "type": "array", "items": { "type": "object" } }
+      }
+    },
+
+    "permits": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "receiver_may": { "type": "array", "items": { "type": "string" } },
+        "receiver_may_not": { "type": "array", "items": { "type": "string" } },
+        "resource_claims": { "type": "array", "items": { "type": "string" },
+                             "description": "res-* ids, as used by .data/missions/*.json" },
+        "access": { "enum": ["READ", "WRITE"] }
+      }
+    },
+    "required_receiver_behavior": { "enum": ["CONSUME", "VERIFY_THEN_CONSUME", "DECIDE", "NONE"] },
+    "ack_required": { "type": "boolean" }
+  },
+
+  "dependentSchemas": {
+    "permits": {}
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "permits": { "properties": { "access": { "const": "WRITE" } },
+                                     "required": ["access"] } },
+        "required": ["permits"]
+      },
+      "then": { "properties": { "permits": { "required": ["resource_claims"] } },
+                "description": "WRITE access must name what it may write to." }
+    }
+  ],
+
+  "$defs": {
+    "party": {
+      "type": "object",
+      "required": ["kind", "id"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "enum": ["agent", "manager", "task", "human"] },
+        "id": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

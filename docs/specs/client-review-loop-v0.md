@@ -33,7 +33,7 @@ confirm it in code before building on it.
 
 | The spec asks for | Candidate primitive already here | Verify |
 |---|---|---|
-| missions / tasks / DAG | `factory/tasks.py` (append-only, evidence-gated close), `.data/tasks.jsonl` | ⚠ ticket-level `blocked_by` is `[]` in all 189 events — the DAG field exists and is unused |
+| missions / tasks / DAG | `factory/tasks.py` (append-only, evidence-gated close), `.data/tasks.jsonl` | ⭐ **CORRECTED 2026-08-31 — the DAG edge is LIVE.** This row read *"`blocked_by` is `[]` in all 189 events — the DAG field exists and is unused"*, which was true when filed and is now false: the store holds **25 `block` events**, created by `marketing-model-reconstruction-v1` (`scripts/mission_marketing_model.py`, which uses `create(parent=…)` + `block()` as the house pattern rather than adding a `depends_on` field). ⛔ Do not build a DAG primitive on the retired premise. Regenerate the count, never type it: `python -c "import json;print(sum(1 for l in open('.data/tasks.jsonl',encoding='utf-8') if l.strip() and json.loads(l)['kind']=='block'))"` |
 | evidence / provenance | `factory/evidence.py` — classes `TARGET/CONSUMER/REGRESSION/ROLLBACK`, states `ABSENT/ASSERTED/SATISFIED` | close() already refuses without evidence |
 | claims / permissions | `factory/claims.py` — `O_EXCL`, three-valued liveness | |
 | approval gates | `factory/contract.py` five verdicts; `presets.needs_paul` is **display-only** | ⚠ only `Lane.needs_paul` is enforcing-ish |
