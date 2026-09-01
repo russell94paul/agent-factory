@@ -60,6 +60,7 @@ from . import bus as _bus
 from . import claims as _claims
 from . import repo as _repo
 from . import sessions as _sessions
+from . import work as _work
 from .tasks import ABANDONED as _T_ABANDONED
 from .tasks import CLAIMED as _T_CLAIMED
 from .tasks import DONE as _T_DONE
@@ -99,7 +100,7 @@ def _now() -> str:
 
 
 def store_path() -> pathlib.Path:
-    """The shared task store. `repo.data()` and not `__file__.parent.parent` — see repo.py."""
+    """The shared task store, resolved through `factory.repo` so every lane sees one store."""
     return _repo.data() / "tasks.jsonl"
 
 
@@ -364,6 +365,31 @@ def classify(rows: List[dict], critical: List[str],
 
 
 # ------------------------------------------------------------------------ sessions
+
+
+def needs_by_work_id(questions: List[dict], works: List) -> Dict[str, List[dict]]:
+    """Best-effort join from a blocked session's question to canonical work.
+
+    ⚠ **Best-effort, and it says so** — the same limitation `_needs_by_label` carries, and for the
+    same reason: a job's `state.json` holds no work id, so the only join available is textual.
+
+    P1 improves the *odds* rather than the *kind*: a caller-chosen id like
+    `MARKETING-MODEL-FINALIZATION-01` is a far more specific token to find in a session name than a
+    two-character label like `D5`, which matched almost anything. A question that joins to nothing
+    is still **never dropped** — it lands in NEEDS YOU unattributed, because an inbox that filters
+    by the thing that produced it is the failure the inbox exists to prevent.
+    """
+    import re
+    out: Dict[str, List[dict]] = {}
+    ids = sorted((w.id for w in works), key=len, reverse=True)   # longest first: most specific wins
+    for q in questions:
+        hay = " ".join(str(q.get(k) or "") for k in ("name", "topic", "detail", "needs", "where"))
+        for wid in ids:
+            if re.search(rf"(?<![A-Za-z0-9]){re.escape(wid)}(?![A-Za-z0-9])", hay, re.I):
+                out.setdefault(wid, []).append(q)
+                q["work_id"] = wid
+                break
+    return out
 
 
 def _needs_by_label(questions: List[dict], rows: List[dict]) -> Dict[str, List[dict]]:
@@ -673,6 +699,20 @@ def state(mission_id: Optional[str] = None, cheap: bool = False) -> dict:
     nbl = _needs_by_label(questions, rows)
     rows = classify(rows, critical, nbl)
 
+    # ---- canonical work (P1) ---------------------------------------------------
+    # The mission DAG above is a VIEW of the manifested mission; this is every piece of canonical
+    # work in the store, manifested or not. One store, read once more, so work created through
+    # CREATE WORK is operable without any manifest existing for it at all.
+    works: List = []
+    if store is not None:
+        try:
+            first = _work.project(store=store, manifests=mans)
+            nbw = needs_by_work_id(questions, first)
+            works = _work.project(store=store, manifests=mans, needs_by_id=nbw)
+        except Exception as exc:                                    # noqa: BLE001
+            warn.append(f"canonical work projection failed: {type(exc).__name__}: {exc}")
+    work_rows = [w.to_dict() for w in works]
+
     # ---- live claims -----------------------------------------------------------
     try:
         held = _claims.active()
@@ -712,7 +752,158 @@ def state(mission_id: Optional[str] = None, cheap: bool = False) -> dict:
         "upstream_digest": digest,
         "worktrees": [] if cheap else worktrees(),
         "warnings": warn,
+        # ---- P1: canonical work + the NOW buckets -------------------------------
+        "work": work_rows,
+        "now": now_buckets(work_rows, questions),
+        "recent": recent(store, work_rows),
+        "repo_health": repo_health([] if cheap else worktrees()),
     }
+
+
+# --------------------------------------------------------------------- SLICE: NOW
+#
+# The default surface answers three questions and nothing else: WHAT NEEDS ME, WHAT SHOULD HAPPEN
+# NEXT, WHAT IS HAPPENING NOW. Everything the P0 page rendered is still reachable; it is no longer
+# *first*. A page that opens on 89 work rows, a full DAG, every worktree and the raw bus is a
+# database dump, and an operator on a phone at 2am reads none of it.
+
+#: How many rows each NOW bucket shows before it defers to its full list. Small on purpose.
+NOW_CAP = 6
+
+
+def now_buckets(work_rows: List[dict], questions: List[dict]) -> dict:
+    """The four NOW lists, each ordered by what the operator should look at first.
+
+    An unattributed question is NOT dropped. `needs_you` is the union of work in `NEEDS_HUMAN`
+    and every blocked question that joined to no work at all -- the join is textual and
+    best-effort, so filtering by it would hide exactly the questions whose origin is unclear,
+    which are the ones most likely to be stuck.
+
+    ACTIVE vs ORPHANED is carried per row rather than sorted away: five stale questions from a
+    dead session must not visually outrank one live delivery blocker, and the only way to say
+    which is which is to measure whether the asking session is still alive.
+    """
+    by_state: Dict[str, List[dict]] = {}
+    for w in work_rows:
+        by_state.setdefault(w["state"], []).append(w)
+
+    attributed = {q.get("work_id") for q in questions if q.get("work_id")}
+    orphan_q = [q for q in questions if not q.get("work_id")]
+
+    needs = []
+    for w in by_state.get(_work.NEEDS_HUMAN, []):
+        needs.append({"kind": "WORK", "work": w, "live": bool(w.get("session_id")),
+                      "questions": w.get("needs") or [], "orphan": False})
+    for q in orphan_q:
+        live = str(q.get("state") or "").startswith("RUNNING")
+        needs.append({"kind": "QUESTION", "work": None, "live": live, "questions": [q],
+                      "orphan": True})
+    # Live first -- a question whose session is still waiting is the one that unblocks work.
+    needs.sort(key=lambda r: (not r["live"], r["kind"] != "WORK"))
+
+    nxt = by_state.get(_work.READY, [])
+    waiting = [w for w in by_state.get(_work.BLOCKED, []) + by_state.get(_work.WAITING_GATE, [])
+               if w.get("depends_on")]
+    return {
+        "needs_you": needs,
+        "needs_you_count": len(needs),
+        "next": nxt,
+        "next_count": len(nxt),
+        "waiting": waiting,
+        "running": by_state.get(_work.RUNNING, []),
+        "running_count": len(by_state.get(_work.RUNNING, [])),
+        "draft": by_state.get(_work.DRAFT, []),
+        "draft_count": len(by_state.get(_work.DRAFT, [])),
+        "attributed": sorted(attributed),
+    }
+
+
+#: Store event kinds that are a TRANSITION an operator would want to know about. A `note` is not
+#: one, and neither is every `evidence` row -- RECENT is a digest, not the event log.
+_RECENT_KINDS = {"create": "created", "claim": "started", "close": "closed",
+                 "block": "blocked", "unblock": "unblocked", "depend": "dependency added",
+                 "visibility": "visibility changed", "session": "session attached"}
+RECENT_CAP = 12
+
+
+def recent(store: Optional[TaskStore], work_rows: List[dict]) -> List[dict]:
+    """Meaningful work transitions, newest first -- an operator digest, not raw bus traffic.
+
+    Reads the same append-only log everything else does, so RECENT cannot report a transition
+    that did not happen. `close` carries the status it closed to, because "closed" and
+    "abandoned" are different news.
+    """
+    if store is None:
+        return []
+    titles = {w["id"]: w["title"] for w in work_rows}
+    out: List[dict] = []
+    for t in store.all():
+        for ev in t.events:
+            verb = _RECENT_KINDS.get(ev.kind)
+            if not verb:
+                continue
+            if ev.kind == "close":
+                verb = str(ev.data.get("status") or "closed")
+            out.append({"at": ev.ts, "work_id": t.id, "title": titles.get(t.id, t.title),
+                        "verb": verb, "actor": ev.actor})
+    out.sort(key=lambda r: r["at"], reverse=True)
+    for r in out[:RECENT_CAP]:
+        r["ago"] = _ago_ts(r["at"])
+    return out[:RECENT_CAP]
+
+
+def _ago_ts(ts: float) -> str:
+    import time as _t
+    d = max(0, int(_t.time() - ts))
+    if d < 90:
+        return f"{d}s ago"
+    if d < 5400:
+        return f"{d // 60}m ago"
+    if d < 172800:
+        return f"{d // 3600}h ago"
+    return f"{d // 86400}d ago"
+
+
+def repo_health(wts: List[dict]) -> dict:
+    """Worktrees as infrastructure health: quiet when normal, loud when not.
+
+    `dirty is None` is an ANOMALY, not a clean tree. git could not be asked, so "clean" is not a
+    measurement -- the false green `factory/repo.py` was written about.
+    """
+    dirty = [w for w in wts if (w.get("dirty") or 0) > 0]
+    blind = [w for w in wts if w.get("dirty") is None]
+    return {"total": len(wts), "dirty": dirty, "blind": blind,
+            "ok": not dirty and not blind and bool(wts),
+            "headline": ("" if not (dirty or blind) else
+                         "; ".join([f"{w.get('branch') or w['path']} - {w['dirty']} uncommitted"
+                                    for w in dirty]
+                                   + [f"{w.get('branch') or w['path']} - UNREADABLE"
+                                      for w in blind]))}
+
+
+def work_rows_to_objects(rows: List[dict]) -> List:
+    """Rebuild `work.Work` objects from the projected dicts, so a caller that already has state
+    does not pay for a second store read just to resolve a target."""
+    import dataclasses as _dc
+    names = {f.name for f in _dc.fields(_work.Work)}
+    out = []
+    for r in rows:
+        kw = {k: v for k, v in r.items() if k in names}
+        kw["checks"] = [_work.Check(**c) if isinstance(c, dict) else c
+                        for c in (kw.get("checks") or [])]
+        out.append(_work.Work(**kw))
+    return out
+
+
+def resolve_target(target: str, st: Optional[dict] = None):
+    """Resolve an operator target to canonical work, or raise `work.TargetRefused`.
+
+    Thin on purpose: the refusal lives in `factory.work` so every caller -- the page, the CLI and
+    the POST handler -- refuses identically rather than each re-deriving the rule.
+    """
+    rows = work_rows_to_objects(st["work"]) if st is not None and st.get("work") is not None \
+        else None
+    return _work.resolve(target, rows)
 
 
 # ------------------------------------------------------------- SLICE B: start synced
