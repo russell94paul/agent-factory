@@ -44,14 +44,36 @@ METRIC = "MetricContract"       #: numerator, denominator, scope, currency, vali
 TASK = "TaskContext"            #: the instruction for this specific piece of work
 OPERATOR = "OperatorAnswer"     #: a decision a human recorded in response to a declared blocker
 
-KINDS: tuple = (COMPANY, REPO, CLIENT, SOURCE, DATASET, METRIC, TASK, OPERATOR)
+CASE_STUDY = "CaseStudyClaim"   #: one forensic claim about a past delivery, with its as-of
+
+KINDS: tuple = (COMPANY, REPO, CLIENT, SOURCE, DATASET, METRIC, TASK, OPERATOR, CASE_STUDY)
 
 # ---------------------------------------------------------------------------------- freshness
-#: Three states. `UNVERIFIED` is not a weak `CURRENT` — it means nobody has looked.
+#: Six states. `UNVERIFIED` is not a weak `CURRENT` — it means nobody has looked.
 CURRENT = "CURRENT"          #: checked against its source, and it agreed
 STALE = "STALE"              #: checked, and the source has moved since
 UNVERIFIED = "UNVERIFIED"    #: never checked against its source
-STATUSES: tuple = (CURRENT, STALE, UNVERIFIED)
+
+#: ⭐ The three added 2026-09-01 for the forensic case study, and why each is NOT one of the above.
+#:
+#: A ref that has been overtaken is not `STALE`. `STALE` says *the source moved and this copy did
+#: not*; these three say *the claim itself was answered*. Collapsing them would lose which of the
+#: three happened, and Delivery #001 contains one of each:
+#:
+#: * `SUPERSEDED`   — a later claim replaced it. (R1/R2 duplicate tasks, annotated not deleted.)
+#: * `REFUTED`      — measurement showed it false. (The inherited metric hierarchy.)
+#: * `CONTRADICTED` — two sources disagree and neither has won. (MER, written both ways.)
+#:
+#: `CONTRADICTED` in particular must never degrade to `STALE`: staleness implies a correct value
+#: exists elsewhere, and the whole point of the MER finding is that it does not, yet.
+SUPERSEDED = "SUPERSEDED"        #: a later claim replaced it; `superseded_by` names which
+REFUTED = "REFUTED"              #: measured against its source and found false
+CONTRADICTED = "CONTRADICTED"    #: sources disagree; no side has won. NOT a weak STALE
+
+STATUSES: tuple = (CURRENT, STALE, UNVERIFIED, SUPERSEDED, REFUTED, CONTRADICTED)
+
+#: The statuses that mean "this claim has been answered", as opposed to merely aged.
+ANSWERED: tuple = (SUPERSEDED, REFUTED, CONTRADICTED)
 
 #: How much the content is to be trusted, separate from whether it is fresh. A ref can be
 #: perfectly current and still be somebody's guess; a ref can be a hard measurement taken a year
@@ -88,6 +110,14 @@ class ContextRef:
     confidence: str = STATED
     #: ISO date the ref was last checked against `source`. Empty means never.
     checked: str = ""
+    #: ⭐ ISO date the claim was FIRST established. Distinct from `checked`, and the distinction is
+    #: the whole point: Delivery #001's "ticket-level `blocked_by` is unused" was TRUE when
+    #: observed (189 events, all empty) and FALSE when re-used (25 block events existed by then).
+    #: One date cannot express that. `observed` without `checked` renders as "true as of X, not
+    #: re-checked" — never as "true".
+    observed: str = ""
+    #: Which ref replaced this one. Required when `status` is SUPERSEDED.
+    superseded_by: str = ""
     #: Structured payload for kinds that have one (a MetricContract's numerator/denominator/scope).
     #: Deliberately untyped for now — the schema is validated against one real client workflow
     #: before it is fixed in code. See the module docstring.
@@ -110,6 +140,11 @@ class ContextRef:
             raise ContextError(
                 f"context ref {self.id!r} claims CURRENT with no `checked` date. Freshness is a "
                 "measurement; without the date it is an assertion wearing a measurement's label.")
+        if self.status == SUPERSEDED and not self.superseded_by:
+            raise ContextError(
+                f"context ref {self.id!r} claims SUPERSEDED but names nothing that superseded it. "
+                "The same rule as CURRENT-needs-a-date: a status that asserts something happened "
+                "must carry the evidence of what happened, or it is an opinion with a label.")
 
     def header(self) -> str:
         """The one line that precedes this ref's body when it is rendered into a prompt."""
@@ -142,6 +177,18 @@ class ContextPack:
 
     def unverified(self) -> List[ContextRef]:
         return [r for r in self.refs if r.status == UNVERIFIED]
+
+    def answered(self) -> List[ContextRef]:
+        """Refs a later measurement settled — superseded, refuted or contradicted.
+
+        Deliberately NOT folded into `stale()`. Staleness implies a correct value exists
+        elsewhere; `CONTRADICTED` means it does not, yet.
+        """
+        return [r for r in self.refs if r.status in ANSWERED]
+
+    def not_rechecked(self) -> List[ContextRef]:
+        """Refs established once and never re-established. The `blocked_by` failure mode."""
+        return [r for r in self.refs if r.observed and not r.checked]
 
     def sources(self) -> List[str]:
         """Every artefact this pack was derived from — the audit answer to "where did that come

@@ -1,0 +1,1090 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Navira Cross-Channel Marketing Model — Delivery #001 forensic case study</title>
+<style>
+/* Tokens. Every colour is defined on bare :root first, so no value has its only definition
+   inside a media query — a page whose dark block is the only definition renders unstyled for a
+   viewer whose system reports neither preference. */
+:root{
+  --bg:#fbfaf8; --panel:#ffffff; --ink:#1a1a1c; --muted:#5c5c66; --line:#e2e0dc;
+  --accent:#2f5d8a; --accent-soft:#eaf1f8;
+  --client:#8a4b2f; --client-soft:#f7ede8;
+  --factory:#2f6b58; --factory-soft:#e8f2ee;
+  --warn:#8a6d2f; --warn-soft:#f8f2e4;
+  --danger:#8a2f3a; --danger-soft:#f8e9eb;
+  --sim:#5a4b8a; --sim-soft:#efecf8;
+  --base:16px; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#131316; --panel:#1b1b1f; --ink:#eceaea; --muted:#a2a2ae; --line:#2e2e35;
+    --accent:#8ab4de; --accent-soft:#1c2833;
+    --client:#d99b7c; --client-soft:#2b2019;
+    --factory:#7fc4ab; --factory-soft:#17261f;
+    --warn:#d9bc7c; --warn-soft:#2a2419;
+    --danger:#e0919c; --danger-soft:#2c1a1e;
+    --sim:#a99ad9; --sim-soft:#211d2e;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#131316; --panel:#1b1b1f; --ink:#eceaea; --muted:#a2a2ae; --line:#2e2e35;
+  --accent:#8ab4de; --accent-soft:#1c2833;
+  --client:#d99b7c; --client-soft:#2b2019;
+  --factory:#7fc4ab; --factory-soft:#17261f;
+  --warn:#d9bc7c; --warn-soft:#2a2419;
+  --danger:#e0919c; --danger-soft:#2c1a1e;
+  --sim:#a99ad9; --sim-soft:#211d2e;
+}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:var(--base)/1.55 var(--sans);
+     -webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:32px 20px 96px}
+h1,h2,h3,h4{line-height:1.25;margin:0 0 .4em}
+h1{font-size:1.9rem;letter-spacing:-.02em}
+h2{font-size:1.28rem;letter-spacing:-.01em;margin-top:0}
+h3{font-size:1.02rem}
+p{margin:0 0 .7em}
+code{font-family:var(--mono);font-size:.86em;background:var(--accent-soft);
+     padding:.1em .35em;border-radius:4px;word-break:break-word}
+a{color:var(--accent)}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+      padding:20px 22px;margin:0 0 18px}
+section{margin:0 0 34px;scroll-margin-top:16px}
+.shead{display:flex;align-items:baseline;gap:12px;margin:0 0 14px;
+       border-bottom:1px solid var(--line);padding-bottom:8px}
+.shead .n{font:600 .74rem/1 var(--mono);color:var(--muted);letter-spacing:.1em}
+.lede{color:var(--muted);margin:-6px 0 16px}
+
+.chip{display:inline-block;font:600 .68rem/1.6 var(--sans);letter-spacing:.04em;
+      padding:.15em .6em;border-radius:999px;border:1px solid var(--line);
+      background:var(--panel);color:var(--muted);white-space:nowrap}
+.client{background:var(--client-soft);color:var(--client);border-color:transparent}
+.factory{background:var(--factory-soft);color:var(--factory);border-color:transparent}
+.exercised{background:var(--factory-soft);color:var(--factory);border-color:transparent}
+.impl{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.sim,.prop{background:var(--sim-soft);color:var(--sim);border-color:transparent}
+.s-block,.s-intercept{background:var(--factory-soft);color:var(--factory);border-color:transparent}
+.s-warn,.s-ctx,.s-may{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.s-none{background:var(--panel);color:var(--muted)}
+.r-high{background:var(--danger-soft);color:var(--danger);border-color:transparent}
+.r-med{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.st-sup,.st-ref,.st-con{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.st-cur{background:var(--factory-soft);color:var(--factory);border-color:transparent}
+.f-live{background:var(--factory-soft);color:var(--factory);border-color:transparent}
+.f-stale,.f-un{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+
+.grid{display:grid;gap:14px}
+@media(min-width:760px){.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}}
+
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.tile .k{font:600 .7rem/1.4 var(--sans);letter-spacing:.08em;text-transform:uppercase;
+         color:var(--muted)}
+.tile .v{font:700 1.6rem/1.2 var(--sans);letter-spacing:-.02em;margin:.15em 0 .1em}
+.tile .v.none{font-size:.95rem;font-weight:600;color:var(--muted);letter-spacing:0}
+.tile .n{font-size:.8rem;color:var(--muted)}
+
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:.88rem;min-width:640px}
+th,td{text-align:left;vertical-align:top;padding:9px 10px;border-bottom:1px solid var(--line)}
+th{font:600 .72rem/1.4 var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+tbody tr:last-child td{border-bottom:0}
+
+.issue{border-left:3px solid var(--line);padding-left:14px;margin:0 0 16px}
+.issue.t-client{border-left-color:var(--client)}
+.issue.t-factory{border-left-color:var(--factory)}
+.issue h3{margin:0 0 .25em;font-size:.98rem}
+.issue .meta{display:flex;flex-wrap:wrap;gap:6px;margin:.4em 0}
+.issue .why{color:var(--muted);font-size:.9rem}
+.sides{background:var(--warn-soft);border-radius:8px;padding:10px 12px;margin:.5em 0}
+.sides .s{margin:0 0 .5em}
+.sides .s:last-child{margin:0}
+.sides b{color:var(--warn)}
+
+.cf{background:var(--sim-soft);border:1px dashed var(--sim);border-radius:10px;
+    padding:12px 14px;margin:.6em 0}
+.cf.observed{background:var(--factory-soft);border-style:solid;border-color:var(--factory)}
+.cf .cfh{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 .5em}
+.cf .cfh b{font-size:.92rem}
+.cf p{font-size:.88rem;margin:0 0 .4em}
+.cf .rule{font-size:.78rem;color:var(--muted);margin:0}
+
+.actual{background:var(--accent-soft);border-left:3px solid var(--accent);
+        border-radius:0 8px 8px 0;padding:12px 14px;margin:.6em 0}
+.actual .lbl{font:700 .68rem/1.6 var(--sans);letter-spacing:.1em;color:var(--accent);
+             text-transform:uppercase}
+
+/* ---- Scenes: CSS-only progressive reveal. No JavaScript in this path. ---- */
+.scene{counter-increment:scene}
+.scene .q{font-weight:600;margin:.6em 0 .4em}
+.choices{list-style:none;margin:0 0 .6em;padding:0}
+.choices li{margin:0 0 6px}
+.choices input{position:absolute;opacity:0;width:0;height:0}
+.choices label{display:block;border:1px solid var(--line);border-radius:8px;
+               padding:9px 12px;cursor:pointer;background:var(--panel);font-size:.92rem}
+.choices label:hover{border-color:var(--accent)}
+.choices label .key{font:700 .8rem/1 var(--mono);color:var(--muted);margin-right:8px}
+.choices input:focus-visible + label{outline:2px solid var(--accent);outline-offset:2px}
+.choices input:checked + label{border-color:var(--accent);background:var(--accent-soft)}
+.conseq{display:none;font-size:.9rem;color:var(--muted);
+        border-left:2px solid var(--line);padding:2px 0 2px 12px;margin:6px 0 0}
+.choices input:checked + label + .conseq{display:block}
+.conseq .was{display:inline-block;font:700 .66rem/1.6 var(--sans);letter-spacing:.08em;
+             color:var(--accent);text-transform:uppercase;margin-right:6px}
+.reveal{margin-top:.7em}
+.reveal > summary{cursor:pointer;font-weight:600;font-size:.93rem;color:var(--accent);
+                  list-style:none}
+.reveal > summary::-webkit-details-marker{display:none}
+.reveal > summary::before{content:"▸ ";display:inline-block;transition:transform .15s}
+.reveal[open] > summary::before{content:"▾ "}
+
+.refs{margin:.5em 0 0}
+.refs > summary{cursor:pointer;font-size:.8rem;color:var(--muted)}
+.refs ul{margin:.4em 0 0;padding-left:18px;font-size:.8rem}
+
+.note{font-size:.85rem;color:var(--muted);border-left:2px solid var(--warn);
+      padding-left:12px;margin:.6em 0}
+.recon td .no{color:var(--warn);font-weight:600}
+.foot{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);
+      font-size:.78rem;color:var(--muted)}
+.foot code{font-size:.9em}
+.toc{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 26px}
+.toc a{font-size:.82rem;text-decoration:none;border:1px solid var(--line);border-radius:999px;
+       padding:.25em .8em;color:var(--muted);background:var(--panel)}
+.toc a:hover{border-color:var(--accent);color:var(--accent)}
+@media print{.toc,.reveal>summary{display:none}.reveal{display:block}.card{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="card">
+  <div class="meta" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+    <span class="chip f-live">Live</span><span class="chip ">Read-only projection</span><span class="chip ">case_study/0.1.0</span>
+    <button id="themer" hidden class="chip" style="cursor:pointer">Theme</button>
+  </div>
+  <h1>Delivery #001 — Navira Cross-Channel Marketing Model</h1>
+  <p class="lede">Forensic reconstruction and Agent Factory counterfactual.
+     Client: GEP · Subject: Navira (the modelled entity; GEP is the contracting client and Jira project) · 2026-05-29 to ongoing</p>
+  <div class="grid g3">
+    <div class="tile"><div class="k">Issues on the client delivery</div>
+      <div class="v">9</div><div class="n">13 still open across both tracks</div></div>
+    <div class="tile"><div class="k">Issues on the Factory mission</div>
+      <div class="v">9</div><div class="n">the investigation produced its own failures</div></div>
+    <div class="tile"><div class="k">Capabilities actually exercised</div>
+      <div class="v">4<span class="n"> of 27</span></div>
+      <div class="n">the rest are simulated and marked as such</div></div>
+  </div>
+  <p class="note"><b>How to read this.</b> Two deliveries are described, not one: the client work,
+     and the Factory mission that investigated it. Both produced failures, and the compiler refuses
+     to build this page from only one of them. Every capability claim carries a maturity chip —
+     only <b>4</b> of 27 were observed running; the rest are simulated and
+     cannot be read as proven.</p>
+</header>
+
+<nav class="toc">
+  <a href="#exec">Executive summary</a><a href="#overview">Overview</a>
+  <a href="#timeline">Timeline</a><a href="#issues">Issues</a><a href="#patterns">Root patterns</a>
+  <a href="#walkthrough">Walkthrough</a><a href="#kpis">KPIs</a><a href="#gaps">Instrumentation gaps</a>
+  <a href="#lessons">Lessons</a><a href="#recon">Reconciliation</a>
+</nav>
+
+<section id="exec">
+  <div class="shead"><span class="n">01</span><h2>Executive summary</h2></div><p class="lede">The findings that change a decision, each with where it was caught and where it should have been.</p>
+  <div class="card scroll"><table>
+    <thead><tr><th>Issue</th><th>Why it happened</th><th>Where detected</th>
+      <th>Ideal interception</th><th>Capability</th><th>Expected benefit</th></tr></thead>
+    <tbody><tr><td><b>A design law built on a client request that was never made</b></td><td>A recollection entered the record as a requirement; the doc flagged it unverified and nothing acted on the flag</td><td>Reconstruction audit, 8 weeks later</td><td>The moment the claim entered the record</td><td>Typed Claims + Evidence requirements</td><td>Escape 5 to 0. A phantom requirement never reaches the client's ticket</td></tr><tr><td><b>The client's largest requirement has an unsent reply, and its bigger half never arrived</b></td><td>A hold with no owner and no expiry</td><td>Reconstruction audit</td><td>At the hold</td><td>Intent Contract + Human Attention Router</td><td>Designs cannot be produced against an unspecified dimension list without that being visible</td></tr><tr><td><b>Two of the client's surfaces read differently-defined objects with the same names</b></td><td>Unqualified references resolving in a divergent schema copy</td><td>Chasing a $3,374.90 discrepancy; six objects still divergent</td><td>Before the first query against an unqualified name</td><td>Source Cartography</td><td>Escape 2 to 0; the six-object backlog never accumulates</td></tr><tr><td><b>$244,870.44 of spend present in the warehouse and unselectable in the report</b></td><td>Channel jammed into the marketplace axis, creating a non-member of the dimension</td><td>Lineage analysis</td><td>At the relabel</td><td>Semantic Contracts + Task DAG validation</td><td>Cross-channel spend addressable by a positive slicer choice</td></tr><tr><td><b>The board headline metric is written backwards in the document that locks it</b></td><td>A formula typed once, never reconciled to the implementation</td><td>Reconstruction audit</td><td>At the first implementation that chose a direction</td><td>Semantic Contracts</td><td>Escape 4 to 1. Document and system stop disagreeing</td></tr><tr><td><b>A deny-list over a credential table exposed three credentials, one spanning production</b></td><td>A guard only as wide as the relation it derives over — the same class fixed hours earlier</td><td>Same session, self-caught</td><td>Before the extraction</td><td>Known-Failure Preflight</td><td>Three credentials not exposed; one production rotation not owed</td></tr><tr><td><b>A search filtered the wrong field, returned zero, and the zero became a finding</b></td><td>No positive control on a search that returned nothing</td><td>Self-caught, 3,611 seconds later</td><td>At the search</td><td>Known-Failure Preflight (positive control)</td><td>Escape 4 to 0. No duplicate tasks, no wrong provenance in the artifacts</td></tr><tr><td><b>"Three tasks ran in parallel" is unproven by the record</b></td><td>Parallelism asserted in prose; three claims share one pid and R3 never claimed</td><td>This audit</td><td>At claim time</td><td>Reliability instrumentation</td><td>The mission's headline claim becomes measurable rather than asserted</td></tr></tbody></table></div>
+</section>
+
+<section id="overview">
+  <div class="shead"><span class="n">02</span><h2>The two deliveries</h2></div>
+  <div class="grid g2">
+    <div class="card"><div class="meta"><span class="chip client">Client delivery</span></div>
+      <h3>Navira Cross-Channel Marketing Model</h3>
+      <p class="why">2026-05-29 to ongoing</p>
+      <p>Navira (the modelled entity; GEP is the contracting client and Jira project)</p></div>
+    <div class="card"><div class="meta"><span class="chip factory">Factory mission</span></div>
+      <h3>Factory mission — read-only reconstruction of Delivery</h3>
+      <p class="why">2026-09-01T00:52:14Z to 2026-09-01T03:14:03Z (Wave 1)</p>
+      <p>The client delivery was investigated by this mission. The mission revealed failure modes on both itself and the delivery. Neither is a subset of the other, and flattening them into one timeline would lose which system produced which failure.</p></div>
+  </div>
+</section>
+
+<section id="timeline">
+  <div class="shead"><span class="n">03</span><h2>Forensic timeline</h2></div><p class="lede">What was known, believed and assumed at each step — and what was not yet knowable.</p>
+  <div class="card"><div class="issue t-client">
+  <h3>The measurement law is written</h3>
+  <div class="meta"><span class="chip client">Client delivery</span><span class="chip st-cur">Current</span>
+    <span class="chip ">2026-05-29 · DAY</span></div>
+  <p class="why"><b>Trying to achieve:</b> A defensible way to answer whether marketing spend is working across three platforms</p>
+  <p class="why"><b>Known:</b> That platform-reported attribution double-counts across channels</p>
+  <p class="why"><b>Believed:</b> That a tiered vocabulary would be shared with the client</p>
+  <p class="why"><b>Assumed:</b> That the client shares the Tier 0-4 vocabulary. NEVER TESTED</p>
+  <p class="why"><b>Not yet known:</b> That the 30-day window would be aliased away at the point of implementation</p>
+  <p>Four decisions locked: blended MER as headline, USD consolidation, a 30-day Amazon window, Google/Meta linkage deferred. Plus the rule that survived everything — platform-attributed value is never summed across channels.</p>
+  <p class="why"><b>Observed:</b> 2026-05-29 · <b>Re-checked:</b> 2026-08-31</p>
+  <details class="refs"><summary>Evidence (1)</summary><ul><li><code>docs/case-studies/delivery-001-marketing-model.md#step-a1</code></li></ul></details>
+</div><div class="issue t-client">
+  <h3>The client says, in her own words, what she actually wants</h3>
+  <div class="meta"><span class="chip client">Client delivery</span><span class="chip st-cur">Current</span>
+    <span class="chip ">2026-07-08 · DAY</span></div>
+  <p class="why"><b>Trying to achieve:</b> —</p>
+  <p class="why"><b>Known:</b> Internally, that a two-model split was probably needed</p>
+  <p class="why"><b>Believed:</b> That the client's objection was about model structure</p>
+  <p class="why"><b>Assumed:</b> —</p>
+  <p class="why"><b>Not yet known:</b> That this transcript would be cited for months as the source of a request it does not contain</p>
+  <p>A 487-line verbatim transcript was filed, and not read again for eight weeks</p>
+  <p class="why"><b>Observed:</b> 2026-07-08 · <b>Re-checked:</b> 2026-08-31</p>
+  <details class="refs"><summary>Evidence (1)</summary><ul><li><code>docs/case-studies/delivery-001-marketing-model.md#step-a2</code></li></ul></details>
+</div><div class="issue t-client">
+  <h3>A recollection becomes a design law</h3>
+  <div class="meta"><span class="chip client">Client delivery</span><span class="chip st-ref">Refuted</span>
+    <span class="chip ">2026-08 · MONTH</span></div>
+  <p class="why"><b>Trying to achieve:</b> —</p>
+  <p class="why"><b>Known:</b> That a metric-visibility boundary was needed</p>
+  <p class="why"><b>Believed:</b> That Heather had asked for a high-level vs low-level split</p>
+  <p class="why"><b>Assumed:</b> That the recollection was accurate — self-flagged as needing confirmation, never done</p>
+  <p class="why"><b>Not yet known:</b> That reading the transcript would refute the premise</p>
+  <p>Engagement metrics hidden on Daily, visible on Marketing; recorded in Jira 36056 as settled</p>
+  <p class="why"><b>Observed:</b> 2026-08 · <b>Re-checked:</b> 2026-08-31</p>
+  <details class="refs"><summary>Evidence (1)</summary><ul><li><code>docs/case-studies/delivery-001-marketing-model.md#step-a6</code></li></ul></details>
+</div><div class="issue t-client">
+  <h3>The headline metric is written backwards in the document that locks it</h3>
+  <div class="meta"><span class="chip client">Client delivery</span><span class="chip st-con">Contradicted</span>
+    <span class="chip ">— · UNKNOWN</span></div>
+  <p class="why"><b>Trying to achieve:</b> —</p>
+  <p class="why"><b>Known:</b> That MER was the board-level headline</p>
+  <p class="why"><b>Believed:</b> That the architecture page stated it correctly</p>
+  <p class="why"><b>Assumed:</b> —</p>
+  <p class="why"><b>Not yet known:</b> That the code, the field contract and the frontend all disagreed with the document</p>
+  <p>The document was used as the specification source for months</p>
+  <p class="why"><b>Observed:</b> — · <b>Re-checked:</b> 2026-08-31</p>
+  <details class="refs"><summary>Evidence (1)</summary><ul><li><code>docs/case-studies/delivery-001-marketing-model.md#step-a9</code></li></ul></details>
+</div><div class="issue t-factory">
+  <h3>The premise handed to the mission is corrected before it is planned against</h3>
+  <div class="meta"><span class="chip factory">Factory mission</span><span class="chip st-cur">Current</span>
+    <span class="chip ">2026-08-31 · DAY</span></div>
+  <p class="why"><b>Trying to achieve:</b> —</p>
+  <p class="why"><b>Known:</b> A reviewer's instruction to use existing mission/task/DAG/state/claim mechanisms</p>
+  <p class="why"><b>Believed:</b> Nothing yet — the premise was measured before it was believed</p>
+  <p class="why"><b>Assumed:</b> —</p>
+  <p class="why"><b>Not yet known:</b> —</p>
+  <p>Two greps refuted two of the four named mechanisms; the subject was corrected from GEP to Navira; one task was rescoped from reconstruct to read-and-diff.</p>
+  <p class="why"><b>Observed:</b> 2026-08-31 · <b>Re-checked:</b> 2026-09-01</p>
+  <details class="refs"><summary>Evidence (1)</summary><ul><li><code>docs/case-studies/delivery-001-marketing-model.md#step-b1</code></li></ul></details>
+</div><div class="issue t-factory">
+  <h3>A credential is exposed by a deny-list over a markdown table</h3>
+  <div class="meta"><span class="chip factory">Factory mission</span><span class="chip st-cur">Current</span>
+    <span class="chip ">2026-08-31 · DAY</span></div>
+  <p class="why"><b>Trying to achieve:</b> —</p>
+  <p class="why"><b>Known:</b> That the vault file contained live credentials and they must not enter the transcript</p>
+  <p class="why"><b>Believed:</b> That filtering out lines naming the credential field was sufficient</p>
+  <p class="why"><b>Assumed:</b> That the vault stored credentials in a form where that word marks the data</p>
+  <p class="why"><b>Not yet known:</b> That the vault uses markdown tables, so the word is in the header and never the rows</p>
+  <p>Three plaintext values reached the session transcript; one spans non-prod and production</p>
+  <p class="why"><b>Observed:</b> 2026-08-31 · <b>Re-checked:</b> 2026-09-01</p>
+  <details class="refs"><summary>Evidence (1)</summary><ul><li><code>docs/case-studies/delivery-001-marketing-model.md#step-b3</code></li></ul></details>
+</div><div class="issue t-factory">
+  <h3>The read-only failsafe is found unable to pass, before it is run</h3>
+  <div class="meta"><span class="chip factory">Factory mission</span><span class="chip st-cur">Current</span>
+    <span class="chip ">2026-08-31 · DAY</span></div>
+  <p class="why"><b>Trying to achieve:</b> —</p>
+  <p class="why"><b>Known:</b> The pre-flight required watching a write be refused</p>
+  <p class="why"><b>Believed:</b> —</p>
+  <p class="why"><b>Assumed:</b> The spec assumed a role it had not verified</p>
+  <p class="why"><b>Not yet known:</b> —</p>
+  <p>Spotted before running. Two honest routes put to a human; the read-only-role route chosen. The vacuous verification was refused rather than run and reported as a proof.</p>
+  <p class="why"><b>Observed:</b> 2026-08-31 · <b>Re-checked:</b> 2026-09-01</p>
+  <details class="refs"><summary>Evidence (1)</summary><ul><li><code>docs/case-studies/delivery-001-marketing-model.md#step-b4</code></li></ul></details>
+</div><div class="issue t-factory">
+  <h3>A search filters the wrong field, returns a false zero, and two duplicate tasks are created</h3>
+  <div class="meta"><span class="chip factory">Factory mission</span><span class="chip st-sup">Superseded</span>
+    <span class="chip ">2026-09-01T02:13:52Z · EXACT</span></div>
+  <p class="why"><b>Trying to achieve:</b> —</p>
+  <p class="why"><b>Known:</b> That the mission spec declared eight tasks</p>
+  <p class="why"><b>Believed:</b> That the plan had not been materialised into the task store</p>
+  <p class="why"><b>Assumed:</b> That a search returning zero had looked in the right place</p>
+  <p class="why"><b>Not yet known:</b> That the search filtered the task ID, which is hex and contains no label</p>
+  <p>Two duplicate tasks created; Wave 1 ran under them</p>
+  <p class="why"><b>Observed:</b> 2026-09-01 · <b>Re-checked:</b> 2026-09-01</p>
+  <p class="note">Superseded by: Corrected at 03:14:03Z — both duplicates annotated SUPERSEDED in the append-only store</p><details class="refs"><summary>Evidence (1)</summary><ul><li><code>docs/case-studies/delivery-001-marketing-model.md#step-b6</code></li></ul></details>
+</div><div class="issue t-factory">
+  <h3>Wave 1 runs — two of three tasks, 87KB of cited evidence</h3>
+  <div class="meta"><span class="chip factory">Factory mission</span><span class="chip st-sup">Superseded</span>
+    <span class="chip ">2026-09-01T02:25:21Z · EXACT</span></div>
+  <p class="why"><b>Trying to achieve:</b> —</p>
+  <p class="why"><b>Known:</b> R1 and R2 were unblocked; R3 waited on a human credential decision</p>
+  <p class="why"><b>Believed:</b> That three tasks were running in parallel</p>
+  <p class="why"><b>Assumed:</b> That three resource claims meant three concurrent sessions</p>
+  <p class="why"><b>Not yet known:</b> That all three claims carried one pid, and that R3 never claimed at all</p>
+  <p>R1 and R2 closed with MEASURED/TARGET evidence; R3 left open</p>
+  <p class="why"><b>Observed:</b> 2026-09-01 · <b>Re-checked:</b> 2026-09-01</p>
+  <p class="note">Superseded by: R3 and D1 both closed later on 2026-09-01; see the reconciliation panel</p><details class="refs"><summary>Evidence (1)</summary><ul><li><code>docs/case-studies/delivery-001-marketing-model.md#step-b7</code></li></ul></details>
+</div></div>
+</section>
+
+<section id="issues">
+  <div class="shead"><span class="n">04</span><h2>Issues, mistakes and contradictions</h2></div><p class="lede">Colour marks the track. A preserved contradiction is never resolved to one side.</p>
+  <div class="card"><div class="issue t-client" id="issue-H1">
+  <h3>H1 — Metric-visibility boundary rests on a recollection the transcript does not contain</h3>
+  <div class="meta"><span class="chip client">Client delivery</span><span class="chip r-high">Client risk high</span><span class="chip r-med">Still open</span><span class="chip ">Escape 5 → 0</span><span class="chip ">DOCUMENTED</span></div>
+  <p>Engagement metrics hidden on Daily, visible on Marketing; recorded in Jira 36056 as settled</p>
+  <p class="why"><b>Why:</b> A remembered ask was written into the record as a requirement; the doc flagged it unconfirmed and nothing acted on the flag</p>
+  <p class="why"><b>Root cause:</b> UNVERIFIED_ASSUMPTION · MISSING_VERIFICATION · HUMAN_MEMORY_DEPENDENCY · <b>Introduced:</b> S2 internal record
+     · <b>Detected:</b> S7 reconstruction audit</p>
+  
+  <div class="cf">
+  <div class="cfh"><b>Typed Claims</b><span class="chip s-intercept">Would intercept</span><span class="chip prop">Proposed — not built</span></div>
+  <p>The recollection would still have been recorded. What it prevents is the recollection becoming a CONFIRMED client requirement, and an artifact citing it as one being published.</p>
+  <p class="rule">Remaining human decision: Someone still has to read the transcript. The Factory schedules it; it does not perform it.</p>
+  <p class="rule">Confidence: MEDIUM — depends on a claim-typing layer that does not exist yet</p>
+  
+  <p class="rule"><b>SIMULATED. This is what the capability would do — it has not been observed doing it.</b></p>
+</div>
+  <details class="refs"><summary>Evidence (1)</summary><ul><li><code>docs/case-studies/delivery-001-marketing-model.md#step-a6</code></li></ul></details>
+</div><div class="issue t-client" id="issue-H2">
+  <h3>H2 — Two documents recommend a conformed core fact rejected the next day; neither marked superseded</h3>
+  <div class="meta"><span class="chip client">Client delivery</span><span class="chip r-high">Client risk high</span><span class="chip r-med">Still open</span><span class="chip ">Escape 3 → 0</span><span class="chip ">DOCUMENTED</span></div>
+  <p>Both read as current on disk. The trap is armed and has not yet fired</p>
+  <p class="why"><b>Why:</b> No supersession mechanism over documents</p>
+  <p class="why"><b>Root cause:</b> DOCUMENTATION_DRIFT · CONTRADICTORY_SOURCES · <b>Introduced:</b> S2
+     · <b>Detected:</b> S7</p>
+  
+  <div class="cf">
+  <div class="cfh"><b>Contradiction detection + Organizational Memory</b><span class="chip s-warn">Would warn</span><span class="chip prop">Proposed — not built</span></div>
+  <p>A 15th copy of a 14-copy table family never gets built</p>
+  <p class="rule">Remaining human decision: Which shape to build remains a modelling judgement</p>
+  <p class="rule">Confidence: MEDIUM</p>
+  
+  <p class="rule"><b>SIMULATED. This is what the capability would do — it has not been observed doing it.</b></p>
+</div>
+  <details class="refs"><summary>Evidence (1)</summary><ul><li><code>docs/case-studies/delivery-001-marketing-model.md#step-a8</code></li></ul></details>
+</div><div class="issue t-client" id="issue-H3">
+  <h3>H3 — MER written inverted in the document that locks it</h3>
+  <div class="meta"><span class="chip client">Client delivery</span><span class="chip r-high">Client risk high</span><span class="chip r-med">Still open</span><span class="chip ">Escape 4 → 1</span><span class="chip ">CONTRADICTORY</span></div>
+  <p>Document and running system disagree on the board headline metric</p>
+  <p class="why"><b>Why:</b> A formula typed once, never cross-checked against the implementation</p>
+  <p class="why"><b>Root cause:</b> DOCUMENTATION_DRIFT · SEMANTIC_CONTRACT_GAP · <b>Introduced:</b> S2
+     · <b>Detected:</b> S7</p>
+  <div class="sides"><p class="why"><b>Preserved contradiction — 2 positions, neither resolved:</b></p><p class="s"><b>MER = SPEND / ACTUAL_SALES</b><br><span class="why">The architecture document that locks the decision, stated twice</span></p><p class="s"><b>MER = ACTUAL_SALES / SPEND</b><br><span class="why">The monthly view, the field contract and the frontend, agreeing independently</span></p></div>
+  <div class="cf">
+  <div class="cfh"><b>Semantic Contracts</b><span class="chip s-intercept">Would intercept</span><span class="chip prop">Proposed — not built</span></div>
+  <p>The definition is the artifact; implementations are checked against it</p>
+  <p class="rule">Remaining human decision: Which direction is correct is a business decision, not a compile check</p>
+  <p class="rule">Confidence: MEDIUM</p>
+  
+  <p class="rule"><b>SIMULATED. This is what the capability would do — it has not been observed doing it.</b></p>
+</div>
+  <details class="refs"><summary>Evidence (1)</summary><ul><li><code>docs/case-studies/delivery-001-marketing-model.md#step-a9</code></li></ul></details>
+</div><div class="issue t-client" id="issue-H4">
+  <h3>H4 — Four objects read unqualified, resolving in a divergent schema copy</h3>
+  <div class="meta"><span class="chip client">Client delivery</span><span class="chip r-high">Client risk high</span><span class="chip r-med">Still open</span><span class="chip ">Escape 2 → 0</span><span class="chip ">DOCUMENTED</span></div>
+  <p>Dashboard and Power BI fed by different definitions of the same object names</p>
+  <p class="why"><b>Why:</b> Default-schema resolution with no qualification convention enforced</p>
+  <p class="why"><b>Root cause:</b> WRONG_SOURCE_OR_POPULATION · ENVIRONMENT_DRIFT · <b>Introduced:</b> S3
+     · <b>Detected:</b> S6</p>
+  
+  <div class="cf">
+  <div class="cfh"><b>Source Cartography</b><span class="chip s-intercept">Would intercept</span><span class="chip impl">Built — not run here</span></div>
+  <p>An unqualified reference becomes a scoped blocker before the first query</p>
+  <p class="rule">Remaining human decision: Which copy is authoritative</p>
+  <p class="rule">Confidence: MEDIUM — the cartography pass exists for this delivery but did not run before the defect</p>
+  <p class="rule">Mechanism: <code>docs/evidence/marketing-model-v1/R3-cartography.md</code></p>
+  <p class="rule"><b>SIMULATED. This is what the capability would do — it has not been observed doing it.</b></p>
+</div>
+  <details class="refs"><summary>Evidence (1)</summary><ul><li><code>docs/case-studies/delivery-001-marketing-model.md#step-a5</code></li></ul></details>
+</div><div class="issue t-client" id="issue-H12">
+  <h3>H12 — Channel jammed into the marketplace axis; 768 rows / $244,870.44 orphaned</h3>
+  <div class="meta"><span class="chip client">Client delivery</span><span class="chip r-high">Client risk high</span><span class="chip r-med">Still open</span><span class="chip ">Escape 3 → 0</span><span class="chip ">DOCUMENTED</span></div>
+  <p>Spend present in the warehouse and unselectable by any positive slicer choice</p>
+  <p class="why"><b>Why:</b> A relabel that creates a non-member of the dimension</p>
+  <p class="why"><b>Root cause:</b> SEMANTIC_CONTRACT_GAP · <b>Introduced:</b> S3
+     · <b>Detected:</b> S4</p>
+  
+  <div class="cf">
+  <div class="cfh"><b>Semantic Contracts + Task DAG validation</b><span class="chip s-intercept">Would intercept</span><span class="chip prop">Proposed — not built</span></div>
+  <p>Cross-channel spend addressable by a positive slicer choice</p>
+  <p class="rule">Remaining human decision: Whether channel becomes its own axis or a conformed dimension</p>
+  <p class="rule">Confidence: MEDIUM</p>
+  
+  <p class="rule"><b>SIMULATED. This is what the capability would do — it has not been observed doing it.</b></p>
+</div>
+  <details class="refs"><summary>Evidence (1)</summary><ul><li><code>docs/case-studies/delivery-001-marketing-model.md#step-a11</code></li></ul></details>
+</div><div class="issue t-client" id="issue-H15">
+  <h3>H15 — Twelve contracted fields render fabricated values on a client surface</h3>
+  <div class="meta"><span class="chip client">Client delivery</span><span class="chip r-high">Client risk high</span><span class="chip r-med">Still open</span><span class="chip ">Escape 3 → 0</span><span class="chip ">DOCUMENTED</span></div>
+  <p>dailyBudget 0, status "active" for every campaign, orders 0, SKU rendering the ASIN</p>
+  <p class="why"><b>Why:</b> The field contract outran the warehouse and the app filled the gap with literals</p>
+  <p class="why"><b>Root cause:</b> SEMANTIC_CONTRACT_GAP · MISSING_VERIFICATION · <b>Introduced:</b> S4
+     · <b>Detected:</b> S7</p>
+  
+  <div class="cf">
+  <div class="cfh"><b>Semantic Contracts + Continuous acceptance</b><span class="chip s-block">Would block</span><span class="chip prop">Proposed — not built</span></div>
+  <p>A contracted field with no source renders NOT_REPORTED; a literal is refused</p>
+  <p class="rule">Remaining human decision: Whether to ship the view at all without the source</p>
+  <p class="rule">Confidence: HIGH — the same codebase already does exactly this for one measure</p>
+  
+  <p class="rule"><b>SIMULATED. This is what the capability would do — it has not been observed doing it.</b></p>
+</div>
+  <details class="refs"><summary>Evidence (1)</summary><ul><li><code>docs/case-studies/delivery-001-marketing-model.md#step-a10</code></li></ul></details>
+</div><div class="issue t-client" id="issue-H19">
+  <h3>H19 — The client's largest requirement has an unsent reply, and its bigger half never arrived</h3>
+  <div class="meta"><span class="chip client">Client delivery</span><span class="chip r-high">Client risk high</span><span class="chip r-med">Still open</span><span class="chip ">Escape 4 → 0</span><span class="chip ">DOCUMENTED</span></div>
+  <p>The dimensional half of a dimensional model is unspecified, and the client does not know we are waiting</p>
+  <p class="why"><b>Why:</b> A hold with no owner and no expiry</p>
+  <p class="why"><b>Root cause:</b> MISSING_TASK_OR_DEPENDENCY · COMMUNICATION_FAILURE · <b>Introduced:</b> S2
+     · <b>Detected:</b> S7</p>
+  
+  <div class="cf">
+  <div class="cfh"><b>Intent Contract + Human Attention Router</b><span class="chip s-block">Would block</span><span class="chip prop">Proposed — not built</span></div>
+  <p>A hold becomes a task with an owner and a next check; dependent design work is visibly BLOCKED</p>
+  <p class="rule">Remaining human decision: Someone still writes the email and sends it</p>
+  <p class="rule">Confidence: MEDIUM — no Intent Contract object exists; measured</p>
+  
+  <p class="rule"><b>SIMULATED. This is what the capability would do — it has not been observed doing it.</b></p>
+</div>
+  <details class="refs"><summary>Evidence (1)</summary><ul><li><code>docs/case-studies/delivery-001-marketing-model.md#step-a4</code></li></ul></details>
+</div><div class="issue t-client" id="issue-H16">
+  <h3>H16 — A client-agreed scope item reversed with no announcement, while client-visible ratios move</h3>
+  <div class="meta"><span class="chip client">Client delivery</span><span class="chip r-high">Client risk high</span><span class="chip r-med">Still open</span><span class="chip ">Escape 4 → 0</span><span class="chip ">DOCUMENTED</span></div>
+  <p>Margin % and TACoS/MER both rise. The record itself says this must be announced, not discovered. Nothing is on file</p>
+  <p class="why"><b>Why:</b> The reversal had a sound technical reason and no communication obligation attached to it</p>
+  <p class="why"><b>Root cause:</b> COMMUNICATION_FAILURE · MISSING_TASK_OR_DEPENDENCY · <b>Introduced:</b> S2
+     · <b>Detected:</b> S7</p>
+  
+  <div class="cf observed">
+  <div class="cfh"><b>Client Review + Human Attention Router</b><span class="chip s-intercept">Would intercept</span><span class="chip exercised">Exercised — observed running</span></div>
+  <p>The obligation becomes an item with client_action_required, rendered in the client's own language. The Navira review compiled on 2026-09-01 carries exactly this shape for two other decisions, so this is observation rather than design.</p>
+  <p class="rule">Remaining human decision: A human still decides what to say and says it</p>
+  <p class="rule">Confidence: HIGH — the mechanism ran and produced an artifact</p>
+  <p class="rule">Mechanism: <code>factory/client_review.py</code></p><p class="rule">Proof it ran: <code>docs/artifacts/client-review-navira.html</code></p>
+  <p class="rule"><b>This capability ran on this delivery and left the evidence named below.</b></p>
+</div>
+  <details class="refs"><summary>Evidence (1)</summary><ul><li><code>docs/case-studies/delivery-001-marketing-model.md#step-a7</code></li></ul></details>
+</div><div class="issue t-client" id="issue-H21">
+  <h3>H21 — ISCROSSFILTERED used where ISFILTERED was required</h3>
+  <div class="meta"><span class="chip client">Client delivery</span><span class="chip r-med">Client risk medium</span><span class="chip ">Escape 0 → 0</span><span class="chip ">DOCUMENTED</span></div>
+  <p>Blanked every ordinary date pivot; cost two failed fix passes</p>
+  <p class="why"><b>Why:</b> Propagation versus adjacency — a genuine knowledge gap</p>
+  <p class="why"><b>Root cause:</b> KNOWLEDGE_NOT_AVAILABLE · <b>Introduced:</b> S4
+     · <b>Detected:</b> S4</p>
+  
+  <div class="cf">
+  <div class="cfh"><b>Known-Failure Preflight</b><span class="chip s-none">No material effect</span><span class="chip prop">Proposed — not built</span></div>
+  <p>None on the first occurrence. Nobody knew. The capability claims the SECOND occurrence and must not claim the first — recorded here so the interception matrix cannot overstate itself.</p>
+  <p class="rule">Remaining human decision: Learning a new platform behaviour remains human work</p>
+  <p class="rule">Confidence: HIGH that it would not have helped</p>
+  
+  <p class="rule"><b>SIMULATED. This is what the capability would do — it has not been observed doing it.</b></p>
+</div>
+  <details class="refs"><summary>Evidence (1)</summary><ul><li><code>docs/case-studies/delivery-001-marketing-model.md#sec-b</code></li></ul></details>
+</div><div class="issue t-factory" id="issue-M-01">
+  <h3>M-01 — A search filtered the task ID instead of the title, returned zero, and the zero became a finding</h3>
+  <div class="meta"><span class="chip factory">Factory mission</span><span class="chip r-low">Client risk low</span><span class="chip ">Escape 4 → 0</span><span class="chip ">MEASURED</span></div>
+  <p>Two duplicate tasks created; Wave 1 ran under them; evidence landed on the wrong tasks</p>
+  <p class="why"><b>Why:</b> No positive control on a search that returned nothing</p>
+  <p class="why"><b>Root cause:</b> INSTRUMENTATION_GAP · MISSING_VERIFICATION · REPEATED_FAILURE_NOT_LEARNED_FROM · <b>Introduced:</b> T3 task store materialization
+     · <b>Detected:</b> T7 mission handoff</p>
+  
+  <div class="cf">
+  <div class="cfh"><b>Known-Failure Preflight (positive control)</b><span class="chip s-intercept">Would intercept</span><span class="chip prop">Proposed — not built</span></div>
+  <p>A zero is not actionable until the instrument has been shown able to return non-zero</p>
+  <p class="rule">Remaining human decision: Deciding what the correct search is</p>
+  <p class="rule">Confidence: HIGH — the findings ledger is machine-read today; the missing piece is a shape matcher</p>
+  
+  <p class="rule"><b>SIMULATED. This is what the capability would do — it has not been observed doing it.</b></p>
+</div>
+  <details class="refs"><summary>Evidence (1)</summary><ul><li><code>docs/case-studies/delivery-001-marketing-model.md#step-b6</code></li></ul></details>
+</div><div class="issue t-factory" id="issue-M-02">
+  <h3>M-02 — Both evidence artifacts name the superseded duplicate as their own provenance</h3>
+  <div class="meta"><span class="chip factory">Factory mission</span><span class="chip r-low">Client risk low</span><span class="chip r-med">Still open</span><span class="chip ">Escape 1 → 0</span><span class="chip ">MEASURED</span></div>
+  <p>R1's header says task fbe2ea4c and R2's says 200deda2 — both annotated SUPERSEDED in the store</p>
+  <p class="why"><b>Why:</b> The correction was applied to the append-only store and not propagated to the immutable prose</p>
+  <p class="why"><b>Root cause:</b> MISSING_PROVENANCE · MANUAL_HANDOFF · <b>Introduced:</b> T6 evidence artifact
+     · <b>Detected:</b> T7</p>
+  
+  <div class="cf">
+  <div class="cfh"><b>Provenance (bidirectional)</b><span class="chip s-intercept">Would intercept</span><span class="chip prop">Proposed — not built</span></div>
+  <p>A SUPERSEDED annotation propagates to every artifact naming the superseded id</p>
+  <p class="rule">Remaining human decision: Editing the prose</p>
+  <p class="rule">Confidence: MEDIUM</p>
+  
+  <p class="rule"><b>SIMULATED. This is what the capability would do — it has not been observed doing it.</b></p>
+</div>
+  <details class="refs"><summary>Evidence (1)</summary><ul><li><code>docs/case-studies/delivery-001-marketing-model.md#step-b8</code></li></ul></details>
+</div><div class="issue t-factory" id="issue-M-03">
+  <h3>M-03 — An inherited metric hierarchy was marked for verification, and came back refuted</h3>
+  <div class="meta"><span class="chip factory">Factory mission</span><span class="chip ">Escape 1 → 1</span><span class="chip ">DOCUMENTED</span></div>
+  <p>It never became mission knowledge. The corrected order reached the handoff</p>
+  <p class="why"><b>Why:</b> The inheritance carried a state, not just a value — this one worked</p>
+  <p class="why"><b>Root cause:</b> STALE_CONTEXT · <b>Introduced:</b> T1 inherited context
+     · <b>Detected:</b> T5 worker execution</p>
+  
+  <div class="cf">
+  <div class="cfh"><b>Typed Claims</b><span class="chip s-intercept">Would intercept</span><span class="chip prop">Proposed — not built</span></div>
+  <p>Already optimal at escape distance 1. Automating it removes the dependence on the operator remembering to write "verify" in a prompt.</p>
+  <p class="rule">Remaining human decision: Performing the verification</p>
+  <p class="rule">Confidence: HIGH — the manual version was observed working</p>
+  
+  <p class="rule"><b>SIMULATED. This is what the capability would do — it has not been observed doing it.</b></p>
+</div>
+  <details class="refs"><summary>Evidence (1)</summary><ul><li><code>docs/case-studies/delivery-001-marketing-model.md#worked-f3</code></li></ul></details>
+</div><div class="issue t-factory" id="issue-M-05">
+  <h3>M-05 — A deny-list over a credential table exposed three credentials, one spanning production</h3>
+  <div class="meta"><span class="chip factory">Factory mission</span><span class="chip r-high">Client risk high</span><span class="chip r-med">Still open</span><span class="chip ">Escape 0 → 0</span><span class="chip ">DOCUMENTED</span></div>
+  <p>Values reached a session transcript indexed by a manager whose deletion does not stick</p>
+  <p class="why"><b>Why:</b> A guard only as wide as the relation it derives over</p>
+  <p class="why"><b>Root cause:</b> SEMANTIC_CONTRACT_GAP · REPEATED_FAILURE_NOT_LEARNED_FROM · <b>Introduced:</b> T2 mission spec execution
+     · <b>Detected:</b> T2 same session</p>
+  
+  <div class="cf">
+  <div class="cfh"><b>Known-Failure Preflight</b><span class="chip s-block">Would block</span><span class="chip prop">Proposed — not built</span></div>
+  <p>The strongest interception claim available, because the knowledge existed in this repo in a finding filed hours earlier. Nothing consumed it. That is an operationalisation problem.</p>
+  <p class="rule">Remaining human decision: None for the known shape; a novel extraction shape still gets through</p>
+  <p class="rule">Confidence: HIGH</p>
+  
+  <p class="rule"><b>SIMULATED. This is what the capability would do — it has not been observed doing it.</b></p>
+</div>
+  <details class="refs"><summary>Evidence (1)</summary><ul><li><code>docs/case-studies/delivery-001-marketing-model.md#step-b3</code></li></ul></details>
+</div><div class="issue t-factory" id="issue-M-06">
+  <h3>M-06 — A verification that could only be vacuous was refused before it ran</h3>
+  <div class="meta"><span class="chip factory">Factory mission</span><span class="chip ">Escape 0 → 0</span><span class="chip ">DOCUMENTED</span></div>
+  <p>The read-only pre-flight could not fail against an admin account, and was not run as theatre</p>
+  <p class="why"><b>Why:</b> The spec assumed a role it had not verified; reading the spec against the credential caught it</p>
+  <p class="why"><b>Root cause:</b> UNVERIFIED_ASSUMPTION · <b>Introduced:</b> T2
+     · <b>Detected:</b> T2</p>
+  
+  <div class="cf observed">
+  <div class="cfh"><b>Evidence requirements + Human Attention Router</b><span class="chip s-block">Would block</span><span class="chip exercised">Exercised — observed running</span></div>
+  <p>The control worked. The route chosen was the one where the role structurally refuses, and the refusal was later captured as evidence on R3.</p>
+  <p class="rule">Remaining human decision: Choosing between the honest routes — and a human did</p>
+  <p class="rule">Confidence: HIGH — the proof artifact exists on disk and is attached to the task</p>
+  <p class="rule">Mechanism: <code>factory/tasks.py</code></p><p class="rule">Proof it ran: <code>docs/evidence/marketing-model-v1/R3-preflight-readonly-proof.md</code></p>
+  <p class="rule"><b>This capability ran on this delivery and left the evidence named below.</b></p>
+</div>
+  <details class="refs"><summary>Evidence (1)</summary><ul><li><code>docs/case-studies/delivery-001-marketing-model.md#step-b4</code></li></ul></details>
+</div><div class="issue t-factory" id="issue-M-07">
+  <h3>M-07 — A scope item named in the spec was never read and never refused</h3>
+  <div class="meta"><span class="chip factory">Factory mission</span><span class="chip r-med">Client risk medium</span><span class="chip r-med">Still open</span><span class="chip ">Escape 3 → 0</span><span class="chip ">MEASURED</span></div>
+  <p>The three existing GP-319 designs were read by neither worker</p>
+  <p class="why"><b>Why:</b> Scope delivered as prose with no acknowledgement channel and no completeness check</p>
+  <p class="why"><b>Root cause:</b> MANUAL_HANDOFF · MISSING_VERIFICATION · SEMANTIC_CONTRACT_GAP · <b>Introduced:</b> T2 mission spec
+     · <b>Detected:</b> T7</p>
+  
+  <div class="cf">
+  <div class="cfh"><b>Typed Handoff + ACK/NACK</b><span class="chip s-block">Would block</span><span class="chip prop">Proposed — not built</span></div>
+  <p>The spec did not merely mention the repo — it predicted the exact failure of missing it, and the failure happened anyway. Prose cannot enforce itself.</p>
+  <p class="rule">Remaining human decision: Whether to grant the read scope. A NACK is a legitimate answer</p>
+  <p class="rule">Confidence: HIGH on necessity; MEDIUM on the build</p>
+  
+  <p class="rule"><b>SIMULATED. This is what the capability would do — it has not been observed doing it.</b></p>
+</div>
+  <details class="refs"><summary>Evidence (1)</summary><ul><li><code>docs/case-studies/delivery-001-marketing-model.md#cf-h-4</code></li></ul></details>
+</div><div class="issue t-factory" id="issue-M-08">
+  <h3>M-08 — Acceptance check 1 — three tasks ran in parallel — is not satisfied by the record</h3>
+  <div class="meta"><span class="chip factory">Factory mission</span><span class="chip r-low">Client risk low</span><span class="chip r-med">Still open</span><span class="chip ">Escape 3 → 0</span><span class="chip ">MEASURED</span></div>
+  <p>Three claim files exist, all carrying one pid and one actor. R3 never claimed at all</p>
+  <p class="why"><b>Why:</b> Parallelism was asserted in the spec and not demonstrated by the store</p>
+  <p class="why"><b>Root cause:</b> INSTRUMENTATION_GAP · MISSING_VERIFICATION · <b>Introduced:</b> T4 worker dispatch
+     · <b>Detected:</b> T7</p>
+  
+  <div class="cf">
+  <div class="cfh"><b>Reliability instrumentation</b><span class="chip s-block">Would block</span><span class="chip prop">Proposed — not built</span></div>
+  <p>A claim carrying no distinct session pid is refused, so parallelism is derived rather than typed</p>
+  <p class="rule">Remaining human decision: Launching the sessions</p>
+  <p class="rule">Confidence: MEDIUM</p>
+  
+  <p class="rule"><b>SIMULATED. This is what the capability would do — it has not been observed doing it.</b></p>
+</div>
+  <details class="refs"><summary>Evidence (1)</summary><ul><li><code>docs/case-studies/delivery-001-marketing-model.md#step-b7</code></li></ul></details>
+</div><div class="issue t-factory" id="issue-M-09">
+  <h3>M-09 — The routing dataset — the stated point of run 1 — was never captured</h3>
+  <div class="meta"><span class="chip factory">Factory mission</span><span class="chip r-low">Client risk low</span><span class="chip r-med">Still open</span><span class="chip ">Escape 3 → 0</span><span class="chip ">MEASURED</span></div>
+  <p>Thirteen per-task instrumentation fields were specified in prose and none was written</p>
+  <p class="why"><b>Why:</b> The instrument was specified in prose and never built</p>
+  <p class="why"><b>Root cause:</b> INSTRUMENTATION_GAP · MISSING_TASK_OR_DEPENDENCY · <b>Introduced:</b> T2
+     · <b>Detected:</b> T7</p>
+  
+  <div class="cf">
+  <div class="cfh"><b>Reliability instrumentation</b><span class="chip s-block">Would block</span><span class="chip prop">Proposed — not built</span></div>
+  <p>The task contract refuses to close without an actual, exactly as it already refuses to close without evidence. The refusal primitive exists and was watched refusing.</p>
+  <p class="rule">Remaining human decision: Deciding what to record</p>
+  <p class="rule">Confidence: HIGH — reuses a proven refusal shape</p>
+  
+  <p class="rule"><b>SIMULATED. This is what the capability would do — it has not been observed doing it.</b></p>
+</div>
+  <details class="refs"><summary>Evidence (1)</summary><ul><li><code>docs/case-studies/delivery-001-marketing-model.md#step-b7</code></li></ul></details>
+</div><div class="issue t-factory" id="issue-M-13">
+  <h3>M-13 — The Artifact Generator design proposed a contract the repository already had</h3>
+  <div class="meta"><span class="chip factory">Factory mission</span><span class="chip ">Escape 0 → 0</span><span class="chip ">MEASURED</span></div>
+  <p>A TemporalAssertion contract was designed from scratch. factory/context.py already carried status, confidence, source and a checked date, and already refused to call a ref CURRENT without one. An inventory sweep caught it before implementation.</p>
+  <p class="why"><b>Why:</b> The need was recognised and the existing capability was not consulted before designing</p>
+  <p class="why"><b>Root cause:</b> KNOWLEDGE_AVAILABLE_BUT_NOT_CONSUMED · <b>Introduced:</b> T2 design
+     · <b>Detected:</b> T2 inventory pass, pre-implementation</p>
+  
+  <div class="cf">
+  <div class="cfh"><b>Known-Failure Preflight</b><span class="chip s-may">May reduce likelihood</span><span class="chip prop">Proposed — not built</span></div>
+  <p>A manual inventory intercepted this one, at escape distance 0. A future automated preflight MAY reduce the likelihood of the next one — it cannot be claimed to have caught this, and the honest classification is MANUAL INVENTORY INTERCEPTED.</p>
+  <p class="rule">Remaining human decision: Running or reading the inventory</p>
+  <p class="rule">Confidence: LOW that automation would have caught this specific case; the sweep was human judgement</p>
+  
+  <p class="rule"><b>SIMULATED. This is what the capability would do — it has not been observed doing it.</b></p>
+</div>
+  <details class="refs"><summary>Evidence (1)</summary><ul><li><code>docs/case-studies/delivery-001-marketing-model.md#sec-k</code></li></ul></details>
+</div></div>
+</section>
+
+<section id="patterns">
+  <div class="shead"><span class="n">05</span><h2>Root patterns</h2></div><p class="lede">Individually these are separate issues. Structurally they are four.</p>
+  <div class="grid g2"><div class="card">
+  <h3>KNOWLEDGE_AVAILABLE_BUT_NOT_CONSUMED</h3>
+  <div class="meta"><span class="chip r-med">8 issues</span></div>
+  <p>The knowledge existed, in our own record, and the next actor did not consume it. Not a knowledge problem — an operationalisation problem. A sentence is not a mechanism.</p>
+  <p class="why"><b>In this record:</b> H1 · H2 · M-05 · M-07 · M-13</p>
+  <p>8 of 37 issues across the full record. The Artifact Generator design process reproduced it (M-13), which is the strongest available evidence that filing knowledge does not make it act.</p>
+</div><div class="card">
+  <h3>ABSENCE_RENDERED_AS_A_NUMBER</h3>
+  <div class="meta"><span class="chip r-med">5 issues</span></div>
+  <p>A missing measurement rendered as a value. The estate already knows the rule and enforces it structurally — for exactly one measure.</p>
+  <p class="why"><b>In this record:</b> H12 · H15 · M-01</p>
+  <p>The counter-example is the argument — one measure got NULL-not-zero and nothing generalised it.</p>
+</div><div class="card">
+  <h3>CLAIM_WITHOUT_AN_AS_OF</h3>
+  <div class="meta"><span class="chip r-med">6 issues</span></div>
+  <p>Each was true when written. None carried the date it was true, or the source it was true of.</p>
+  <p class="why"><b>In this record:</b> H2 · H3</p>
+  <p>The remedy is one field, not a system. factory/context.py already has it.</p>
+</div><div class="card">
+  <h3>OBLIGATION_WRITTEN_IN_PROSE</h3>
+  <div class="meta"><span class="chip r-med">5 issues</span></div>
+  <p>We wrote the obligation down ourselves, in our own words, and nothing enforced it.</p>
+  <p class="why"><b>In this record:</b> H16 · H19 · M-07 · M-09</p>
+  <p>The cheapest and most under-built capability. Four of five are one sentence away from being a task with an owner and a dependency edge, and TaskStore.block already works.</p>
+</div></div>
+</section>
+
+<section id="walkthrough">
+  <div class="shead"><span class="n">06</span><h2>Forensic walkthrough</h2></div><p class="lede">Each scene shows only what was knowable then. Choose, then reveal. Choosing changes nothing about what happened — actual history is fixed.</p>
+  <p class="note">This walkthrough needs no JavaScript. Every consequence, outcome and
+     counterfactual is present in the page; the reveal is CSS and native disclosure. Your choice is
+     a reading aid — it never rewrites the historical outcome.</p>
+  <article class="card scene" id="scene-SC-1">
+  <h3>Scene 1 — The premise you were handed</h3>
+  <p>You have been told to run the first real mission using Agent Factory's existing mission/task/DAG/state/claim mechanisms.</p>
+  <p class="why"><b>What you know at this point:</b></p><ul><li>The repo has a factory/ package with ~50 modules</li><li>The instruction sounds authoritative and came from a reviewer whose job is to improve the plan</li><li>Nothing yet suggests a problem</li></ul>
+  <p class="q">The plan names four mechanisms. What do you do first?</p>
+  <ul class="choices"><li><input type="radio" name="sc-SC-1" id="sc-SC-1-A"><label for="sc-SC-1-A"><span class="key">A</span>Start building against the four named mechanisms</label><p class="conseq">Two do not exist. lanes.py validates lane gate ids at import, so the first lane fails at import time and the session is spent debugging a plan rather than running it.</p></li><li><input type="radio" name="sc-SC-1" id="sc-SC-1-B"><label for="sc-SC-1-B"><span class="key">B</span>Ask the reviewer to clarify</label><p class="conseq">Costs a round trip. The reviewer does not have the repo open.</p></li><li><input type="radio" name="sc-SC-1" id="sc-SC-1-C"><label for="sc-SC-1-C"><span class="key">C</span>Grep for each of the four names before planning against any of them</label><p class="conseq"><span class="was">This is what happened</span>Two greps. `\bmission\b` -&gt; no matches. `depends_on` -&gt; no matches.</p></li><li><input type="radio" name="sc-SC-1" id="sc-SC-1-D"><label for="sc-SC-1-D"><span class="key">D</span>Assume they exist under different names and adapt as you go</label><p class="conseq">The adaptation is invisible; nobody can tell later which parts of the plan were real.</p></li></ul>
+  <details class="reveal"><summary>Show what actually happened</summary>
+    <div class="actual"><div class="lbl">Actual history</div><p>Two greps, run before a task existed. board.DEPENDS turned out to be a gate dependency map, not a task DAG — but TaskStore already supplied the exact shape needed. Nothing new was built.</p></div>
+  </details>
+  <details class="reveal"><summary>Show what was only discovered later</summary>
+    <p>The same pass corrected two more inherited premises: the subject is Navira, not GEP, and one task was already substantially done and was rescoped from reconstruct to read-and-diff.</p>
+  </details>
+  <details class="reveal"><summary>Show the Agent Factory counterfactual</summary>
+    <div class="cf">
+  <div class="cfh"><b>Provenance on inherited premises</b><span class="chip s-intercept">Would intercept</span><span class="chip prop">Proposed — not built</span></div>
+  <p>An inherited premise carries who measured it and when, so it cannot be planned against unchecked</p>
+  <p class="rule">Remaining human decision: Running the check</p>
+  <p class="rule">Confidence: HIGH — the manual version was observed working here</p>
+  
+  <p class="rule"><b>SIMULATED. This is what the capability would do — it has not been observed doing it.</b></p>
+</div>
+  </details>
+  <div class="scroll"><table><tbody><tr><th>Technical</th><td>The plan was written against the system that exists rather than the one described</td></tr><tr><th>Client</th><td>None directly — but a mission planned against absent mechanisms delivers nothing</td></tr><tr><th>Company</th><td>The cheapest control in the entire case study. Two greps</td></tr></tbody></table></div>
+  <details class="refs"><summary>Evidence (1)</summary><ul><li><code>docs/case-studies/delivery-001-marketing-model.md#scene-1</code></li></ul></details>
+</article><article class="card scene" id="scene-SC-3">
+  <h3>Scene 2 — The credential you are about to read</h3>
+  <p>A task needs Snowflake read access. Credentials live in a wiki vault file. A standing grant covers retrieval from this repo. You want the account and user, not the credential value itself.</p>
+  <p class="why"><b>What you know at this point:</b></p><ul><li>The file contains live credential values and they must not enter the transcript</li><li>You have a filter in mind</li><li>A finding about guards being only as wide as the relation they derive over was fixed this morning</li></ul>
+  <p class="q">How do you extract the account and user without extracting a credential value?</p>
+  <ul class="choices"><li><input type="radio" name="sc-SC-3" id="sc-SC-3-A"><label for="sc-SC-3-A"><span class="key">A</span>Deny-list — filter out every line naming the credential field</label><p class="conseq"><span class="was">This is what happened</span>The vault stores credentials in markdown tables. The word is in the header row and never in the data rows. Three plaintext values pass straight through.</p></li><li><input type="radio" name="sc-SC-3" id="sc-SC-3-B"><label for="sc-SC-3-B"><span class="key">B</span>Allow-list only the account and user columns</label><p class="conseq">Nothing else can escape, including fields nobody has thought about yet.</p></li><li><input type="radio" name="sc-SC-3" id="sc-SC-3-C"><label for="sc-SC-3-C"><span class="key">C</span>Read the whole file and be careful</label><p class="conseq">The value is in the transcript the moment it renders.</p></li><li><input type="radio" name="sc-SC-3" id="sc-SC-3-D"><label for="sc-SC-3-D"><span class="key">D</span>Ask a human to paste just the account name</label><p class="conseq">Safe, slow, and the standing grant exists precisely to avoid this.</p></li></ul>
+  <details class="reveal"><summary>Show what actually happened</summary>
+    <div class="actual"><div class="lbl">Actual history</div><p>A. Three plaintext credential values reached the session transcript. One is listed for both the non-prod and the PRODUCTION account. Another was recorded as issued without MFA.</p></div>
+  </details>
+  <details class="reveal"><summary>Show what was only discovered later</summary>
+    <p>A session manager indexes the first ~500 characters of the first ~16 messages into a substring-searchable table, and deletion does not stick. The exposure was around message 90 — probably outside that window. Probably is not verified. And the identical defect class was fixed in readiness.py that same morning.</p>
+  </details>
+  <details class="reveal"><summary>Show the Agent Factory counterfactual</summary>
+    <div class="cf">
+  <div class="cfh"><b>Known-Failure Preflight</b><span class="chip s-block">Would block</span><span class="chip prop">Proposed — not built</span></div>
+  <p>A deny-list filter over a credential source is refused before it runs</p>
+  <p class="rule">Remaining human decision: None for the known shape</p>
+  <p class="rule">Confidence: HIGH — the knowledge existed in this repo hours earlier and nothing consumed it</p>
+  
+  <p class="rule"><b>SIMULATED. This is what the capability would do — it has not been observed doing it.</b></p>
+</div>
+  </details>
+  <div class="scroll"><table><tbody><tr><th>Technical</th><td>One credential spanning non-prod and production. Rotation owed and not confirmed</td></tr><tr><th>Client</th><td>None — the credential is ours, not the client's</td></tr><tr><th>Company</th><td>The rule became rule 1 of factory/client_review.py within a day — the client boundary is an allow-list, never a deny-list. The estate learning, expensively.</td></tr></tbody></table></div>
+  <details class="refs"><summary>Evidence (1)</summary><ul><li><code>docs/case-studies/delivery-001-marketing-model.md#scene-3</code></li></ul></details>
+</article><article class="card scene" id="scene-SC-4">
+  <h3>Scene 3 — The read-only proof that cannot fail</h3>
+  <p>The mission spec requires proving read-only access by attempting a scoped write and watching it be refused. A role assumed read-only is an assumption; a role watched refusing is a measurement.</p>
+  <p class="why"><b>What you know at this point:</b></p><ul><li>The available credential is an admin account in the TEST environment</li><li>TEST is recoverable, so a mistake is not catastrophic</li><li>The pre-flight is written and ready to run</li></ul>
+  <p class="q">Do you run the pre-flight?</p>
+  <ul class="choices"><li><input type="radio" name="sc-SC-4" id="sc-SC-4-A"><label for="sc-SC-4-A"><span class="key">A</span>Run it — TEST is recoverable and the mission is read-only anyway</label><p class="conseq">The account is admin. It will not refuse. You record a pass from an instrument that cannot fail.</p></li><li><input type="radio" name="sc-SC-4" id="sc-SC-4-B"><label for="sc-SC-4-B"><span class="key">B</span>Skip the pre-flight; the mission writes nothing</label><p class="conseq">An unproven assumption becomes an unwritten one.</p></li><li><input type="radio" name="sc-SC-4" id="sc-SC-4-C"><label for="sc-SC-4-C"><span class="key">C</span>Run it and record read-only as ASSUMED, citing TEST recoverability as the compensating control</label><p class="conseq">Honest. Weaker. Still workable.</p></li><li><input type="radio" name="sc-SC-4" id="sc-SC-4-D"><label for="sc-SC-4-D"><span class="key">D</span>Stop, and ask for a read-only role that structurally refuses</label><p class="conseq"><span class="was">This is what happened</span>Blocks the task on a human. Makes the pre-flight mean what it says.</p></li></ul>
+  <details class="reveal"><summary>Show what actually happened</summary>
+    <div class="actual"><div class="lbl">Actual history</div><p>The problem was spotted before the pre-flight ran, and both C and D were put to a human. D was chosen. The task blocked on creating a read-only role.</p></div>
+  </details>
+  <details class="reveal"><summary>Show what was only discovered later</summary>
+    <p>The role was created and the refusal captured — R3 now carries R3-preflight-readonly-proof.md as MEASURED evidence. The vacuous version was refused; the real one was later performed.</p>
+  </details>
+  <details class="reveal"><summary>Show the Agent Factory counterfactual</summary>
+    <div class="cf observed">
+  <div class="cfh"><b>Evidence requirements</b><span class="chip s-block">Would block</span><span class="chip exercised">Exercised — observed running</span></div>
+  <p>The control worked without automation, and the automated half — close() refusing without MEASURED evidence — was watched refusing before the mission began.</p>
+  <p class="rule">Remaining human decision: Choosing between the honest routes</p>
+  <p class="rule">Confidence: HIGH</p>
+  <p class="rule">Mechanism: <code>factory/tasks.py</code></p><p class="rule">Proof it ran: <code>docs/evidence/marketing-model-v1/R3-preflight-readonly-proof.md</code></p>
+  <p class="rule"><b>This capability ran on this delivery and left the evidence named below.</b></p>
+</div>
+  </details>
+  <div class="scroll"><table><tbody><tr><th>Technical</th><td>One blocked task, and one green light not manufactured</td></tr><tr><th>Client</th><td>None — and the client review said so in the client's own language</td></tr><tr><th>Company</th><td>The vacuous-verification shape this repo has met nine times, refused on the tenth</td></tr></tbody></table></div>
+  <details class="refs"><summary>Evidence (1)</summary><ul><li><code>docs/case-studies/delivery-001-marketing-model.md#scene-4</code></li></ul></details>
+</article><article class="card scene" id="scene-SC-5">
+  <h3>Scene 4 — The search that returns zero</h3>
+  <p>You are about to run Wave 1. First, confirm the mission's tasks exist in the store.</p>
+  <p class="why"><b>What you know at this point:</b></p><ul><li>You wrote the mission spec and believe the tasks were created</li><li>You run a search over the task ledger filtering on a field for "R1"</li><li>It returns zero</li></ul>
+  <p class="q">What do you conclude?</p>
+  <ul class="choices"><li><input type="radio" name="sc-SC-5" id="sc-SC-5-A"><label for="sc-SC-5-A"><span class="key">A</span>The plan was never materialized. Create the tasks</label><p class="conseq"><span class="was">This is what happened</span>Two duplicate tasks with no dependency edges. Wave 1 runs under the wrong ids.</p></li><li><input type="radio" name="sc-SC-5" id="sc-SC-5-B"><label for="sc-SC-5-B"><span class="key">B</span>Run a positive control — search for something you know is in the store</label><p class="conseq">You discover the field you filtered is the task ID, which is hex. No id contains "R1".</p></li><li><input type="radio" name="sc-SC-5" id="sc-SC-5-C"><label for="sc-SC-5-C"><span class="key">C</span>Check the mission JSON, which lists the ids</label><p class="conseq">The labels block maps R1 to its id directly. Ten seconds.</p></li><li><input type="radio" name="sc-SC-5" id="sc-SC-5-D"><label for="sc-SC-5-D"><span class="key">D</span>Ask someone</label><p class="conseq">Slower, and the answer is on disk.</p></li></ul>
+  <details class="reveal"><summary>Show what actually happened</summary>
+    <div class="actual"><div class="lbl">Actual history</div><p>A. Two duplicate tasks created at 02:13:52Z — 81 minutes and 38 seconds after the tasks it could not find were created.</p></div>
+  </details>
+  <details class="reveal"><summary>Show what was only discovered later</summary>
+    <p>All eight tasks existed, correctly parented, with a fully wired DAG and 25 block events. The correction came 3,611 seconds later; the store is append-only so both duplicates were annotated SUPERSEDED rather than deleted. And both evidence artifacts STILL name the superseded duplicates in their own headers.</p>
+  </details>
+  <details class="reveal"><summary>Show the Agent Factory counterfactual</summary>
+    <div class="cf">
+  <div class="cfh"><b>Known-Failure Preflight (positive control)</b><span class="chip s-intercept">Would intercept</span><span class="chip prop">Proposed — not built</span></div>
+  <p>A zero from an unproven instrument is not actionable until a positive control passes</p>
+  <p class="rule">Remaining human decision: Deciding what the correct search is</p>
+  <p class="rule">Confidence: HIGH</p>
+  
+  <p class="rule"><b>SIMULATED. This is what the capability would do — it has not been observed doing it.</b></p>
+</div>
+  </details>
+  <div class="scroll"><table><tbody><tr><th>Technical</th><td>Evidence landed on the wrong tasks; provenance in two artifacts is still wrong</td></tr><tr><th>Client</th><td>None — internal only, this time</td></tr><tr><th>Company</th><td>The same shape pointed at a client produced five wrong client answers with zero deploys</td></tr></tbody></table></div>
+  <details class="refs"><summary>Evidence (1)</summary><ul><li><code>docs/case-studies/delivery-001-marketing-model.md#scene-5</code></li></ul></details>
+</article><article class="card scene" id="scene-SC-6">
+  <h3>Scene 5 — Two documents, one day apart</h3>
+  <p>You are about to design candidate dimensional models. Two documents on disk, both recent, both persuasive, both concluding the same shape. Nothing marks either as superseded.</p>
+  <p class="why"><b>What you know at this point:</b></p><ul><li>Both are dated the same day and cite the client's own requirement matrix</li><li>They agree with each other</li><li>No supersession marker appears on either</li></ul>
+  <p class="q">Do you build it?</p>
+  <ul class="choices"><li><input type="radio" name="sc-SC-6" id="sc-SC-6-A"><label for="sc-SC-6-A"><span class="key">A</span>Yes — two independent documents agree</label><p class="conseq">You build the thing that was rejected the next day.</p></li><li><input type="radio" name="sc-SC-6" id="sc-SC-6-B"><label for="sc-SC-6-B"><span class="key">B</span>Check for a later decision on the same question before opening either</label><p class="conseq"><span class="was">This is what happened</span>A ticket dated one day later rejects the shape explicitly, with a specific reason.</p></li><li><input type="radio" name="sc-SC-6" id="sc-SC-6-C"><label for="sc-SC-6-C"><span class="key">C</span>Build it and flag it for review</label><p class="conseq">The review is where the rejection surfaces — after the work.</p></li><li><input type="radio" name="sc-SC-6" id="sc-SC-6-D"><label for="sc-SC-6-D"><span class="key">D</span>Ask the client</label><p class="conseq">The client has no view on warehouse object counts.</p></li></ul>
+  <details class="reveal"><summary>Show what actually happened</summary>
+    <div class="actual"><div class="lbl">Actual history</div><p>The trap has not yet fired, because the design task has not run. The reconstruction found it first and named it as the single highest-risk trap for the design phase.</p></div>
+  </details>
+  <details class="reveal"><summary>Show what was only discovered later</summary>
+    <p>The rejection's reason is specific — the client already carries ~14 copies of the marketing family across 6 schemas, and a 15th worsens the canonical-object problem. Nothing is left to conform.</p>
+  </details>
+  <details class="reveal"><summary>Show the Agent Factory counterfactual</summary>
+    <div class="cf">
+  <div class="cfh"><b>Contradiction detection + Organizational Memory</b><span class="chip s-warn">Would warn</span><span class="chip prop">Proposed — not built</span></div>
+  <p>Opening a superseded document surfaces the decision that superseded it</p>
+  <p class="rule">Remaining human decision: Deciding which shape to build</p>
+  <p class="rule">Confidence: MEDIUM</p>
+  
+  <p class="rule"><b>SIMULATED. This is what the capability would do — it has not been observed doing it.</b></p>
+</div>
+  </details>
+  <div class="scroll"><table><tbody><tr><th>Technical</th><td>A fifteenth copy of a fourteen-copy table family, built in good faith</td></tr><tr><th>Client</th><td>More warehouse objects to reconcile, and another surface that can disagree</td></tr><tr><th>Company</th><td>Rework on a design that a standing decision had already rejected</td></tr></tbody></table></div>
+  <details class="refs"><summary>Evidence (1)</summary><ul><li><code>docs/case-studies/delivery-001-marketing-model.md#scene-6</code></li></ul></details>
+</article><article class="card scene" id="scene-SC-7">
+  <h3>Scene 6 — The headline metric, upside down</h3>
+  <p>You are writing the specification for the board-level marketing-efficiency number. You open the architecture page that locks it.</p>
+  <p class="why"><b>What you know at this point:</b></p><ul><li>The page states the formula twice, consistently</li><li>It is the decision record, and it names a decision date and an owner</li><li>You have not opened the implementation</li></ul>
+  <p class="q">Do you specify the formula as the document states it?</p>
+  <ul class="choices"><li><input type="radio" name="sc-SC-7" id="sc-SC-7-A"><label for="sc-SC-7-A"><span class="key">A</span>Yes — it is the locking document and it says so twice</label><p class="conseq">You ship a spec whose headline metric is the reciprocal of the running system's.</p></li><li><input type="radio" name="sc-SC-7" id="sc-SC-7-B"><label for="sc-SC-7-B"><span class="key">B</span>Check the implementation before specifying from the doc</label><p class="conseq"><span class="was">This is what happened</span>The monthly view computes the inverse.</p></li><li><input type="radio" name="sc-SC-7" id="sc-SC-7-C"><label for="sc-SC-7-C"><span class="key">C</span>Pick whichever looks more sensible</label><p class="conseq">Both ~5.0 and ~0.2 are defensible-looking numbers.</p></li><li><input type="radio" name="sc-SC-7" id="sc-SC-7-D"><label for="sc-SC-7-D"><span class="key">D</span>Preserve the contradiction and escalate it as a decision</label><p class="conseq">Slower. Correct.</p></li></ul>
+  <details class="reveal"><summary>Show what actually happened</summary>
+    <div class="actual"><div class="lbl">Actual history</div><p>B, then D. Three implementations were found that agree with each other and disagree with the document — the SQL, the field contract, and the frontend at two separate lines.</p></div>
+  </details>
+  <details class="reveal"><summary>Show what was only discovered later</summary>
+    <p>The document's own formula is what the same page elsewhere calls a different metric's shape. The error is not random: a definition migrated into its neighbour's slot. The contradiction was preserved rather than resolved, and it is recorded as CONTRADICTORY, not fixed.</p>
+  </details>
+  <details class="reveal"><summary>Show the Agent Factory counterfactual</summary>
+    <div class="cf">
+  <div class="cfh"><b>Semantic Contracts</b><span class="chip s-intercept">Would intercept</span><span class="chip prop">Proposed — not built</span></div>
+  <p>The definition is the artifact and implementations are checked against it</p>
+  <p class="rule">Remaining human decision: Deciding which direction is correct</p>
+  <p class="rule">Confidence: MEDIUM</p>
+  
+  <p class="rule"><b>SIMULATED. This is what the capability would do — it has not been observed doing it.</b></p>
+</div>
+  </details>
+  <div class="scroll"><table><tbody><tr><th>Technical</th><td>Nothing was ever built wrong. The code has been right throughout</td></tr><tr><th>Client</th><td>A ~5.0 and a ~0.2 are the same business fact; the board would see one of them</td></tr><tr><th>Company</th><td>The cost is paid by every future person who specifies from the document</td></tr></tbody></table></div>
+  <details class="refs"><summary>Evidence (1)</summary><ul><li><code>docs/case-studies/delivery-001-marketing-model.md#scene-7</code></li></ul></details>
+</article><article class="card scene" id="scene-SC-8">
+  <h3>Scene 7 — What the dashboard shows when the warehouse has nothing</h3>
+  <p>The dashboard has a field contract. The warehouse does not supply every field in it. The views must render.</p>
+  <p class="why"><b>What you know at this point:</b></p><ul><li>The contract lists budget, status, SKU, orders and platform-count fields</li><li>No warehouse object supplies several of them</li><li>The same codebase already returns NULL rather than 0 for one measure, deliberately</li></ul>
+  <p class="q">What does the app render for a contracted field with no source?</p>
+  <ul class="choices"><li><input type="radio" name="sc-SC-8" id="sc-SC-8-A"><label for="sc-SC-8-A"><span class="key">A</span>A sensible default — the view must not break</label><p class="conseq"><span class="was">This is what happened</span>Zeroes, "active" for every campaign, the ASIN rendered in the SKU column, a boolean wearing a count.</p></li><li><input type="radio" name="sc-SC-8" id="sc-SC-8-B"><label for="sc-SC-8-B"><span class="key">B</span>Render a NOT_REPORTED state the user can see</label><p class="conseq">The view is honest and slightly uglier.</p></li><li><input type="radio" name="sc-SC-8" id="sc-SC-8-C"><label for="sc-SC-8-C"><span class="key">C</span>Hide the column entirely</label><p class="conseq">The contract silently shrinks and nobody knows why.</p></li><li><input type="radio" name="sc-SC-8" id="sc-SC-8-D"><label for="sc-SC-8-D"><span class="key">D</span>Fail the contract until the warehouse supplies it</label><p class="conseq">Nothing ships.</p></li></ul>
+  <details class="reveal"><summary>Show what actually happened</summary>
+    <div class="actual"><div class="lbl">Actual history</div><p>A, across at least twelve fields.</p></div>
+  </details>
+  <details class="reveal"><summary>Show what was only discovered later</summary>
+    <p>The same codebase does B elsewhere, deliberately, with the reason in a view comment — cost unknown means margin is not applicable, never 0 — and the frontend enforces the same rule independently. The estate knows the rule, states it, and enforces it structurally for exactly one measure.</p>
+  </details>
+  <details class="reveal"><summary>Show the Agent Factory counterfactual</summary>
+    <div class="cf">
+  <div class="cfh"><b>Semantic Contracts + Continuous acceptance</b><span class="chip s-block">Would block</span><span class="chip prop">Proposed — not built</span></div>
+  <p>A contracted field with no resolvable source renders NOT_REPORTED; a literal is refused</p>
+  <p class="rule">Remaining human decision: Whether to ship the view without the source</p>
+  <p class="rule">Confidence: HIGH — the counter-example already ships in the same codebase</p>
+  
+  <p class="rule"><b>SIMULATED. This is what the capability would do — it has not been observed doing it.</b></p>
+</div>
+  </details>
+  <div class="scroll"><table><tbody><tr><th>Technical</th><td>Twelve contracted fields carry literals with no source</td></tr><tr><th>Client</th><td>A client reads a zero and cannot tell a measurement from a placeholder</td></tr><tr><th>Company</th><td>The same failure class that put internal debugging folders into a client-facing export</td></tr></tbody></table></div>
+  <details class="refs"><summary>Evidence (1)</summary><ul><li><code>docs/case-studies/delivery-001-marketing-model.md#scene-8</code></li></ul></details>
+</article><article class="card scene" id="scene-SC-9">
+  <h3>Scene 8 — What you tell the client</h3>
+  <p>Wave 1 is done. Two reconstruction tasks delivered 87KB of cited evidence. One task is blocked on an internal credential rotation. You owe the client a review.</p>
+  <p class="why"><b>What you know at this point:</b></p><ul><li>Seven contradictions, eleven stale statements, twenty-three missing columns</li><li>A phantom client requirement and six divergent warehouse objects</li><li>An unfixed credential exposure of your own</li></ul>
+  <p class="q">What goes in the client review?</p>
+  <ul class="choices"><li><input type="radio" name="sc-SC-9" id="sc-SC-9-A"><label for="sc-SC-9-A"><span class="key">A</span>Progress and next steps. The findings are internal</label><p class="conseq">The client learns about the phantom requirement when it changes their model.</p></li><li><input type="radio" name="sc-SC-9" id="sc-SC-9-B"><label for="sc-SC-9-B"><span class="key">B</span>Everything, in engineering language</label><p class="conseq">Twenty-three missing column names is not a client communication.</p></li><li><input type="radio" name="sc-SC-9" id="sc-SC-9-C"><label for="sc-SC-9-C"><span class="key">C</span>The findings that change their decisions, in their language, separated by origin</label><p class="conseq"><span class="was">This is what happened</span>Two decisions, one blocking. Three risks, one HIGH. Every item marked CLIENT or FACTORY_PROPOSED.</p></li><li><input type="radio" name="sc-SC-9" id="sc-SC-9-D"><label for="sc-SC-9-D"><span class="key">D</span>Wait until the blocked task clears and review the whole thing at once</label><p class="conseq">The blocking decision gates requirements synthesis. Waiting costs the delivery.</p></li></ul>
+  <details class="reveal"><summary>Show what actually happened</summary>
+    <div class="actual"><div class="lbl">Actual history</div><p>C. The review carries a blocking decision on the unsourced metric boundary, a non-blocking decision on the six divergent objects, and three risks — one HIGH, one stating plainly that part of the requirement record is not readable by us.</p></div>
+  </details>
+  <details class="reveal"><summary>Show what was only discovered later</summary>
+    <p>The rendering mechanism will not print VERIFIED, DEPLOYED, ACCEPTED, HEALTHY or ON TRACK unless a file resolves on disk AND a task-evidence row carries a MEASURED or DERIVED basis. An unsupported outcome degrades to CLAIMED — not silently dropped, not silently promoted.</p>
+  </details>
+  <details class="reveal"><summary>Show the Agent Factory counterfactual</summary>
+    <div class="cf observed">
+  <div class="cfh"><b>Client Review</b><span class="chip s-intercept">Would intercept</span><span class="chip exercised">Exercised — observed running</span></div>
+  <p>This one is observation, not design. The compiler ran against the real task store and the real mission record and produced the artifact named in exercised_proof.</p>
+  <p class="rule">Remaining human decision: Holding the meeting and accepting the outcome</p>
+  <p class="rule">Confidence: HIGH</p>
+  <p class="rule">Mechanism: <code>factory/client_review.py</code>, <code>factory/client_review_render.py</code></p><p class="rule">Proof it ran: <code>docs/artifacts/client-review-navira.html</code></p>
+  <p class="rule"><b>This capability ran on this delivery and left the evidence named below.</b></p>
+</div>
+  </details>
+  <div class="scroll"><table><tbody><tr><th>Technical</th><td>A client-safe projection over real task state, with grounding enforced in code</td></tr><tr><th>Client</th><td>"A design decision that has shaped the model for months turns out not to be traceable to anything you said. Correcting it now is cheap; discovering it after the rebuild is not."</td></tr><tr><th>Company</th><td>The first client review the Factory has compiled from real delivery state</td></tr></tbody></table></div>
+  <details class="refs"><summary>Evidence (1)</summary><ul><li><code>docs/case-studies/delivery-001-marketing-model.md#scene-9</code></li></ul></details>
+</article><article class="card scene" id="scene-SC-10">
+  <h3>Scene 9 — The contract you are about to invent</h3>
+  <p>You are designing the Artifact Generator. The forensic record shows six issues where a claim was true when written and false when re-used. You need a temporal contract.</p>
+  <p class="why"><b>What you know at this point:</b></p><ul><li>The repo has ~50 modules in a flat factory/ package</li><li>No module name obviously suggests temporal claims</li><li>The need is clear and the design is straightforward to write</li></ul>
+  <p class="q">What do you do?</p>
+  <ul class="choices"><li><input type="radio" name="sc-SC-10" id="sc-SC-10-A"><label for="sc-SC-10-A"><span class="key">A</span>Design a TemporalAssertion dataclass — the need is well understood</label><p class="conseq"><span class="was">This is what happened</span>You add a parallel vocabulary beside one that already exists, and the two drift. This is the failure family the case study names as its largest.</p></li><li><input type="radio" name="sc-SC-10" id="sc-SC-10-B"><label for="sc-SC-10-B"><span class="key">B</span>Inventory the existing modules for an equivalent contract first</label><p class="conseq">factory/context.py has status, confidence, a required source and a checked date — and refuses to call a ref CURRENT without one.</p></li><li><input type="radio" name="sc-SC-10" id="sc-SC-10-C"><label for="sc-SC-10-C"><span class="key">C</span>Ask whether anyone remembers a similar contract</label><p class="conseq">Depends on who is available and what they recall.</p></li><li><input type="radio" name="sc-SC-10" id="sc-SC-10-D"><label for="sc-SC-10-D"><span class="key">D</span>Build it and reconcile later</label><p class="conseq">Later never has a scheduled date.</p></li></ul>
+  <details class="reveal"><summary>Show what actually happened</summary>
+    <div class="actual"><div class="lbl">Actual history</div><p>A. A TemporalAssertion contract was fully designed and written into the architecture proposal before an inventory sweep found the existing one.</p></div>
+  </details>
+  <details class="reveal"><summary>Show what was only discovered later</summary>
+    <p>context.py:109 refuses CURRENT without a checked date, and its docstring states the invariant — UNVERIFIED is the default, not a weak CURRENT. The contract was deleted from the proposal and replaced with a ~25-line additive extension. The correction is recorded in the proposal rather than quietly applied.</p>
+  </details>
+  <details class="reveal"><summary>Show the Agent Factory counterfactual</summary>
+    <div class="cf">
+  <div class="cfh"><b>Known-Failure Preflight</b><span class="chip s-may">May reduce likelihood</span><span class="chip prop">Proposed — not built</span></div>
+  <p>MANUAL INVENTORY INTERCEPTED. A human sweep caught this at escape distance 0. A future automated preflight may reduce the likelihood of the next one; it cannot be credited with this one, and no current code supports a stronger classification.</p>
+  <p class="rule">Remaining human decision: Running or reading the inventory, and judging equivalence</p>
+  <p class="rule">Confidence: LOW that automation would have caught this specific case</p>
+  
+  <p class="rule"><b>SIMULATED. This is what the capability would do — it has not been observed doing it.</b></p>
+</div>
+  </details>
+  <div class="scroll"><table><tbody><tr><th>Technical</th><td>A duplicate contract avoided; three live consumers not forked</td></tr><tr><th>Client</th><td>None — internal design work</td></tr><tr><th>Company</th><td>The design process for the tool that documents this failure family reproduced the failure family. That is the strongest available argument for making filed knowledge act, and the weakest possible argument that the automation already exists.</td></tr></tbody></table></div>
+  <details class="refs"><summary>Evidence (1)</summary><ul><li><code>docs/case-studies/delivery-001-marketing-model.md#sec-k</code></li></ul></details>
+</article>
+</section>
+
+<section id="kpis">
+  <div class="shead"><span class="n">07</span><h2>Delivery measurement</h2></div><p class="lede">8 of 15 carry a number. The other 7 render their state instead of an invented figure.</p>
+  <div class="grid g3"><div class="tile">
+  <div class="k">Defect Escape Distance (median, client track)</div>
+  <div class="v">3 <span class="n">workflow boundaries</span></div>
+  <div class="n">DERIVED</div>
+  
+  <div class="n">Median of the 11 client-track escapes with a recorded introduction and detection stage</div>
+</div><div class="tile">
+  <div class="k">Defect Escape Distance (median, factory track)</div>
+  <div class="v">2 <span class="n">workflow boundaries</span></div>
+  <div class="n">DERIVED</div>
+  
+  <div class="n">Median of the 4 factory-track escapes</div>
+</div><div class="tile">
+  <div class="k">Known-Failure Recurrence</div>
+  <div class="v">2 <span class="n">incidents</span></div>
+  <div class="n">MEASURED</div>
+  
+  <div class="n">Incidents whose defect class already had a filed finding — the blind zero and the deny-list</div>
+</div><div class="tile">
+  <div class="k">Escaped Defects (client track, still open)</div>
+  <div class="v">6 <span class="n">objects</span></div>
+  <div class="n">DOCUMENTED</div>
+  
+  <div class="n">Warehouse objects identified as divergent and not yet repointed</div>
+</div><div class="tile">
+  <div class="k">Evidence Coverage</div>
+  <div class="v">50 <span class="n">% of declared tasks carrying MEASURED or DERIVED evidence</span></div>
+  <div class="n">MEASURED</div>
+  
+  <div class="n">Declared mission tasks with at least one usable-basis evidence row, over declared tasks</div>
+</div><div class="tile">
+  <div class="k">Time to First Verified Value</div>
+  <div class="v">93 <span class="n">minutes</span></div>
+  <div class="n">DERIVED</div>
+  
+  <div class="n">Mission task creation to the first MEASURED evidence row, from event timestamps</div>
+</div><div class="tile">
+  <div class="k">Blocked Time</div>
+  <div class="v none">PARTIALLY_MEASURABLE</div>
+  <div class="n">DERIVED</div>
+  
+  <div class="n">Block events carry timestamps so this is derivable going forward, but no unblock event was recorded for the one long block in this delivery, so the interval is incomplete.</div>
+</div><div class="tile">
+  <div class="k">First-Pass Acceptance</div>
+  <div class="v none">NOT_RECORDED</div>
+  <div class="n">NOT_RECORDED</div>
+  
+  <div class="n">No acceptance event type exists, and there are zero client sign-offs in the corpus. This is a real zero from an instrument proven able to see the positive case — the same corpus recorded an acceptance when one happened on an earlier ticket.</div>
+</div><div class="tile">
+  <div class="k">Delivery Predictability (estimate versus actual)</div>
+  <div class="v none">REQUIRES_NEW_INSTRUMENTATION</div>
+  <div class="n">NOT_RECORDED</div>
+  
+  <div class="n">Estimates exist for all eight tasks, every one with basis ASSUMED. No actual_minutes field exists for any task. The routing dataset was the stated purpose of run 1 and was not captured.</div>
+</div><div class="tile">
+  <div class="k">Concurrent Delivery Capacity</div>
+  <div class="v none">BLIND_INSTRUMENT</div>
+  <div class="n">NOT_RECORDED</div>
+  <div class="n"><b>Blind instrument</b> — the instrument exists and cannot see this.</div>
+  <div class="n">Three resource claims exist for Wave 1 and all three carry one process id, with one task never claiming at all. The store cannot currently distinguish three concurrent sessions from one. This is not a zero — it is an instrument that cannot see the answer.</div>
+</div><div class="tile">
+  <div class="k">Cost per Accepted Outcome</div>
+  <div class="v none">NOT_RECORDED</div>
+  <div class="n">NOT_RECORDED</div>
+  
+  <div class="n">The run ledger carries a cost basis field; this mission wrote zero run rows</div>
+</div><div class="tile">
+  <div class="k">Human Engineering Effort</div>
+  <div class="v none">NOT_RECORDED</div>
+  <div class="n">NOT_RECORDED</div>
+  
+  <div class="n">Thirteen instrumentation fields were specified in the mission spec and none was written</div>
+</div><div class="tile">
+  <div class="k">Reuse Rate</div>
+  <div class="v none">REQUIRES_DELIVERY_002</div>
+  <div class="n">NOT_RECORDED</div>
+  
+  <div class="n">No recipe or pattern registry exists, and one delivery cannot show reuse</div>
+</div><div class="tile">
+  <div class="k">Onboarding Time</div>
+  <div class="v none">REQUIRES_DELIVERY_002</div>
+  <div class="n">NOT_RECORDED</div>
+  
+  <div class="n">No instrumentation, and no second delivery to compare against</div>
+</div><div class="tile">
+  <div class="k">Rework (fix passes on a single defect)</div>
+  <div class="v">2 <span class="n">fix passes</span></div>
+  <div class="n">DOCUMENTED</div>
+  
+  <div class="n">Measurable as a count where a ticket records it; NOT_RECORDED as elapsed time. Two failed fix passes are recorded for one semantic-model defect, and three sessions for another.</div>
+</div></div>
+</section>
+
+<section id="gaps">
+  <div class="shead"><span class="n">08</span><h2>Instrumentation gaps</h2></div><p class="lede">What this delivery could not measure, stated as a gap rather than as a zero.</p>
+  <div class="card scroll"><table>
+    <thead><tr><th>Measure</th><th>State</th><th>Why it cannot be measured yet</th></tr></thead>
+    <tbody><tr><td>First-Pass Acceptance</td><td><span class="chip r-med">NOT_RECORDED</span></td><td>No acceptance event type exists, and there are zero client sign-offs in the corpus. This is a real zero from an instrument proven able to see the positive case — the same corpus recorded an acceptance when one happened on an earlier ticket.</td></tr><tr><td>Delivery Predictability (estimate versus actual)</td><td><span class="chip r-med">REQUIRES_NEW_INSTRUMENTATION</span></td><td>Estimates exist for all eight tasks, every one with basis ASSUMED. No actual_minutes field exists for any task. The routing dataset was the stated purpose of run 1 and was not captured.</td></tr><tr><td>Concurrent Delivery Capacity</td><td><span class="chip r-med">BLIND_INSTRUMENT</span></td><td>Three resource claims exist for Wave 1 and all three carry one process id, with one task never claiming at all. The store cannot currently distinguish three concurrent sessions from one. This is not a zero — it is an instrument that cannot see the answer.</td></tr><tr><td>Cost per Accepted Outcome</td><td><span class="chip r-med">NOT_RECORDED</span></td><td>The run ledger carries a cost basis field; this mission wrote zero run rows</td></tr><tr><td>Human Engineering Effort</td><td><span class="chip r-med">NOT_RECORDED</span></td><td>Thirteen instrumentation fields were specified in the mission spec and none was written</td></tr><tr><td>Reuse Rate</td><td><span class="chip r-med">REQUIRES_DELIVERY_002</span></td><td>No recipe or pattern registry exists, and one delivery cannot show reuse</td></tr><tr><td>Onboarding Time</td><td><span class="chip r-med">REQUIRES_DELIVERY_002</span></td><td>No instrumentation, and no second delivery to compare against</td></tr></tbody></table></div>
+</section>
+
+<section id="lessons">
+  <div class="shead"><span class="n">09</span><h2>What Delivery #001 teaches Delivery #002</h2></div><p class="lede">Each lesson carries a baseline and a target, so #002 can be graded rather than described.</p>
+  <div class="card"><div class="issue t-factory">
+  <h3>L-1 — Known-Failure Preflight (new mechanism; the knowledge base exists today)</h3>
+  <p>Previous failure evidence existed and later actors did not consume it — eight of thirty-seven issues. In the sharpest case a defect class was fixed in the morning and the identical class was committed against a credential file that afternoon.</p>
+  <p class="why"><b>Root cause:</b> KNOWLEDGE_AVAILABLE_BUT_NOT_CONSUMED — execution history is stored and not operationalised</p>
+  <p class="why"><b>Change:</b> A shape matcher at task launch — task shape maps to matching prior findings, and the specific guard is shown AND required. Seed it with three proven shapes: a deny-list over a credential source, a zero from an unproven instrument, an unqualified object reference.</p>
+  <p class="why"><b>Measurement:</b> Known-failure recurrence rate per mission
+     · <b>Baseline:</b> 2 (the blind zero and the deny-list)</p>
+  <p class="why"><b>Delivery #002 target:</b> 0. A repeated known failure should never occur without the later run having been shown the prior evidence and having declined the guard explicitly.</p>
+</div><div class="issue t-factory">
+  <h3>L-2 — Intent Contract (absent, measured) on top of TaskStore.block (existing and proven)</h3>
+  <p>Five obligations were written down by us, in our own words, and none was enforced — a confirmation marked not done, a ratio movement that must be announced, a hold with no owner, a scope item never read, and thirteen instrumentation fields never written.</p>
+  <p class="why"><b>Root cause:</b> MISSING_TASK_OR_DEPENDENCY — a sentence carries no state, no owner and no blocking power</p>
+  <p class="why"><b>Change:</b> Any spec sentence of obligation shape becomes a task with an owner, a next-check date and a dependency edge. The mission cannot close over an open obligation.</p>
+  <p class="why"><b>Measurement:</b> Obligations declared in a mission spec versus obligations materialised as tasks
+     · <b>Baseline:</b> 5 declared, 0 materialised</p>
+  <p class="why"><b>Delivery #002 target:</b> 100% materialised, or explicitly waived with a reason recorded in the store</p>
+</div><div class="issue t-factory">
+  <h3>L-3 — Reliability instrumentation (partial — the run ledger already draws three verdicts)</h3>
+  <p>Thirteen per-task instrumentation fields were specified and none written; and the acceptance check claiming three parallel sessions is not satisfied by the record, exactly as the spec warned it could pass over an absence.</p>
+  <p class="why"><b>Root cause:</b> INSTRUMENTATION_GAP — the instrument was specified in prose and never built</p>
+  <p class="why"><b>Change:</b> A task-execution event carrying start, end, model, effort, retries and outcome. The task contract refuses to close without an actual, exactly as it already refuses without evidence.</p>
+  <p class="why"><b>Measurement:</b> Percentage of tasks with a RECORDED actual, and acceptance checks demonstrated rather than asserted
+     · <b>Baseline:</b> 0% actuals; 2 of 5 acceptance checks demonstrated</p>
+  <p class="why"><b>Delivery #002 target:</b> 100% recorded actuals; every acceptance check demonstrated or labelled as able to pass over an absence</p>
+</div><div class="issue t-factory">
+  <h3>L-4 — Typed Claims (partial — factory/context.py already carries the temporal half)</h3>
+  <p>Two claims were inherited into the mission. The one marked "verify" was refuted at escape distance 1 and never became mission knowledge. The one not marked propagated into a filed spec and had to be challenged by a human.</p>
+  <p class="why"><b>Root cause:</b> STALE_CONTEXT — with the mechanism's effectiveness shown by the contrast</p>
+  <p class="why"><b>Change:</b> Promote the five-level client-claim vocabulary from prose convention to type. Inheriting a claim across a session boundary requires a verification state.</p>
+  <p class="why"><b>Measurement:</b> Claims inherited across a session boundary with no verification state
+     · <b>Baseline:</b> 1 of 2</p>
+  <p class="why"><b>Delivery #002 target:</b> 0</p>
+</div><div class="issue t-factory">
+  <h3>L-5 — Typed Handoff with ACK/NACK (new)</h3>
+  <p>The spec named a scope item AND predicted the exact failure of missing it. The worker recorded that scope as unreachable. Nothing reconciled the two, and the artefacts it named were read by nobody.</p>
+  <p class="why"><b>Root cause:</b> MANUAL_HANDOFF — prose cannot enforce itself, however precisely it predicts its own failure</p>
+  <p class="why"><b>Change:</b> Scope becomes a typed list. The worker ACKs or NACKs each item. A task cannot close with an item carrying neither, and a NACK is a legitimate answer that becomes a visible gap.</p>
+  <p class="why"><b>Measurement:</b> Scope items with neither an ACK nor a NACK, per task
+     · <b>Baseline:</b> at least 1</p>
+  <p class="why"><b>Delivery #002 target:</b> 0</p>
+</div><div class="issue t-factory">
+  <h3>L-6 — Semantic Contracts (partial — the review projection already keeps four absence states distinct)</h3>
+  <p>Five issues are the same defect — an absence rendered as a number — and the estate already enforces the correct rule structurally for exactly one measure.</p>
+  <p class="why"><b>Root cause:</b> SEMANTIC_CONTRACT_GAP — a rule enforced by convention at one site instead of by type at every site</p>
+  <p class="why"><b>Change:</b> Extend the four-state absence model from the review projection down into the field contract. A contracted field with no resolvable source renders NOT_REPORTED and cannot render a literal.</p>
+  <p class="why"><b>Measurement:</b> Contracted fields rendering a literal with no source
+     · <b>Baseline:</b> at least 12</p>
+  <p class="why"><b>Delivery #002 target:</b> 0 in any client-facing surface the Factory publishes</p>
+</div></div>
+</section>
+
+<section id="recon">
+  <div class="shead"><span class="n">10</span><h2>Reconciliation against live state</h2></div><p class="lede">The narrative is a point-in-time account. The task store moves.</p>
+  <div class="card">
+    <div class="meta"><span class="chip st-sup">Narrative vs store: DIVERGED</span></div>
+    <div class="scroll"><table>
+      <thead><tr><th>Task</th><th>Id</th><th>Narrative says</th><th>Store says</th>
+        <th>Verdict</th></tr></thead>
+      <tbody><tr><td>R1</td><td><code>2b9aae3b</code></td><td>done</td><td>done</td><td class="">CURRENT</td></tr><tr><td>R2</td><td><code>3d053975</code></td><td>done</td><td>done</td><td class="">CURRENT</td></tr><tr><td>R3</td><td><code>e397be46</code></td><td>open</td><td>done</td><td class="no">SUPERSEDED</td></tr><tr><td>D1</td><td><code>1785f5a9</code></td><td>blocked</td><td>done</td><td class="no">SUPERSEDED</td></tr></tbody></table></div>
+    <p class="note">The narrative was written at a point in time and the task store has moved since. The compiler re-checked every claim and reports the divergence rather than republishing a stale fact under a fresh timestamp. It reports; it does not repair — correcting the narrative belongs to its author.</p>
+  </div>
+</section>
+
+<div class="foot">
+  <p>Compiled 2026-09-01 05:24 UTC · freshness <b>Live</b> ·
+     last verified 2026-09-01 05:14 UTC · basis DERIVED</p>
+  <p>Narrative <code>94fd9b58d833</code> · Prose source docs/case-studies/delivery-001-marketing-model.md <code>05be20ef6339</code></p>
+  <p>This page is a projection of Agent Factory state. It holds no delivery state of its own,
+     needs no running backend, and is regenerated by
+     <code>python -m factory.case_study missions/delivery-001/case-study.yaml --out &lt;path&gt;</code>.
+     If it disagrees with the task store, the task store is right.</p>
+</div>
+
+</div>
+<script>
+(function(){
+  var r=document.documentElement, b=document.getElementById('themer');
+  if(!b) return;
+  try{ var s=localStorage.getItem('cs-theme'); if(s) r.setAttribute('data-theme',s); }catch(e){}
+  b.hidden=false;
+  b.addEventListener('click',function(){
+    var cur=r.getAttribute('data-theme');
+    var next = cur==='dark' ? 'light' : cur==='light' ? 'dark'
+             : (matchMedia('(prefers-color-scheme: dark)').matches?'light':'dark');
+    r.setAttribute('data-theme',next);
+    try{ localStorage.setItem('cs-theme',next); }catch(e){}
+  });
+})();
+</script>
+</body>
+</html>

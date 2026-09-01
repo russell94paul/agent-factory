@@ -46,7 +46,9 @@ import pathlib
 from dataclasses import dataclass, field
 from typing import Any, Dict, Iterable, List, Optional, Sequence
 
+from . import assertions as _assertions
 from . import evidence as _evidence
+from . import projection as _projection
 from . import tasks as _tasks
 
 # --------------------------------------------------------------------------------------------
@@ -54,18 +56,20 @@ from . import tasks as _tasks
 # --------------------------------------------------------------------------------------------
 
 #: How fresh the projection is. Four states, never three — see rule 3 in the module docstring.
-LIVE = "LIVE"                    #: read from live state within :data:`LIVE_WINDOW_SEC`
-LAST_VERIFIED = "LAST_VERIFIED"  #: not live, but a verification timestamp is known
-STALE = "STALE"                  #: older than :data:`STALE_AFTER_SEC`; say so, do not hide it
-UNAVAILABLE = "UNAVAILABLE"      #: the source could not be read at all — NOT the same as "nothing"
+#: Extracted 2026-09-01 to :mod:`factory.assertions` so the case-study artifact shares ONE
+#: vocabulary with this one. Re-exported here: every existing caller and test keeps working.
+LIVE = _assertions.LIVE
+LAST_VERIFIED = _assertions.LAST_VERIFIED
+STALE = _assertions.STALE
+UNAVAILABLE = _assertions.UNAVAILABLE
 
 FRESHNESS: tuple = (LIVE, LAST_VERIFIED, STALE, UNAVAILABLE)
 
 #: Grounding of a client-visible claim. Borrowed wholesale from :mod:`factory.evidence` rather
 #: than renamed, so the two cannot drift into two vocabularies for one idea.
-GROUNDED = _evidence.SATISFIED    #: evidence resolves and carries a usable basis
-CLAIMED = _evidence.ASSERTED      #: someone asserted it; nothing usable backs it
-UNGROUNDED = _evidence.ABSENT     #: nobody attached anything
+GROUNDED = _assertions.GROUNDED      #: evidence resolves and carries a usable basis
+CLAIMED = _assertions.CLAIMED        #: someone asserted it; nothing usable backs it
+UNGROUNDED = _assertions.UNGROUNDED  #: nobody attached anything
 
 #: Who originated an item. Closes the hole the v1 data contract leaves open: without this, a
 #: suggestion the factory generated is indistinguishable from something the client requested.
@@ -133,40 +137,16 @@ CLIENT_SAFE: Dict[str, tuple] = {
     "acceptance": ("status", "accepted_at", "accepted_by", "notes", "unmet"),
 }
 
-#: Substrings that must never appear in a client-visible string, whatever the allow-list says.
-#: This is a second, independent gate — belt and braces — and it is explicitly NOT the primary
-#: control, because a deny-list alone is what failed on 2026-08-31.
-_FORBIDDEN_SUBSTRINGS: tuple = (
-    "password", "passwd", "secret", "api_key", "apikey", "token=", "bearer ",
-    "azure-kv:", "keyvault", "private_key", "-----begin",
-)
+_projection.register("client_review", CLIENT_SAFE)
+
+#: Re-exported so existing callers and tests keep working after the 2026-09-01 extraction.
+_FORBIDDEN_SUBSTRINGS: tuple = _projection.FORBIDDEN
+LeakError = _projection.LeakError
 
 
-class LeakError(ReviewError):
-    """A client-visible string carried something the deny-gate recognised.
-
-    Reaching this exception means the allow-list already failed. It is a backstop, and a hit here
-    is a defect to fix in the projection — never something to suppress at the call site.
-    """
-
-
-def _scan(value: Any, where: str) -> Any:
-    """Backstop scan. Raises rather than redacting: a silent redaction hides a broken boundary."""
-    if isinstance(value, str):
-        low = value.lower()
-        for bad in _FORBIDDEN_SUBSTRINGS:
-            if bad in low:
-                raise LeakError(
-                    f"{where}: client-visible string contains {bad!r}. The allow-list let this "
-                    "through, which means the projection is wrong — fix the projection, do not "
-                    "redact here.")
-    elif isinstance(value, dict):
-        for k, v in value.items():
-            _scan(v, f"{where}.{k}")
-    elif isinstance(value, (list, tuple)):
-        for i, v in enumerate(value):
-            _scan(v, f"{where}[{i}]")
-    return value
+def _scan(value, where):
+    """Backstop scan. See :func:`factory.projection.scan`."""
+    return _projection.scan(value, where)
 
 
 def client_safe(section: str, row: Dict[str, Any]) -> Dict[str, Any]:
@@ -175,86 +155,23 @@ def client_safe(section: str, row: Dict[str, Any]) -> Dict[str, Any]:
     Unknown sections raise. A typo'd section name that silently returned ``{}`` would empty a
     whole panel of the client view and look like "nothing to report".
     """
-    if section not in CLIENT_SAFE:
-        raise ReviewError(
-            f"{section!r} has no client-safe field list. Add one to CLIENT_SAFE — a section with "
-            "no allow-list is not publishable by default, and that is the intended behaviour.")
-    out = {k: row[k] for k in CLIENT_SAFE[section] if k in row}
-    return _scan(out, section)
+    try:
+        return _projection.safe("client_review", section, row)
+    except _projection.LeakError:
+        raise
+    except _projection.ProjectionError as exc:
+        raise ReviewError(str(exc)) from None
 
 
 # --------------------------------------------------------------------------------------------
-# Grounding
+# Grounding and freshness — extracted 2026-09-01 to factory.assertions, re-exported here.
+# The behaviour is byte-identical; tests/test_client_review.py is the acceptance test.
 # --------------------------------------------------------------------------------------------
 
-def is_guarded(status: str) -> bool:
-    """True when `status` asserts something that needs evidence behind it."""
-    low = (status or "").strip().lower()
-    if low in GUARDED_WORDS:
-        return True
-    return any(w in low.split() for w in GUARDED_WORDS if " " not in w) or \
-        any(w in low for w in GUARDED_WORDS if " " in w)
-
-
-def ground(refs: Sequence[str], rows: Iterable[dict], root: pathlib.Path) -> str:
-    """Return GROUNDED / CLAIMED / UNGROUNDED for a set of evidence references.
-
-    ``GROUNDED`` requires **both** halves, and the two halves answer different questions:
-
-    * every ref resolves to a file that exists under `root` — *the artefact is really there*;
-    * at least one task-evidence row whose ``ref`` matches carries a basis in
-      :data:`evidence.USABLE` — *somebody measured or derived it, rather than assuming it*.
-
-    A file that exists but is backed only by an ``ASSUMED`` row is ``CLAIMED``. A ref naming a file
-    that is not on disk is ``CLAIMED`` too, never ``GROUNDED`` — the claim survives, its promotion
-    does not.
-    """
-    refs = [r for r in (refs or []) if r]
-    if not refs:
-        return UNGROUNDED
-    by_ref = {r.get("ref"): r for r in rows if isinstance(r, dict)}
-    all_present = all((root / r).exists() for r in refs)
-    any_usable = any((by_ref.get(r) or {}).get("basis") in _evidence.USABLE for r in refs)
-    if all_present and any_usable:
-        return GROUNDED
-    return CLAIMED
-
-
-def enforce(status: str, grounding: str) -> str:
-    """Return the status a client may see, given its grounding.
-
-    A guarded word with anything less than :data:`GROUNDED` becomes :data:`UNSUBSTANTIATED`.
-    Unguarded statuses ("In progress", "Blocked") pass through untouched — they describe an
-    intention or an observable state, not a verified outcome.
-    """
-    if not is_guarded(status):
-        return status
-    return status if grounding == GROUNDED else UNSUBSTANTIATED
-
-
-# --------------------------------------------------------------------------------------------
-# Freshness
-# --------------------------------------------------------------------------------------------
-
-def freshness(last_verified: Optional[float], now: Optional[float] = None,
-              source_readable: bool = True) -> str:
-    """Classify how much the projection can be trusted as current.
-
-    `source_readable=False` yields ``UNAVAILABLE`` regardless of timestamps: an unreadable source
-    has not told us the state is old, it has told us nothing. Collapsing those is exactly the
-    failure :mod:`factory.contract` keeps ``UNMEASURABLE`` separate to prevent.
-    """
-    if not source_readable:
-        return UNAVAILABLE
-    if last_verified is None:
-        return UNAVAILABLE
-    now = _dt.datetime.now(_dt.timezone.utc).timestamp() if now is None else now
-    age = now - last_verified
-    if age <= LIVE_WINDOW_SEC:
-        return LIVE
-    if age <= STALE_AFTER_SEC:
-        return LAST_VERIFIED
-    return STALE
+is_guarded = _assertions.is_guarded
+ground = _assertions.ground
+enforce = _assertions.enforce
+freshness = _assertions.freshness
 
 
 def _iso(ts: Optional[float]) -> Optional[str]:

@@ -1,0 +1,1474 @@
+# Delivery #001 — forensic case study record
+#
+# ⛔ This file is NOT a system of record. It is the STRUCTURE of a forensic account whose
+#    long-form prose lives in docs/case-studies/delivery-001-marketing-model.md and is cited
+#    here by `path#anchor`. `factory.forensic_source` validates every anchor; a citation that
+#    does not resolve fails compilation rather than rendering a partial, authoritative-looking
+#    artifact.
+#
+# ⭐ `track` is load-bearing. CLIENT_DELIVERY is the work done for the client; FACTORY_MISSION is
+#    the mission that investigated it. Both produced failures. `factory.case_study` REFUSES to
+#    compile a record carrying issues on only one track — a record showing only the client's
+#    mistakes would be an advertisement, not a forensic account.
+
+prose_sources:
+  - docs/case-studies/delivery-001-marketing-model.md
+
+delivery:
+  id: delivery-001
+  name: Navira Cross-Channel Marketing Model
+  client: GEP
+  subject: Navira (the modelled entity; GEP is the contracting client and Jira project)
+  window: 2026-05-29 to ongoing
+  track: CLIENT_DELIVERY
+
+companion:
+  id: marketing-model-reconstruction-v1
+  name: Factory mission — read-only reconstruction of Delivery #001
+  window: 2026-09-01T00:52:14Z to 2026-09-01T03:14:03Z (Wave 1)
+  track: FACTORY_MISSION
+  relationship: >-
+    The client delivery was investigated by this mission. The mission revealed failure modes on
+    both itself and the delivery. Neither is a subset of the other, and flattening them into one
+    timeline would lose which system produced which failure.
+
+# What the narrative asserted about task state when it was written. The compiler re-checks each
+# against the live append-only store and reports divergence as SUPERSEDED. It reports; it never
+# repairs — rewriting the narrative belongs to its author.
+task_state_claims:
+  - { label: R1, task: 2b9aae3b, status: done,    observed: "2026-09-01T03:14Z" }
+  - { label: R2, task: 3d053975, status: done,    observed: "2026-09-01T03:14Z" }
+  - { label: R3, task: e397be46, status: open,    observed: "2026-09-01T03:14Z" }
+  - { label: D1, task: 1785f5a9, status: blocked, observed: "2026-09-01T03:14Z" }
+
+# ---------------------------------------------------------------------------------------------
+summary:
+  - id: S-1
+    issue: A design law built on a client request that was never made
+    why: A recollection entered the record as a requirement; the doc flagged it unverified and nothing acted on the flag
+    detected: Reconstruction audit, 8 weeks later
+    ideal_interception: The moment the claim entered the record
+    capability: Typed Claims + Evidence requirements
+    benefit: Escape 5 to 0. A phantom requirement never reaches the client's ticket
+  - id: S-2
+    issue: The client's largest requirement has an unsent reply, and its bigger half never arrived
+    why: A hold with no owner and no expiry
+    detected: Reconstruction audit
+    ideal_interception: At the hold
+    capability: Intent Contract + Human Attention Router
+    benefit: Designs cannot be produced against an unspecified dimension list without that being visible
+  - id: S-3
+    issue: Two of the client's surfaces read differently-defined objects with the same names
+    why: Unqualified references resolving in a divergent schema copy
+    detected: Chasing a $3,374.90 discrepancy; six objects still divergent
+    ideal_interception: Before the first query against an unqualified name
+    capability: Source Cartography
+    benefit: Escape 2 to 0; the six-object backlog never accumulates
+  - id: S-4
+    issue: $244,870.44 of spend present in the warehouse and unselectable in the report
+    why: Channel jammed into the marketplace axis, creating a non-member of the dimension
+    detected: Lineage analysis
+    ideal_interception: At the relabel
+    capability: Semantic Contracts + Task DAG validation
+    benefit: Cross-channel spend addressable by a positive slicer choice
+  - id: S-5
+    issue: The board headline metric is written backwards in the document that locks it
+    why: A formula typed once, never reconciled to the implementation
+    detected: Reconstruction audit
+    ideal_interception: At the first implementation that chose a direction
+    capability: Semantic Contracts
+    benefit: Escape 4 to 1. Document and system stop disagreeing
+  - id: S-6
+    issue: A deny-list over a credential table exposed three credentials, one spanning production
+    why: A guard only as wide as the relation it derives over — the same class fixed hours earlier
+    detected: Same session, self-caught
+    ideal_interception: Before the extraction
+    capability: Known-Failure Preflight
+    benefit: Three credentials not exposed; one production rotation not owed
+  - id: S-7
+    issue: A search filtered the wrong field, returned zero, and the zero became a finding
+    why: No positive control on a search that returned nothing
+    detected: Self-caught, 3,611 seconds later
+    ideal_interception: At the search
+    capability: Known-Failure Preflight (positive control)
+    benefit: Escape 4 to 0. No duplicate tasks, no wrong provenance in the artifacts
+  - id: S-8
+    issue: "\"Three tasks ran in parallel\" is unproven by the record"
+    why: Parallelism asserted in prose; three claims share one pid and R3 never claimed
+    detected: This audit
+    ideal_interception: At claim time
+    capability: Reliability instrumentation
+    benefit: The mission's headline claim becomes measurable rather than asserted
+
+# ---------------------------------------------------------------------------------------------
+timeline:
+  - id: T-A1
+    order: 1
+    track: CLIENT_DELIVERY
+    occurred_at: "2026-05-29"
+    precision: DAY
+    title: The measurement law is written
+    intent: A defensible way to answer whether marketing spend is working across three platforms
+    known: That platform-reported attribution double-counts across channels
+    believed: That a tiered vocabulary would be shared with the client
+    assumed: That the client shares the Tier 0-4 vocabulary. NEVER TESTED
+    unknown: That the 30-day window would be aliased away at the point of implementation
+    action: >-
+      Four decisions locked: blended MER as headline, USD consolidation, a 30-day Amazon window,
+      Google/Meta linkage deferred. Plus the rule that survived everything — platform-attributed
+      value is never summed across channels.
+    status: CURRENT
+    observed: "2026-05-29"
+    checked: "2026-08-31"
+    evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#step-a1"]
+
+  - id: T-A2
+    order: 2
+    track: CLIENT_DELIVERY
+    occurred_at: "2026-07-08"
+    precision: DAY
+    title: The client says, in her own words, what she actually wants
+    known: Internally, that a two-model split was probably needed
+    believed: That the client's objection was about model structure
+    assumed: —
+    unknown: That this transcript would be cited for months as the source of a request it does not contain
+    action: A 487-line verbatim transcript was filed, and not read again for eight weeks
+    status: CURRENT
+    observed: "2026-07-08"
+    checked: "2026-08-31"
+    evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#step-a2"]
+
+  - id: T-A6
+    order: 3
+    track: CLIENT_DELIVERY
+    occurred_at: "2026-08"
+    precision: MONTH
+    title: A recollection becomes a design law
+    known: That a metric-visibility boundary was needed
+    believed: That Heather had asked for a high-level vs low-level split
+    assumed: That the recollection was accurate — self-flagged as needing confirmation, never done
+    unknown: That reading the transcript would refute the premise
+    action: Engagement metrics hidden on Daily, visible on Marketing; recorded in Jira 36056 as settled
+    status: REFUTED
+    observed: "2026-08"
+    checked: "2026-08-31"
+    evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#step-a6"]
+
+  - id: T-A9
+    order: 4
+    track: CLIENT_DELIVERY
+    occurred_at: ""
+    precision: UNKNOWN
+    title: The headline metric is written backwards in the document that locks it
+    known: That MER was the board-level headline
+    believed: That the architecture page stated it correctly
+    assumed: —
+    unknown: That the code, the field contract and the frontend all disagreed with the document
+    action: The document was used as the specification source for months
+    status: CONTRADICTED
+    observed: ""
+    checked: "2026-08-31"
+    evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#step-a9"]
+
+  - id: T-B1
+    order: 5
+    track: FACTORY_MISSION
+    occurred_at: "2026-08-31"
+    precision: DAY
+    title: The premise handed to the mission is corrected before it is planned against
+    known: A reviewer's instruction to use existing mission/task/DAG/state/claim mechanisms
+    believed: Nothing yet — the premise was measured before it was believed
+    assumed: —
+    unknown: —
+    action: >-
+      Two greps refuted two of the four named mechanisms; the subject was corrected from GEP to
+      Navira; one task was rescoped from reconstruct to read-and-diff.
+    status: CURRENT
+    observed: "2026-08-31"
+    checked: "2026-09-01"
+    evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#step-b1"]
+
+  - id: T-B3
+    order: 6
+    track: FACTORY_MISSION
+    occurred_at: "2026-08-31"
+    precision: DAY
+    title: A credential is exposed by a deny-list over a markdown table
+    known: That the vault file contained live credentials and they must not enter the transcript
+    believed: That filtering out lines naming the credential field was sufficient
+    assumed: That the vault stored credentials in a form where that word marks the data
+    unknown: That the vault uses markdown tables, so the word is in the header and never the rows
+    action: Three plaintext values reached the session transcript; one spans non-prod and production
+    status: CURRENT
+    observed: "2026-08-31"
+    checked: "2026-09-01"
+    evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#step-b3"]
+
+  - id: T-B4
+    order: 7
+    track: FACTORY_MISSION
+    occurred_at: "2026-08-31"
+    precision: DAY
+    title: The read-only failsafe is found unable to pass, before it is run
+    known: The pre-flight required watching a write be refused
+    believed: —
+    assumed: The spec assumed a role it had not verified
+    unknown: —
+    action: >-
+      Spotted before running. Two honest routes put to a human; the read-only-role route chosen.
+      The vacuous verification was refused rather than run and reported as a proof.
+    status: CURRENT
+    observed: "2026-08-31"
+    checked: "2026-09-01"
+    evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#step-b4"]
+
+  - id: T-B6
+    order: 8
+    track: FACTORY_MISSION
+    occurred_at: "2026-09-01T02:13:52Z"
+    precision: EXACT
+    title: A search filters the wrong field, returns a false zero, and two duplicate tasks are created
+    known: That the mission spec declared eight tasks
+    believed: That the plan had not been materialised into the task store
+    assumed: That a search returning zero had looked in the right place
+    unknown: That the search filtered the task ID, which is hex and contains no label
+    action: Two duplicate tasks created; Wave 1 ran under them
+    status: SUPERSEDED
+    superseded_by: Corrected at 03:14:03Z — both duplicates annotated SUPERSEDED in the append-only store
+    observed: "2026-09-01"
+    checked: "2026-09-01"
+    evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#step-b6"]
+
+  - id: T-B7
+    order: 9
+    track: FACTORY_MISSION
+    occurred_at: "2026-09-01T02:25:21Z"
+    precision: EXACT
+    title: Wave 1 runs — two of three tasks, 87KB of cited evidence
+    known: R1 and R2 were unblocked; R3 waited on a human credential decision
+    believed: That three tasks were running in parallel
+    assumed: That three resource claims meant three concurrent sessions
+    unknown: That all three claims carried one pid, and that R3 never claimed at all
+    action: R1 and R2 closed with MEASURED/TARGET evidence; R3 left open
+    status: SUPERSEDED
+    superseded_by: "R3 and D1 both closed later on 2026-09-01; see the reconciliation panel"
+    observed: "2026-09-01"
+    checked: "2026-09-01"
+    evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#step-b7"]
+
+# ---------------------------------------------------------------------------------------------
+issues:
+  # ---- CLIENT_DELIVERY -----------------------------------------------------------------------
+  - id: H1
+    track: CLIENT_DELIVERY
+    title: Metric-visibility boundary rests on a recollection the transcript does not contain
+    what_happened: Engagement metrics hidden on Daily, visible on Marketing; recorded in Jira 36056 as settled
+    why: A remembered ask was written into the record as a requirement; the doc flagged it unconfirmed and nothing acted on the flag
+    root_causes: [UNVERIFIED_ASSUMPTION, MISSING_VERIFICATION, HUMAN_MEMORY_DEPENDENCY]
+    mistake_types: [HUMAN_DECISION_ERROR, VERIFICATION_FAILURE]
+    stage_introduced: S2 internal record
+    stage_detected: S7 reconstruction audit
+    escape_distance: 5
+    ideal_interception_stage: S2
+    potential_escape: 0
+    still_open: true
+    client_risk: HIGH
+    basis: DOCUMENTED
+    evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#step-a6"]
+    counterfactual:
+      capability: Typed Claims
+      strength: WOULD_INTERCEPT
+      maturity: PROPOSED
+      expected_effect: >-
+        The recollection would still have been recorded. What it prevents is the recollection
+        becoming a CONFIRMED client requirement, and an artifact citing it as one being published.
+      remaining_human: Someone still has to read the transcript. The Factory schedules it; it does not perform it.
+      confidence: MEDIUM — depends on a claim-typing layer that does not exist yet
+
+  - id: H2
+    track: CLIENT_DELIVERY
+    title: Two documents recommend a conformed core fact rejected the next day; neither marked superseded
+    what_happened: Both read as current on disk. The trap is armed and has not yet fired
+    why: No supersession mechanism over documents
+    root_causes: [DOCUMENTATION_DRIFT, CONTRADICTORY_SOURCES]
+    mistake_types: [DOCUMENTATION_ERROR]
+    stage_introduced: S2
+    stage_detected: S7
+    escape_distance: 3
+    ideal_interception_stage: S2
+    potential_escape: 0
+    still_open: true
+    client_risk: HIGH
+    basis: DOCUMENTED
+    evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#step-a8"]
+    counterfactual:
+      capability: Contradiction detection + Organizational Memory
+      strength: WOULD_WARN
+      maturity: PROPOSED
+      expected_effect: A 15th copy of a 14-copy table family never gets built
+      remaining_human: Which shape to build remains a modelling judgement
+      confidence: MEDIUM
+
+  - id: H3
+    track: CLIENT_DELIVERY
+    title: MER written inverted in the document that locks it
+    what_happened: Document and running system disagree on the board headline metric
+    why: A formula typed once, never cross-checked against the implementation
+    root_causes: [DOCUMENTATION_DRIFT, SEMANTIC_CONTRACT_GAP]
+    mistake_types: [DOCUMENTATION_ERROR]
+    stage_introduced: S2
+    stage_detected: S7
+    escape_distance: 4
+    ideal_interception_stage: S3
+    potential_escape: 1
+    still_open: true
+    client_risk: HIGH
+    basis: CONTRADICTORY
+    sides:
+      - position: "MER = SPEND / ACTUAL_SALES"
+        source: The architecture document that locks the decision, stated twice
+        evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#step-a9"]
+      - position: "MER = ACTUAL_SALES / SPEND"
+        source: The monthly view, the field contract and the frontend, agreeing independently
+        evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#step-a9"]
+    evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#step-a9"]
+    counterfactual:
+      capability: Semantic Contracts
+      strength: WOULD_INTERCEPT
+      maturity: PROPOSED
+      expected_effect: The definition is the artifact; implementations are checked against it
+      remaining_human: Which direction is correct is a business decision, not a compile check
+      confidence: MEDIUM
+
+  - id: H4
+    track: CLIENT_DELIVERY
+    title: Four objects read unqualified, resolving in a divergent schema copy
+    what_happened: Dashboard and Power BI fed by different definitions of the same object names
+    why: Default-schema resolution with no qualification convention enforced
+    root_causes: [WRONG_SOURCE_OR_POPULATION, ENVIRONMENT_DRIFT]
+    mistake_types: [TOOLING_GAP]
+    stage_introduced: S3
+    stage_detected: S6
+    escape_distance: 2
+    ideal_interception_stage: S3
+    potential_escape: 0
+    still_open: true
+    client_risk: HIGH
+    basis: DOCUMENTED
+    evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#step-a5"]
+    counterfactual:
+      capability: Source Cartography
+      strength: WOULD_INTERCEPT
+      maturity: IMPLEMENTED_NOT_EXERCISED
+      mechanism_refs: ["docs/evidence/marketing-model-v1/R3-cartography.md"]
+      expected_effect: An unqualified reference becomes a scoped blocker before the first query
+      remaining_human: Which copy is authoritative
+      confidence: MEDIUM — the cartography pass exists for this delivery but did not run before the defect
+
+  - id: H12
+    track: CLIENT_DELIVERY
+    title: Channel jammed into the marketplace axis; 768 rows / $244,870.44 orphaned
+    what_happened: Spend present in the warehouse and unselectable by any positive slicer choice
+    why: A relabel that creates a non-member of the dimension
+    root_causes: [SEMANTIC_CONTRACT_GAP]
+    mistake_types: [SYSTEM_DESIGN_GAP]
+    stage_introduced: S3
+    stage_detected: S4
+    escape_distance: 3
+    ideal_interception_stage: S3
+    potential_escape: 0
+    still_open: true
+    client_risk: HIGH
+    basis: DOCUMENTED
+    evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#step-a11"]
+    counterfactual:
+      capability: Semantic Contracts + Task DAG validation
+      strength: WOULD_INTERCEPT
+      maturity: PROPOSED
+      expected_effect: Cross-channel spend addressable by a positive slicer choice
+      remaining_human: Whether channel becomes its own axis or a conformed dimension
+      confidence: MEDIUM
+
+  - id: H15
+    track: CLIENT_DELIVERY
+    title: Twelve contracted fields render fabricated values on a client surface
+    what_happened: dailyBudget 0, status "active" for every campaign, orders 0, SKU rendering the ASIN
+    why: The field contract outran the warehouse and the app filled the gap with literals
+    root_causes: [SEMANTIC_CONTRACT_GAP, MISSING_VERIFICATION]
+    mistake_types: [SYSTEM_DESIGN_GAP]
+    stage_introduced: S4
+    stage_detected: S7
+    escape_distance: 3
+    ideal_interception_stage: S4
+    potential_escape: 0
+    still_open: true
+    client_risk: HIGH
+    basis: DOCUMENTED
+    evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#step-a10"]
+    counterfactual:
+      capability: Semantic Contracts + Continuous acceptance
+      strength: WOULD_BLOCK
+      maturity: PROPOSED
+      expected_effect: A contracted field with no source renders NOT_REPORTED; a literal is refused
+      remaining_human: Whether to ship the view at all without the source
+      confidence: HIGH — the same codebase already does exactly this for one measure
+
+  - id: H19
+    track: CLIENT_DELIVERY
+    title: The client's largest requirement has an unsent reply, and its bigger half never arrived
+    what_happened: The dimensional half of a dimensional model is unspecified, and the client does not know we are waiting
+    why: A hold with no owner and no expiry
+    root_causes: [MISSING_TASK_OR_DEPENDENCY, COMMUNICATION_FAILURE]
+    mistake_types: [PROCESS_GAP, COMMUNICATION_FAILURE]
+    stage_introduced: S2
+    stage_detected: S7
+    escape_distance: 4
+    ideal_interception_stage: S2
+    potential_escape: 0
+    still_open: true
+    client_risk: HIGH
+    basis: DOCUMENTED
+    evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#step-a4"]
+    counterfactual:
+      capability: Intent Contract + Human Attention Router
+      strength: WOULD_BLOCK
+      maturity: PROPOSED
+      expected_effect: A hold becomes a task with an owner and a next check; dependent design work is visibly BLOCKED
+      remaining_human: Someone still writes the email and sends it
+      confidence: MEDIUM — no Intent Contract object exists; measured
+
+  - id: H16
+    track: CLIENT_DELIVERY
+    title: A client-agreed scope item reversed with no announcement, while client-visible ratios move
+    what_happened: Margin % and TACoS/MER both rise. The record itself says this must be announced, not discovered. Nothing is on file
+    why: The reversal had a sound technical reason and no communication obligation attached to it
+    root_causes: [COMMUNICATION_FAILURE, MISSING_TASK_OR_DEPENDENCY]
+    mistake_types: [PROCESS_GAP, COMMUNICATION_FAILURE]
+    stage_introduced: S2
+    stage_detected: S7
+    escape_distance: 4
+    ideal_interception_stage: S2
+    potential_escape: 0
+    still_open: true
+    client_risk: HIGH
+    basis: DOCUMENTED
+    evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#step-a7"]
+    counterfactual:
+      capability: Client Review + Human Attention Router
+      strength: WOULD_INTERCEPT
+      maturity: EXERCISED
+      mechanism_refs: ["factory/client_review.py"]
+      exercised_proof: docs/artifacts/client-review-navira.html
+      expected_effect: >-
+        The obligation becomes an item with client_action_required, rendered in the client's own
+        language. The Navira review compiled on 2026-09-01 carries exactly this shape for two
+        other decisions, so this is observation rather than design.
+      remaining_human: A human still decides what to say and says it
+      confidence: HIGH — the mechanism ran and produced an artifact
+
+  - id: H21
+    track: CLIENT_DELIVERY
+    title: ISCROSSFILTERED used where ISFILTERED was required
+    what_happened: Blanked every ordinary date pivot; cost two failed fix passes
+    why: Propagation versus adjacency — a genuine knowledge gap
+    root_causes: [KNOWLEDGE_NOT_AVAILABLE]
+    mistake_types: [MISSING_INFORMATION]
+    stage_introduced: S4
+    stage_detected: S4
+    escape_distance: 0
+    ideal_interception_stage: "second occurrence only"
+    potential_escape: 0
+    still_open: false
+    client_risk: MEDIUM
+    basis: DOCUMENTED
+    evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#sec-b"]
+    counterfactual:
+      capability: Known-Failure Preflight
+      strength: NO_MATERIAL_EFFECT
+      maturity: PROPOSED
+      expected_effect: >-
+        None on the first occurrence. Nobody knew. The capability claims the SECOND occurrence and
+        must not claim the first — recorded here so the interception matrix cannot overstate itself.
+      remaining_human: Learning a new platform behaviour remains human work
+      confidence: HIGH that it would not have helped
+
+  # ---- FACTORY_MISSION -----------------------------------------------------------------------
+  - id: M-01
+    track: FACTORY_MISSION
+    title: A search filtered the task ID instead of the title, returned zero, and the zero became a finding
+    what_happened: Two duplicate tasks created; Wave 1 ran under them; evidence landed on the wrong tasks
+    why: No positive control on a search that returned nothing
+    root_causes: [INSTRUMENTATION_GAP, MISSING_VERIFICATION, REPEATED_FAILURE_NOT_LEARNED_FROM]
+    mistake_types: [AGENT_REASONING_ERROR, VERIFICATION_FAILURE]
+    stage_introduced: T3 task store materialization
+    stage_detected: T7 mission handoff
+    escape_distance: 4
+    ideal_interception_stage: T3
+    potential_escape: 0
+    still_open: false
+    client_risk: LOW
+    basis: MEASURED
+    evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#step-b6"]
+    counterfactual:
+      capability: Known-Failure Preflight (positive control)
+      strength: WOULD_INTERCEPT
+      maturity: PROPOSED
+      expected_effect: A zero is not actionable until the instrument has been shown able to return non-zero
+      remaining_human: Deciding what the correct search is
+      confidence: HIGH — the findings ledger is machine-read today; the missing piece is a shape matcher
+
+  - id: M-02
+    track: FACTORY_MISSION
+    title: Both evidence artifacts name the superseded duplicate as their own provenance
+    what_happened: R1's header says task fbe2ea4c and R2's says 200deda2 — both annotated SUPERSEDED in the store
+    why: The correction was applied to the append-only store and not propagated to the immutable prose
+    root_causes: [MISSING_PROVENANCE, MANUAL_HANDOFF]
+    mistake_types: [PROCESS_GAP]
+    stage_introduced: T6 evidence artifact
+    stage_detected: T7
+    escape_distance: 1
+    ideal_interception_stage: T6
+    potential_escape: 0
+    still_open: true
+    client_risk: LOW
+    basis: MEASURED
+    evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#step-b8"]
+    counterfactual:
+      capability: Provenance (bidirectional)
+      strength: WOULD_INTERCEPT
+      maturity: PROPOSED
+      expected_effect: A SUPERSEDED annotation propagates to every artifact naming the superseded id
+      remaining_human: Editing the prose
+      confidence: MEDIUM
+
+  - id: M-03
+    track: FACTORY_MISSION
+    title: An inherited metric hierarchy was marked for verification, and came back refuted
+    what_happened: It never became mission knowledge. The corrected order reached the handoff
+    why: The inheritance carried a state, not just a value — this one worked
+    root_causes: [STALE_CONTEXT]
+    mistake_types: [BAD_OR_STALE_INPUT]
+    stage_introduced: T1 inherited context
+    stage_detected: T5 worker execution
+    escape_distance: 1
+    ideal_interception_stage: T1
+    potential_escape: 1
+    still_open: false
+    client_risk: NONE
+    basis: DOCUMENTED
+    evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#worked-f3"]
+    counterfactual:
+      capability: Typed Claims
+      strength: WOULD_INTERCEPT
+      maturity: PROPOSED
+      expected_effect: >-
+        Already optimal at escape distance 1. Automating it removes the dependence on the operator
+        remembering to write "verify" in a prompt.
+      remaining_human: Performing the verification
+      confidence: HIGH — the manual version was observed working
+
+  - id: M-05
+    track: FACTORY_MISSION
+    title: A deny-list over a credential table exposed three credentials, one spanning production
+    what_happened: Values reached a session transcript indexed by a manager whose deletion does not stick
+    why: A guard only as wide as the relation it derives over
+    root_causes: [SEMANTIC_CONTRACT_GAP, REPEATED_FAILURE_NOT_LEARNED_FROM]
+    mistake_types: [HUMAN_DECISION_ERROR, TOOLING_GAP]
+    stage_introduced: T2 mission spec execution
+    stage_detected: T2 same session
+    escape_distance: 0
+    ideal_interception_stage: T2
+    potential_escape: 0
+    still_open: true
+    client_risk: HIGH
+    basis: DOCUMENTED
+    evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#step-b3"]
+    counterfactual:
+      capability: Known-Failure Preflight
+      strength: WOULD_BLOCK
+      maturity: PROPOSED
+      expected_effect: >-
+        The strongest interception claim available, because the knowledge existed in this repo in a
+        finding filed hours earlier. Nothing consumed it. That is an operationalisation problem.
+      remaining_human: None for the known shape; a novel extraction shape still gets through
+      confidence: HIGH
+
+  - id: M-06
+    track: FACTORY_MISSION
+    title: A verification that could only be vacuous was refused before it ran
+    what_happened: The read-only pre-flight could not fail against an admin account, and was not run as theatre
+    why: The spec assumed a role it had not verified; reading the spec against the credential caught it
+    root_causes: [UNVERIFIED_ASSUMPTION]
+    mistake_types: [VERIFICATION_FAILURE]
+    stage_introduced: T2
+    stage_detected: T2
+    escape_distance: 0
+    ideal_interception_stage: T2
+    potential_escape: 0
+    still_open: false
+    client_risk: NONE
+    basis: DOCUMENTED
+    evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#step-b4"]
+    counterfactual:
+      capability: Evidence requirements + Human Attention Router
+      strength: WOULD_BLOCK
+      maturity: EXERCISED
+      mechanism_refs: ["factory/tasks.py"]
+      exercised_proof: docs/evidence/marketing-model-v1/R3-preflight-readonly-proof.md
+      expected_effect: >-
+        The control worked. The route chosen was the one where the role structurally refuses, and
+        the refusal was later captured as evidence on R3.
+      remaining_human: Choosing between the honest routes — and a human did
+      confidence: HIGH — the proof artifact exists on disk and is attached to the task
+
+  - id: M-07
+    track: FACTORY_MISSION
+    title: A scope item named in the spec was never read and never refused
+    what_happened: The three existing GP-319 designs were read by neither worker
+    why: Scope delivered as prose with no acknowledgement channel and no completeness check
+    root_causes: [MANUAL_HANDOFF, MISSING_VERIFICATION, SEMANTIC_CONTRACT_GAP]
+    mistake_types: [PROCESS_GAP, COMMUNICATION_FAILURE]
+    stage_introduced: T2 mission spec
+    stage_detected: T7
+    escape_distance: 3
+    ideal_interception_stage: T4 worker dispatch
+    potential_escape: 0
+    still_open: true
+    client_risk: MEDIUM
+    basis: MEASURED
+    evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#cf-h-4"]
+    counterfactual:
+      capability: Typed Handoff + ACK/NACK
+      strength: WOULD_BLOCK
+      maturity: PROPOSED
+      expected_effect: >-
+        The spec did not merely mention the repo — it predicted the exact failure of missing it,
+        and the failure happened anyway. Prose cannot enforce itself.
+      remaining_human: Whether to grant the read scope. A NACK is a legitimate answer
+      confidence: HIGH on necessity; MEDIUM on the build
+
+  - id: M-08
+    track: FACTORY_MISSION
+    title: Acceptance check 1 — three tasks ran in parallel — is not satisfied by the record
+    what_happened: Three claim files exist, all carrying one pid and one actor. R3 never claimed at all
+    why: Parallelism was asserted in the spec and not demonstrated by the store
+    root_causes: [INSTRUMENTATION_GAP, MISSING_VERIFICATION]
+    mistake_types: [VERIFICATION_FAILURE]
+    stage_introduced: T4 worker dispatch
+    stage_detected: T7
+    escape_distance: 3
+    ideal_interception_stage: T4
+    potential_escape: 0
+    still_open: true
+    client_risk: LOW
+    basis: MEASURED
+    evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#step-b7"]
+    counterfactual:
+      capability: Reliability instrumentation
+      strength: WOULD_BLOCK
+      maturity: PROPOSED
+      expected_effect: A claim carrying no distinct session pid is refused, so parallelism is derived rather than typed
+      remaining_human: Launching the sessions
+      confidence: MEDIUM
+
+  - id: M-09
+    track: FACTORY_MISSION
+    title: The routing dataset — the stated point of run 1 — was never captured
+    what_happened: Thirteen per-task instrumentation fields were specified in prose and none was written
+    why: The instrument was specified in prose and never built
+    root_causes: [INSTRUMENTATION_GAP, MISSING_TASK_OR_DEPENDENCY]
+    mistake_types: [SYSTEM_DESIGN_GAP]
+    stage_introduced: T2
+    stage_detected: T7
+    escape_distance: 3
+    ideal_interception_stage: T2
+    potential_escape: 0
+    still_open: true
+    client_risk: LOW
+    basis: MEASURED
+    evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#step-b7"]
+    counterfactual:
+      capability: Reliability instrumentation
+      strength: WOULD_BLOCK
+      maturity: PROPOSED
+      expected_effect: >-
+        The task contract refuses to close without an actual, exactly as it already refuses to
+        close without evidence. The refusal primitive exists and was watched refusing.
+      remaining_human: Deciding what to record
+      confidence: HIGH — reuses a proven refusal shape
+
+  - id: M-13
+    track: FACTORY_MISSION
+    title: The Artifact Generator design proposed a contract the repository already had
+    what_happened: >-
+      A TemporalAssertion contract was designed from scratch. factory/context.py already carried
+      status, confidence, source and a checked date, and already refused to call a ref CURRENT
+      without one. An inventory sweep caught it before implementation.
+    why: The need was recognised and the existing capability was not consulted before designing
+    root_causes: [KNOWLEDGE_AVAILABLE_BUT_NOT_CONSUMED]
+    mistake_types: [PROCESS_GAP]
+    stage_introduced: T2 design
+    stage_detected: T2 inventory pass, pre-implementation
+    escape_distance: 0
+    ideal_interception_stage: T2
+    potential_escape: 0
+    still_open: false
+    client_risk: NONE
+    basis: MEASURED
+    evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#sec-k"]
+    counterfactual:
+      capability: Known-Failure Preflight
+      strength: MAY_REDUCE_LIKELIHOOD
+      maturity: PROPOSED
+      expected_effect: >-
+        A manual inventory intercepted this one, at escape distance 0. A future automated preflight
+        MAY reduce the likelihood of the next one — it cannot be claimed to have caught this, and
+        the honest classification is MANUAL INVENTORY INTERCEPTED.
+      remaining_human: Running or reading the inventory
+      confidence: LOW that automation would have caught this specific case; the sweep was human judgement
+
+# ---------------------------------------------------------------------------------------------
+patterns:
+  - id: P1
+    name: KNOWLEDGE_AVAILABLE_BUT_NOT_CONSUMED
+    statement: >-
+      The knowledge existed, in our own record, and the next actor did not consume it. Not a
+      knowledge problem — an operationalisation problem. A sentence is not a mechanism.
+    issue_ids: [H1, H2, M-05, M-07, M-13]
+    count: 8
+    note: >-
+      8 of 37 issues across the full record. The Artifact Generator design process reproduced it
+      (M-13), which is the strongest available evidence that filing knowledge does not make it act.
+
+  - id: P2
+    name: ABSENCE_RENDERED_AS_A_NUMBER
+    statement: >-
+      A missing measurement rendered as a value. The estate already knows the rule and enforces it
+      structurally — for exactly one measure.
+    issue_ids: [H12, H15, M-01]
+    count: 5
+    note: The counter-example is the argument — one measure got NULL-not-zero and nothing generalised it.
+
+  - id: P3
+    name: CLAIM_WITHOUT_AN_AS_OF
+    statement: Each was true when written. None carried the date it was true, or the source it was true of.
+    issue_ids: [H2, H3]
+    count: 6
+    note: The remedy is one field, not a system. factory/context.py already has it.
+
+  - id: P4
+    name: OBLIGATION_WRITTEN_IN_PROSE
+    statement: We wrote the obligation down ourselves, in our own words, and nothing enforced it.
+    issue_ids: [H16, H19, M-07, M-09]
+    count: 5
+    note: >-
+      The cheapest and most under-built capability. Four of five are one sentence away from being a
+      task with an owner and a dependency edge, and TaskStore.block already works.
+
+# ---------------------------------------------------------------------------------------------
+scenes:
+  - id: SC-1
+    order: 1
+    step_ref: T-B1
+    title: The premise you were handed
+    context: >-
+      You have been told to run the first real mission using Agent Factory's existing
+      mission/task/DAG/state/claim mechanisms.
+    information_available:
+      - The repo has a factory/ package with ~50 modules
+      - The instruction sounds authoritative and came from a reviewer whose job is to improve the plan
+      - Nothing yet suggests a problem
+    question: The plan names four mechanisms. What do you do first?
+    choices:
+      - key: A
+        label: Start building against the four named mechanisms
+        consequence: >-
+          Two do not exist. lanes.py validates lane gate ids at import, so the first lane fails at
+          import time and the session is spent debugging a plan rather than running it.
+        was_actual: false
+      - key: B
+        label: Ask the reviewer to clarify
+        consequence: Costs a round trip. The reviewer does not have the repo open.
+        was_actual: false
+      - key: C
+        label: Grep for each of the four names before planning against any of them
+        consequence: "Two greps. `\\bmission\\b` -> no matches. `depends_on` -> no matches."
+        was_actual: true
+      - key: D
+        label: Assume they exist under different names and adapt as you go
+        consequence: The adaptation is invisible; nobody can tell later which parts of the plan were real.
+        was_actual: false
+    actual_outcome: >-
+      Two greps, run before a task existed. board.DEPENDS turned out to be a gate dependency map,
+      not a task DAG — but TaskStore already supplied the exact shape needed. Nothing new was built.
+    later_evidence: >-
+      The same pass corrected two more inherited premises: the subject is Navira, not GEP, and one
+      task was already substantially done and was rescoped from reconstruct to read-and-diff.
+    impact:
+      technical: The plan was written against the system that exists rather than the one described
+      client: None directly — but a mission planned against absent mechanisms delivers nothing
+      company: The cheapest control in the entire case study. Two greps
+      kpi_ref: K-14
+    evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#scene-1"]
+    counterfactual:
+      capability: Provenance on inherited premises
+      strength: WOULD_INTERCEPT
+      maturity: PROPOSED
+      expected_effect: An inherited premise carries who measured it and when, so it cannot be planned against unchecked
+      remaining_human: Running the check
+      confidence: HIGH — the manual version was observed working here
+
+  - id: SC-3
+    order: 2
+    step_ref: T-B3
+    title: The credential you are about to read
+    context: >-
+      A task needs Snowflake read access. Credentials live in a wiki vault file. A standing grant
+      covers retrieval from this repo. You want the account and user, not the credential value itself.
+    information_available:
+      - The file contains live credential values and they must not enter the transcript
+      - You have a filter in mind
+      - A finding about guards being only as wide as the relation they derive over was fixed this morning
+    question: How do you extract the account and user without extracting a credential value?
+    choices:
+      - key: A
+        label: Deny-list — filter out every line naming the credential field
+        consequence: >-
+          The vault stores credentials in markdown tables. The word is in the header row and never
+          in the data rows. Three plaintext values pass straight through.
+        was_actual: true
+      - key: B
+        label: Allow-list only the account and user columns
+        consequence: Nothing else can escape, including fields nobody has thought about yet.
+        was_actual: false
+      - key: C
+        label: Read the whole file and be careful
+        consequence: The value is in the transcript the moment it renders.
+        was_actual: false
+      - key: D
+        label: Ask a human to paste just the account name
+        consequence: Safe, slow, and the standing grant exists precisely to avoid this.
+        was_actual: false
+    actual_outcome: >-
+      A. Three plaintext credential values reached the session transcript. One is listed for both the
+      non-prod and the PRODUCTION account. Another was recorded as issued without MFA.
+    later_evidence: >-
+      A session manager indexes the first ~500 characters of the first ~16 messages into a
+      substring-searchable table, and deletion does not stick. The exposure was around message 90 —
+      probably outside that window. Probably is not verified. And the identical defect class was
+      fixed in readiness.py that same morning.
+    impact:
+      technical: One credential spanning non-prod and production. Rotation owed and not confirmed
+      client: None — the credential is ours, not the client's
+      company: >-
+        The rule became rule 1 of factory/client_review.py within a day — the client boundary is an
+        allow-list, never a deny-list. The estate learning, expensively.
+      kpi_ref: K-14
+    evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#scene-3"]
+    counterfactual:
+      capability: Known-Failure Preflight
+      strength: WOULD_BLOCK
+      maturity: PROPOSED
+      expected_effect: A deny-list filter over a credential source is refused before it runs
+      remaining_human: None for the known shape
+      confidence: HIGH — the knowledge existed in this repo hours earlier and nothing consumed it
+
+  - id: SC-4
+    order: 3
+    step_ref: T-B4
+    title: The read-only proof that cannot fail
+    context: >-
+      The mission spec requires proving read-only access by attempting a scoped write and watching
+      it be refused. A role assumed read-only is an assumption; a role watched refusing is a
+      measurement.
+    information_available:
+      - The available credential is an admin account in the TEST environment
+      - TEST is recoverable, so a mistake is not catastrophic
+      - The pre-flight is written and ready to run
+    question: Do you run the pre-flight?
+    choices:
+      - key: A
+        label: Run it — TEST is recoverable and the mission is read-only anyway
+        consequence: The account is admin. It will not refuse. You record a pass from an instrument that cannot fail.
+        was_actual: false
+      - key: B
+        label: Skip the pre-flight; the mission writes nothing
+        consequence: An unproven assumption becomes an unwritten one.
+        was_actual: false
+      - key: C
+        label: Run it and record read-only as ASSUMED, citing TEST recoverability as the compensating control
+        consequence: Honest. Weaker. Still workable.
+        was_actual: false
+      - key: D
+        label: Stop, and ask for a read-only role that structurally refuses
+        consequence: Blocks the task on a human. Makes the pre-flight mean what it says.
+        was_actual: true
+    actual_outcome: >-
+      The problem was spotted before the pre-flight ran, and both C and D were put to a human.
+      D was chosen. The task blocked on creating a read-only role.
+    later_evidence: >-
+      The role was created and the refusal captured — R3 now carries
+      R3-preflight-readonly-proof.md as MEASURED evidence. The vacuous version was refused; the
+      real one was later performed.
+    impact:
+      technical: One blocked task, and one green light not manufactured
+      client: None — and the client review said so in the client's own language
+      company: The vacuous-verification shape this repo has met nine times, refused on the tenth
+      kpi_ref: K-8
+    evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#scene-4"]
+    counterfactual:
+      capability: Evidence requirements
+      strength: WOULD_BLOCK
+      maturity: EXERCISED
+      mechanism_refs: ["factory/tasks.py"]
+      exercised_proof: docs/evidence/marketing-model-v1/R3-preflight-readonly-proof.md
+      expected_effect: >-
+        The control worked without automation, and the automated half — close() refusing without
+        MEASURED evidence — was watched refusing before the mission began.
+      remaining_human: Choosing between the honest routes
+      confidence: HIGH
+
+  - id: SC-5
+    order: 4
+    step_ref: T-B6
+    title: The search that returns zero
+    context: You are about to run Wave 1. First, confirm the mission's tasks exist in the store.
+    information_available:
+      - You wrote the mission spec and believe the tasks were created
+      - You run a search over the task ledger filtering on a field for "R1"
+      - It returns zero
+    question: What do you conclude?
+    choices:
+      - key: A
+        label: The plan was never materialized. Create the tasks
+        consequence: Two duplicate tasks with no dependency edges. Wave 1 runs under the wrong ids.
+        was_actual: true
+      - key: B
+        label: Run a positive control — search for something you know is in the store
+        consequence: You discover the field you filtered is the task ID, which is hex. No id contains "R1".
+        was_actual: false
+      - key: C
+        label: Check the mission JSON, which lists the ids
+        consequence: The labels block maps R1 to its id directly. Ten seconds.
+        was_actual: false
+      - key: D
+        label: Ask someone
+        consequence: Slower, and the answer is on disk.
+        was_actual: false
+    actual_outcome: >-
+      A. Two duplicate tasks created at 02:13:52Z — 81 minutes and 38 seconds after the tasks it
+      could not find were created.
+    later_evidence: >-
+      All eight tasks existed, correctly parented, with a fully wired DAG and 25 block events. The
+      correction came 3,611 seconds later; the store is append-only so both duplicates were
+      annotated SUPERSEDED rather than deleted. And both evidence artifacts STILL name the
+      superseded duplicates in their own headers.
+    impact:
+      technical: Evidence landed on the wrong tasks; provenance in two artifacts is still wrong
+      client: None — internal only, this time
+      company: The same shape pointed at a client produced five wrong client answers with zero deploys
+      kpi_ref: K-14
+    evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#scene-5"]
+    counterfactual:
+      capability: Known-Failure Preflight (positive control)
+      strength: WOULD_INTERCEPT
+      maturity: PROPOSED
+      expected_effect: A zero from an unproven instrument is not actionable until a positive control passes
+      remaining_human: Deciding what the correct search is
+      confidence: HIGH
+
+  - id: SC-6
+    order: 5
+    step_ref: T-A9
+    title: Two documents, one day apart
+    context: >-
+      You are about to design candidate dimensional models. Two documents on disk, both recent,
+      both persuasive, both concluding the same shape. Nothing marks either as superseded.
+    information_available:
+      - Both are dated the same day and cite the client's own requirement matrix
+      - They agree with each other
+      - No supersession marker appears on either
+    question: Do you build it?
+    choices:
+      - key: A
+        label: Yes — two independent documents agree
+        consequence: You build the thing that was rejected the next day.
+        was_actual: false
+      - key: B
+        label: Check for a later decision on the same question before opening either
+        consequence: A ticket dated one day later rejects the shape explicitly, with a specific reason.
+        was_actual: true
+      - key: C
+        label: Build it and flag it for review
+        consequence: The review is where the rejection surfaces — after the work.
+        was_actual: false
+      - key: D
+        label: Ask the client
+        consequence: The client has no view on warehouse object counts.
+        was_actual: false
+    actual_outcome: >-
+      The trap has not yet fired, because the design task has not run. The reconstruction found it
+      first and named it as the single highest-risk trap for the design phase.
+    later_evidence: >-
+      The rejection's reason is specific — the client already carries ~14 copies of the marketing
+      family across 6 schemas, and a 15th worsens the canonical-object problem. Nothing is left to
+      conform.
+    impact:
+      technical: A fifteenth copy of a fourteen-copy table family, built in good faith
+      client: More warehouse objects to reconcile, and another surface that can disagree
+      company: Rework on a design that a standing decision had already rejected
+      kpi_ref: K-4
+    evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#scene-6"]
+    counterfactual:
+      capability: Contradiction detection + Organizational Memory
+      strength: WOULD_WARN
+      maturity: PROPOSED
+      expected_effect: Opening a superseded document surfaces the decision that superseded it
+      remaining_human: Deciding which shape to build
+      confidence: MEDIUM
+
+  - id: SC-7
+    order: 6
+    step_ref: T-A9
+    title: The headline metric, upside down
+    context: >-
+      You are writing the specification for the board-level marketing-efficiency number. You open
+      the architecture page that locks it.
+    information_available:
+      - The page states the formula twice, consistently
+      - It is the decision record, and it names a decision date and an owner
+      - You have not opened the implementation
+    question: Do you specify the formula as the document states it?
+    choices:
+      - key: A
+        label: Yes — it is the locking document and it says so twice
+        consequence: You ship a spec whose headline metric is the reciprocal of the running system's.
+        was_actual: false
+      - key: B
+        label: Check the implementation before specifying from the doc
+        consequence: The monthly view computes the inverse.
+        was_actual: true
+      - key: C
+        label: Pick whichever looks more sensible
+        consequence: Both ~5.0 and ~0.2 are defensible-looking numbers.
+        was_actual: false
+      - key: D
+        label: Preserve the contradiction and escalate it as a decision
+        consequence: Slower. Correct.
+        was_actual: false
+    actual_outcome: >-
+      B, then D. Three implementations were found that agree with each other and disagree with the
+      document — the SQL, the field contract, and the frontend at two separate lines.
+    later_evidence: >-
+      The document's own formula is what the same page elsewhere calls a different metric's shape.
+      The error is not random: a definition migrated into its neighbour's slot. The contradiction
+      was preserved rather than resolved, and it is recorded as CONTRADICTORY, not fixed.
+    impact:
+      technical: Nothing was ever built wrong. The code has been right throughout
+      client: A ~5.0 and a ~0.2 are the same business fact; the board would see one of them
+      company: The cost is paid by every future person who specifies from the document
+      kpi_ref: K-4
+    evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#scene-7"]
+    counterfactual:
+      capability: Semantic Contracts
+      strength: WOULD_INTERCEPT
+      maturity: PROPOSED
+      expected_effect: The definition is the artifact and implementations are checked against it
+      remaining_human: Deciding which direction is correct
+      confidence: MEDIUM
+
+  - id: SC-8
+    order: 7
+    step_ref: T-A9
+    title: What the dashboard shows when the warehouse has nothing
+    context: >-
+      The dashboard has a field contract. The warehouse does not supply every field in it. The
+      views must render.
+    information_available:
+      - The contract lists budget, status, SKU, orders and platform-count fields
+      - No warehouse object supplies several of them
+      - The same codebase already returns NULL rather than 0 for one measure, deliberately
+    question: What does the app render for a contracted field with no source?
+    choices:
+      - key: A
+        label: A sensible default — the view must not break
+        consequence: Zeroes, "active" for every campaign, the ASIN rendered in the SKU column, a boolean wearing a count.
+        was_actual: true
+      - key: B
+        label: Render a NOT_REPORTED state the user can see
+        consequence: The view is honest and slightly uglier.
+        was_actual: false
+      - key: C
+        label: Hide the column entirely
+        consequence: The contract silently shrinks and nobody knows why.
+        was_actual: false
+      - key: D
+        label: Fail the contract until the warehouse supplies it
+        consequence: Nothing ships.
+        was_actual: false
+    actual_outcome: A, across at least twelve fields.
+    later_evidence: >-
+      The same codebase does B elsewhere, deliberately, with the reason in a view comment — cost
+      unknown means margin is not applicable, never 0 — and the frontend enforces the same rule
+      independently. The estate knows the rule, states it, and enforces it structurally for exactly
+      one measure.
+    impact:
+      technical: Twelve contracted fields carry literals with no source
+      client: A client reads a zero and cannot tell a measurement from a placeholder
+      company: The same failure class that put internal debugging folders into a client-facing export
+      kpi_ref: K-8
+    evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#scene-8"]
+    counterfactual:
+      capability: Semantic Contracts + Continuous acceptance
+      strength: WOULD_BLOCK
+      maturity: PROPOSED
+      expected_effect: A contracted field with no resolvable source renders NOT_REPORTED; a literal is refused
+      remaining_human: Whether to ship the view without the source
+      confidence: HIGH — the counter-example already ships in the same codebase
+
+  - id: SC-9
+    order: 8
+    step_ref: T-B7
+    title: What you tell the client
+    context: >-
+      Wave 1 is done. Two reconstruction tasks delivered 87KB of cited evidence. One task is
+      blocked on an internal credential rotation. You owe the client a review.
+    information_available:
+      - Seven contradictions, eleven stale statements, twenty-three missing columns
+      - A phantom client requirement and six divergent warehouse objects
+      - An unfixed credential exposure of your own
+    question: What goes in the client review?
+    choices:
+      - key: A
+        label: Progress and next steps. The findings are internal
+        consequence: The client learns about the phantom requirement when it changes their model.
+        was_actual: false
+      - key: B
+        label: Everything, in engineering language
+        consequence: Twenty-three missing column names is not a client communication.
+        was_actual: false
+      - key: C
+        label: The findings that change their decisions, in their language, separated by origin
+        consequence: Two decisions, one blocking. Three risks, one HIGH. Every item marked CLIENT or FACTORY_PROPOSED.
+        was_actual: true
+      - key: D
+        label: Wait until the blocked task clears and review the whole thing at once
+        consequence: The blocking decision gates requirements synthesis. Waiting costs the delivery.
+        was_actual: false
+    actual_outcome: >-
+      C. The review carries a blocking decision on the unsourced metric boundary, a non-blocking
+      decision on the six divergent objects, and three risks — one HIGH, one stating plainly that
+      part of the requirement record is not readable by us.
+    later_evidence: >-
+      The rendering mechanism will not print VERIFIED, DEPLOYED, ACCEPTED, HEALTHY or ON TRACK
+      unless a file resolves on disk AND a task-evidence row carries a MEASURED or DERIVED basis.
+      An unsupported outcome degrades to CLAIMED — not silently dropped, not silently promoted.
+    impact:
+      technical: A client-safe projection over real task state, with grounding enforced in code
+      client: >-
+        "A design decision that has shaped the model for months turns out not to be traceable to
+        anything you said. Correcting it now is cheap; discovering it after the rebuild is not."
+      company: The first client review the Factory has compiled from real delivery state
+      kpi_ref: K-8
+    evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#scene-9"]
+    counterfactual:
+      capability: Client Review
+      strength: WOULD_INTERCEPT
+      maturity: EXERCISED
+      mechanism_refs: ["factory/client_review.py", "factory/client_review_render.py"]
+      exercised_proof: docs/artifacts/client-review-navira.html
+      expected_effect: >-
+        This one is observation, not design. The compiler ran against the real task store and the
+        real mission record and produced the artifact named in exercised_proof.
+      remaining_human: Holding the meeting and accepting the outcome
+      confidence: HIGH
+
+  - id: SC-10
+    order: 9
+    step_ref: T-B1
+    title: The contract you are about to invent
+    context: >-
+      You are designing the Artifact Generator. The forensic record shows six issues where a claim
+      was true when written and false when re-used. You need a temporal contract.
+    information_available:
+      - The repo has ~50 modules in a flat factory/ package
+      - No module name obviously suggests temporal claims
+      - The need is clear and the design is straightforward to write
+    question: What do you do?
+    choices:
+      - key: A
+        label: Design a TemporalAssertion dataclass — the need is well understood
+        consequence: >-
+          You add a parallel vocabulary beside one that already exists, and the two drift. This is
+          the failure family the case study names as its largest.
+        was_actual: true
+      - key: B
+        label: Inventory the existing modules for an equivalent contract first
+        consequence: >-
+          factory/context.py has status, confidence, a required source and a checked date — and
+          refuses to call a ref CURRENT without one.
+        was_actual: false
+      - key: C
+        label: Ask whether anyone remembers a similar contract
+        consequence: Depends on who is available and what they recall.
+        was_actual: false
+      - key: D
+        label: Build it and reconcile later
+        consequence: Later never has a scheduled date.
+        was_actual: false
+    actual_outcome: >-
+      A. A TemporalAssertion contract was fully designed and written into the architecture proposal
+      before an inventory sweep found the existing one.
+    later_evidence: >-
+      context.py:109 refuses CURRENT without a checked date, and its docstring states the
+      invariant — UNVERIFIED is the default, not a weak CURRENT. The contract was deleted from the
+      proposal and replaced with a ~25-line additive extension. The correction is recorded in the
+      proposal rather than quietly applied.
+    impact:
+      technical: A duplicate contract avoided; three live consumers not forked
+      client: None — internal design work
+      company: >-
+        The design process for the tool that documents this failure family reproduced the failure
+        family. That is the strongest available argument for making filed knowledge act, and the
+        weakest possible argument that the automation already exists.
+      kpi_ref: K-14
+    evidence_refs: ["docs/case-studies/delivery-001-marketing-model.md#sec-k"]
+    counterfactual:
+      capability: Known-Failure Preflight
+      strength: MAY_REDUCE_LIKELIHOOD
+      maturity: PROPOSED
+      expected_effect: >-
+        MANUAL INVENTORY INTERCEPTED. A human sweep caught this at escape distance 0. A future
+        automated preflight may reduce the likelihood of the next one; it cannot be credited with
+        this one, and no current code supports a stronger classification.
+      remaining_human: Running or reading the inventory, and judging equivalence
+      confidence: LOW that automation would have caught this specific case
+
+# ---------------------------------------------------------------------------------------------
+kpis:
+  - id: K-1
+    name: Defect Escape Distance (median, client track)
+    value: "3"
+    unit: workflow boundaries
+    measurability: DERIVABLE_NOW
+    basis: DERIVED
+    method: Median of the 11 client-track escapes with a recorded introduction and detection stage
+    regeneration: See the escape-distance table in the forensic reconstruction
+
+  - id: K-2
+    name: Defect Escape Distance (median, factory track)
+    value: "2"
+    unit: workflow boundaries
+    measurability: DERIVABLE_NOW
+    basis: DERIVED
+    method: Median of the 4 factory-track escapes
+    regeneration: See the escape-distance table in the forensic reconstruction
+
+  - id: K-3
+    name: Known-Failure Recurrence
+    value: "2"
+    unit: incidents
+    measurability: MEASURABLE_NOW
+    basis: MEASURED
+    method: Incidents whose defect class already had a filed finding — the blind zero and the deny-list
+    regeneration: "ls docs/findings.d/F*.md | wc -l  then match issue root_causes against filed classes"
+
+  - id: K-4
+    name: Escaped Defects (client track, still open)
+    value: "6"
+    unit: objects
+    measurability: DERIVABLE_NOW
+    basis: DOCUMENTED
+    method: Warehouse objects identified as divergent and not yet repointed
+    regeneration: See the repo-versus-record diff in the mission evidence
+
+  - id: K-5
+    name: Evidence Coverage
+    value: "50"
+    unit: "% of declared tasks carrying MEASURED or DERIVED evidence"
+    measurability: MEASURABLE_NOW
+    basis: MEASURED
+    method: Declared mission tasks with at least one usable-basis evidence row, over declared tasks
+    regeneration: "python -m factory.case_study missions/delivery-001/case-study.yaml"
+
+  - id: K-6
+    name: Time to First Verified Value
+    value: "93"
+    unit: minutes
+    measurability: DERIVABLE_NOW
+    basis: DERIVED
+    method: Mission task creation to the first MEASURED evidence row, from event timestamps
+    regeneration: Difference of the create and evidence event timestamps in the task ledger
+
+  - id: K-7
+    name: Blocked Time
+    value: null
+    measurability: PARTIALLY_MEASURABLE
+    basis: DERIVED
+    method: >-
+      Block events carry timestamps so this is derivable going forward, but no unblock event was
+      recorded for the one long block in this delivery, so the interval is incomplete.
+    regeneration: Block and unblock events in the task ledger
+
+  - id: K-8
+    name: First-Pass Acceptance
+    value: null
+    measurability: NOT_RECORDED
+    basis: NOT_RECORDED
+    method: >-
+      No acceptance event type exists, and there are zero client sign-offs in the corpus. This is a
+      real zero from an instrument proven able to see the positive case — the same corpus recorded
+      an acceptance when one happened on an earlier ticket.
+    regeneration: Requires an acceptance event in the task store
+
+  - id: K-9
+    name: Delivery Predictability (estimate versus actual)
+    value: null
+    measurability: REQUIRES_NEW_INSTRUMENTATION
+    basis: NOT_RECORDED
+    method: >-
+      Estimates exist for all eight tasks, every one with basis ASSUMED. No actual_minutes field
+      exists for any task. The routing dataset was the stated purpose of run 1 and was not captured.
+    regeneration: Requires a task-execution event carrying duration
+
+  - id: K-10
+    name: Concurrent Delivery Capacity
+    value: null
+    measurability: BLIND_INSTRUMENT
+    basis: NOT_RECORDED
+    method: >-
+      Three resource claims exist for Wave 1 and all three carry one process id, with one task
+      never claiming at all. The store cannot currently distinguish three concurrent sessions from
+      one. This is not a zero — it is an instrument that cannot see the answer.
+    regeneration: Requires a distinct session pid per claim
+
+  - id: K-11
+    name: Cost per Accepted Outcome
+    value: null
+    measurability: NOT_RECORDED
+    basis: NOT_RECORDED
+    method: The run ledger carries a cost basis field; this mission wrote zero run rows
+    regeneration: Requires the mission to run through the dispatch path
+
+  - id: K-12
+    name: Human Engineering Effort
+    value: null
+    measurability: NOT_RECORDED
+    basis: NOT_RECORDED
+    method: Thirteen instrumentation fields were specified in the mission spec and none was written
+    regeneration: Requires the instrumentation the spec described
+
+  - id: K-13
+    name: Reuse Rate
+    value: null
+    measurability: REQUIRES_DELIVERY_002
+    basis: NOT_RECORDED
+    method: No recipe or pattern registry exists, and one delivery cannot show reuse
+    regeneration: Requires a second delivery
+
+  - id: K-14
+    name: Onboarding Time
+    value: null
+    measurability: REQUIRES_DELIVERY_002
+    basis: NOT_RECORDED
+    method: No instrumentation, and no second delivery to compare against
+    regeneration: Requires a second delivery
+
+  - id: K-15
+    name: Rework (fix passes on a single defect)
+    value: "2"
+    unit: fix passes
+    measurability: PARTIALLY_MEASURABLE
+    basis: DOCUMENTED
+    method: >-
+      Measurable as a count where a ticket records it; NOT_RECORDED as elapsed time. Two failed fix
+      passes are recorded for one semantic-model defect, and three sessions for another.
+    regeneration: Ticket records; no automated source exists
+
+# ---------------------------------------------------------------------------------------------
+lessons:
+  - id: L-1
+    observation: >-
+      Previous failure evidence existed and later actors did not consume it — eight of thirty-seven
+      issues. In the sharpest case a defect class was fixed in the morning and the identical class
+      was committed against a credential file that afternoon.
+    root_cause: KNOWLEDGE_AVAILABLE_BUT_NOT_CONSUMED — execution history is stored and not operationalised
+    capability: Known-Failure Preflight (new mechanism; the knowledge base exists today)
+    change: >-
+      A shape matcher at task launch — task shape maps to matching prior findings, and the specific
+      guard is shown AND required. Seed it with three proven shapes: a deny-list over a credential
+      source, a zero from an unproven instrument, an unqualified object reference.
+    measurement: Known-failure recurrence rate per mission
+    baseline: "2 (the blind zero and the deny-list)"
+    target_002: >-
+      0. A repeated known failure should never occur without the later run having been shown the
+      prior evidence and having declined the guard explicitly.
+
+  - id: L-2
+    observation: >-
+      Five obligations were written down by us, in our own words, and none was enforced — a
+      confirmation marked not done, a ratio movement that must be announced, a hold with no owner,
+      a scope item never read, and thirteen instrumentation fields never written.
+    root_cause: MISSING_TASK_OR_DEPENDENCY — a sentence carries no state, no owner and no blocking power
+    capability: Intent Contract (absent, measured) on top of TaskStore.block (existing and proven)
+    change: >-
+      Any spec sentence of obligation shape becomes a task with an owner, a next-check date and a
+      dependency edge. The mission cannot close over an open obligation.
+    measurement: Obligations declared in a mission spec versus obligations materialised as tasks
+    baseline: "5 declared, 0 materialised"
+    target_002: 100% materialised, or explicitly waived with a reason recorded in the store
+
+  - id: L-3
+    observation: >-
+      Thirteen per-task instrumentation fields were specified and none written; and the acceptance
+      check claiming three parallel sessions is not satisfied by the record, exactly as the spec
+      warned it could pass over an absence.
+    root_cause: INSTRUMENTATION_GAP — the instrument was specified in prose and never built
+    capability: Reliability instrumentation (partial — the run ledger already draws three verdicts)
+    change: >-
+      A task-execution event carrying start, end, model, effort, retries and outcome. The task
+      contract refuses to close without an actual, exactly as it already refuses without evidence.
+    measurement: Percentage of tasks with a RECORDED actual, and acceptance checks demonstrated rather than asserted
+    baseline: "0% actuals; 2 of 5 acceptance checks demonstrated"
+    target_002: 100% recorded actuals; every acceptance check demonstrated or labelled as able to pass over an absence
+
+  - id: L-4
+    observation: >-
+      Two claims were inherited into the mission. The one marked "verify" was refuted at escape
+      distance 1 and never became mission knowledge. The one not marked propagated into a filed
+      spec and had to be challenged by a human.
+    root_cause: STALE_CONTEXT — with the mechanism's effectiveness shown by the contrast
+    capability: Typed Claims (partial — factory/context.py already carries the temporal half)
+    change: >-
+      Promote the five-level client-claim vocabulary from prose convention to type. Inheriting a
+      claim across a session boundary requires a verification state.
+    measurement: Claims inherited across a session boundary with no verification state
+    baseline: "1 of 2"
+    target_002: 0
+
+  - id: L-5
+    observation: >-
+      The spec named a scope item AND predicted the exact failure of missing it. The worker recorded
+      that scope as unreachable. Nothing reconciled the two, and the artefacts it named were read by
+      nobody.
+    root_cause: MANUAL_HANDOFF — prose cannot enforce itself, however precisely it predicts its own failure
+    capability: Typed Handoff with ACK/NACK (new)
+    change: >-
+      Scope becomes a typed list. The worker ACKs or NACKs each item. A task cannot close with an
+      item carrying neither, and a NACK is a legitimate answer that becomes a visible gap.
+    measurement: Scope items with neither an ACK nor a NACK, per task
+    baseline: "at least 1"
+    target_002: 0
+
+  - id: L-6
+    observation: >-
+      Five issues are the same defect — an absence rendered as a number — and the estate already
+      enforces the correct rule structurally for exactly one measure.
+    root_cause: SEMANTIC_CONTRACT_GAP — a rule enforced by convention at one site instead of by type at every site
+    capability: Semantic Contracts (partial — the review projection already keeps four absence states distinct)
+    change: >-
+      Extend the four-state absence model from the review projection down into the field contract.
+      A contracted field with no resolvable source renders NOT_REPORTED and cannot render a literal.
+    measurement: Contracted fields rendering a literal with no source
+    baseline: "at least 12"
+    target_002: 0 in any client-facing surface the Factory publishes
