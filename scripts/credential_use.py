@@ -31,7 +31,19 @@ import json
 import pathlib
 import sys
 
-LOG = pathlib.Path(__file__).resolve().parent.parent / ".data" / "credential-use.jsonl"
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
+
+#: ⛔ Resolved through `factory.repo`, not from this file's location. As a `__file__`-relative
+#: path the audit log was written into whichever worktree invoked it, so a record of a credential
+#: retrieval was DELETED with that worktree -- and `--list` from anywhere else reported
+#: "no rows ... NOT-RECORDED", which the module's own text is careful to say is not the same as
+#: "no credential used". An audit trail that is per-worktree is not an audit trail.
+def _log_path() -> pathlib.Path:
+    from factory import repo as _repo
+    return _repo.data() / "credential-use.jsonl"
+
+
+LOG = _log_path()
 
 #: A value is never a valid `--secret`. These are the shapes that mean somebody passed one by
 #: mistake, and the refusal is louder than a silent log entry containing a live credential.
