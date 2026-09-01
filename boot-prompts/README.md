@@ -26,7 +26,8 @@ false within the hour. A second session had a workstream open the whole time.
 
 | thread | prompt | `next:` |
 |---|---|---|
-| **execution plane** | [`first-real-dispatch-2026-08-31.md`](first-real-dispatch-2026-08-31.md) | **F90 remedy (a) + sparse-checkout, then one live dispatch.** The credential problem is solved, not deferred — sparse-checkout excludes all three credential files from the worktree, tested against the real repo |
+| **⭐ MISSION (current)** | [`mission-wave1-checkpoint-2026-09-01.md`](mission-wave1-checkpoint-2026-09-01.md) | **Paul's credential decision, then Wave 1.** R1/R2 unblocked, R3 blocked. ⛔ Read §1 first — three credentials were exposed into a transcript and one reaches PROD |
+| **execution plane** (paused for the mission) | [`first-real-dispatch-2026-08-31.md`](first-real-dispatch-2026-08-31.md) | **F90 remedy (a) + sparse-checkout, then one live dispatch.** The credential problem is solved, not deferred — sparse-checkout excludes all three credential files from the worktree, tested against the real repo |
 | **workflow library / client delivery** | [`workflow-library-2026-08-31.md`](workflow-library-2026-08-31.md) | run `keel` on the GEP marketing model **as an instrumented experiment** — §3a's five setup steps come before any agent spawns |
 
 They do not conflict: one owns *what the factory can execute*, the other owns *which workflow a
