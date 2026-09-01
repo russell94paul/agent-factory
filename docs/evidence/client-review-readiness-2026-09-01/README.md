@@ -63,8 +63,14 @@ docs/evidence/marketing-model-v1/            (main checkout)  R1 R2 R3 D1
 Seven cited artefacts do not resolve from `main`, so four outcomes ground as `CLAIMED` rather than
 `VERIFIED`. Basis **MEASURED** (`ls` on both paths; gate output reproduced below).
 
-This is MAIN T's to resolve by merging `mission/marketing-model-v1`. The read-only fallback
-`--root .worktrees/mission` was executed and clears the check, leaving one blocker.
+⛔ **Superseded by operator decision, same day.** This paragraph originally said the fix was for
+MAIN T to merge `mission/marketing-model-v1`. That was wrong and is corrected here rather than
+only in §8: the branch carries client-identifying and commercially sensitive evidence and is **not
+approved for merge or push** to make a projection convenient.
+
+`--root .worktrees/mission` is therefore **the supported delivery path, not a fallback** — a
+read-only read of isolated canonical state, from which only the allow-listed projection crosses
+into the artifact. Executed, and it clears this check. See `06-D5-REFRESH-CONTRACT.md`.
 
 ---
 
@@ -80,10 +86,18 @@ LECTRIC   TARGET SCOPE   CONFIRMED DE-SCOPED
 The Client Review's `intent.assumptions` still tells the client *"Navira (HOUSE) and Lectric
 (AGENCY, sales-only, no ad spend) are the two entities in scope."*
 
-⛔ **Not resolved here.** Whether and how to say this to the client is a D4/D5 semantic
-conclusion and belongs to the mission. Flagged as `WAIT FOR D5`. Basis of this observation:
-**DOCUMENTED** — read from one file in another session's worktree, one hop from measurement, and
-that worktree is mutable.
+Basis of this observation: **DOCUMENTED** — read from one file in another session's worktree, one
+hop from measurement, and that worktree is mutable.
+
+**Flagged as `WAIT FOR D5`, then resolved by operator authority the same day.** LECTRIC is not
+part of target-state scope. The Client Review representation was updated — and only the
+representation; D4's evidence was not touched and the LECTRIC metric path was not repaired.
+LECTRIC moved from `intent.assumptions` (in scope) to `intent.exclusions`, using the contract's
+existing field rather than a new status constant, because the repository has none
+(`grep -rn 'DE_SCOPED\|de-scoped' factory/` → no matches). The un-verified half is carried
+explicitly in `unresolved_ambiguities`: excluding it from a design is not removing it from a
+running system, and removal ordering and dangling consumers are stated as **not verified**. The
+three rendered sentences are quoted in §8.
 
 ---
 
@@ -203,10 +217,60 @@ NOT_RECORDED / DE_SCOPED`. Measured against `factory/assertions.py`:
 
 ---
 
+## 8. Closing state — the gate cleared, and the chain worked end to end
+
+**Measured 2026-09-01 09:00 UTC, `main @ 1068f59`, root `.worktrees/mission`.**
+
+MAIN T closed D5 and then supplied the six outcome write-ups through the boundary this session
+prepared — `delivered:` entries carrying `task:` links, **no hand-typed `status:`, no
+`evidence_refs:`** (committed by that session as `0a8b593`). Nothing was copy-pasted between
+sessions and no analytical prose was restated.
+
+```text
+MEETING GATE  READY_WITH_WARNINGS
+  ok    canonical_state_readable            task store read; 110 evidence row(s)
+  ok    freshness                           LIVE (verified 2026-09-01 09:00 UTC)
+  ok    narrative_matches_canonical_state   no typed status contradicts the record
+  ok    completed_work_is_written_up        every completed task is written up
+  ok    no_status_rendered_without_a_basis  every plan status is DERIVED from the task store
+  ok    cited_evidence_resolves             every cited artefact resolves on disk
+  ok    no_unsubstantiated_claim            no claim degraded
+  ok    required_sections_populated         10 outcomes, 2 evidence, 2 decisions, 6 next
+  ok    client_boundary_holds               allow-list projection and backstop scan both pass
+ warn   mission_record_integrity            8 declared vs 10 observed children
+ warn   risks_still_current                 RISK-2 shown as resolved from the record
+
+RENDER   RENDERED_CONFIRMED          meeting_ready exit 0 · render_check exit 0
+```
+
+**SAFE TO OPEN IN FRONT OF THE CLIENT**, with two presenter notes, neither of which is a defect.
+
+### One test had to be corrected, and the correction is the interesting part
+
+`test_the_navira_review_assembles_and_renders` grounded the real narrative against *this*
+checkout. Under the operator decision that the mission branch stays isolated, that asserted a
+state the approved architecture guarantees will never hold. It passed only while the narrative
+happened to cite R1/R2 evidence alone, and failed the moment the D-task write-ups landed — a
+green test that was green for the wrong reason. Corrected in `1068f59` to build from the same
+root the artifact is built from.
+
+### LECTRIC, as rendered to the client
+
+Three statements, verified by reading the built page's `innerText`:
+
+```text
+· not part of the target-state model; exists in the estate today and in the historical record;
+  this phase does not remove it. Historical values are not carried forward.
+· its known metric defect is NOT a repair requirement and no fix is proposed or costed.
+· removal ordering and dangling consumers have NOT been verified, and that is not claimed as done.
+```
+
+---
+
 ## Reproduce everything here
 
 ```bash
-python scripts/meeting_ready.py                       # compile + render + gate + browser
+python scripts/meeting_ready.py --root .worktrees/mission   # compile + render + gate + browser
 python scripts/render_check_client_review.py          # the browser pass alone
 python -m pytest tests/test_client_review.py tests/test_client_review_readiness.py
 ```
