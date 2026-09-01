@@ -475,6 +475,22 @@ def test_the_navira_review_assembles_and_renders():
     from its worktree. Asserting grounding against `repo` asserted a state that the approved
     architecture guarantees will never hold — and it duly broke the moment the write-ups landed.
     See `missions/client-review-v1/06-D5-REFRESH-CONTRACT.md`.
+
+    ⭐ **And the second half, which is a different root for a different reason (F105).** Two kinds
+    of path meet in this call and they resolve oppositely:
+
+        root         GIT-TRACKED evidence  -> checkout/worktree relative. Correct above.
+        tasks_path   ESTATE-WIDE state     -> `factory.repo`, shared by every worktree.
+        mission_path         ""                        ""
+
+    As `repo / ".data"` the latter two pointed at the WORKTREE's own `.data/`, which holds no task
+    store and no mission manifest — so `assemble()` received zero tasks, all four delivered
+    outcomes fell back to ASSERTED, and this assertion failed. RED in every worktree, GREEN only
+    in the primary checkout: the test was detecting its own broken input and reporting it as a
+    grounding regression.
+
+    Both fixes are required and neither subsumes the other. They were made independently on two
+    branches, each correct about its own half.
     """
     repo = pathlib.Path(__file__).resolve().parent.parent
     y = repo / "missions" / "client-review-v1" / "reviews" / "navira-marketing-model.yaml"
@@ -483,8 +499,9 @@ def test_the_navira_review_assembles_and_renders():
     mission_root = repo / ".worktrees" / "mission"
     root = mission_root if mission_root.exists() else repo
 
-    review = cr.assemble(y, tasks_path=repo / ".data" / "tasks.jsonl",
-                         mission_path=repo / ".data" / "missions"
+    from factory import repo as _repo
+    review = cr.assemble(y, tasks_path=_repo.data() / "tasks.jsonl",
+                         mission_path=_repo.data() / "missions"
                          / "marketing-model-reconstruction-v1.json", root=root)
     from factory.client_review_render import render_html
     html = render_html(review)
@@ -512,3 +529,110 @@ def test_the_navira_review_assembles_and_renders():
     # And nothing operator-only leaked into the page.
     for needle in ("diagnostics", "tasks_readable", str(repo)):
         assert needle not in html
+
+
+# --------------------------------------------------------------------------------------------
+# 12. A blind instrument must not quietly downgrade a client-facing claim
+# --------------------------------------------------------------------------------------------
+
+def test_the_cli_default_task_store_is_the_shared_root_not_the_cwd(tmp_path, monkeypatch):
+    """⭐ Delivery-critical, and the defect lives at the CLI boundary.
+
+    Measured 2026-09-01, same narrative and same code, differing only in the directory the build
+    ran from:
+
+        --tasks .data/tasks.jsonl  (the old CWD-relative default, from a worktree)
+            grounding 4x ASSERTED   status 4x UNSUBSTANTIATED   freshness UNAVAILABLE
+        resolved via factory.repo
+            grounding 4x SATISFIED  status 4x Complete          freshness LAST_VERIFIED
+
+    The degradation is visible rather than hidden -- the page says UNSUBSTANTIATED -- so this was
+    never an overclaim. It is the opposite and still delivery-critical: the client receives a
+    document reporting fully evidenced outcomes as unsubstantiated, from the command the runbook
+    prescribes at the moment it prescribes it.
+
+    ⚠ Asserted against what `main()` PASSES, not against a grounding outcome. `assemble()`'s
+    `tasks_path=None` means "there is no store" and the readiness gate depends on that sentinel,
+    so the default cannot live in `assemble()`. An earlier version of this test called `assemble`
+    twice with the same argument and compared the results -- a check that could not fail.
+    """
+    from factory import client_review as _cr
+    from factory import repo as _repo
+
+    root = pathlib.Path(__file__).resolve().parent.parent
+    y = root / "missions" / "client-review-v1" / "reviews" / "navira-marketing-model.yaml"
+    if not y.exists():                                      # pragma: no cover
+        pytest.skip("narrative not present")
+
+    seen = {}
+
+    def _spy(narrative, **kw):
+        seen.update(kw)
+        raise SystemExit(0)                 # stop before rendering; the argument is the assertion
+
+    monkeypatch.setattr(_cr, "assemble", _spy)
+    monkeypatch.chdir(tmp_path)             # a directory with no .data/ at all
+    with pytest.raises(SystemExit):
+        _cr.main([str(y)])
+
+    got = pathlib.Path(seen["tasks_path"])
+    assert got == _repo.data() / "tasks.jsonl", (
+        f"the CLI default resolved to {got}, not the shared root — the evidence strength of a "
+        f"client document would depend on the working directory")
+    assert got.is_absolute(), "a relative default is the whole defect"
+
+
+def test_a_missing_store_still_degrades_visibly_rather_than_pretending(root, tmp_path):
+    """The fail-closed path is preserved: an explicit path that is not there must still announce
+    itself, in freshness, in completion basis and in every outcome's status. A weaker claim that
+    does not say why is the thing that cannot be told apart from an honest absence."""
+    y = _write(tmp_path, {"project": {"name": "P"}, "delivered": [
+        {"id": "1", "title": "T", "status": "Complete", "evidence_refs": ["docs/real.md"]}]})
+    review = cr.assemble(y, tasks_path=tmp_path / "nope.jsonl", root=root)
+    assert review.review["freshness_state"] == cr.UNAVAILABLE
+    assert review.progress["completion_basis"] == "UNAVAILABLE"
+    assert review.delivered[0].status == cr.UNSUBSTANTIATED
+
+
+def test_the_runbook_command_produces_a_grounded_artifact_from_any_checkout(tmp_path):
+    """⭐ The documented regeneration command, verbatim, must be correct from a worktree.
+
+    `05-CLIENT-REVIEW-DEMO-RUNBOOK.md` passes `--tasks .data/tasks.jsonl` and
+    `--mission .data/missions/<id>.json`, both CWD-relative, and tells the operator to regenerate
+    "shortly before the meeting". Run from a worktree those resolve to a `.data/` holding neither
+    file, and the client artefact reported all four delivered outcomes as UNSUBSTANTIATED. The
+    failure landed exactly when nobody had time to notice it.
+    """
+    from factory import repo as _repo
+    root = pathlib.Path(__file__).resolve().parent.parent
+    y = root / "missions" / "client-review-v1" / "reviews" / "navira-marketing-model.yaml"
+    if not y.exists() or not (_repo.data() / "tasks.jsonl").exists():   # pragma: no cover
+        pytest.skip("narrative or shared store not present")
+
+    # ⛔ The mission worktree, not this checkout. D2-D5 evidence is deliberately isolated there
+    # (operator decision 2026-09-01), so grounding asserted against this checkout asserts a state
+    # the approved architecture guarantees will never hold. That is the exact mistake the
+    # docstring on test_the_navira_review_assembles_and_renders already records -- made again
+    # here, independently, on another branch, and inherited on merge.
+    mission_root = root / ".worktrees" / "mission"
+    if not mission_root.exists():                           # pragma: no cover
+        pytest.skip("mission worktree absent - evidence cannot resolve from main by design")
+    review = cr.assemble(y, tasks_path=pathlib.Path(".data/tasks.jsonl"),
+                         mission_path=pathlib.Path(
+                             ".data/missions/marketing-model-reconstruction-v1.json"),
+                         root=mission_root)
+    assert cr.publication_block(review) == [], (
+        "the runbook's own command produces an artefact that understates its evidence")
+    assert all(o.grounding == cr.GROUNDED for o in review.delivered)
+
+
+def test_publication_is_blocked_when_the_document_understates_itself(root, tmp_path):
+    """⭐ Negative control for the gate. It checks the OUTPUT, not the inputs — a path that
+    resolved by luck still passes, and one that looked right but produced a degraded document
+    still fails."""
+    y = _write(tmp_path, {"project": {"name": "P"}, "delivered": [
+        {"id": "1", "title": "T", "status": "Complete", "evidence_refs": ["docs/real.md"]}]})
+    degraded = cr.assemble(y, tasks_path=tmp_path / "definitely-absent.jsonl", root=root)
+    blocks = cr.publication_block(degraded)
+    assert blocks, "a review with an unreadable store was cleared for publication"
+    assert any("freshness" in b for b in blocks)

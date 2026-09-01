@@ -455,6 +455,60 @@ def _aggregate_plan(states: Sequence[str]) -> str:
     return "NOT_STARTED"
 
 
+def _resolve_state_path(given) -> pathlib.Path:
+    """A `.data/` path, resolved against the SHARED root when it is relative and not here.
+
+    ⛔ The documented regeneration command passes `--tasks .data/tasks.jsonl` and
+    `--mission .data/missions/<id>.json`, both relative to the CWD. Run from the primary checkout
+    they are right; run from any worktree they resolve to a `.data/` that holds neither file, and
+    the review renders every delivered outcome as UNSUBSTANTIATED. The runbook says to regenerate
+    "shortly before the meeting", so the failure lands exactly when nobody has time to notice it.
+
+    Falls back rather than raising: a relative `.data/...` unambiguously means the estate's
+    `.data`, and there is only one of those.
+    """
+    p = pathlib.Path(given)
+    if p.exists() or p.is_absolute():
+        return p
+    from . import repo as _repo_mod
+    parts = p.parts
+    if ".data" in parts:
+        rel = pathlib.Path(*parts[parts.index(".data") + 1:])
+        candidate = _repo_mod.data() / rel
+        if candidate.exists():
+            return candidate
+    candidate = _repo_mod.primary() / p
+    return candidate if candidate.exists() else p
+
+
+class UnsafeToPublish(Exception):
+    """Raised when a client artefact would understate its own evidence."""
+
+
+def publication_block(cr_obj) -> list:
+    """Reasons this review must NOT be written to a client-facing file. Empty means it may be.
+
+    ⭐ **The safety net that does not depend on anyone getting the CWD right.** Everything above
+    makes the common case resolve correctly; this makes the uncommon case impossible to ship.
+
+    ⚠ Deliberately checks the OUTPUT, not the inputs. A path that resolved by luck still passes,
+    and a path that looked right but produced a degraded document still fails -- which is the right
+    way round for a gate whose job is to protect the reader rather than the caller.
+    """
+    out = []
+    if cr_obj.review.get("freshness_state") == UNAVAILABLE:
+        out.append("freshness is UNAVAILABLE — the task store could not be read, so the page "
+                   "cannot say when any of this was last verified")
+    if cr_obj.progress.get("completion_basis") == "UNAVAILABLE":
+        out.append("completion basis is UNAVAILABLE — no mission record was readable, so progress "
+                   "is asserted rather than derived")
+    bad = [o.title for o in cr_obj.delivered if o.grounding != GROUNDED]
+    if bad and len(bad) == len(cr_obj.delivered) and cr_obj.delivered:
+        out.append(f"all {len(bad)} delivered outcome(s) are ungrounded — that is the signature of "
+                   f"a store that was not read, not of work without evidence")
+    return out
+
+
 def assemble(narrative_path: pathlib.Path,
              tasks_path: Optional[pathlib.Path] = None,
              mission_path: Optional[pathlib.Path] = None,
@@ -473,6 +527,38 @@ def assemble(narrative_path: pathlib.Path,
     store = None
     task_rows: List[dict] = []
     tasks_readable = False
+    # ⛔ **The DEFAULT must resolve through `factory.repo`, never against the CWD.**
+    #
+    # Measured 2026-09-01 -- same narrative, same code, differing only in the directory the build
+    # was invoked from:
+    #
+    #     --tasks .data/tasks.jsonl   (the old CWD-relative default, run from a worktree)
+    #         grounding  4x ASSERTED      status 4x UNSUBSTANTIATED
+    #         freshness  UNAVAILABLE      completion_basis UNAVAILABLE
+    #     resolved via factory.repo.data()
+    #         grounding  4x SATISFIED     status 4x Complete
+    #         freshness  LAST_VERIFIED    completion_basis DERIVED
+    #
+    # ⭐ The degradation is VISIBLE -- the client page renders "UNSUBSTANTIATED" four times -- so
+    # this is not a hidden overclaim. It is the opposite, and still a delivery defect: the client
+    # would be handed a document reporting four delivered outcomes as unsubstantiated when every
+    # one is fully evidenced, produced by the command the runbook prescribes at the moment it
+    # prescribes it. The fail-closed behaviour is correct and is left exactly as it was; what was
+    # wrong is that a CWD-relative default made it fire spuriously.
+    # ⛔ `None` means ABSENT and must keep meaning that. An earlier version of this fix made it
+    # mean "resolve the default", which silently defeated
+    # `test_an_unreadable_store_reports_no_undeclared_work_rather_than_zero`: that test passes
+    # `tasks_path=None` precisely to simulate a store nobody can read, and the readiness gate
+    # blocks on `tasks_readable is False`. Redefining the sentinel made the blind-instrument path
+    # unreachable -- a helpful default defeating the control that exists to catch its absence.
+    #
+    # The real defect was never in this function. It was the CLI DEFAULT, which was the
+    # CWD-relative string ".data/tasks.jsonl"; see `main()`. A caller who passes a path still gets
+    # it resolved against the shared root when it is relative and not present here.
+    if tasks_path is not None:
+        tasks_path = _resolve_state_path(tasks_path)
+    if mission_path is not None:
+        mission_path = _resolve_state_path(mission_path)
     if tasks_path and pathlib.Path(tasks_path).exists():
         try:
             store = _tasks.TaskStore(pathlib.Path(tasks_path))
@@ -1022,7 +1108,15 @@ def main(argv=None) -> int:
     p = argparse.ArgumentParser(prog="python -m factory.client_review",
                                 description="Assemble and render a Client Review.")
     p.add_argument("narrative", help="path to the authored review yaml")
-    p.add_argument("--tasks", default=".data/tasks.jsonl")
+    # ⛔ Not ".data/tasks.jsonl". A CWD-relative default meant the evidence strength of a
+    # client-facing document depended on which directory the build was invoked from.
+    # ⛔ Not ".data/tasks.jsonl". A CWD-relative default meant the evidence strength of a
+    # client-facing document depended on which directory the build was invoked from. Resolved
+    # here, at the CLI boundary, so `assemble()`'s `None`-means-absent contract is untouched.
+    p.add_argument("--tasks", default=None,
+                   help="task store (default: the shared .data/ resolved via factory.repo)")
+    p.add_argument("--force", action="store_true",
+                   help="write the artefact even if it understates its own evidence")
     p.add_argument("--mission", default=None)
     p.add_argument("--json", action="store_true", help="print the client-safe payload as json")
     p.add_argument("--out", default=None, help="write a self-contained HTML review here")
@@ -1033,13 +1127,23 @@ def main(argv=None) -> int:
                         "repo. Point it at a worktree when the evidence has not merged yet.")
     a = p.parse_args(argv)
 
+    from . import repo as _repo_mod
+    _tasks = pathlib.Path(a.tasks) if a.tasks else (_repo_mod.data() / "tasks.jsonl")
     cr = assemble(pathlib.Path(a.narrative),
-                  tasks_path=pathlib.Path(a.tasks) if a.tasks else None,
+                  tasks_path=_tasks,
                   mission_path=pathlib.Path(a.mission) if a.mission else None,
                   root=pathlib.Path(a.root) if a.root else None)
     if a.json:
         print(json.dumps(cr.to_client_dict(), indent=2))
     if a.out:
+        blocks = publication_block(cr)
+        if blocks and not getattr(a, "force", False):
+            raise UnsafeToPublish(
+                "refusing to write a client artefact that understates its own evidence:\n  - "
+                + "\n  - ".join(blocks)
+                + "\n\nThis is almost always the working directory: run it from the primary\n"
+                  "checkout, or omit --tasks/--mission and let them resolve via factory.repo.\n"
+                  "Pass --force only if you intend to publish the weaker claims.")
         from .client_review_render import render_html      # noqa: PLC0415
         pathlib.Path(a.out).write_text(render_html(cr), encoding="utf-8")
         print(f"wrote {a.out}")

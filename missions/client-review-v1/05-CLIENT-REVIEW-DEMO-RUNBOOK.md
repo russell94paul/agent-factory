@@ -19,10 +19,27 @@
 > The longhand still works, and is what the one command runs:
 > ```bash
 > python -m factory.client_review missions/client-review-v1/reviews/navira-marketing-model.yaml \
->   --tasks .data/tasks.jsonl \
 >   --mission .data/missions/marketing-model-reconstruction-v1.json \
 >   --out docs/artifacts/client-review-navira.html
 > ```
+>
+> ⛔ **`--tasks` is gone on purpose — do not add it back.** It used to read
+> `--tasks .data/tasks.jsonl`, relative to the working directory. Run from the primary checkout
+> that is right; run it from any worktree and it resolves to a `.data/` holding no task store, and
+> the artefact reported **all four delivered outcomes as UNSUBSTANTIATED** with freshness
+> `UNAVAILABLE` — a client document understating fully evidenced work, produced by the command
+> this runbook told you to run, at the moment it told you to run it. Measured 2026-09-01.
+>
+> It now resolves through `factory.repo`, so it is correct from anywhere. `--mission` is still
+> passed explicitly, because omitting it means *"there is no mission record"* — a different
+> statement from *"I could not find it"* — and a relative `.data/...` path is now resolved against
+> the shared root as a fallback.
+>
+> Two safety nets sit behind that, and neither depends on you getting the directory right:
+> `factory.client_review.publication_block()` inspects the FINISHED document, and `--out` refuses
+> to write when the result understates its own evidence. If you ever see that refusal, the fix is
+> the working directory, not `--force`.
+>
 > Then open `docs/artifacts/client-review-navira.html` in a browser. **It is a single static
 > file — no server, no build, no network call at render time.** If every service in the estate is
 > down, it still opens and still tells the truth about when it was last verified. Regenerate it
