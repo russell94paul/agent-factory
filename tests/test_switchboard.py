@@ -356,3 +356,222 @@ def test_a_tied_critical_path_head_is_reported_as_tied(tmp_path):
     store.block(ids["C"], by=e2, actor="test")
     assert sb._chain_ties(sb._edges(store, list(man["labels"].values()))) == 2
 
+
+# ==================================================================== SLICE B: start synced
+
+
+def _st(tmp_path, monkeypatch, store, man, **over):
+    monkeypatch.setattr(sb, "manifests", lambda: [dict(man, _id="m1", _mtime=0)])
+    monkeypatch.setattr(sb, "store_path", lambda: store.path)
+    monkeypatch.setattr(sb._sessions, "inventory", lambda: over.get("sessions", []))
+    monkeypatch.setattr(sb._sessions, "blocked", lambda: over.get("blocked", []))
+    monkeypatch.setattr(sb, "upstream", lambda *a, **k: over.get("upstream", []))
+    monkeypatch.setattr(sb, "worktrees", lambda: over.get("worktrees", [
+        {"path": "C:/repo", "branch": "main", "head": "aaaaaaa", "primary": True, "dirty": 0}]))
+    return sb.state()
+
+
+def test_the_startup_packet_derives_current_state_not_remembered_state(tmp_path, monkeypatch):
+    """Every load-bearing value in the packet comes from the measurement taken at write time."""
+    store, man, ids = _mission(tmp_path)
+    store.claim(ids["C"], actor="agent-1")
+    st = _st(tmp_path, monkeypatch, store, man)
+    md, bnd, events = sb.startup_packet("C", st=st)
+
+    assert ids["C"] in md, "the packet does not carry the task id it is about"
+    assert "aaaaaaa" in md and "main" in md, "HEAD/branch missing — a session cannot verify itself"
+    assert "shared" in md, "the declared resource claim is missing"
+    assert "`A`" in md, "the dependency is not stated"
+    assert "SESSION START" in md and "REGROUND REQUIRED" in md
+    assert bnd["tasks"]["C"] == "claimed" and bnd["heads"]["main"] == "aaaaaaa"
+
+
+def test_a_moved_state_boundary_produces_a_reground_not_a_shrug(tmp_path, monkeypatch):
+    """⭐ The markdown is a rendered artefact; the boundary is the authority.
+
+    A handoff written twenty minutes ago reads exactly as confidently as one written now. So a
+    packet carries the boundary it was built at, and the difference is computed rather than felt.
+    """
+    store, man, ids = _mission(tmp_path)
+    st = _st(tmp_path, monkeypatch, store, man)
+    _md, bnd, _e = sb.startup_packet("C", st=st)
+    assert sb.reground(bnd, st) == [], "an unchanged boundary reported drift"
+
+    store.claim(ids["C"], actor="someone-else")
+    moved = _st(tmp_path, monkeypatch, store, man, worktrees=[
+        {"path": "C:/repo", "branch": "main", "head": "bbbbbbb", "primary": True, "dirty": 0}])
+    out = sb.reground(bnd, moved)
+    assert any("task C moved blocked -> claimed" in x for x in out), out
+    assert any("main moved aaaaaaa -> bbbbbbb" in x for x in out), out
+
+
+def test_reground_notices_a_worktree_that_disappeared(tmp_path, monkeypatch):
+    store, man, ids = _mission(tmp_path)
+    st = _st(tmp_path, monkeypatch, store, man)
+    _md, bnd, _e = sb.startup_packet("C", st=st)
+    gone = _st(tmp_path, monkeypatch, store, man, worktrees=[])
+    assert any("no longer exists" in x for x in sb.reground(bnd, gone))
+
+
+def test_the_reground_command_exits_nonzero_when_state_moved(tmp_path, monkeypatch, capsys):
+    """The handshake tells a session to run this. An instrument that always exits 0 is not a gate."""
+    store, man, ids = _mission(tmp_path)
+    st = _st(tmp_path, monkeypatch, store, man)
+    _md, bnd, _e = sb.startup_packet("C", st=st)
+    b = tmp_path / "b.json"
+    b.write_text(json.dumps(bnd), encoding="utf-8")
+
+    assert sb.main(["--reground", str(b)]) == 0
+    assert "READY" in capsys.readouterr().out
+
+    store.claim(ids["C"], actor="x")
+    _st(tmp_path, monkeypatch, store, man)
+    assert sb.main(["--reground", str(b)]) == 1
+    assert "REGROUND REQUIRED" in capsys.readouterr().out
+
+
+def test_an_unreadable_boundary_is_a_reground_not_a_pass(tmp_path, monkeypatch):
+    """A gate that cannot read its own input must fail closed. Exiting 0 on a missing boundary
+    would let a session print READY having verified nothing."""
+    assert sb.main(["--reground", str(tmp_path / "does-not-exist.json")]) == 1
+
+
+def test_the_packet_carries_unread_traffic_without_marking_it_read(tmp_path, monkeypatch):
+    """⛔ The cursor rule, at the packet boundary. `startup_packet` RETURNS the events instead of
+    marking them, so 'never advance a cursor before delivery' is a property of the shape rather
+    than a rule the caller has to remember."""
+    monkeypatch.setattr(buslib, "ROOT", tmp_path / "bus")
+    buslib.post("peer", "correction", "the grain moved")
+    store, man, ids = _mission(tmp_path)
+    st = _st(tmp_path, monkeypatch, store, man)
+
+    md, _b, events = sb.startup_packet("C", reader="me", st=st)
+    assert len(events) == 1 and "the grain moved" in md
+    assert "nudge, not durable evidence" in md, "traffic rendered without its caveat"
+    assert not buslib._cursor_path("me").exists(), "building a packet advanced the cursor"
+    assert len(buslib.unread("me")) == 1
+
+
+def test_the_cursor_advances_only_when_deliver_is_called(tmp_path, monkeypatch):
+    monkeypatch.setattr(buslib, "ROOT", tmp_path / "bus")
+    buslib.post("peer", "correction", "one")
+    evs = buslib.unread("me")
+    assert sb.deliver("me", []) is None, "an empty delivery advanced a cursor"
+    assert sb.deliver("", evs) is None, "a delivery with no reader advanced a cursor"
+    assert not buslib._cursor_path("me").exists()
+    assert sb.deliver("me", evs)
+    assert buslib.unread("me") == []
+
+
+def test_a_dry_start_writes_the_packet_opens_nothing_and_marks_nothing(tmp_path, monkeypatch):
+    """The dry-run lesson `start_research_pass` already paid for: `dry` is checked before the
+    spawn, and a dry run that dispatched would be worse than none at all. Here it must also leave
+    the bus cursor exactly where it was."""
+    from scripts import local_tracker as lt
+    monkeypatch.setattr(buslib, "ROOT", tmp_path / "bus")
+    # ⚠ Point the packet directory at tmp. `.data/handoffs` is SHARED estate state that other live
+    # sessions read; a test suite that drops probe files into it is mutating the thing it observes.
+    monkeypatch.setattr(lt, "FACTORY", tmp_path)
+    buslib.post("peer", "correction", "one")
+    opened = []
+    # ⚠ `lt._spawn`, NOT `subprocess.Popen`. Patching Popen module-wide also breaks
+    # `subprocess.run`, which the projection uses for every git and process-table read — the
+    # assertion then fails for a reason unrelated to what it asserts.
+    monkeypatch.setattr(lt, "_spawn", lambda *a, **k: opened.append(a))
+
+    ok, msg = lt.start_synced(target="", note="probe", reader="me", dry=True)
+    assert ok, msg
+    assert "DRY RUN" in msg
+    written = sorted(p.name for p in (tmp_path / ".data" / "handoffs").iterdir())
+    assert len(written) == 2, f"expected the packet and its boundary, got {written}"
+    assert not opened, "a dry run opened a terminal"
+    assert not buslib._cursor_path("me").exists(), "a dry run advanced a bus cursor"
+    assert len(buslib.unread("me")) == 1
+
+
+def test_the_gate_handoff_is_off_by_default(tmp_path, monkeypatch):
+    """⛔ `handoff.session_handoff()` runs `readiness.measure()` — the path timed at 413.8 s for
+    `board.board()` and 801.0 s for `session.brief()` on 2026-09-01. If it ever becomes the
+    default, START SYNCED becomes a button nobody presses."""
+    store, man, ids = _mission(tmp_path)
+    st = _st(tmp_path, monkeypatch, store, man)
+    called = []
+
+    import factory.handoff as h
+    monkeypatch.setattr(h, "session_handoff", lambda note="": called.append(1) or "SLOW")
+    md, _b, _e = sb.startup_packet("C", st=st)
+    assert not called, "the default packet ran the readiness measure"
+    md2, _b2, _e2 = sb.startup_packet("C", st=st, include_gate_handoff=True)
+    assert called and "SLOW" in md2, "the opt-in did not reach handoff.session_handoff"
+
+
+# --------------------------------------------------------------- resume safety
+
+
+def _cards(monkeypatch, *rows):
+    from scripts import local_tracker as lt
+    monkeypatch.setattr(lt.sblib, "session_cards", lambda *a, **k: list(rows))
+    return lt
+
+
+def test_direct_resume_cannot_create_a_second_process_on_a_live_session(monkeypatch):
+    """⛔ The divergent-duplicate failure, refused at the action rather than hidden in the page.
+
+    The rendered page is NOT the authority: a page rendered thirty seconds ago can still be
+    offering RESUME for a session that has since been reattached. So liveness is re-measured inside
+    the action, and a live session is refused there.
+    """
+    lt = _cards(monkeypatch, sb.session_cards([_session(
+        session_id="abc123", state=sesslib.RUNNING_ATTACHED)])[0])
+    opened = []
+    monkeypatch.setattr(lt, "_spawn", lambda *a, **k: opened.append(a))
+    ok, msg = lt.resume_session("abc123")
+    assert not ok and not opened, "a live session was resumed — two processes, one transcript"
+    assert "RUNNING-ATTACHED" in msg and "second process" in msg
+
+
+def test_direct_resume_refuses_an_orphaned_session_too(monkeypatch):
+    lt = _cards(monkeypatch, sb.session_cards([_session(
+        session_id="abc123", state=sesslib.RUNNING_ORPHANED, kind="bg")])[0])
+    opened = []
+    monkeypatch.setattr(lt, "_spawn", lambda *a, **k: opened.append(a))
+    ok, msg = lt.resume_session("abc123")
+    assert not ok and not opened and "Attach to it instead" in msg
+
+
+def test_direct_resume_refuses_when_liveness_is_unknown(monkeypatch):
+    """UNKNOWN is not EXITED. Resuming on an unread process table claims a measurement nobody made."""
+    lt = _cards(monkeypatch, sb.session_cards([_session(
+        session_id="abc123", state=sesslib.UNKNOWN)])[0])
+    opened = []
+    monkeypatch.setattr(lt, "_spawn", lambda *a, **k: opened.append(a))
+    ok, msg = lt.resume_session("abc123")
+    assert not ok and not opened and "not established" in msg
+
+
+def test_a_stale_resume_link_for_a_vanished_session_is_refused(monkeypatch):
+    lt = _cards(monkeypatch)
+    opened = []
+    monkeypatch.setattr(lt, "_spawn", lambda *a, **k: opened.append(a))
+    ok, msg = lt.resume_session("gone9999")
+    assert not ok and not opened and "the page was stale" in msg
+
+
+def test_an_exited_resumable_session_is_actually_resumable(monkeypatch):
+    """The control has to work, or the refusals above are just a broken button."""
+    lt = _cards(monkeypatch, sb.session_cards([_session(
+        session_id="abc123", state=sesslib.EXITED_RESUMABLE, cwd="C:/repo")])[0])
+    ok, msg = lt.resume_session("abc123", dry=True)
+    assert ok and "DRY RUN" in msg and "abc123" in msg
+
+
+def test_the_start_synced_control_is_on_the_page():
+    import datetime
+
+    from scripts import local_tracker as lt
+    page = lt.render(datetime.datetime(2026, 9, 1, 12, 0), "switchboard")
+    assert 'action="/switchboard/start"' in page
+    assert "START SYNCED" in page and "PACKET ONLY" in page
+    for field in ('name="target"', 'name="worktree"', 'name="reader"', 'name="note"'):
+        assert field in page, f"the dispatch form is missing {field}"
+    assert "413.8" in page, "the slow opt-in does not state its measured cost"

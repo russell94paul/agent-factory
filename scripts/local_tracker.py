@@ -322,6 +322,132 @@ def start_session_from_handoff(note: str, dry: bool = False):
     return True, f"new session opened, holding {f.name}"
 
 
+# ------------------------------------------------------------------ switchboard actions
+#
+# Both of these live here rather than in `factory/switchboard.py` for the reason `session.py`
+# states about itself: the projection answers questions and never dispatches. Spawning a terminal
+# is an act, and every other act on this estate is already in this file.
+
+_SB_MSG = None
+
+
+def _spawn(cmd, cwd):
+    """The one place the Switchboard opens a terminal. Every spawn here goes through it.
+
+    ⚠ It exists because of a test, and the test was right. Patching `subprocess.Popen` module-wide
+    to prove "nothing was opened" also breaks `subprocess.run`, which `switchboard.state()` uses for
+    every git and process-table read — so the assertion failed for a reason unrelated to what it
+    asserted. One named seam is both easier to patch and a truer statement of the boundary: this
+    function is where an act begins.
+    """
+    import subprocess as _sp
+    return _sp.Popen(cmd, cwd=cwd, close_fds=True)
+
+
+def start_synced(target: str = "", note: str = "", reader: str = "", worktree: str = "",
+                 dry: bool = False, gate_handoff: bool = False):
+    """Write a measured startup packet and open a session already holding it.
+
+    Replaces: generate handoff -> copy -> find terminal -> launch -> paste.
+
+    Order matters and is the same order `start_session_from_handoff` uses for the same reason: the
+    packet and its boundary are on disk BEFORE the terminal opens, so a failed spawn leaves the
+    work recoverable instead of losing it with the click.
+
+    ⛔ The bus cursor is advanced LAST, and only on a real spawn that succeeded. Marking traffic
+    read before delivery is how a correction gets marked seen by a session that never started.
+    """
+    d = FACTORY / ".data" / "handoffs"
+    d.mkdir(parents=True, exist_ok=True)
+    stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    stem = f"switchboard-{(target or 'session').lower()}-{stamp}"
+    md, bnd, events = (None, None, [])
+    try:
+        st = sblib.state()
+        bpath = d / f"{stem}.boundary.json"
+        md, bnd, events = sblib.startup_packet(
+            target=target, note=note, reader=reader, worktree=worktree, st=st,
+            include_gate_handoff=gate_handoff, boundary_path=str(bpath))
+    except Exception as exc:                                       # noqa: BLE001
+        return False, f"could not build the packet: {type(exc).__name__}: {exc}"
+
+    f = d / f"{stem}.md"
+    f.write_text(md, encoding="utf-8")
+    bpath.write_text(json.dumps(bnd, indent=1), encoding="utf-8")
+
+    if dry:
+        return True, (f"DRY RUN — packet at {f.name} ({len(md):,} bytes) and boundary at "
+                      f"{bpath.name}; no terminal opened, and {len(events)} bus event(s) were "
+                      f"NOT marked read")
+
+    ps1 = _launch_script(f"switchboard {target or 'session'}",
+                         f"start synced · {target or 'session'}", f, "38;5;110",
+                         session_name=f"{target or 'session'} · start synced")
+    cwd = worktree if worktree and pathlib.Path(worktree).is_dir() else str(FACTORY)
+    wtexe = _wt()
+    cmd = ([wtexe, "new-tab", "--title", f"switchboard {target or 'session'}",
+            "--startingDirectory", cwd, "--colorScheme", WT_SCHEME,
+            "powershell", "-NoExit", "-ExecutionPolicy", "Bypass", "-File", str(ps1)]
+           if wtexe else
+           ["cmd", "/c", "start", f"switchboard {target or 'session'}", "powershell", "-NoExit",
+            "-ExecutionPolicy", "Bypass", "-File", str(ps1)])
+    try:
+        _spawn(cmd, cwd)
+    except Exception as exc:                                       # noqa: BLE001
+        return False, (f"packet saved to {f.name} but no terminal opened "
+                       f"({type(exc).__name__}: {exc}) — nothing was marked read")
+
+    marked = None
+    if reader and events:
+        try:
+            marked = sblib.deliver(reader, events)
+        except Exception as exc:                                   # noqa: BLE001
+            return True, (f"session opened holding {f.name}, but the bus cursor for {reader} could "
+                          f"not be advanced ({type(exc).__name__}: {exc}) — that traffic will be "
+                          f"delivered again, which is the safe direction")
+    return True, (f"session opened in {cwd}, holding {f.name}"
+                  + (f"; delivered {len(events)} bus event(s) to {reader} and advanced its cursor "
+                     f"to {marked}" if marked else ""))
+
+
+def resume_session(session_id: str, dry: bool = False):
+    """Resume an exited session — after RE-MEASURING that it is actually exited.
+
+    ⛔ **The rendered page is not the authority.** A page rendered thirty seconds ago can offer a
+    RESUME for a session that has since been reattached, and `claude --resume` against a live
+    session puts two processes on one transcript. That is the divergent-duplicate failure
+    control-room.md §5 records, and it is why liveness is re-read here rather than passed in from
+    the link the operator clicked.
+    """
+    row = next((c for c in sblib.session_cards()
+                if c.get("session_id") == session_id), None)
+    if row is None:
+        return False, f"no session {session_id[:8]} in the registry now — the page was stale"
+    if not row["can_resume"]:
+        return False, (f"refusing to resume {session_id[:8]}: it is {row['state']}. "
+                       + ("It is alive — resuming would put a second process on one transcript. "
+                          "Attach to it instead."
+                          if row["is_live"] else
+                          "Liveness could not be measured, so 'exited' is not established."
+                          if not row["liveness_trusted"] else
+                          "There is no transcript to resume from; start a new session."))
+    cwd = row.get("cwd") or str(FACTORY)
+    wtexe = _wt()
+    title = (row.get("topic") or row.get("name") or session_id)[:48]
+    inner = ["powershell", "-NoExit", "-ExecutionPolicy", "Bypass", "-Command",
+             f"claude --resume {session_id}"]
+    cmd = ([wtexe, "new-tab", "--title", title, "--startingDirectory", cwd,
+            "--colorScheme", WT_SCHEME] + inner
+           if wtexe else ["cmd", "/c", "start", title] + inner)
+    if dry:
+        return True, f"DRY RUN — would resume {session_id[:8]} ({row['state']}) in {cwd}"
+    try:
+        _spawn(cmd, cwd)
+    except Exception as exc:                                       # noqa: BLE001
+        return False, f"could not resume {session_id[:8]}: {type(exc).__name__}: {exc}"
+    return True, f"resumed {session_id[:8]} in {cwd}"
+
+
 def start_research_pass(rid: str, dry: bool = False):
     """Prepare a research pass and open a session that runs it here.
 
@@ -2625,6 +2751,22 @@ class Handler(http.server.BaseHTTPRequestHandler):
             print(f"  finish: {_CLAIM_MSG[1]}")
             self.send_response(303); self.send_header("Location", "/lanes"); self.end_headers()
             return
+        if self.path.rstrip("/") == "/switchboard/start":
+            raw = self.rfile.read(int(self.headers.get("Content-Length") or 0)).decode("utf-8", "replace")
+            q = urllib.parse.parse_qs(raw, keep_blank_values=True)
+            _CLAIM_MSG = start_synced(
+                target=(q.get("target") or [""])[0].strip(),
+                note=(q.get("note") or [""])[0],
+                reader=(q.get("reader") or [""])[0].strip(),
+                worktree=(q.get("worktree") or [""])[0].strip(),
+                # The submit button's own value carries the mode, exactly as /run-ticket does.
+                # A dry run that dispatches is worse than none at all.
+                dry=bool((q.get("dry") or [""])[0]),
+                gate_handoff=bool((q.get("gate") or [""])[0]))
+            print(f"  switchboard/start: {_CLAIM_MSG[1]}")
+            self.send_response(303); self.send_header("Location", "/switchboard")
+            self.send_header("Cache-Control", "no-store"); self.end_headers()
+            return
         if self.path.rstrip("/") == "/run-ticket":
             raw = self.rfile.read(int(self.headers.get("Content-Length") or 0)).decode("utf-8", "replace")
             q = urllib.parse.parse_qs(raw, keep_blank_values=True)
@@ -2736,6 +2878,15 @@ class Handler(http.server.BaseHTTPRequestHandler):
             ok = opans.clear(um.group(1))
             _CLAIM_MSG = (True, f"cleared the answer for {um.group(1)}" if ok else "nothing to clear")
             self.send_response(303); self.send_header("Location", "/lanes"); self.end_headers()
+            return
+        rm_ = re.match(r"^/switchboard/resume/([A-Za-z0-9-]{1,64})$",
+                       urllib.parse.urlparse(self.path).path.rstrip("/"))
+        if rm_:
+            dry = "dry=1" in (urllib.parse.urlparse(self.path).query or "")
+            _CLAIM_MSG = resume_session(rm_.group(1), dry=dry)
+            print(f"  switchboard/resume: {_CLAIM_MSG[1]}")
+            self.send_response(303); self.send_header("Location", "/switchboard")
+            self.send_header("Cache-Control", "no-store"); self.end_headers()
             return
         if self.path.rstrip("/") == "/start-all":
             import subprocess as _sp

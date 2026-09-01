@@ -62,6 +62,10 @@ CSS = """
  white-space:nowrap}
 .sw details{margin:4px 0 0}
 .sw summary{cursor:pointer;color:var(--ink3);font-size:11.5px}
+.sw select,.sw textarea,.sw input[type=text]{background:var(--paper);color:var(--ink);
+ border:1px solid var(--rule);padding:4px 6px;font:12px ui-monospace,monospace}
+.sw label{font-size:11.5px;color:var(--ink3)}
+.sw button.btn{background:var(--paper)}
 .sw pre{margin:6px 0 0;padding:8px 10px;background:var(--paper);border:1px solid var(--rule);
  overflow-x:auto;font-size:11.5px;white-space:pre-wrap}
 """
@@ -251,6 +255,68 @@ def _warnings(st: dict) -> str:
                    f'<span>{_e(w)}</span><span></span></div>' for w in st["warnings"])
 
 
+# ------------------------------------------------------- SLICE B: the START SYNCED control
+
+
+def _opts(pairs, selected="") -> str:
+    return "".join(f'<option value="{_e(v)}"{" selected" if v == selected else ""}>{_e(lab)}</option>'
+                   for v, lab in pairs)
+
+
+def _start_synced(st: dict) -> str:
+    """The control that replaces: generate handoff, copy, find terminal, launch, paste.
+
+    ⭐ **Everything the SECURITY section requires beside a dispatch is rendered here** — target,
+    task/lane, worktree and the live state of what is running — because the failure that matters is
+    not a malformed packet, it is a correct packet delivered to the wrong session.
+    """
+    by = {r["label"]: r for r in st["tasks"]}
+    targets = [("", "— whole session (no single task) —")]
+    for r in st["tasks"]:
+        targets.append((r["label"], f'{r["label"]} · {r["state"]} · {r["title"][:52]}'))
+    wts = [(w["path"], f'{w.get("branch") or "?"} @ {w.get("head") or "?"} — {w["path"]}')
+           for w in st["worktrees"]]
+    readers = [("", "— deliver no bus traffic —")]
+    for u in st["upstream"]:
+        readers.append((u["reader"], f'{u["reader"]} ({u["unread"]} unread)'))
+    for r in _sb.bus_readers():
+        if r not in [x[0] for x in readers]:
+            readers.append((r, f"{r} (nothing unread)"))
+
+    running = ", ".join(st["running"]) or "nothing"
+    body = [
+        '<form method="POST" action="/switchboard/start">',
+        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px">',
+        f'<label>target task<br><select name="target" style="width:100%">{_opts(targets)}</select></label>',
+        f'<label>worktree<br><select name="worktree" style="width:100%">{_opts(wts)}</select></label>',
+        f'<label>deliver bus traffic for<br><select name="reader" style="width:100%">{_opts(readers)}</select></label>',
+        '</div>',
+        '<label style="display:block;margin:9px 0 0">note for the next session (the only part no '
+        'instrument can see)<br>'
+        '<textarea name="note" rows="3" style="width:100%;font:12px ui-monospace,monospace"></textarea></label>',
+        '<label style="display:block;margin:7px 0 0;font-size:11.5px" class="dim">'
+        '<input type="checkbox" name="gate" value="1"> also run the full gate handoff '
+        '<b>(slow — this is the <code>readiness.measure()</code> path, timed at 413.8 s for '
+        '<code>board.board()</code> and 801.0 s for <code>session.brief()</code> on 2026-09-01)</b>'
+        '</label>',
+        '<div style="margin:10px 0 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap">',
+        '<button name="dry" value="1" class="btn" style="cursor:pointer">PACKET ONLY (dry)</button>',
+        '<button name="dry" value="" class="btn" style="cursor:pointer;border-color:var(--accent);'
+        'color:var(--accent);font-weight:700">START SYNCED</button>',
+        f'<span class="dim" style="font-size:11.5px">running now: <b>{_e(running)}</b> · '
+        f'{len(st["sessions"])} session(s) in the registry · '
+        f'{st["needs_you_count"]} question(s) waiting</span>',
+        '</div>',
+        '<p class="dim" style="font-size:11.5px;margin:9px 0 0">The packet carries measured '
+        'identity, worktree, branch, HEAD, dependency state, live conflicts, evidence pointers and '
+        'the unread traffic for the reader chosen above &mdash; plus a boundary file and a '
+        'handshake the new session must run before acting. '
+        '<b>A bus cursor is advanced only after a real spawn succeeds</b>, never on a dry run.</p>',
+        '</form>',
+    ]
+    return "".join(body)
+
+
 # --------------------------------------------------------------------------- page
 
 
@@ -280,6 +346,8 @@ def page(st: Optional[dict] = None) -> str:
                        + tie_note))
     o.append(_sec("Ready in parallel", _parallel(st),
                   note="dependencies satisfied AND no live conflicting writer"))
+    o.append(_sec("Start synced", _start_synced(st),
+                  note="opens a session already holding a measured packet — no copy, no paste"))
     o.append(_sec("Needs you", _needs(st),
                   note="read from jobs, so a question outlives the session that asked it"))
     o.append(_sec("Sessions", _sessions(st),

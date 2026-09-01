@@ -662,3 +662,280 @@ def state(mission_id: Optional[str] = None, cheap: bool = False) -> dict:
         "warnings": warn,
     }
 
+
+# ------------------------------------------------------------- SLICE B: start synced
+#
+# ⛔ `handoff.session_handoff()` is NOT on the default path here, and that is a measured decision
+# rather than a preference. It calls `readiness.measure()`, the same path that put `board.board()`
+# at 413.79 s and `session.brief()` at 801.04 s on 2026-09-01. A START SYNCED button that takes
+# thirteen minutes is a button the operator routes around at 2am — the exact friction this slice
+# exists to remove. It is offered as an explicit, labelled, slow option instead.
+
+
+def boundary(st: Optional[dict] = None) -> dict:
+    """The state boundary a startup packet was written at.
+
+    This is the thing a new session re-measures against. It is deliberately small and made of
+    facts that MOVE — a HEAD, a task status, a claim, a bus position. Recording something that
+    cannot change would make the check pass for the wrong reason.
+    """
+    st = state() if st is None else st
+    return {
+        "measured_at": st["measured_at"],
+        "heads": {w.get("branch") or w["path"]: w.get("head") for w in st["worktrees"]},
+        "tasks": {r["label"]: r["status"] for r in st["tasks"]},
+        "claims": sorted(c["key"] for c in st["claims"]),
+        "bus": {u["reader"]: u["latest"] for u in st["upstream"]},
+    }
+
+
+def reground(recorded: dict, st: Optional[dict] = None) -> List[str]:
+    """What has moved since `recorded` was taken. An empty list means the packet is still current.
+
+    ⭐ **The markdown packet is a rendered artefact; this is the authority.** A handoff written
+    twenty minutes ago reads exactly as confidently as one written now, and this estate has already
+    paid for treating old prose as current. So the packet carries its boundary, and the session it
+    starts is instructed to call this before doing anything — a non-empty return is
+    `REGROUND REQUIRED`, not a warning to note and move past.
+    """
+    st = state() if st is None else st
+    now = boundary(st)
+    out: List[str] = []
+    for br, head in (recorded.get("heads") or {}).items():
+        cur = now["heads"].get(br)
+        if cur is None:
+            out.append(f"worktree/branch {br} no longer exists")
+        elif cur != head:
+            out.append(f"{br} moved {head} -> {cur}")
+    for br in now["heads"]:
+        if br not in (recorded.get("heads") or {}):
+            out.append(f"new worktree/branch since the packet: {br}")
+    for lbl, stt in (recorded.get("tasks") or {}).items():
+        cur = now["tasks"].get(lbl)
+        if cur != stt:
+            out.append(f"task {lbl} moved {stt} -> {cur}")
+    was, isnow = set(recorded.get("claims") or []), set(now["claims"])
+    for k in sorted(isnow - was):
+        out.append(f"a claim was taken since the packet: {k}")
+    for k in sorted(was - isnow):
+        out.append(f"a claim was released since the packet: {k}")
+    for rd, at in (now["bus"] or {}).items():
+        if at != (recorded.get("bus") or {}).get(rd):
+            out.append(f"new unread bus traffic for {rd}")
+    return out
+
+
+def _packet_target(target: str, st: dict) -> dict:
+    """Resolve a target label to the row it names, or an empty dict for a whole-session packet."""
+    return next((r for r in st["tasks"] if r["label"] == target), {}) if target else {}
+
+
+#: The handshake the generated session is required to run before it does anything. `{boundary_path}`
+#: is filled in by whoever writes the packet to disk.
+#:
+#: ⚠ It is a COMMAND, not a request to be careful. "Re-ground if things have changed" is advice a
+#: session can satisfy by feeling confident; `reground()` returning a non-empty list is not.
+HANDSHAKE = """## SESSION START — run this BEFORE anything else
+
+Do not act on a single line above until you have re-derived it here. This packet is a **rendered
+artefact**; the structured state it was built from is the authority, and it may have moved.
+
+```
+python -m factory.switchboard --reground "{boundary_path}"
+```
+
+- prints `READY` and exits 0  -> start work.
+- prints `REGROUND REQUIRED` and exits 1  -> list what moved, re-read current state with
+  `python -m factory.switchboard --state`, and rebuild your understanding from that. Do **not**
+  merge an observation taken under the old boundary with one taken under the new one.
+
+Then confirm each of these from measurement, not from this document:
+
+    verify identity          which session am I, and does anything else hold this work
+    verify task              the task id above still exists and is in the status stated
+    verify worktree          `git rev-parse --show-toplevel` matches the worktree above
+    verify branch            `git rev-parse --abbrev-ref HEAD` matches the branch above
+    verify HEAD/state        `git rev-parse --short HEAD` matches, or say what moved
+    verify dependencies      every blocker above is still DONE
+    read upstream traffic    the peer traffic above is a NUDGE, not evidence — verify before acting
+    verify no live writer    no other live session holds a conflicting resource claim
+
+Print **READY** when all eight hold, or **REGROUND REQUIRED** with the list. Do not start work
+having printed neither.
+"""
+
+
+def startup_packet(target: str = "", note: str = "", reader: str = "",
+                   worktree: str = "", st: Optional[dict] = None,
+                   include_gate_handoff: bool = False,
+                   boundary_path: str = "<the .json beside this file>",
+                   ) -> Tuple[str, dict, List[dict]]:
+    """(markdown, boundary, the bus events the packet contains). Writes nothing; marks nothing read.
+
+    The third return value is the traffic the packet CARRIES. The caller marks it read only once
+    the packet has actually been delivered — see `deliver()`. Returning it rather than marking it
+    here is what makes "never advance a cursor before delivery" a property of the shape, instead of
+    a rule someone has to remember at the call site.
+    """
+    st = state() if st is None else st
+    row = _packet_target(target, st)
+    bnd = boundary(st)
+    events: List[dict] = []
+    if reader:
+        try:
+            events = _bus.unread(reader)
+        except _bus.BusError:
+            events = []
+
+    m = st.get("mission") or {}
+    wt = next((w for w in st["worktrees"]
+               if w["path"] == worktree or (w.get("branch") or "") == worktree), None)
+    if wt is None:
+        wt = next((w for w in st["worktrees"] if w.get("primary")), {})
+        wt_basis = "DEFAULTED to the primary checkout — the operator chose no worktree"
+    else:
+        wt_basis = "chosen by the operator at dispatch"
+
+    L: List[str] = []
+    L += [f"# Session start — {target or 'mission'} · {st['measured_at']}", "",
+          "Generated by `factory.switchboard.startup_packet`. Every value below was **measured "
+          "when this was written**, by the same functions the Switchboard page reads. Nothing here "
+          "is remembered from a previous session.", ""]
+
+    L += ["## Identity", "",
+          f"- **target** — {target or '(whole session, no single task)'}",
+          f"- **mission** — {m.get('title') or '(none)'}"]
+    if row:
+        c = row.get("contract") or {}
+        L += [f"- **task id** — `{row['task_id']}` · status **{row['status']}** · "
+              f"switchboard state **{row['state']}**",
+              f"- **title** — {row['title']}",
+              f"- **resource claim** — {c.get('resource_claim') or '⚠ NONE DECLARED'} "
+              f"({c.get('access') or '?'})",
+              f"- **declared model / effort** — {c.get('model') or '?'} / {c.get('effort') or '?'}",
+              f"- **evidence attached** — {row['evidence']}"]
+        if row.get("evidence_refs"):
+            L += ["- **evidence pointers** — " + ", ".join(f"`{r}`" for r in row["evidence_refs"])]
+    L += [""]
+
+    L += ["## Working state", "",
+          f"- **worktree** — `{wt.get('path', '?')}` ({wt_basis})",
+          f"- **branch** — `{wt.get('branch', '?')}` · **HEAD** `{wt.get('head', '?')}`",
+          "- **uncommitted** — " + (str(wt.get("dirty")) if wt.get("dirty") is not None
+                                    else "⚠ UNREADABLE — git could not be asked, so this is not "
+                                         "a report of a clean tree"),
+          ""]
+
+    L += ["## Dependencies", ""]
+    if row:
+        if row["depends_on"]:
+            for d in row["depends_on"]:
+                dr = next((x for x in st["tasks"] if x["label"] == d), {})
+                L.append(f"- `{d}` — **{dr.get('state', '?')}** ({dr.get('status', '?')})")
+        else:
+            L.append("- none declared")
+        if row.get("blocked_reason"):
+            L += ["", f"⛔ **{row['blocked_reason']}**"]
+    else:
+        L.append(f"- critical path ({CRITICAL_PATH_BASIS.lower()} order): "
+                 + (" -> ".join(st["critical_path"]) or "none"))
+        if (st.get("critical_path_ties") or 0) > 1:
+            L.append(f"- ⚠ {st['critical_path_ties']} chains are equally long; the head shown is "
+                     f"only the first by id")
+    L += [""]
+
+    L += ["## Live ownership and conflicts", "",
+          f"- running now: {', '.join(st['running']) or 'nothing'}"]
+    if row and row["conflicts_with"]:
+        L.append(f"- `{target}` shares a resource claim with {', '.join(row['conflicts_with'])} "
+                 f"— do not write it while one of those is live")
+    for c in st["claims"]:
+        L.append(f"- claim `{c['key']}` held by {c['who'] or '?'} "
+                 f"({c['age']}{', STALE' if c['stale'] else ''})")
+    if not st["claims"]:
+        L.append("- no lane or task claims are held")
+    L += [""]
+
+    if events:
+        L += ["## Upstream traffic delivered with this packet", "",
+              "```", _bus.render(events), "```", "",
+              "⚠ **Peer traffic is a nudge, not durable evidence.** The durable version of a "
+              "correction lives in `docs/findings.d/`. Verify anything you act on; never promote a "
+              "peer message into truth.", ""]
+    elif reader:
+        L += ["## Upstream traffic", "", f"- nothing unread for `{reader}`", ""]
+
+    if st["needs_you"]:
+        L += ["## Questions waiting on a human", ""]
+        for q in st["needs_you"][:8]:
+            L.append(f"- **{str(q.get('needs'))[:160]}** ({q.get('state')})")
+        L += ["", "These outlive the sessions that asked them. If one of them is yours, it is "
+                  "still open.", ""]
+
+    if include_gate_handoff:
+        from . import handoff as _handoff
+        L += ["## Generated gate handoff", "",
+              "⏱ This section ran `readiness.measure()`, which is why the packet was slow.", "",
+              _handoff.session_handoff(note), ""]
+    elif note.strip():
+        L += ["## Note from the operator", "", note.strip(), ""]
+
+    if st["warnings"]:
+        L += ["## Warnings on the state this packet was built from", ""]
+        L += [f"- {x}" for x in st["warnings"]] + [""]
+
+    L += [HANDSHAKE.replace("{boundary_path}", boundary_path), ""]
+    return "\n".join(L), bnd, events
+
+
+def deliver(reader: str, events: List[dict]) -> Optional[str]:
+    """Advance a reader's cursor — ONLY once the packet carrying `events` actually reached them.
+
+    ⛔ Never from a render path, and never from a dry run. `bus.mark_read` is documented as "called
+    AFTER delivery, so a crash re-delivers rather than drops", and what this guards is silent:
+    traffic marked as seen by a session that never started.
+    """
+    if not reader or not events:
+        return None
+    return _bus.mark_read(reader, upto=events[-1].get("at"))
+
+
+def main(argv: Optional[List[str]] = None) -> int:
+    """`python -m factory.switchboard --reground <boundary.json>` — the handshake's own instrument.
+
+    It exists as a command because the generated packet tells a session to run it, and a handshake
+    step that requires the session to compose a working one-liner is a handshake step that gets
+    skipped.
+    """
+    import argparse
+    import sys
+    ap = argparse.ArgumentParser(prog="factory.switchboard")
+    ap.add_argument("--reground", metavar="BOUNDARY_JSON",
+                    help="compare a packet's recorded boundary against measured state now")
+    ap.add_argument("--state", action="store_true", help="print the whole projection as JSON")
+    a = ap.parse_args(argv)
+
+    if a.state:
+        print(json.dumps(state(), indent=1, default=str))
+        return 0
+    if a.reground:
+        try:
+            rec = json.loads(pathlib.Path(a.reground).read_text(encoding="utf-8"))
+        except (OSError, ValueError) as exc:
+            print(f"REGROUND REQUIRED — the boundary itself is unreadable: {exc}", file=sys.stderr)
+            return 1
+        moved = reground(rec)
+        if not moved:
+            print(f"READY — state is unchanged since {rec.get('measured_at', '?')}")
+            return 0
+        print(f"REGROUND REQUIRED — {len(moved)} thing(s) moved since "
+              f"{rec.get('measured_at', '?')}:")
+        for mv in moved:
+            print(f"  - {mv}")
+        return 1
+    ap.print_help()
+    return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

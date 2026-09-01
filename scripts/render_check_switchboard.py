@@ -34,8 +34,14 @@ SCHEMES = ("light", "dark")
 
 #: Panel headings that must exist on every render. The list is the acceptance question set from the
 #: brief, turned into things a browser can look for.
-EXPECTED = ("CRITICAL PATH", "READY IN PARALLEL", "NEEDS YOU", "SESSIONS", "UPSTREAM",
-            "WORKTREES", "WARNINGS")
+EXPECTED = ("CRITICAL PATH", "READY IN PARALLEL", "START SYNCED", "NEEDS YOU", "SESSIONS",
+            "UPSTREAM", "WORKTREES", "WARNINGS")
+
+#: Controls that must be present and correctly wired. A form that renders but posts nowhere is the
+#: same class of defect as a panel that paints nothing.
+CONTROLS = ('form[action="/switchboard/start"]', 'select[name="target"]',
+            'select[name="worktree"]', 'select[name="reader"]', 'textarea[name="note"]',
+            'button[name="dry"]')
 
 
 def main(argv=None) -> int:
@@ -89,6 +95,10 @@ def main(argv=None) -> int:
                 for want in EXPECTED:
                     if want not in seen:
                         report["problems"].append(f"{scheme}/{w}: panel {want} is missing entirely")
+
+                for sel in CONTROLS:
+                    if page.locator(sel).count() == 0:
+                        report["problems"].append(f"{scheme}/{w}: control {sel} is not on the page")
 
                 badge = (page.locator(".sw .needs").first.inner_text() or "").strip()
                 if str(expected_needs) not in badge:
