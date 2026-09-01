@@ -438,12 +438,24 @@ def bus_readers() -> List[str]:
     return sorted(n for n in names if n)
 
 
-def upstream(readers: Optional[List[str]] = None) -> List[dict]:
-    """Unread peer traffic per reader. **Reads only — no cursor is advanced anywhere in here.**
+#: Display caps for the digest. The bus caps one message at `bus.MAX_LEN` (2000 chars), which is
+#: the right cap for DELIVERY into a session's context and much too generous for a command page.
+DIGEST_EVENTS = 40
+DIGEST_CHARS = 420
 
-    `bus.mark_read` is called AFTER delivery, by the thing that delivered it (the lane-bus hook
-    injects it into a session's context). Marking on render would mean opening this page counts as
-    a session having seen the traffic, which is how a correction gets lost.
+
+def upstream(readers: Optional[List[str]] = None) -> List[dict]:
+    """Unread peer traffic per reader — **counts and senders only, never the text.**
+
+    ⛔ This returned a fully rendered block per reader until the traffic got real. Measured
+    2026-09-01 with 16 readers holding unread events: the Upstream panel alone was **211,485
+    bytes**, on a page whose other seven panels total ~12 KB. The bus is ONE channel that many
+    readers have not caught up on, so rendering the same event once per reader duplicated every
+    message sixteen times. The text now lives in `upstream_digest()`, deduplicated.
+
+    **Reads only — no cursor is advanced anywhere in here.** `bus.mark_read` is called AFTER
+    delivery, by the thing that delivered it. Marking on render would mean opening this page counts
+    as a session having seen the traffic, which is how a correction gets lost.
     """
     out = []
     for r in (readers if readers is not None else bus_readers()):
@@ -458,13 +470,51 @@ def upstream(readers: Optional[List[str]] = None) -> List[dict]:
             "unread": len(evs),
             "latest": evs[-1].get("at", ""),
             "from": sorted({e.get("from", "?") for e in evs}),
-            "rendered": _bus.render(evs),
             # Peer traffic is a nudge, not evidence. Carried on the row so the surface cannot
-            # render it without the caveat, and so a finding reference stays clickable.
+            # render it without the caveat, and so a finding reference stays reachable.
             "basis": "PEER-TRAFFIC — a nudge, not durable evidence; verify before acting",
             "refs": sorted({ref for e in evs for ref in (e.get("refs") or [])}),
         })
     return sorted(out, key=lambda r: r["unread"], reverse=True)
+
+
+def upstream_digest(readers: Optional[List[str]] = None) -> dict:
+    """The distinct unread events, ONCE, newest first, each truncated for display.
+
+    Deduplicated on (at, from, kind) because one post is unread by every reader that has not caught
+    up, and sixteen copies of a message is not sixteen messages. Each event carries `unread_by` so
+    the page can still answer "who has not seen this" without repeating the body.
+
+    ⚠ Truncated on purpose, and it says by how much. This is a NUDGE surface: the durable version
+    of a correction is in `docs/findings.d/`, and the full text reaches a session through the
+    startup packet or the lane-bus hook, not through a dashboard.
+    """
+    rs = readers if readers is not None else bus_readers()
+    seen: Dict[tuple, dict] = {}
+    for r in rs:
+        try:
+            evs = _bus.unread(r)
+        except _bus.BusError:
+            continue
+        for e in evs:
+            key = (e.get("at", ""), e.get("from", ""), e.get("kind", ""))
+            row = seen.get(key)
+            if row is None:
+                text = str(e.get("text", ""))
+                row = seen[key] = {
+                    "at": e.get("at", ""), "from": e.get("from", "?"),
+                    "kind": e.get("kind", "note"),
+                    "text": text[:DIGEST_CHARS],
+                    "clipped": max(0, len(text) - DIGEST_CHARS),
+                    "refs": list(e.get("refs") or []), "unread_by": [],
+                }
+            row["unread_by"].append(r)
+    rows = sorted(seen.values(), key=lambda r: r["at"], reverse=True)
+    for r in rows:
+        r["unread_by"] = sorted(set(r["unread_by"]))
+    return {"events": rows[:DIGEST_EVENTS],
+            "total": len(rows),
+            "not_shown": max(0, len(rows) - DIGEST_EVENTS)}
 
 
 # ---------------------------------------------------------------------- worktrees
@@ -635,8 +685,9 @@ def state(mission_id: Optional[str] = None, cheap: bool = False) -> dict:
 
     try:
         traffic = upstream()
+        digest = upstream_digest()
     except Exception as exc:                                        # noqa: BLE001
-        traffic = []
+        traffic, digest = [], {"events": [], "total": 0, "not_shown": 0}
         warn.append(f"bus unreadable: {type(exc).__name__}: {exc}")
 
     return {
@@ -658,6 +709,7 @@ def state(mission_id: Optional[str] = None, cheap: bool = False) -> dict:
         "needs_you_count": len(questions),
         "claims": claim_rows,
         "upstream": traffic,
+        "upstream_digest": digest,
         "worktrees": [] if cheap else worktrees(),
         "warnings": warn,
     }
@@ -898,6 +950,199 @@ def deliver(reader: str, events: List[dict]) -> Optional[str]:
     if not reader or not events:
         return None
     return _bus.mark_read(reader, upto=events[-1].get("at"))
+
+
+# ---------------------------------------------------------- SLICE C: quick dispatch
+#
+# P0 prioritises **preventing a wrong-session dispatch** over automating a right one. Everything
+# below therefore either resolves to exactly one target or refuses and asks. There is no LLM router
+# and no fuzzy scoring: a header either matches a declared alias as a whole phrase, or it does not.
+
+#: header phrase -> the aliases that mean it. **BASIS: AUTHORED**, in the open, for the same reason
+#: `session.LANE_SHAPE` is authored in the open — a person has to say what "MAIN T" means, and the
+#: honest place to say it is one declared table rather than a guess made per dispatch.
+#:
+#: ⚠ These are matched as WHOLE PHRASES against the first few lines of a pasted prompt. They are
+#: deliberately not matched against the body: a prompt that merely mentions client review in passing
+#: is not addressed to it, and treating a mention as an address is exactly the wrong-session
+#: dispatch this slice exists to stop.
+TARGET_ALIASES: Dict[str, Tuple[str, ...]] = {
+    "MAIN T":             ("main t", "main-t", "maint"),
+    "CLIENT REVIEW":      ("client review", "client-review", "client-review-readiness"),
+    "ARTIFACT GENERATOR": ("artifact generator", "artifact-generator", "project artifact"),
+    "SWITCHBOARD":        ("switchboard", "switchboard-p0"),
+}
+
+#: How many leading lines of a pasted prompt count as "the header".
+HEADER_LINES = 6
+
+# Dispatch routes, in the order of how much of the channel we actually own.
+SEND = "SEND"                    # we spawn the process, so we own its input by construction
+COPY_OPEN = "COPY+OPEN"          # we open what we can and leave one paste to the operator
+COPY_ONLY = "COPY"               # we cannot open anything; copy and name the target precisely
+REFUSE = "REFUSE"
+
+
+def _validate_aliases() -> None:
+    """Fail at import if two headers claim the same alias.
+
+    An ambiguous table would make routing non-deterministic while still looking declarative, which
+    is worse than no table. Same reason `session._validate` runs at import.
+    """
+    seen: Dict[str, str] = {}
+    for header, aliases in TARGET_ALIASES.items():
+        for a in aliases:
+            if a in seen and seen[a] != header:
+                raise ImportError(
+                    f"TARGET_ALIASES is ambiguous: {a!r} is claimed by both {seen[a]!r} "
+                    f"and {header!r}, so a prompt carrying it has no deterministic target")
+            seen[a] = header
+
+
+_validate_aliases()
+
+
+def header_of(prompt: str) -> dict:
+    """Which declared target a pasted prompt names, from its first lines only. No LLM, no scoring.
+
+    Returns `matched` (the header phrases found), and refuses to pick when there is not exactly
+    one. Two matches is not a tie to be broken — it is a prompt whose address is genuinely unclear,
+    and the operator is the one who knows.
+    """
+    import re
+    head = "\n".join((prompt or "").splitlines()[:HEADER_LINES]).lower()
+    matched: List[str] = []
+    for hdr, aliases in TARGET_ALIASES.items():
+        for a in aliases:
+            # Whole phrase, bounded. "maint" must not fire inside "maintenance", and "switchboard"
+            # must not fire inside a longer word.
+            if re.search(rf"(?<![a-z0-9]){re.escape(a)}(?![a-z0-9-])", head):
+                matched.append(hdr)
+                break
+    return {"matched": sorted(set(matched)),
+            "deterministic": len(set(matched)) == 1,
+            "header": matched[0] if len(set(matched)) == 1 else None}
+
+
+def _target_sessions(header: str, cards: List[dict]) -> List[dict]:
+    """Live-or-resumable sessions whose own topic/name carries the header's aliases.
+
+    ⚠ The join is textual because there is nothing else to join on: a session registry entry has a
+    name, a cwd and a topic, and none of them is a lane id or a task id. This is stated rather than
+    hidden, and it is why the result is a RECOMMENDATION that still requires the operator to
+    confirm rather than an address the page acts on.
+    """
+    import re
+    if not header:
+        return []
+    aliases = TARGET_ALIASES.get(header, ())
+    out = []
+    for c in cards:
+        hay = " ".join(str(c.get(k) or "") for k in ("topic", "name", "where", "cwd")).lower()
+        if any(re.search(rf"(?<![a-z0-9]){re.escape(a)}(?![a-z0-9-])", hay) for a in aliases):
+            out.append(c)
+    # A live session outranks a dead one as a dispatch target, but neither is dropped.
+    rank = {_sessions.RUNNING_ATTACHED: 0, _sessions.RUNNING_ORPHANED: 1,
+            _sessions.EXITED_RESUMABLE: 2, _sessions.UNKNOWN: 3, _sessions.EXITED_GONE: 4}
+    return sorted(out, key=lambda c: rank.get(c.get("state"), 9))
+
+
+def route_for(state_: Optional[str]) -> Tuple[str, str]:
+    """(route, why) for a target in this liveness state. The measured capability matrix.
+
+    ⛔ **`SEND` appears exactly once, and only where the channel is owned by construction.**
+    Measured on this machine, 2026-09-01:
+
+    * every live `claude.exe` reports `MainWindowHandle = 0` — the terminal host owns the window,
+      so there is no per-session window to raise and "open the target session" is not achievable
+      for a running session. 8 of 8 processes checked.
+    * `~/.claude/sessions/<pid>.json` does carry a `messagingSocketPath` named pipe per session,
+      and **no code in this estate reads or writes it**. Its protocol is undocumented and
+      unverified here. Writing an unknown frame into the pipe of a live session — MAIN T's
+      included — is not a P0 experiment, so it is recorded as the identified-but-unproven route
+      and nothing claims to use it.
+    * what IS proven is the channel the repo already runs on: a session we spawn ourselves takes
+      its prompt as an argument (`_launch_script` -> `claude (Get-Content -Raw <prompt>)`), which
+      is how every lane in this estate has ever been started.
+
+    So SEND is offered for a session that does not exist yet, and for nothing else.
+    """
+    if state_ == _sessions.EXITED_GONE or state_ is None:
+        return SEND, ("no live process — the session is spawned here, so its prompt is delivered "
+                      "as its startup prompt through the same path every lane uses")
+    if state_ == _sessions.EXITED_RESUMABLE:
+        return COPY_OPEN, ("resumed here (safe: it is not alive), and the prompt is copied for one "
+                           "paste — a prompt riding along with an interactive --resume is not "
+                           "proven, so it is not claimed")
+    if state_ == _sessions.RUNNING_ATTACHED:
+        return COPY_OPEN, ("alive and externally controlled. It owns no window handle, so its "
+                           "terminal tab cannot be raised from here; the prompt is copied and the "
+                           "exact identity shown so the right tab is findable")
+    if state_ == _sessions.RUNNING_ORPHANED:
+        return COPY_OPEN, ("alive but detached. Use the background-agent path (`claude agents`, "
+                           "then `claude attach <id>`); a second process is never started here")
+    if state_ == _sessions.UNKNOWN:
+        return REFUSE, ("liveness could not be measured, so neither 'it is safe to resume' nor "
+                        "'it is safe to spawn' is established")
+    return COPY_ONLY, "no route is known for this state"
+
+
+def dispatch_plan(prompt: str, target_session_id: str = "",
+                  st: Optional[dict] = None) -> dict:
+    """What would happen if this prompt were dispatched. Decides nothing and spawns nothing.
+
+    The whole contract of P0 dispatch is here: **a plan that does not resolve to exactly one
+    session returns `REQUIRE_SELECTION`**, and the caller refuses to act on it.
+    """
+    st = state() if st is None else st
+    cards = st["sessions"]
+    hdr = header_of(prompt)
+    chosen = next((c for c in cards if c.get("session_id") == target_session_id),
+                  None) if target_session_id else None
+
+    candidates = _target_sessions(hdr["header"], cards) if hdr["header"] else []
+    plan = {
+        "matched_headers": hdr["matched"],
+        "header": hdr["header"],
+        "candidates": [{"session_id": c.get("session_id"), "state": c.get("state"),
+                        "topic": (c.get("topic") or c.get("name") or "")[:80],
+                        "cwd": c.get("cwd"), "repo": c.get("repo")} for c in candidates],
+        "chosen": None, "route": None, "why": "", "decision": "REQUIRE_SELECTION",
+        "prompt_bytes": len((prompt or "").encode("utf-8")),
+    }
+
+    if not (prompt or "").strip():
+        plan["why"] = "there is no prompt to dispatch"
+        return plan
+
+    if chosen is None:
+        if not hdr["matched"]:
+            plan["why"] = ("no declared header was found in the first "
+                           f"{HEADER_LINES} lines — choose the target explicitly")
+            return plan
+        if not hdr["deterministic"]:
+            plan["why"] = ("this prompt names " + " and ".join(hdr["matched"])
+                           + " — two addresses is not a tie to break, choose one")
+            return plan
+        if len(candidates) != 1:
+            plan["why"] = (f"header {hdr['header']} matched {len(candidates)} session(s); "
+                           + ("no session carries that header, so pick one or start a new session"
+                              if not candidates else
+                              "more than one session carries that header and they are not "
+                              "distinguishable from the registry — choose which"))
+            return plan
+        chosen = next(c for c in cards if c.get("session_id") == candidates[0]["session_id"])
+
+    route, why = route_for(chosen.get("state"))
+    plan["chosen"] = {"session_id": chosen.get("session_id"), "state": chosen.get("state"),
+                      "topic": (chosen.get("topic") or chosen.get("name") or "")[:80],
+                      "cwd": chosen.get("cwd"), "repo": chosen.get("repo"),
+                      "pid": chosen.get("pid"), "kind": chosen.get("kind"),
+                      "job_state": chosen.get("job_state"), "needs": chosen.get("needs") or ""}
+    plan["route"] = route
+    plan["why"] = why
+    plan["decision"] = "REFUSE" if route == REFUSE else "READY"
+    return plan
 
 
 def main(argv: Optional[List[str]] = None) -> int:

@@ -65,7 +65,7 @@ CSS = """
 .sw select,.sw textarea,.sw input[type=text]{background:var(--paper);color:var(--ink);
  border:1px solid var(--rule);padding:4px 6px;font:12px ui-monospace,monospace}
 .sw label{font-size:11.5px;color:var(--ink3)}
-.sw button.btn{background:var(--paper)}
+.sw button.btn{background:var(--paper);color:var(--ink);border:1px solid var(--rule)}
 .sw pre{margin:6px 0 0;padding:8px 10px;background:var(--paper);border:1px solid var(--rule);
  overflow-x:auto;font-size:11.5px;white-space:pre-wrap}
 """
@@ -213,19 +213,45 @@ def _needs(st: dict) -> str:
 
 
 def _upstream(st: dict) -> str:
-    u = st["upstream"]
+    """One channel, rendered once.
+
+    ⛔ This rendered a full block per reader until 2026-09-01, when 16 readers with unread traffic
+    made this panel 211,485 bytes on a page whose other seven panels totalled ~12 KB. The bus is
+    one channel that several readers have not caught up on; the same message sixteen times is not
+    sixteen messages.
+    """
+    u, dg = st["upstream"], st.get("upstream_digest") or {"events": [], "not_shown": 0}
     if not u:
         return ('<p class="dim">No unread peer traffic on <code>.data/bus/</code>. '
                 'Cursors are per reader and are <b>not</b> advanced by opening this page.</p>')
-    out = []
-    for r in u:
+
+    senders = sorted({e["from"] for e in dg["events"]})
+    out = ['<div class="dim" style="font-size:11.5px;margin:0 0 6px">'
+           'behind: ' + " · ".join(f'<b>{_e(r["reader"])}</b> {r["unread"]}' for r in u)
+           + ' &nbsp;—&nbsp; peer traffic is a nudge, not durable evidence; the durable version of '
+             'a correction is in <code>docs/findings.d/</code></div>',
+           # ⛔ COLLAPSED BY DEFAULT. This is a command page the brief asks to keep to one screen,
+           # and an unread backlog is the one panel that grows without bound — 21 events pushed
+           # every other panel below the fold on 2026-09-01. The COUNT is always visible, because
+           # that is the part that changes a decision; the text is one click away.
+           f'<details><summary>{dg["total"]} unread event(s) from '
+           f'{_e(", ".join(senders)) or "nobody"} — read them</summary>']
+    for e in dg["events"]:
+        clip = (f' <span class="dim">+{e["clipped"]} more chars — read it in the session, not here</span>'
+                if e["clipped"] else "")
+        refs = (f'<br><span class="dim" style="font-size:11px">refs: '
+                f'{_e(", ".join(e["refs"]))}</span>' if e["refs"] else "")
         out.append(
-            f'<div class="row"><span class="tag warn">{r["unread"]} UNREAD</span>'
-            f'<span><b>{_e(r["reader"])}</b> '
-            f'<span class="dim">from {_e(", ".join(r["from"]))}</span>'
-            f'<br><span class="dim" style="font-size:11px">{_e(r["basis"])}</span>'
-            f'<details><summary>view</summary><pre>{_e(r["rendered"])}</pre></details>'
-            '</span><span></span></div>')
+            f'<div class="row"><span class="tag warn">{_e(e["kind"].upper())}</span>'
+            f'<span><b>{_e(e["from"])}</b> '
+            f'<span class="dim" style="font-size:11px">{_e(e["at"][:19])} · unread by '
+            f'{len(e["unread_by"])}</span><br>{_e(e["text"])}{clip}{refs}</span>'
+            '<span></span></div>')
+    if dg["not_shown"]:
+        out.append(f'<div class="row"><span class="tag dim">…</span><span class="dim">'
+                   f'{dg["not_shown"]} older event(s) not shown — this is a nudge surface, not an '
+                   f'archive</span><span></span></div>')
+    out.append("</details>")
     return "".join(out)
 
 
@@ -317,10 +343,104 @@ def _start_synced(st: dict) -> str:
     return "".join(body)
 
 
+# --------------------------------------------------------- SLICE C: the quick-dispatch control
+
+
+def _dispatch_panel(st: dict, plan=None) -> str:
+    """Paste a prompt, see exactly which session it would reach, then act.
+
+    ⭐ **Identity is rendered before the act, not after it.** The SECURITY requirement is that a
+    dispatch shows target, task/lane, worktree and session state near the button — because the
+    failure that costs something is not a malformed prompt, it is a correct prompt delivered to the
+    wrong session. PREVIEW resolves the target and spawns nothing, so the operator can look before
+    committing.
+    """
+    cards = st["sessions"]
+    opts = [("", "— resolve from the prompt's header —")]
+    for c in cards:
+        sid = c.get("session_id") or ""
+        opts.append((sid, f'{c.get("state")} · {(c.get("topic") or c.get("name") or "?")[:52]} '
+                          f'· {c.get("where") or "?"}'))
+
+    known = " · ".join(sorted(_sb.TARGET_ALIASES))
+    out = [
+        '<form method="POST" action="/switchboard/dispatch" id="qd-form">',
+        '<textarea id="qd-prompt" name="prompt" rows="5" placeholder="Paste the prompt. '
+        'A recognised header on one of its first '
+        f'{_sb.HEADER_LINES} lines routes it deterministically." '
+        'style="width:100%;font:12px ui-monospace,monospace"></textarea>',
+        f'<div class="dim" style="font-size:11px;margin:4px 0 7px">recognised headers: '
+        f'<b>{_e(known)}</b> — matched as whole phrases, no LLM router, no fuzzy scoring</div>',
+        '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">',
+        f'<label>target<br><select name="session" style="min-width:330px">{_opts(opts)}</select></label>',
+        '</div>',
+        '<div style="margin:9px 0 0;display:flex;gap:8px;flex-wrap:wrap">',
+        '<button name="dry" value="1" class="btn" style="cursor:pointer">PREVIEW (resolve only)</button>',
+        '<button name="dry" value="" id="qd-go" class="btn" style="cursor:pointer;'
+        'border-color:var(--accent);color:var(--accent);font-weight:700">COPY + DISPATCH</button>',
+        '</div>',
+        '</form>',
+        # The clipboard half of COPY+OPEN happens HERE, in the browser, because that is the only
+        # place with a clipboard. The server half opens what it safely can. Copy failing must never
+        # block the dispatch, so the submit is not conditional on it.
+        '<script>(function(){var f=document.getElementById("qd-form"),'
+        'b=document.getElementById("qd-go"),t=document.getElementById("qd-prompt");'
+        'if(!f||!b||!t)return;b.addEventListener("click",function(){'
+        'try{if(navigator.clipboard&&navigator.clipboard.writeText){'
+        'navigator.clipboard.writeText(t.value);}}catch(e){}});})();</script>',
+    ]
+
+    if plan:
+        out.append(_plan_readout(plan))
+    else:
+        out.append('<p class="dim" style="font-size:11.5px;margin:10px 0 0">'
+                   'Nothing dispatched this session. PREVIEW resolves the target and spawns '
+                   'nothing.</p>')
+    return "".join(out)
+
+
+def _plan_readout(plan: dict) -> str:
+    """The identity block. Everything the operator needs to catch a wrong target before acting."""
+    dec = plan.get("decision")
+    col = ("var(--pass)" if dec == "READY" else "var(--fail)" if dec == "REFUSE"
+           else "var(--unmeas)")
+    rows = [f'<div class="row" style="border-top:1px solid var(--rule);margin-top:10px;'
+            f'padding-top:9px"><span class="tag" style="color:{col}">{_e(dec)}</span>'
+            f'<span><b>{_e(plan.get("route") or "no route")}</b> — {_e(plan.get("why"))}</span>'
+            f'<span class="dim">{plan.get("prompt_bytes", 0):,}b</span></div>']
+
+    ch = plan.get("chosen")
+    if ch:
+        rows.append(
+            '<div class="row"><span class="tag" style="color:var(--accent)">TARGET</span>'
+            f'<span><b>{_e(ch.get("topic"))}</b><br>'
+            f'<span class="dim" style="font-size:11px">'
+            f'state {_e(ch.get("state"))} · pid {_e(ch.get("pid"))} · '
+            f'{_e(ch.get("kind") or "?")} · job {_e(ch.get("job_state") or "—")}<br>'
+            f'worktree/cwd <code>{_e(ch.get("cwd"))}</code><br>'
+            f'session id <code>{_e(ch.get("session_id"))}</code></span>'
+            + (f'<br><span class="bad">this session is blocked on: '
+               f'{_e(str(ch.get("needs"))[:120])}</span>' if ch.get("needs") else "")
+            + '</span><span></span></div>')
+    if plan.get("matched_headers"):
+        rows.append('<div class="row"><span class="tag dim">HEADER</span>'
+                    f'<span>matched {_e(", ".join(plan["matched_headers"]))}</span>'
+                    '<span></span></div>')
+    for c in plan.get("candidates") or []:
+        rows.append('<div class="row"><span class="tag dim">CANDIDATE</span>'
+                    f'<span>{_e(c.get("state"))} · {_e(c.get("topic"))}<br>'
+                    f'<span class="dim" style="font-size:11px">{_e(c.get("cwd"))}</span></span>'
+                    '<span></span></div>')
+    if plan.get("prompt_file"):
+        rows.append('<div class="row"><span class="tag dim">SAVED</span>'
+                    f'<span><code>{_e(plan["prompt_file"])}</code></span><span></span></div>')
+    return "".join(rows)
+
+
 # --------------------------------------------------------------------------- page
 
 
-def page(st: Optional[dict] = None) -> str:
+def page(st: Optional[dict] = None, dispatch: Optional[dict] = None) -> str:
     """The whole Switchboard as one HTML fragment, for embedding in the tracker's `.wrap`."""
     st = _sb.state() if st is None else st
     n = st["needs_you_count"]
@@ -352,6 +472,8 @@ def page(st: Optional[dict] = None) -> str:
                   note="read from jobs, so a question outlives the session that asked it"))
     o.append(_sec("Sessions", _sessions(st),
                   note="registry × jobs × process table · resume offered only for EXITED-RESUMABLE"))
+    o.append(_sec("Quick dispatch", _dispatch_panel(st, dispatch),
+                  note="deterministic header routing · refuses rather than guesses a target"))
     o.append(_sec("Upstream", _upstream(st),
                   note="peer traffic is a nudge, not durable evidence"))
     o.append(_sec("Worktrees", _worktrees(st), note="git worktree list, then rev-parse"))

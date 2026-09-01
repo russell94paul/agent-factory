@@ -16,6 +16,7 @@ import pytest
 from factory import bus as buslib
 from factory import sessions as sesslib
 from factory import switchboard as sb
+from factory import switchboard_render as sbr
 from factory.tasks import TaskStore
 
 
@@ -234,9 +235,11 @@ def test_an_unread_bus_event_is_surfaced(monkeypatch, tmp_path):
     buslib.post("peer", "correction", "the grain is not what D3 assumed")
     got = sb.upstream(["me"])
     assert len(got) == 1 and got[0]["unread"] == 1
-    assert "grain" in got[0]["rendered"]
     assert "nudge, not durable evidence" in got[0]["basis"], (
         "peer traffic rendered without the caveat that it is not evidence")
+    # The text itself lives in the digest now — see the compaction tests below for why.
+    dg = sb.upstream_digest(["me"])
+    assert dg["total"] == 1 and "grain" in dg["events"][0]["text"]
 
 
 def test_reading_the_switchboard_does_not_advance_a_bus_cursor(monkeypatch, tmp_path):
@@ -575,3 +578,263 @@ def test_the_start_synced_control_is_on_the_page():
     for field in ('name="target"', 'name="worktree"', 'name="reader"', 'name="note"'):
         assert field in page, f"the dispatch form is missing {field}"
     assert "413.8" in page, "the slow opt-in does not state its measured cost"
+
+
+# ============================================================ the upstream digest (compaction)
+
+
+def test_the_digest_renders_one_event_once_no_matter_how_many_readers_are_behind(monkeypatch, tmp_path):
+    """⛔ The defect that made the Upstream panel 211,485 bytes on 2026-09-01.
+
+    The bus is ONE channel that several readers have not caught up on. Rendering per reader
+    duplicated every message once per reader — sixteen copies of a message is not sixteen
+    messages. The digest deduplicates and records who is behind instead.
+    """
+    monkeypatch.setattr(buslib, "ROOT", tmp_path)
+    buslib.post("peer", "correction", "the grain moved")
+    readers = [f"r{i}" for i in range(16)]
+
+    per_reader = sb.upstream(readers)
+    assert len(per_reader) == 16, "every behind reader should still be counted"
+    assert all("rendered" not in r for r in per_reader), (
+        "upstream() is carrying message text again — that is the 211 KB panel returning")
+
+    dg = sb.upstream_digest(readers)
+    assert dg["total"] == 1, f"one post rendered as {dg['total']} events"
+    assert dg["events"][0]["text"] == "the grain moved"
+    assert len(dg["events"][0]["unread_by"]) == 16
+
+
+def test_the_digest_truncates_a_long_message_and_says_by_how_much(monkeypatch, tmp_path):
+    """The bus caps a message at 2000 chars, which is right for delivery into a session and much
+    too generous for a command page. Truncation must be visible, never silent."""
+    monkeypatch.setattr(buslib, "ROOT", tmp_path)
+    buslib.post("peer", "note", "x" * 1500)
+    e = sb.upstream_digest(["me"])["events"][0]
+    assert len(e["text"]) == sb.DIGEST_CHARS
+    assert e["clipped"] == 1500 - sb.DIGEST_CHARS
+    page = sbr._upstream({"upstream": sb.upstream(["me"]),
+                          "upstream_digest": sb.upstream_digest(["me"])})
+    assert "more chars" in page, "the panel truncated without saying so"
+
+
+def test_the_digest_still_advances_no_cursor(monkeypatch, tmp_path):
+    monkeypatch.setattr(buslib, "ROOT", tmp_path)
+    buslib.post("peer", "correction", "one")
+    sb.upstream_digest(["me"])
+    sb.upstream_digest(["me"])
+    assert not buslib._cursor_path("me").exists()
+    assert len(buslib.unread("me")) == 1
+
+
+# ==================================================================== SLICE C: quick dispatch
+
+
+def _live(sid, state_, topic, cwd="C:/repo", **kw):
+    return sb.session_cards([_session(session_id=sid, state=state_, topic=topic, cwd=cwd, **kw)])[0]
+
+
+def _plan(prompt, cards, target=""):
+    return sb.dispatch_plan(prompt, target_session_id=target,
+                            st={"sessions": cards, "tasks": []})
+
+
+# ---------------------------------------------------------------- deterministic routing
+
+
+def test_an_explicit_header_routes_deterministically():
+    """No LLM router. The header either matches a declared alias as a whole phrase, or it does not."""
+    cards = [_live("s1", sesslib.RUNNING_ATTACHED, "# MAIN T — resume the mission")]
+    p = _plan("# MAIN T\nplease continue at D5", cards)
+    assert p["header"] == "MAIN T" and p["decision"] == "READY"
+    assert p["chosen"]["session_id"] == "s1"
+
+
+def test_every_declared_header_is_recognised():
+    for hdr, aliases in sb.TARGET_ALIASES.items():
+        for a in aliases:
+            got = sb.header_of(f"# {a}\nbody")
+            assert got["header"] == hdr, f"{a!r} did not route to {hdr}"
+
+
+def test_a_header_is_not_matched_inside_a_longer_word():
+    """`maint` must not fire inside `maintenance`, or a maintenance note dispatches to MAIN T."""
+    assert sb.header_of("# maintenance window tonight")["header"] is None
+    assert sb.header_of("# switchboarding is not a word")["header"] is None
+
+
+def test_a_header_only_counts_in_the_first_lines():
+    """A prompt that MENTIONS client review in its body is not addressed to it. Treating a mention
+    as an address is the wrong-session dispatch this slice exists to stop."""
+    body = "# some other thing\n" + ("filler\n" * 20) + "later we should tell CLIENT REVIEW\n"
+    assert sb.header_of(body)["header"] is None
+
+
+def test_two_headers_is_a_refusal_not_a_tie_to_break():
+    cards = [_live("s1", sesslib.RUNNING_ATTACHED, "# MAIN T"),
+             _live("s2", sesslib.RUNNING_ATTACHED, "# CLIENT REVIEW")]
+    p = _plan("# MAIN T and CLIENT REVIEW\nboth of you", cards)
+    assert p["decision"] == "REQUIRE_SELECTION"
+    assert p["chosen"] is None and "two addresses" in p["why"]
+
+
+def test_no_header_requires_an_explicit_target():
+    p = _plan("just some text with no header", [_live("s1", sesslib.RUNNING_ATTACHED, "# MAIN T")])
+    assert p["decision"] == "REQUIRE_SELECTION" and p["chosen"] is None
+
+
+def test_a_header_matching_two_sessions_refuses_rather_than_guessing():
+    """⭐ The measured problem this guards: 5 of 12 live sessions once shared one name. A router
+    that picks the first of two identically-named sessions is a coin toss with a confident UI."""
+    cards = [_live("s1", sesslib.RUNNING_ATTACHED, "# MAIN T one"),
+             _live("s2", sesslib.RUNNING_ATTACHED, "# MAIN T two")]
+    p = _plan("# MAIN T\ngo", cards)
+    assert p["decision"] == "REQUIRE_SELECTION"
+    assert "more than one session" in p["why"] and len(p["candidates"]) == 2
+
+
+def test_an_explicit_target_overrides_the_header_entirely():
+    """The operator is the authority. A chosen target is used even when the header says otherwise —
+    and it is the header that is advisory, not the choice."""
+    cards = [_live("s1", sesslib.RUNNING_ATTACHED, "# MAIN T"),
+             _live("s2", sesslib.EXITED_GONE, "# CLIENT REVIEW")]
+    p = _plan("# MAIN T\ngo", cards, target="s2")
+    assert p["chosen"]["session_id"] == "s2" and p["decision"] == "READY"
+
+
+def test_an_empty_prompt_is_never_dispatchable():
+    p = _plan("   \n  ", [_live("s1", sesslib.RUNNING_ATTACHED, "# MAIN T")])
+    assert p["decision"] == "REQUIRE_SELECTION" and "no prompt" in p["why"]
+
+
+def test_the_alias_table_cannot_be_ambiguous():
+    """Two headers claiming one alias would make routing non-deterministic while still looking
+    declarative — worse than no table. Guarded at import."""
+    import importlib
+    bad = dict(sb.TARGET_ALIASES, DECOY=("main t",))
+    orig = sb.TARGET_ALIASES
+    try:
+        sb.TARGET_ALIASES = bad
+        with pytest.raises(ImportError):
+            sb._validate_aliases()
+    finally:
+        sb.TARGET_ALIASES = orig
+    sb._validate_aliases()
+    importlib.reload  # noqa: B018  - referenced so the intent is obvious
+
+
+# ------------------------------------------------------------------ the route matrix
+
+
+def test_send_is_offered_only_where_the_channel_is_owned():
+    """⛔ SEND appears for a session that does not exist yet, and for nothing else.
+
+    Measured 2026-09-01: all 8 live claude.exe processes report MainWindowHandle 0, so a running
+    session's terminal tab cannot be raised from here; and the per-session `messagingSocketPath`
+    named pipe has no reader or writer anywhere in this estate and an unverified protocol. What IS
+    proven is the channel every lane already launches on: a session we spawn takes its prompt as an
+    argument.
+    """
+    assert sb.route_for(sesslib.EXITED_GONE)[0] == sb.SEND
+    assert sb.route_for(None)[0] == sb.SEND
+    for st_ in (sesslib.RUNNING_ATTACHED, sesslib.RUNNING_ORPHANED, sesslib.EXITED_RESUMABLE):
+        assert sb.route_for(st_)[0] != sb.SEND, f"{st_} was offered a direct SEND"
+
+
+def test_an_unknown_liveness_target_is_refused_outright():
+    assert sb.route_for(sesslib.UNKNOWN)[0] == sb.REFUSE
+    cards = [_live("s1", sesslib.UNKNOWN, "# MAIN T")]
+    p = _plan("# MAIN T\ngo", cards)
+    assert p["decision"] == "REFUSE"
+
+
+def test_an_orphaned_target_is_pointed_at_the_attach_path_not_a_spawn():
+    route, why = sb.route_for(sesslib.RUNNING_ORPHANED)
+    assert route == sb.COPY_OPEN
+    assert "attach" in why and "never started here" in why
+
+
+# ----------------------------------------------------------- the action refuses safely
+
+
+def test_dispatch_refuses_without_resolving_and_spawns_nothing(monkeypatch):
+    from scripts import local_tracker as lt
+    opened = []
+    monkeypatch.setattr(lt, "_spawn", lambda *a, **k: opened.append(a))
+    ok, msg = lt.quick_dispatch("no header anywhere in this prompt")
+    assert not ok and not opened and "REQUIRE_SELECTION" in msg
+
+
+def test_dispatch_to_a_live_session_starts_no_second_process(monkeypatch, tmp_path):
+    """⛔ The core P0 safety property: a live externally controlled session is never duplicated."""
+    from scripts import local_tracker as lt
+    monkeypatch.setattr(lt, "FACTORY", tmp_path)
+    card = _live("s1", sesslib.RUNNING_ATTACHED, "# MAIN T mission", cwd=str(tmp_path))
+    monkeypatch.setattr(lt.sblib, "state",
+                        lambda *a, **k: {"sessions": [card], "tasks": []})
+    opened = []
+    monkeypatch.setattr(lt, "_spawn", lambda *a, **k: opened.append(a))
+
+    ok, msg = lt.quick_dispatch("# MAIN T\ndo the thing")
+    assert ok, msg
+    assert not opened, "a live session was dispatched to by starting a second process"
+    assert "COPY+OPEN" in msg and "No second process was started" in msg
+    assert "MainWindowHandle 0" in msg, "the reason it cannot open the tab is not stated"
+    saved = list((tmp_path / ".data" / "dispatch").iterdir())
+    assert len(saved) == 1 and saved[0].read_text(encoding="utf-8").startswith("# MAIN T")
+
+
+def test_dispatch_to_a_dead_target_sends_by_spawning_one_session(monkeypatch, tmp_path):
+    from scripts import local_tracker as lt
+    monkeypatch.setattr(lt, "FACTORY", tmp_path)
+    card = _live("s1", sesslib.EXITED_GONE, "# CLIENT REVIEW", cwd=str(tmp_path))
+    monkeypatch.setattr(lt.sblib, "state", lambda *a, **k: {"sessions": [card], "tasks": []})
+    opened = []
+    monkeypatch.setattr(lt, "_spawn", lambda *a, **k: opened.append(a))
+
+    ok, msg = lt.quick_dispatch("# CLIENT REVIEW\nrefresh please")
+    assert ok and "SENT" in msg
+    assert len(opened) == 1, "SEND did not open exactly one session"
+
+
+def test_a_dry_dispatch_resolves_the_target_and_opens_nothing(monkeypatch, tmp_path):
+    from scripts import local_tracker as lt
+    monkeypatch.setattr(lt, "FACTORY", tmp_path)
+    card = _live("s1", sesslib.EXITED_GONE, "# CLIENT REVIEW", cwd=str(tmp_path))
+    monkeypatch.setattr(lt.sblib, "state", lambda *a, **k: {"sessions": [card], "tasks": []})
+    opened = []
+    monkeypatch.setattr(lt, "_spawn", lambda *a, **k: opened.append(a))
+    ok, msg = lt.quick_dispatch("# CLIENT REVIEW\ngo", dry=True)
+    assert ok and "DRY RUN" in msg and not opened
+
+
+def test_dispatching_to_an_unknown_liveness_target_opens_nothing(monkeypatch, tmp_path):
+    from scripts import local_tracker as lt
+    monkeypatch.setattr(lt, "FACTORY", tmp_path)
+    card = _live("s1", sesslib.UNKNOWN, "# MAIN T", cwd=str(tmp_path))
+    monkeypatch.setattr(lt.sblib, "state", lambda *a, **k: {"sessions": [card], "tasks": []})
+    opened = []
+    monkeypatch.setattr(lt, "_spawn", lambda *a, **k: opened.append(a))
+    ok, msg = lt.quick_dispatch("# MAIN T\ngo")
+    assert not ok and not opened and "REFUSE" in msg
+
+
+def test_the_dispatch_panel_shows_identity_before_the_act():
+    """SECURITY: target, state, worktree/cwd and session id must be visible beside the button."""
+    card = _live("s1", sesslib.RUNNING_ATTACHED, "# MAIN T mission", cwd="C:/repo/wt")
+    plan = _plan("# MAIN T\ngo", [card])
+    html = sbr._plan_readout(plan)
+    for needle in ("TARGET", "RUNNING-ATTACHED", "C:/repo/wt", "s1", "COPY+OPEN"):
+        assert needle in html, f"the pre-dispatch identity block is missing {needle!r}"
+
+
+def test_the_dispatch_control_is_on_the_page():
+    import datetime
+
+    from scripts import local_tracker as lt
+    page = lt.render(datetime.datetime(2026, 9, 1, 12, 0), "switchboard")
+    assert 'action="/switchboard/dispatch"' in page
+    assert "COPY + DISPATCH" in page and "PREVIEW (resolve only)" in page
+    assert 'id="qd-prompt"' in page
+    for hdr in sb.TARGET_ALIASES:
+        assert hdr in page, f"the recognised header {hdr} is not advertised to the operator"

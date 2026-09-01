@@ -6,44 +6,45 @@
       "scheme": "light",
       "width": 900,
       "file": "switchboard-light-900.png",
-      "panels": 8,
+      "panels": 9,
       "badge": "NEEDS YOU \u2014 5"
     },
     {
       "scheme": "light",
       "width": 1280,
       "file": "switchboard-light-1280.png",
-      "panels": 8,
+      "panels": 9,
       "badge": "NEEDS YOU \u2014 5"
     },
     {
       "scheme": "light",
       "width": 1600,
       "file": "switchboard-light-1600.png",
-      "panels": 8,
+      "panels": 9,
       "badge": "NEEDS YOU \u2014 5"
     },
     {
       "scheme": "dark",
       "width": 900,
       "file": "switchboard-dark-900.png",
-      "panels": 8,
+      "panels": 9,
       "badge": "NEEDS YOU \u2014 5"
     },
     {
       "scheme": "dark",
       "width": 1280,
       "file": "switchboard-dark-1280.png",
-      "panels": 8,
+      "panels": 9,
       "badge": "NEEDS YOU \u2014 5"
     },
     {
       "scheme": "dark",
       "width": 1600,
       "file": "switchboard-dark-1600.png",
-      "panels": 8,
+      "panels": 9,
       "badge": "NEEDS YOU \u2014 5"
     }
   ],
-  "problems": []
+  "problems": [],
+  "page_bytes": 52106
 }

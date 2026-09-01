@@ -1,0 +1,31 @@
+{
+  "label": "fixed",
+  "viewport": "1280x1100",
+  "color_scheme": "dark",
+  "buttons": [
+    {
+      "label": "PACKET ONLY (dry)",
+      "color": "rgb(242, 240, 234)",
+      "background": "rgb(18, 18, 15)",
+      "luminance_gap": 222
+    },
+    {
+      "label": "START SYNCED",
+      "color": "rgb(123, 160, 240)",
+      "background": "rgb(18, 18, 15)",
+      "luminance_gap": 140
+    },
+    {
+      "label": "PREVIEW (resolve only)",
+      "color": "rgb(242, 240, 234)",
+      "background": "rgb(18, 18, 15)",
+      "luminance_gap": 222
+    },
+    {
+      "label": "COPY + DISPATCH",
+      "color": "rgb(123, 160, 240)",
+      "background": "rgb(18, 18, 15)",
+      "luminance_gap": 140
+    }
+  ]
+}

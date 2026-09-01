@@ -35,13 +35,15 @@ SCHEMES = ("light", "dark")
 #: Panel headings that must exist on every render. The list is the acceptance question set from the
 #: brief, turned into things a browser can look for.
 EXPECTED = ("CRITICAL PATH", "READY IN PARALLEL", "START SYNCED", "NEEDS YOU", "SESSIONS",
-            "UPSTREAM", "WORKTREES", "WARNINGS")
+            "QUICK DISPATCH", "UPSTREAM", "WORKTREES", "WARNINGS")
 
 #: Controls that must be present and correctly wired. A form that renders but posts nowhere is the
 #: same class of defect as a panel that paints nothing.
 CONTROLS = ('form[action="/switchboard/start"]', 'select[name="target"]',
             'select[name="worktree"]', 'select[name="reader"]', 'textarea[name="note"]',
-            'button[name="dry"]')
+            'button[name="dry"]',
+            'form[action="/switchboard/dispatch"]', 'textarea#qd-prompt',
+            'select[name="session"]', 'button#qd-go')
 
 
 def main(argv=None) -> int:
@@ -116,6 +118,30 @@ def main(argv=None) -> int:
                     report["problems"].append(f"{scheme}/{w}: {len(errs)} console error(s): {errs[:3]}")
                 if fails:
                     report["problems"].append(f"{scheme}/{w}: {len(fails)} failed request(s): {fails[:3]}")
+
+                # ⛔ Added after a look at a screenshot caught what every selector check missed:
+                # both dry-run buttons rendered as invisible text, because `.sw button.btn` set a
+                # background and never a colour, so the browser default (black) sat on a near-black
+                # dark-mode ground. A control that exists in the DOM and cannot be read is not a
+                # control — and "the element is present" cannot see that.
+                unreadable = page.evaluate("""() => [...document.querySelectorAll('.sw button')]
+                    .filter(b => {
+                      const s = getComputedStyle(b);
+                      const p = c => c.match(/\d+/g).slice(0,3).map(Number);
+                      const [r,g,bl] = p(s.color), bg = p(s.backgroundColor);
+                      const lum = ([r,g,b]) => 0.2126*r + 0.7152*g + 0.0722*b;
+                      return Math.abs(lum([r,g,bl]) - lum(bg)) < 40;
+                    }).map(b => b.textContent.trim().slice(0,30))""")
+                for u in unreadable:
+                    report["problems"].append(
+                        f"{scheme}/{w}: button {u!r} has too little contrast to read")
+
+                size = page.evaluate("() => document.documentElement.outerHTML.length")
+                if size > 120_000:
+                    report["problems"].append(
+                        f"{scheme}/{w}: the page is {size:,} bytes — a command page that large "
+                        f"means a panel is rendering an archive rather than a nudge")
+                report.setdefault("page_bytes", size)
 
                 shot = out / f"switchboard-{scheme}-{w}.png"
                 page.screenshot(path=str(shot), full_page=True)

@@ -448,6 +448,86 @@ def resume_session(session_id: str, dry: bool = False):
     return True, f"resumed {session_id[:8]} in {cwd}"
 
 
+#: The last dispatch preview or attempt, rendered back into the Switchboard panel. Held in memory
+#: only — a dispatch plan is a statement about a moment, and persisting it would create exactly the
+#: stale second source of truth this page refuses to have.
+_DISPATCH = None
+
+
+def quick_dispatch(prompt: str, target_session_id: str = "", dry: bool = False):
+    """Route a pasted prompt to one Claude session, or refuse and say which choice is missing.
+
+    ⛔ **Refusing is the feature.** P0 prioritises preventing a wrong-session dispatch over
+    automating a right one, so anything that does not resolve to exactly one session returns
+    REQUIRE_SELECTION and nothing is spawned, opened or copied server-side.
+
+    The routes, and what each actually does:
+
+      SEND        no live process. The session is started here, so the prompt is delivered as its
+                  startup prompt through `_launch_script` — the same path every lane in this estate
+                  has ever been launched with. This is the only owned input channel, and it is the
+                  only place SEND is offered.
+      COPY+OPEN   a live or resumable session someone else controls. A resumable one is resumed
+                  (safe — it is not alive). A running one is NOT touched: it owns no window handle,
+                  so nothing here can raise its tab, and the honest output is its exact identity
+                  plus the prompt on the clipboard.
+      REFUSE      liveness is UNKNOWN, so neither resume nor spawn is established as safe.
+    """
+    global _DISPATCH
+    try:
+        st = sblib.state()
+        plan = sblib.dispatch_plan(prompt, target_session_id=target_session_id, st=st)
+    except Exception as exc:                                       # noqa: BLE001
+        _DISPATCH = None
+        return False, f"could not plan the dispatch: {type(exc).__name__}: {exc}"
+
+    _DISPATCH = plan
+    if plan["decision"] != "READY":
+        return False, f"{plan['decision']} — {plan['why']}"
+
+    d = FACTORY / ".data" / "dispatch"
+    d.mkdir(parents=True, exist_ok=True)
+    stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    f = d / f"dispatch-{stamp}.txt"
+    f.write_text(prompt, encoding="utf-8")
+    plan["prompt_file"] = str(f)
+
+    ch = plan["chosen"]
+    who = f"{ch['topic'][:44]} ({ch['state']}, pid {ch['pid']}, {ch['cwd']})"
+    if dry:
+        return True, (f"DRY RUN — would {plan['route']} to {who}; prompt saved to {f.name}, "
+                      f"nothing opened")
+
+    if plan["route"] == sblib.SEND:
+        ps1 = _launch_script(f"dispatch {stamp}", f"quick dispatch · {plan['header'] or 'manual'}",
+                             f, "38;5;180", session_name=f"{plan['header'] or 'dispatch'} · sent")
+        cwd = ch.get("cwd") if ch.get("cwd") and pathlib.Path(ch["cwd"]).is_dir() else str(FACTORY)
+        wtexe = _wt()
+        cmd = ([wtexe, "new-tab", "--title", f"dispatch {plan['header'] or stamp}",
+                "--startingDirectory", cwd, "--colorScheme", WT_SCHEME,
+                "powershell", "-NoExit", "-ExecutionPolicy", "Bypass", "-File", str(ps1)]
+               if wtexe else
+               ["cmd", "/c", "start", "dispatch", "powershell", "-NoExit",
+                "-ExecutionPolicy", "Bypass", "-File", str(ps1)])
+        try:
+            _spawn(cmd, cwd)
+        except Exception as exc:                                   # noqa: BLE001
+            return False, f"prompt saved to {f.name} but nothing opened: {type(exc).__name__}: {exc}"
+        return True, f"SENT — new session opened in {cwd} holding {f.name}"
+
+    if plan["route"] == sblib.COPY_OPEN and ch["state"] == sesslib.EXITED_RESUMABLE:
+        ok, msg = resume_session(ch["session_id"])
+        return ok, (f"COPY+OPEN — {msg}; the prompt is on your clipboard and saved to {f.name}. "
+                    f"Paste it into the resumed session."
+                    if ok else f"prompt saved to {f.name}, but {msg}")
+
+    # A live, externally controlled session. Nothing is opened, and the reason is measured.
+    return True, (f"COPY+OPEN — prompt copied and saved to {f.name}. Target is {who}. "
+                  f"It is alive and this page cannot raise its terminal tab "
+                  f"(claude.exe reports MainWindowHandle 0 — the terminal host owns the window), "
+                  f"so paste it into that tab. No second process was started.")
+
+
 def start_research_pass(rid: str, dry: bool = False):
     """Prepare a research pass and open a session that runs it here.
 
@@ -2642,7 +2722,7 @@ def render(when: datetime.datetime, tab: str = "tickets", team: str = "") -> str
         # The tab body is deliberately thin: everything that could be wrong lives in the
         # projection, where a test can reach it without parsing HTML.
         try:
-            w(sbr.page(sblib.state()))
+            w(sbr.page(sblib.state(), dispatch=_DISPATCH))
         except Exception as _exc:                                  # noqa: BLE001
             # A command page that 500s tells the operator nothing. A command page that says
             # WHICH instrument failed tells them where to look, and keeps the nav reachable.
@@ -2750,6 +2830,17 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 _CLAIM_MSG = (False, f"could not finish {lane_id}: {type(exc).__name__}: {exc}")
             print(f"  finish: {_CLAIM_MSG[1]}")
             self.send_response(303); self.send_header("Location", "/lanes"); self.end_headers()
+            return
+        if self.path.rstrip("/") == "/switchboard/dispatch":
+            raw = self.rfile.read(int(self.headers.get("Content-Length") or 0)).decode("utf-8", "replace")
+            q = urllib.parse.parse_qs(raw, keep_blank_values=True)
+            _CLAIM_MSG = quick_dispatch(
+                (q.get("prompt") or [""])[0],
+                target_session_id=(q.get("session") or [""])[0].strip(),
+                dry=bool((q.get("dry") or [""])[0]))
+            print(f"  switchboard/dispatch: {_CLAIM_MSG[1]}")
+            self.send_response(303); self.send_header("Location", "/switchboard")
+            self.send_header("Cache-Control", "no-store"); self.end_headers()
             return
         if self.path.rstrip("/") == "/switchboard/start":
             raw = self.rfile.read(int(self.headers.get("Content-Length") or 0)).decode("utf-8", "replace")
