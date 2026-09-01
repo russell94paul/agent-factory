@@ -105,6 +105,11 @@ CSS = """
 .p1 .btn.wide{display:block;width:100%;text-align:center;padding:11px;
  white-space:normal;overflow-wrap:anywhere}
 .p1 .btn[aria-disabled=true]{opacity:.45;pointer-events:none}
+/* ⛔ Decision buttons are the ones a thumb actually has to hit, at 2am, on a phone. Measured at
+   30px in the flex row, under the 40px floor every .btn.wide already meets — and APPROVE/REJECT
+   are the highest-consequence taps on the surface. Given their own minimum rather than relying on
+   the wide-button rule they do not match. */
+.p1 form button.btn{min-height:44px;padding:11px 12px}
 
 /* ---- sections ------------------------------------------------------------ */
 .p1 .sec{border:1px solid var(--rule);background:var(--raise);margin:0 0 var(--gut);
@@ -325,7 +330,15 @@ def _primary_action(w: dict, view: str) -> str:
                 f'<button class="btn pri wide" name="go" value="1">START SYNCED</button></form>')
     if w["state"] == _work.RUNNING and w.get("session_id"):
         return (f'<a class="btn wide" href="{_url("sessions", w["id"])}">OPEN SESSION</a>')
-    return f'<a class="btn wide" href="{_url(view, w["id"])}">{_e(act)}</a>'
+    if w["state"] == _work.BLOCKED and w.get("blocked_by"):
+        # A real hold has a real release. Everything else here is navigation and says so.
+        return _decide_form(w, "; ".join(w["blocked_by"]), view)
+    # ⛔ These states have no single action the page can perform, so the control must NOT wear
+    # an imperative verb. RESOLVE / VALIDATE / REVIEW OUTCOME as bare <a href> were 58 buttons that
+    # looked like acts and only navigated -- the defect Paul hit on a phone with no laptop. The
+    # verb stays, as the thing you are going to DO next, and the label says where the tap goes.
+    return (f'<a class="btn wide" href="{_url(view, w["id"])}">'
+            f'{_e(act)} — open detail</a>')
 
 
 # --------------------------------------------------------------------------- NOW
@@ -346,6 +359,36 @@ def _why(r: dict) -> str:
     why = " · ".join(_e(x) for x in (r.get("why") or []))
     return (f'<div style="margin:0 0 5px"><span class="tag" style="color:{col}">{_e(band)}</span>'
             f'<div class="empty" style="margin-top:4px">{why}</div></div>')
+
+
+def _decide_form(w: dict, hold: str, view: str) -> str:
+    """APPROVE / REJECT, as a real POST. ⛔ Not a link.
+
+    The first version rendered `<a href=…>RESOLVE</a>`, which navigated to the Inspector — and the
+    Inspector had no release control either. The page named a decision, named the person who had
+    to make it, and offered no way to make it. On a phone, with no laptop, that is a dead end
+    dressed as an inbox.
+
+    Both answers are answers: APPROVE releases the hold, REJECT releases it too and records the
+    verdict, because a hold nobody will ever clear is worse than one cleared with a "no" attached.
+    The optional note is what a future reader needs to reconstruct why.
+    """
+    first = (hold.split(";")[0] or "").strip()
+    return (
+        f'<form method="POST" action="/switchboard/resolve" style="margin:0">'
+        f'<input type="hidden" name="work_id" value="{_e(w["id"])}">'
+        f'<input type="hidden" name="hold" value="{_e(first)}">'
+        f'<div style="display:flex;gap:7px">'
+        f'<button class="btn pri" name="go" value="APPROVE" style="flex:1">APPROVE</button>'
+        f'<button class="btn" name="go" value="REJECT" style="flex:1">REJECT</button>'
+        f'</div>'
+        # The note comes AFTER the buttons. It is optional, and putting it first pushed the
+        # decision itself below the fold on a 390px phone -- an optional field outranking the act.
+        f'<details style="margin-top:7px"><summary class="empty" style="cursor:pointer">'
+        f'add a reason (optional)</summary>'
+        f'<input type="text" name="note" maxlength="500" placeholder="why" '
+        f'style="margin-top:6px"></details></form>'
+        f'<a class="btn wide" href="{_url(view, w["id"])}" style="margin-top:7px">DETAIL</a>')
 
 
 def _needs_you(st: dict, view: str) -> str:
@@ -385,7 +428,7 @@ def _needs_you(st: dict, view: str) -> str:
                 f'{_e(w.get("visibility_label",""))}</span></div>'
                 f'<p class="ttl" style="color:var(--ink)">Held on: {_e(r.get("asks",""))}</p>'
                 f'<p class="empty">If you do not decide: {_e(r.get("consequence",""))}</p>'
-                f'<a class="btn wide" href="{_url(view, w["id"])}">RESOLVE</a></div>')
+                + _decide_form(w, r.get("asks", ""), view) + '</div>')
             continue
         if r["kind"] == "WORK" and r.get("work"):
             o.append(_why(r) + work_card(r["work"], view=view))
@@ -608,6 +651,26 @@ def inspector(st: dict, wid: str, view: str) -> str:
     o.append('</ul><p class="empty" style="margin-top:7px">READY requires every check to be an '
              'explicit PASS. UNMEASURED is not a pass.</p></div>')
 
+    holds = w.get("blocked_by") or []
+    if holds:
+        o.append('<div class="isec"><h3>Holds</h3>')
+        o.append('<p class="empty" style="margin-bottom:8px">An explicit hold. Releasing it is a '
+                 'decision, and it is recorded with an author, a time and a verdict.</p>')
+        for h in holds:
+            o.append(
+                f'<form method="POST" action="/switchboard/resolve" style="margin:0 0 9px">'
+                f'<input type="hidden" name="work_id" value="{_e(w["id"])}">'
+                f'<input type="hidden" name="hold" value="{_e(h)}">'
+                f'<p class="ttl" style="color:var(--ink);margin-bottom:5px">'
+                f'<code>{_e(h)}</code></p>'
+                f'<input type="text" name="note" maxlength="500" placeholder="why (optional)" '
+                f'style="margin-bottom:6px">'
+                f'<div style="display:flex;gap:6px">'
+                f'<button class="btn pri" name="go" value="APPROVE" style="flex:1">APPROVE</button>'
+                f'<button class="btn" name="go" value="REJECT" style="flex:1">REJECT</button>'
+                f'</div></form>')
+        o.append("</div>")
+
     o.append('<div class="isec"><h3>Autonomy</h3><dl class="kv">')
     o.append(f'<dt>policy</dt><dd>{_e(w.get("autonomy", "MANUAL"))}</dd>')
     o.append(f'<dt>paused</dt><dd>{"YES — the operator stop outranks the policy" if w.get("autonomy_paused") else "no"}</dd>')
@@ -815,7 +878,12 @@ def p0_block(st: dict, dispatch=None, expanded: bool = False) -> str:
 
 def _view_now(st: dict, view: str) -> str:
     now = st.get("now") or {}
-    o = [_repo_health(st)]
+    # ⛔ NEEDS YOU first, repo health after. Repo health sat above it and pushed the APPROVE button
+    # to 929px on an 844px viewport -- below the fold, on the one card the page exists to surface.
+    # And "main -- 26 uncommitted" is CHRONIC here: several sessions share that checkout, so it is
+    # close to permanently true. A permanently-true alarm outranking a live human decision is the
+    # same defect as five stale questions outranking one live blocker.
+    o = []
     rows = now.get("needs_you") or []
     live_n = sum(1 for r in rows if r.get("live"))
     stale_n = len(rows) - live_n
@@ -826,6 +894,7 @@ def _view_now(st: dict, view: str) -> str:
                   # ⛔ The alarm border is for a LIVE blocker only. Five stale questions turning
                   # the panel red teaches the operator that red means nothing.
                   alarm=bool(live_n), sid="needs-you"))
+    o.append(_repo_health(st))
     o.append(_sec("Next", _next(st, view), n=str(now.get("next_count") or 0),
                   hint="READY is derived from the checks, never chosen", sid="next"))
     o.append(_sec("Running", _running(st, view), n=str(now.get("running_count") or 0),

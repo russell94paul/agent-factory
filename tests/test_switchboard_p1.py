@@ -699,3 +699,85 @@ def test_a_waiting_card_names_the_real_blocker_not_a_satisfied_dependency(store)
     assert "AWAITING-A-DECISION" in w.blocked_reason
     assert "SATISFIED-DEP" not in w.blocked_reason, (
         "the card would name a dependency that is already satisfied")
+
+
+# ============================================================ 13. the buttons must ACT
+
+
+def test_every_action_label_is_either_a_real_post_or_says_it_navigates(live_state):
+    """⛔ The defect Paul hit on a phone with no laptop access.
+
+    The NEEDS YOU decision card rendered a control labelled RESOLVE that was an `<a href>` to the
+    Inspector — and the Inspector carried no release control either. The page stated a decision was
+    required, named the person required to make it, and offered no way to make it. An audit found
+    58 such controls: RESOLVE, VALIDATE and REVIEW OUTCOME were all navigation wearing an
+    imperative verb.
+
+    A control may navigate. It may not LOOK like an act and only navigate.
+    """
+    import re
+    html = ""
+    for view in ("now", "work", "inbox"):
+        html += p1.page(live_state, view=view, token="tok", runtime="rt")
+    bare = re.findall(r'<a class="btn[^"]*"[^>]*>\s*(RESOLVE|VALIDATE|REVIEW OUTCOME|RESPOND)\s*</a>',
+                      html)
+    assert not bare, (
+        f"{len(bare)} control(s) wear an imperative verb and only navigate: {set(bare)}")
+
+
+def test_a_held_work_item_renders_a_real_release_control(store, monkeypatch):
+    _mk(store, "BTN-01")
+    store.block("BTN-01", by="AWAITING-A-DECISION", actor="t")
+    monkeypatch.setattr(W, "store_path", lambda: store.path)
+    rows = [w.to_dict() for w in W.project(store=store)]
+    # The retained P0 block renders inside the NOW page and reads top-level keys of its own, so
+    # the fixture has to be a whole projection rather than the subset this test cares about.
+    st = sb.state(cheap=True)
+    st["work"] = rows
+    st["now"] = sb.now_buckets(rows, [])
+
+    body = p1.page(st, view="now", token="t", runtime="r")
+    assert 'action="/switchboard/resolve"' in body, "no release control on the decision card"
+    assert 'value="APPROVE"' in body and 'value="REJECT"' in body, (
+        "both answers must be answers — a hold nobody will ever clear is worse than a 'no'")
+
+    insp = p1.inspector(st, "BTN-01", "now")
+    assert 'action="/switchboard/resolve"' in insp, "the Inspector has no release control either"
+    assert "AWAITING-A-DECISION" in insp
+
+
+def test_resolving_a_hold_is_recorded_and_refuses_a_stale_one(store, monkeypatch):
+    """The release must carry an author, a time and a verdict, and must refuse a hold that is not
+    actually held — a page rendered thirty seconds ago is not the authority."""
+    from scripts import local_tracker as lt
+    monkeypatch.setattr(lt.worklib, "open_store", lambda: store)
+    monkeypatch.setattr(W, "open_store", lambda: store)
+    monkeypatch.setattr(W, "store_path", lambda: store.path)
+
+    _mk(store, "BTN-02")
+    store.block("BTN-02", by="AWAITING-A-DECISION", actor="t")
+
+    ok, msg = lt.resolve_hold("BTN-02", hold="NOT-HELD-ON-THIS", decision="APPROVE")
+    assert ok is False and "not held on" in msg
+    assert {x.id: x for x in W.project(store=store)}["BTN-02"].state == W.BLOCKED
+
+    ok, msg = lt.resolve_hold("BTN-02", hold="AWAITING-A-DECISION",
+                              decision="APPROVE", note="because I said so")
+    assert ok is True
+    w = {x.id: x for x in W.project(store=store)}["BTN-02"]
+    assert w.state == W.READY and w.blocked_by == []
+    kinds = [e["kind"] for e in store.get("BTN-02").evidence]
+    assert any("APPROVE" in k for k in kinds), f"the decision was not recorded ({kinds})"
+
+
+def test_reject_also_releases_and_records_the_verdict(store, monkeypatch):
+    from scripts import local_tracker as lt
+    monkeypatch.setattr(lt.worklib, "open_store", lambda: store)
+    monkeypatch.setattr(W, "open_store", lambda: store)
+    monkeypatch.setattr(W, "store_path", lambda: store.path)
+    _mk(store, "BTN-03")
+    store.block("BTN-03", by="A-HOLD", actor="t")
+    ok, msg = lt.resolve_hold("BTN-03", hold="A-HOLD", decision="REJECT")
+    assert ok is True and "REJECT" in msg
+    kinds = [e["kind"] for e in store.get("BTN-03").evidence]
+    assert any("REJECT" in k for k in kinds)

@@ -554,6 +554,53 @@ def _await_session(work_id: str):
     return None
 
 
+def resolve_hold(work_id: str, hold: str = "", decision: str = "", note: str = ""):
+    """Release an explicit hold on a piece of work — the operator's decision, recorded.
+
+    ⛔ **This exists because the button did not.** The NEEDS YOU decision card rendered a control
+    labelled RESOLVE that was an `<a href>` to the Inspector, and the Inspector carried no control
+    to release a hold either. So the page stated that a decision was required, named the person
+    required to make it, and offered no way to make it — an inbox that can only ever accumulate.
+    Paul hit exactly that on a phone with no laptop access, which is the situation the whole
+    surface exists to serve.
+
+    The release is `unblock`, which is already the store's inverse of `block`, plus an evidence row
+    so the decision has an author, a time and a reason. `decision` is recorded verbatim: APPROVE
+    and REJECT are different answers and both are answers.
+    """
+    work_id, hold = (work_id or "").strip(), (hold or "").strip()
+    if not work_id or not hold:
+        return False, "REFUSED: a resolve needs both the work id and the hold it releases."
+    try:
+        store = worklib.open_store()
+        t = store.get(work_id)
+    except KeyError:
+        return False, f"REFUSED: no canonical work named {work_id!r}."
+    except Exception as exc:                                       # noqa: BLE001
+        return False, f"could not read the store: {type(exc).__name__}: {exc}"
+    if hold not in (t.blocked_by or []):
+        return False, (f"REFUSED: {work_id} is not held on {hold!r}. Current holds: "
+                       + (", ".join(t.blocked_by) or "none") + ". The page was stale.")
+    verdict = (decision or "RESOLVED").upper()[:32]
+    try:
+        # ⭐ Evidence FIRST. A release that lands with no record of who decided or why is the
+        # thing this estate keeps finding: a state change nobody can reconstruct afterwards.
+        store.add_evidence(work_id, kind=f"operator decision: {verdict}",
+                           ref=f"hold:{hold}", actor="operator", basis="MEASURED")
+        if note.strip():
+            store._emit({"ts": __import__("time").time(), "actor": "operator", "kind": "note",
+                         "task": work_id, "data": {"text": note.strip()[:2000], "hold": hold,
+                                                   "decision": verdict}})
+        store.unblock(work_id, by=hold, actor="operator")
+    except Exception as exc:                                       # noqa: BLE001
+        return False, f"could not release the hold: {type(exc).__name__}: {exc}"
+    w = next((x for x in worklib.project() if x.id == work_id), None)
+    return True, (f"{verdict}: released {hold} on {work_id}"
+                  + (f" — now {w.state}" + (f" ({w.blocked_reason[:90]})"
+                                            if w.blocked_reason else "") if w else "")
+                  + (f'; note recorded' if note.strip() else ""))
+
+
 def set_autonomy(work_id: str, to: str = "", go: str = "set"):
     """Set the execution policy, or PAUSE / RESUME it.
 
@@ -3119,6 +3166,19 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.send_response(303)
             self.send_header("Location", "/switchboard?view=now" if _SB_MSG[0]
                              else "/switchboard?view=create")
+            self.send_header("Cache-Control", "no-store"); self.end_headers()
+            return
+        if self.path.rstrip("/") == "/switchboard/resolve":
+            raw = self.rfile.read(int(self.headers.get("Content-Length") or 0)).decode("utf-8", "replace")
+            q = urllib.parse.parse_qs(raw, keep_blank_values=True)
+            _SB_MSG = resolve_hold(
+                (q.get("work_id") or [""])[0],
+                hold=(q.get("hold") or [""])[0],
+                decision=(q.get("go") or [""])[0],
+                note=(q.get("note") or [""])[0])
+            print(f"  switchboard/resolve: {_SB_MSG[1]}")
+            self.send_response(303)
+            self.send_header("Location", "/switchboard?view=now")
             self.send_header("Cache-Control", "no-store"); self.end_headers()
             return
         if self.path.rstrip("/") == "/switchboard/autonomy":
