@@ -1,0 +1,3000 @@
+# Concept index — named and unnamed ideas in the Agent Factory corpus
+#
+# GENERATED 2026-09-02 against agent-factory @ fc78074 (main).
+# AMENDED 2026-09-02 @ 7b19baf (main) by the .agent-platform delta pass — Section P, nine concepts.
+#   Its reconciliation, including the six mechanisms deliberately given NO id, is in
+#   docs/_index/agent_platform_delta_synthesis.md. Nothing above Section P was rewritten.
+# Companion to corpus_manifest.yaml (per-artifact records) and document_catalog.md (reading map).
+#
+# ------------------------------------------------------------------------------------------------
+# RULES THIS INDEX FOLLOWS
+# ------------------------------------------------------------------------------------------------
+#
+# 1. SPECULATIVE CONCEPTS ARE PRESERVED. A concept is not downgraded for being unusual, unproven or
+#    metaphorical. `maturity` and `evidence` say what is known; they do not say whether the idea is
+#    good. Several of the most speculative entries here (C-AG-11 cognitive error correlation,
+#    C-AG-13 expected verification value) carry the highest research value in the index precisely
+#    because they are testable against data this repository already holds.
+#
+# 2. A CONCEPT'S HOME IS ITS FIRST NAMED SOURCE, not its best treatment. Where a later document
+#    treats it better, that document is listed second and the relationship is stated.
+#
+# 3. `implementation_status` claims are subordinate to docs/agent-army/CURRENT_STATE.md, which
+#    cites file:line. Where they disagree, CURRENT_STATE.md is right.
+#
+# 4. NOTHING IS INVENTED. A concept with no stated benefit, no proposed metric or no source has
+#    those fields as `unknown` or absent. Several entries below have `proposed_metrics: unknown`
+#    and that is a finding about the corpus, not an omission in this index.
+#
+# 5. UNNAMED CONCEPTS ARE INCLUDED. Section H holds ideas the corpus practises without ever giving
+#    them a name. They are among the most transferable things in it, and none of the inbound
+#    research packs contains any of them.
+#
+# ------------------------------------------------------------------------------------------------
+
+schema_version: 1
+
+id_scheme:
+  format: "C-<AREA>-<NN>"
+  areas:
+    VD: verdict and measurement semantics
+    AG: agent — definition, configuration, cognition
+    TM: team and topology
+    OR: organization, hierarchy, higher-order structures
+    CM: communication and coordination
+    KN: memory, knowledge and context
+    EV: evaluation, contracts and gates
+    OP: optimization and search
+    SM: simulation
+    SI: self-improvement and self-maintenance
+    GV: governance, safety and autonomy boundaries
+    UI: operator surfaces
+    RS: the research system itself
+    PR: process and working discipline
+  stability: "IDs are stable. A concept that is later split keeps its id for the parent and gains C-<AREA>-<NN>a/b children."
+
+maturity_vocabulary:
+  - idea               # named, no design
+  - designed           # a design document exists
+  - specified          # a contract, schema or spec exists
+  - prototyped
+  - implemented        # exists, imported, covered by a test
+  - measured           # implemented AND a number has been obtained from it in this estate
+  - refuted            # tested here or in cited work, and the result was against it
+
+research_status_vocabulary:
+  - not_researched
+  - prompt_written_not_dispatched
+  - answered_unverified      # an answer exists; nobody checked it back to source
+  - answered_verified        # an answer exists and its load-bearing claims were checked
+  - answered_and_contested   # an answer exists and a later pass or measurement disputes it
+  - settled
+
+concepts:
+
+# ================================================================================================
+# A · VERDICT AND MEASUREMENT SEMANTICS
+#     The corpus's deepest layer. Every other concept is judged through it.
+# ================================================================================================
+
+- concept_id: C-VD-01
+  name: The five verdicts, never collapsed
+  aliases: [five-verdict contract, GreenContract verdicts, PASS/FAIL/UNMEASURABLE/ERROR/NOT_RUN]
+  description: >-
+    A check returns one of five verdicts and no two may be merged. PASS asserted and held; FAIL
+    asserted and did not hold; UNMEASURABLE the instrument declined to run and KNOWS it cannot look;
+    ERROR the apparatus itself broke, which is not a measurement at all; NOT_RUN never attempted.
+    ERROR dominates FAIL: once the apparatus has broken we no longer know the observed failure was
+    real. Collapsing "I could not look" into "I looked and it was fine" is how a measurement that
+    never happened passes for one that did.
+  source_documents:
+    - README.md
+    - factory/contract.py
+    - docs/agent-army/CURRENT_STATE.md
+  prior_art:
+    - "ISO/IEC 9646 (1991) conformance testing"
+    - "ITU-T Z.140 (07/2001) TTCN-3 clause 24.2, Table 20 — monotone overwriting: none < pass < inconc < fail < error"
+    - "ETSI ES 201 873-1, current maintained edition (same material at clause 24.1 / Table 30)"
+  prior_art_status: known_prior_art
+  prior_art_note: >-
+    NOT this repository's invention, and the corpus corrected itself in public on this point.
+    The mapping is one-to-one: PASS<->pass, FAIL<->fail, UNMEASURABLE<->inconc, NOT_RUN<->none.
+    ERROR was MISSING until 2026-08-31 (commit ba57f66) and its absence was found by an adversarial
+    refutation pass in the sibling repo, not by internal review.
+  maturity: measured
+  research_status: settled
+  implementation_status: IMPLEMENTED
+  implementation_evidence: "factory/contract.py:32 Verdict enum; ContractResult.verdict checks ERROR before FAIL; ERROR is in UNSCORED_VERDICTS; tests/test_contract.py:68 guards against sweeping declared inconclusiveness into ERROR"
+  related_concepts: [C-VD-02, C-VD-03, C-EV-01, C-EV-02]
+  dependencies: []
+  proposed_benefits:
+    - "a dark instrument cannot read as healthy"
+    - "an apparatus failure cannot be reported as a subject failure"
+  proposed_metrics:
+    - "count of UNMEASURABLE verdicts, reported separately from FAIL, never summed"
+  unresolved_questions:
+    - "⚠ FIVE IN THE ENUM, SIX IN EFFECTIVE USE: REFUSED (evaluator_service/service.py:62) is a verdict to the client but is not a Verdict member. CURRENT_STATE.md judges the separation may be correct, and leaves it open."
+    - "⛔ `Unmeasurable` is defined THREE SEPARATE TIMES with three different docstrings — contract.py, readiness.py:42, schedule.py:54. UNRESOLVED."
+
+- concept_id: C-VD-02
+  name: A zero from an instrument nobody proved could see is not a measurement
+  aliases: [instrument_live, blind instrument, the blind-grep class]
+  description: >-
+    Before publishing "none / never / zero", demonstrate the instrument would have registered a
+    non-zero in that window. Report ZERO / NOT-RECORDED / NOT-VISIBLE / NOT-RETAINED as distinct
+    verdicts; collapsing them is how a measurement gap becomes a claim about the world.
+  source_documents:
+    - docs/protocol/METRICS.md
+    - docs/findings.d/F84-the-zero-consumer-count-was-measured-by-a-blind-grep.md
+    - docs/findings.d/F94-six-gates-reported-pass-over-an-empty-population-and-four-cited-no-evidence.md
+    - docs/findings.d/F96-a-search-on-the-wrong-field-returned-zero-and-two-duplicate-tasks-were-created-on-the-strength-of-it.md
+    - docs/findings.d/F86-the-findings-ledger-could-not-see-its-own-last-eight-findings.md
+    - docs/evidence/marketing-model-v1/R1-stakeholder-evidence.md
+  maturity: measured
+  research_status: settled
+  implementation_status: IMPLEMENTED
+  implementation_evidence: >-
+    factory/reliability.py Rate.__str__ prints "⚠ [instrument NEVER seen to register a non-zero]";
+    tests/test_recurrence_preflight.py carries the negative control proving the counter CAN register
+    a green; tests/test_gates_refuse_an_empty_population.py; tests/test_gate_negative_control_census.py
+  related_concepts: [C-VD-01, C-VD-04, C-EV-03, C-PR-02]
+  dependencies: [C-VD-01]
+  proposed_benefits:
+    - "a false negative from a broken tool cannot be reported as an absence in the world"
+  proposed_metrics:
+    - "instrument_live boolean carried beside every rate"
+    - "count of gates whose population is empty"
+  unresolved_questions: []
+  measured_incidence: >-
+    SEVEN of the thirty-three findings in docs/findings.d/ are instances of this single class:
+    F72, F75, F84, F86, F91, F94, F96. It is the corpus's most frequently rediscovered defect.
+
+- concept_id: C-VD-03
+  name: Every figure carries its basis
+  aliases: [MEASURED/DERIVED/ASSUMED, basis labelling, evidence tiers]
+  description: >-
+    Each stated number carries a label saying how it was obtained. The corpus uses several
+    overlapping vocabularies for this and has not unified them (see contradictions.md CN-08):
+    MEASURED / DERIVED / ASSUMED (factory/tasks.py:137); MEASURED / DERIVED / REASONED / BET
+    (architecture-v0); OBSERVED / DOCUMENTED / MARKETED (R8 §7 for external claims);
+    RECORDED / RECONSTRUCTED / NOT-RECORDED (factory/runs.py:42).
+  source_documents:
+    - docs/specs/architecture-v0.md
+    - factory/tasks.py
+    - factory/runs.py
+    - docs/research/R8-data-engineering-agent-factory.md
+    - docs/evidence/marketing-model-v1/D1-requirements-and-uncertainty.md
+  maturity: implemented
+  research_status: settled
+  implementation_status: IMPLEMENTED
+  implementation_evidence: "factory/tasks.py:137 basis on every evidence row; factory/runs.py:42 basis on every run row"
+  related_concepts: [C-VD-02, C-VD-04, C-EV-06]
+  dependencies: []
+  proposed_benefits: ["a stale claim cannot wear a measurement's label unnoticed"]
+  proposed_metrics: ["share of published figures carrying a basis label"]
+  unresolved_questions:
+    - "⛔ four incompatible basis vocabularies coexist and no document maps them onto each other. R17 §16.12 maps its own tiers onto the estate's, which is the only mapping that exists."
+
+- concept_id: C-VD-04
+  name: Counts must carry their own regeneration command
+  aliases: [regenerable counts, no hand-typed numbers]
+  description: >-
+    Never state a count in a document unless the command that produced it is stated beside it. A
+    hand-maintained number re-rots every time and the re-rot is invisible because the number still
+    looks authoritative.
+  source_documents:
+    - docs/evidence/marketing-model-v1/D1-requirements-and-uncertainty.md
+    - docs/agent-army/CURRENT_STATE.md
+    - docs/evidence/recurrence-preflight-2026-08-31/README.md
+    - docs/research/agent-factory-concept-inventory.md
+  maturity: implemented
+  research_status: settled
+  implementation_status: PARTIAL
+  implementation_evidence: "practised in the newer evidence documents; NOT enforced by any test"
+  related_concepts: [C-VD-02, C-VD-03]
+  dependencies: []
+  proposed_benefits: ["counts stop drifting silently"]
+  proposed_metrics: ["share of stated counts accompanied by a command"]
+  unresolved_questions:
+    - "the concept-inventory's own gate count drifted from 27 to 30 within one document, and was corrected in place. Nothing prevents recurrence."
+
+# ================================================================================================
+# B · AGENT — DEFINITION, CONFIGURATION, COGNITION
+# ================================================================================================
+
+- concept_id: C-AG-01
+  name: The configuration IS the version
+  aliases: [config-as-identity, content-derived version id, agent as a tuple]
+  description: >-
+    An agent is not a name — it is a (prompt, model, effort, tools, retry policy, turn cap, budget)
+    tuple. Change any element and it is a different agent, whose certification does not transfer.
+    The version id is a hash of the config, so a silent upgrade cannot inherit a guarantee nobody
+    re-checked.
+  source_documents:
+    - factory/blueprint.py
+    - docs/research/agent-factory-concept-inventory.md
+    - docs/research/answers/R2-answer-topology.md
+    - docs/raw_research/agent-config-research-pack/02-configuration-and-storage.md
+  maturity: measured
+  research_status: settled
+  implementation_status: IMPLEMENTED
+  implementation_evidence: "factory/blueprint.py AgentSpec/TeamSpec with content-derived version ids; factory/readiness.py VERSION_DIMENSIONS + g_version_hash_is_complete"
+  related_concepts: [C-AG-02, C-AG-03, C-EV-05, C-GV-04]
+  dependencies: []
+  proposed_benefits: ["a certification cannot silently transfer across a configuration change"]
+  proposed_metrics:
+    - "version-hash completeness: how many of the declared dimensions the hash actually covers"
+  unresolved_questions:
+    - "⛔ R2 named NINE version dimensions the hash misses (SYNTHESIS §3.4). architecture-v0 §8 records 6 of 15 covered, 9 absent."
+    - "⛔ F90 (OPEN): TeamSpec.repo is INSIDE the version hash and NOTHING READS IT — the inverse defect. A field in the identity that has no effect."
+    - "⭐ SYNTHESIS §15.1: g_version_hash_is_complete could never pass, because of a U+0008 character in its regex. The gate measuring this concept was itself broken."
+
+- concept_id: C-AG-02
+  name: The four-layer agent model
+  aliases: [genotype/phenotype/history/fitness, Agent Genome]
+  description: >-
+    An agent is described in four separate layers. GENOTYPE — mutable declarative configuration
+    (model profile, reasoning strategy, context policy, memory policy, tool permissions,
+    communication phenotype, initiative/escalation policy, budgets, skill bindings, authority,
+    safety constraints). PHENOTYPE — observed mission behaviour (message frequency, verbosity,
+    initiative events, clarification count, disagreement rate, tool strategy, planning depth,
+    recovery, delegation, latency, cost). HISTORICAL STATE — append-only measurements.
+    FITNESS/READINESS — derived, mission-conditioned metrics.
+  source_documents:
+    - docs/raw_research/agent_factory_agent_genome_research_pack/01_CURRENT_DESIGN_SYNTHESIS.md
+    - docs/raw_research/agent_factory_agent_genome_research_pack/schemas/agent_genome.schema.yaml
+    - docs/raw_research/agent_factory_rd_consolidation_pack/02_AGENT_GENOME.md
+    - docs/raw_research/agent_factory_agents_as_configuration_research_pack/02_CONCEPTS/AGENT_PHENOTYPE_AND_PRESETS.md
+  maturity: designed
+  research_status: not_researched
+  implementation_status: NOT_IMPLEMENTED
+  implementation_evidence: "factory/blueprint.py implements the genotype layer only. No phenotype, historical-state or fitness layer exists."
+  related_concepts: [C-AG-01, C-AG-03, C-AG-04, C-AG-06, C-OP-03]
+  dependencies: [C-AG-01, C-AG-03]
+  proposed_benefits:
+    - "prevents a giant YAML becoming an accidental source of truth for history and telemetry"
+    - "makes an agent comparable across mission classes"
+  proposed_metrics: ["capability fit, recent reliability, domain freshness, context readiness, tool/environment readiness, communication compatibility, team complementarity, risk/trust score, expected quality/cost/latency"]
+  unresolved_questions:
+    - "no evidence that the phenotype layer's fields predict anything"
+    - "no definition of how a phenotype is measured from a transcript"
+
+- concept_id: C-AG-03
+  name: The five field classes
+  aliases: [TUNABLE/DECLARED/MEASURED/DERIVED/POLICY, field classification]
+  description: >-
+    Every configuration field carries exactly one class. TUNABLE — a candidate for simulation or
+    search. DECLARED — fixed identity or contract. MEASURED — an append-only observation. DERIVED —
+    computed from evidence. POLICY — human- or institution-governed, never automatically mutated.
+    The stated purpose is to stop one YAML file becoming an accidental source of truth for
+    history and telemetry at once.
+  source_documents:
+    - docs/raw_research/agent_factory_agent_genome_research_pack/01_CURRENT_DESIGN_SYNTHESIS.md
+    - docs/raw_research/agent_factory_agent_genome_research_pack/schemas/field_classification.yaml
+  maturity: designed
+  research_status: not_researched
+  implementation_status: NOT_IMPLEMENTED
+  related_concepts: [C-AG-01, C-AG-02, C-OP-04, C-GV-04]
+  dependencies: []
+  proposed_benefits:
+    - "the optimizer's legal search space becomes a property of the schema rather than of a convention"
+    - "a safety-specification field cannot be mutated by a search"
+  proposed_metrics: ["count of fields per class; count of TUNABLE fields the optimizer is actually permitted to touch"]
+  unresolved_questions:
+    - "who assigns the class, and what happens when a field's class should change?"
+  cross_reference_note: >-
+    ⭐ THIS CONCEPT AND SYNTHESIS §6's "never optimise" LIST ARE THE SAME IDEA REACHED
+    INDEPENDENTLY. §6 names retry caps, gate thresholds, tenancy checks, timeouts, evaluator
+    thresholds and the corpus as "safety specification, not hyperparameters" — that is exactly the
+    POLICY class. Neither document cites the other. This convergence is the strongest argument in
+    the index for adopting the five classes.
+
+- concept_id: C-AG-04
+  name: Agent registry and agent lockfile
+  aliases: [AgentVersion, certification, resolved config lockfile]
+  description: >-
+    A registry analogous to a package registry — AgentDefinition + skills + model profile + tool set
+    + policy + eval suite -> AgentVersion -> Certification -> AgentLockfile. A mission run records
+    the exact config hash and dependency versions.
+  source_documents:
+    - docs/raw_research/agent_factory_agent_genome_research_pack/01_CURRENT_DESIGN_SYNTHESIS.md
+    - docs/raw_research/agent-config-research-pack/00-executive-assessment.md
+    - docs/raw_research/agent-config-research-pack/configs/resolved-config.lock.example.json
+  prior_art: ["Nix/Guix lockfiles", "Kubernetes CRD + controller pattern", "package registries generally"]
+  prior_art_status: adaptation
+  maturity: designed
+  research_status: not_researched
+  implementation_status: PARTIAL
+  implementation_evidence: "factory/blueprint.py hashes config; factory/registry.py distinguishes proven/declared/unbuilt workflows. There is no lockfile, no certification object and no dependency pinning."
+  related_concepts: [C-AG-01, C-AG-03, C-EV-05, C-GV-04]
+  dependencies: [C-AG-01, C-AG-03]
+  proposed_benefits: ["exact reproduction of a run's configuration", "certification bound to a resolved artifact rather than a name"]
+  proposed_metrics: ["share of runs whose configuration can be exactly reconstructed"]
+  unresolved_questions:
+    - "what is in the lock: the agent config only, or the whole environment? R4 treats environment reproducibility as the expensive part."
+
+- concept_id: C-AG-05
+  name: Agent phenotype presets and communication phenotypes
+  aliases: [Quiet/Loud/Mumbler, Concise Scout, Challenger, Coordinator, behavioral policy profile]
+  description: >-
+    UI-friendly personality labels compiled into measurable parameters. Quiet — low unsolicited-
+    message probability, high novelty threshold, high batching. Loud — high initiative, high
+    broadcast tendency, low escalation threshold. MUMBLER is explicitly not a preset but a DETECTED
+    ANTI-PATTERN (low semantic density, high ambiguity, weak commitments). Also Concise Scout,
+    Challenger, Coordinator. The simulation system should DISCOVER which phenotype fits which
+    mission and topology rather than assuming one is universally best.
+  source_documents:
+    - docs/raw_research/agent_factory_agent_genome_research_pack/01_CURRENT_DESIGN_SYNTHESIS.md
+    - docs/raw_research/agent_factory_agent_genome_research_pack/presets/communication_phenotypes.yaml
+    - docs/raw_research/agent-config-research-pack/00-executive-assessment.md
+  maturity: designed
+  research_status: not_researched
+  implementation_status: NOT_IMPLEMENTED
+  related_concepts: [C-AG-02, C-CM-05, C-TM-04, C-SM-01]
+  dependencies: [C-AG-02, C-CM-01]
+  proposed_benefits: ["team chemistry stops being hidden in prompts"]
+  proposed_metrics: ["message frequency, information density, initiative events, disagreement rate"]
+  unresolved_questions:
+    - "no multi-agent run has ever executed here, so the denominator for every phenotype metric is zero"
+  preservation_note: >-
+    KEPT DESPITE BEING UNUSUAL. The renaming discipline in agent-config-research-pack — metaphor to
+    engineering primitive — is what makes this tractable: "personality" becomes "bounded behavioral
+    policy profile", "army rank" becomes three separate fields (authority grade, competency grade,
+    operational role).
+
+- concept_id: C-AG-06
+  name: Agent health vector and mission requirement vector
+  aliases: [readiness as a match, Agent Health Vector, Mission Requirement Vector]
+  description: >-
+    Readiness is not a property of an agent — it is the MATCH between an agent health vector and a
+    mission requirement vector. Health must not become a single opaque score without decomposition.
+  source_documents:
+    - docs/raw_research/agent_factory_agents_as_configuration_research_pack/02_CONCEPTS/MISSION_READINESS_AND_READY_UP.md
+    - docs/raw_research/agent-factory-bootstrap-pack/docs/07-implementation/FEATURE_INTEGRATION_SEEDS.md
+    - docs/raw_research/agent-config-research-pack/04-team-metrics-and-formulas.md
+  maturity: idea
+  research_status: not_researched
+  implementation_status: NOT_IMPLEMENTED
+  implementation_evidence: "factory/readiness.py measures readiness OF THE FACTORY, not of an agent or capability (CURRENT_STATE.md: PARTIAL)"
+  related_concepts: [C-AG-07, C-TM-04, C-EV-04]
+  dependencies: [C-AG-02]
+  proposed_benefits: ["mission-specific readiness rather than blind metric maximisation"]
+  proposed_metrics: ["readiness delta between current health and mission requirement"]
+  unresolved_questions:
+    - "which health dimensions actually predict mission success? R-HEALTH-01 in the bootstrap pack's queue asks exactly this and is unrun."
+
+- concept_id: C-AG-07
+  name: Pre-deployment readiness uplift (READY-UP)
+  aliases: [last-minute skill-up, mission conditioning, readiness boost]
+  description: >-
+    Before deployment, compare mission requirements to current readiness and recommend BOUNDED
+    interventions — context refresh, targeted retrieval, tool check, micro-eval, skill loading, a
+    temporary specialist attachment. A mission-specific readiness delta is preferable to blindly
+    maximising every metric.
+  source_documents:
+    - docs/raw_research/agent_factory_agents_as_configuration_research_pack/02_CONCEPTS/MISSION_READINESS_AND_READY_UP.md
+    - docs/raw_research/agent-config-research-pack/configs/presets/predeployment-readiness-uplift.yaml
+    - docs/raw_research/agent-factory-bootstrap-pack/docs/07-implementation/FEATURE_INTEGRATION_SEEDS.md
+  maturity: designed
+  research_status: not_researched
+  implementation_status: NOT_IMPLEMENTED
+  related_concepts: [C-AG-06, C-KN-04, C-SI-03]
+  dependencies: [C-AG-06]
+  proposed_benefits: ["higher first-pass success without permanently enlarging every agent"]
+  proposed_metrics: ["measured before/after readiness state; first-pass success with vs without uplift"]
+  known_risks:
+    - "⛔ THE CORPUS CONTRADICTS ITSELF HERE. agent-config-research-pack lists 'artificially increasing all health scores before deployment' under ideas that must NOT be implemented literally: 'this corrupts the instrument. The system may improve readiness and forecast uplift, but health moves only after measurement.' See contradictions.md CN-04."
+  unresolved_questions:
+    - "how is an uplift's effect attributed, given the agent also changed?"
+
+- concept_id: C-AG-08
+  name: Viable Cognitive Entity
+  aliases: [VCE, Agent 2.0, the entity after the standard agent]
+  description: >-
+    A persistent computational entity that maintains and improves its own ability to operate,
+    described by a self-model plus cognition plus health plus trust plus development — as opposed to
+    a task-only agent that exists for the duration of a request.
+  source_documents:
+    - docs/raw_research/agent2_sihre_consolidation_pack/03_agent2_concept_registry.md
+    - docs/raw_research/agent2_sihre_consolidation_pack/research_prompts/DR08_ENTITY_DEFINITION_AND_NAMING.md
+  maturity: idea
+  research_status: not_researched
+  implementation_status: NOT_IMPLEMENTED
+  related_concepts: [C-AG-09, C-AG-14, C-AG-15, C-SI-01]
+  dependencies: []
+  proposed_benefits: ["moves beyond task-only agents"]
+  proposed_metrics: unknown
+  unresolved_questions:
+    - "the pack's own 08_NOVELTY document says this claim requires prior-art evidence before it may be made"
+  preservation_note: "The most speculative entry in the index. Preserved verbatim in intent; its own source document is unusually careful about what it is not entitled to claim."
+
+- concept_id: C-AG-09
+  name: SIHRE cognitive kernel and morphological cognition
+  aliases: [heterogeneous reasoning governance, mutable cognition, cognitive architecture generator]
+  description: >-
+    Heterogeneous reasoning governance INSIDE one agent — routing between reasoning modes plus trust
+    plus uncertainty plus verification. Morphological cognition extends it: the agent constructs a
+    different cognitive topology per mission rather than running a fixed planner/reviewer pipeline.
+    Recursive SIHRE applies the same routing and trust principles at expert, agent, team, army and
+    factory levels.
+  source_documents:
+    - docs/raw_research/agent2_sihre_consolidation_pack/02_sihre_to_agent_factory.md
+    - docs/raw_research/agent2_sihre_consolidation_pack/04_recursive_sihre_and_morphological_cognition.md
+  prior_art_status: adaptation
+  prior_art_note: "transferred from heterogeneous ensemble methods in quantitative research; the pack states this transfer is a hypothesis requiring agent-specific evaluation"
+  maturity: idea
+  research_status: not_researched
+  implementation_status: NOT_IMPLEMENTED
+  related_concepts: [C-AG-08, C-AG-11, C-TM-05]
+  dependencies: []
+  proposed_benefits: ["adaptive cognition; better fit to mission state; avoids static pipelines"]
+  proposed_metrics: unknown
+  unresolved_questions:
+    - "no mechanism proposed for how a topology is selected"
+    - "⛔ contradicted at the team level by R2's evidence: added coordination structure has no detectable average benefit and degrades sequential work"
+
+- concept_id: C-AG-10
+  name: Contextual Bayesian trust and dynamic earned autonomy
+  aliases: [trust conditioned on context, earned autonomy, capability gates]
+  description: >-
+    An agent's reliability is not one number: it is conditioned on mission context and recency, and
+    updated Bayesianly. Authority then rises and falls with evidence and risk rather than being
+    granted once.
+  source_documents:
+    - docs/raw_research/agent2_sihre_consolidation_pack/03_agent2_concept_registry.md
+    - docs/raw_research/agent2_sihre_consolidation_pack/research_prompts/DR04_CONTEXTUAL_TRUST_KG_MESH.md
+  maturity: idea
+  research_status: not_researched
+  implementation_status: NOT_IMPLEMENTED
+  related_concepts: [C-AG-13, C-GV-02, C-GV-03, C-AG-08]
+  dependencies: [C-VD-01]
+  proposed_benefits: ["safer autonomy; evidence-based routing"]
+  proposed_metrics: ["per-context reliability posterior; authority level vs measured error rate"]
+  unresolved_questions:
+    - "with zero real dispatches recorded, the prior is the whole model"
+
+- concept_id: C-AG-11
+  name: Cognitive error correlation and cognitive portfolio optimization
+  aliases: [error covariance between agents, portfolio selection of experts]
+  description: >-
+    Select agents or experts by expected utility AND ERROR COVARIANCE, not by individual accuracy —
+    so that a team's diversity actually reduces correlated failure rather than merely adding
+    members. Requires measuring WHICH AGENTS FAIL TOGETHER.
+  source_documents:
+    - docs/raw_research/agent2_sihre_consolidation_pack/03_agent2_concept_registry.md
+    - docs/raw_research/agent2_sihre_consolidation_pack/05_quantitative_agent2_features.md
+    - docs/raw_research/agent2_sihre_consolidation_pack/research_prompts/DR02_COGNITIVE_PORTFOLIO_THEORY.md
+  prior_art_status: adaptation
+  prior_art_note: "portfolio optimisation, transferred from quantitative finance"
+  maturity: idea
+  research_status: not_researched
+  implementation_status: NOT_IMPLEMENTED
+  related_concepts: [C-TM-01, C-TM-05, C-AG-09]
+  dependencies: []
+  proposed_benefits: ["diversity that provably reduces correlated failure rather than assuming it does"]
+  proposed_metrics: ["failure-vector covariance between agents on the same task set"]
+  unresolved_questions:
+    - "needs many agents scored on the same tasks; the corpus has ONE connector scored and no multi-agent runs"
+  preservation_note: >-
+    ⭐ HIGH RESEARCH VALUE DESPITE BEING SPECULATIVE. It is the only proposal in the corpus that
+    offers a MECHANISM for why a team might beat a single agent, and R2's evidence is that the
+    naive version does not. It is also directly testable against future verdict data without
+    building any organizational architecture. Carried into high_leverage_concepts.md.
+
+- concept_id: C-AG-12
+  name: Value of Information
+  aliases: [VOI, is more evidence worth acquiring]
+  description: "Decide whether acquiring more evidence is worth its cost, by expected utility."
+  source_documents: [docs/raw_research/agent2_sihre_consolidation_pack/05_quantitative_agent2_features.md]
+  prior_art_status: known_prior_art
+  prior_art_note: "standard decision theory"
+  maturity: idea
+  research_status: not_researched
+  implementation_status: NOT_IMPLEMENTED
+  related_concepts: [C-AG-13, C-RS-04]
+  dependencies: []
+  proposed_benefits: ["rational research and testing spend"]
+  proposed_metrics: unknown
+  unresolved_questions: ["what utility function?"]
+
+- concept_id: C-AG-13
+  name: Expected Verification Value
+  aliases: [EVV, is another verifier worth its cost]
+  description: >-
+    Decide whether an additional verifier or test is worth running, as
+    error probability x impact x detection probability. Selective assurance rather than uniform.
+  source_documents: [docs/raw_research/agent2_sihre_consolidation_pack/05_quantitative_agent2_features.md]
+  maturity: idea
+  research_status: not_researched
+  implementation_status: NOT_IMPLEMENTED
+  related_concepts: [C-AG-12, C-EV-01, C-EV-08, C-AG-10]
+  dependencies: [C-VD-01]
+  proposed_benefits: ["assurance spend proportional to blast radius"]
+  proposed_metrics: ["cost per defect caught, per verifier"]
+  unresolved_questions: ["detection probability per verifier is unmeasured here"]
+  preservation_note: >-
+    ⭐ DIRECTLY TESTABLE AGAINST EXISTING DATA. This repository already records per-assertion
+    verdicts for a twelve-assertion contract and has calibrated every assertion's known-bad. The
+    detection probability per assertion is therefore obtainable from data already on disk. Carried
+    into high_leverage_concepts.md.
+
+- concept_id: C-AG-14
+  name: Agent physiology, cognitive homeostasis and graceful degradation
+  aliases: [health vector as homeostatic state, degraded/supervised/safe modes]
+  description: >-
+    An operational health vector over cognition, tooling, memory and workload, actively maintained
+    within healthy ranges; and a runtime state machine that moves an agent through degraded,
+    supervised and safe modes rather than a binary working/failed state.
+  source_documents: [docs/raw_research/agent2_sihre_consolidation_pack/03_agent2_concept_registry.md]
+  prior_art_status: adaptation
+  prior_art_note: "homeostasis; model predictive control"
+  maturity: idea
+  research_status: not_researched
+  implementation_status: NOT_IMPLEMENTED
+  related_concepts: [C-AG-06, C-AG-15, C-SI-02]
+  dependencies: [C-AG-02]
+  proposed_benefits: ["graceful adaptation under load; avoids a binary failure model"]
+  proposed_metrics: unknown
+  unresolved_questions: ["what is the observable that corresponds to cognitive load?"]
+
+- concept_id: C-AG-15
+  name: Predictive cognitive immunity and near-miss memory
+  aliases: [failure memory changes cognition before recurrence, weak-signal capture]
+  description: >-
+    Failure memory that alters an agent's behaviour BEFORE a failure recurs, plus the observation
+    that a SUCCESSFUL mission can still carry a safety lesson (a near miss) worth recording.
+  source_documents: [docs/raw_research/agent2_sihre_consolidation_pack/03_agent2_concept_registry.md]
+  prior_art_status: adaptation
+  prior_art_note: "high-reliability organisation theory; near-miss reporting in aviation and healthcare"
+  maturity: prototyped
+  research_status: not_researched
+  implementation_status: PARTIAL
+  implementation_evidence: >-
+    factory/preflight.py implements the FIRST half in its narrowest form: a run is shown its own
+    recorded failure families before it starts, by deterministic key lookup, WARN-ONLY. The
+    near-miss half is NOT implemented — nothing captures a lesson from a successful run.
+  related_concepts: [C-KN-05, C-SI-02, C-AG-14]
+  dependencies: [C-KN-05]
+  proposed_benefits: ["self-protection; the same mistake is not paid for twice"]
+  proposed_metrics: ["Known Error Recurrence Rate; Preventable Failure Rate (both DESIGN, both NOT-RECORDED)"]
+  unresolved_questions:
+    - "⭐ the near-miss half is the genuinely novel part and the corpus has no mechanism for it. A success with a lesson currently leaves no trace."
+
+# ================================================================================================
+# C · TEAM AND TOPOLOGY
+# ================================================================================================
+
+- concept_id: C-TM-01
+  name: One worker, a non-LLM verifier, and a human for privileged operations
+  aliases: [the minimum topology, single-worker blueprint]
+  description: >-
+    The team shape this repository decided on: exactly one working agent, a DETERMINISTIC (non-LLM)
+    verifier that owns the verdict, and a human for anything privileged. Additional LLM roles are
+    deferred behind quantified unlock conditions.
+  source_documents:
+    - docs/research/answers/R2-answer-topology.md
+    - docs/research/SYNTHESIS.md
+    - README.md
+    - blueprints/orchestrator_team.yaml
+  maturity: measured
+  research_status: answered_and_contested
+  implementation_status: IMPLEMENTED
+  implementation_evidence: "no LLM judge exists anywhere in the codebase; every verdict is deterministic Python (PACK_CONFORMANCE.md test 1.2). factory/provider.py:11-13: 'a provider never names its own verdict'."
+  related_concepts: [C-TM-02, C-TM-03, C-EV-02, C-AG-11]
+  dependencies: [C-VD-01]
+  proposed_benefits: ["removes the seam cost that our own measured failures were all at"]
+  proposed_metrics: ["terminal success rate; cost per accepted outcome; handoff acceptance rate"]
+  evidence:
+    for:
+      - "sequential tasks degrade up to -70.0% under multi-agent architectures (arXiv:2512.08296 v3, named in the paper's own abstract). Connector migration is sequential shared-state work."
+      - "architectures WITHOUT centralized verification propagate errors more than those with it — an independent argument for the non-LLM verifier already built"
+      - "our own measured failures were all at SEAMS, so adding two mandatory LLM-to-LLM handoffs treats the wrong variable"
+    against:
+      - "⚠ the headline -3.5% mean carries a 95% interval of -18.6% to +25.7%. An interval spanning zero is NOT evidence that coordination hurts on average — it is evidence of high variance and no detectable average effect."
+      - "the same study found a centralised system improved a PARALLELISABLE financial task by +80.9%. The effect is strongly task-structure dependent, in both directions."
+      - "the source labels itself OPEN RESEARCH, not production infrastructure evidence"
+  unresolved_questions:
+    - "the decision stands on sequential degradation and on our own seam failures, NOT on the aggregate mean. Anyone re-opening it should attack those two, not the -3.5%."
+
+- concept_id: C-TM-02
+  name: Unlock conditions — deferral with a quantified threshold
+  aliases: [the deliberate-absence table, the do-not-build list, rank promotion rules]
+  description: >-
+    Every deliberately absent subsystem carries a NAMED, QUANTIFIED condition that would unlock it.
+    Optimizer <- a working eval. Agent Army / supervisor tiers <- one certified team plus evidence a
+    tier helps. A second comms topology <- a second team that actually needs to talk to the first.
+    Gym <- the eval corpus plus a scoreboard. Platform UI <- numbers worth looking at. And in
+    SYNTHESIS §6, ten more with pass-percentage and sample-size thresholds.
+  source_documents:
+    - README.md
+    - docs/research/SYNTHESIS.md
+    - blueprints/orchestrator_team.yaml
+    - docs/DEEP-REVIEW-PROMPT.md
+  maturity: implemented
+  research_status: settled
+  implementation_status: IMPLEMENTED
+  implementation_evidence: "the table is enforced socially rather than mechanically; docs/research/agent-factory-concept-inventory.md §1 makes DEFERRED a first-class survey verdict so a gap analysis cannot report a deferral as a gap"
+  related_concepts: [C-TM-01, C-OR-04, C-SI-01, C-PR-04]
+  dependencies: []
+  proposed_benefits: ["a survey run without this list reports every deferral as a gap and is wrong once per row"]
+  proposed_metrics: ["for each row: has its unlock evidence been produced?"]
+  unresolved_questions:
+    - "no mechanism re-checks an unlock condition when new evidence arrives; the concept inventory §5.4 asks for exactly that and nothing does it"
+  competing_formulation:
+    - concept: "rank progression (.agent-platform/bootstrap/ROADMAP_TO_VISION.md)"
+      note: "encodes the same discipline as an ordered ladder with promotion rules rather than a table of independent gates. Neither document cites the other. Compare them — the ladder is easier to communicate, the table is harder to game."
+
+- concept_id: C-TM-03
+  name: Parallelism bound by file locality, not by the dependency graph
+  aliases: [the conflict graph, lanes, worktree per lane]
+  description: >-
+    What can START is a dependency question. What can run IN PARALLEL is a FILE question: two agents
+    editing the same file conflict regardless of the DAG. `conflicts()` computes which lanes write
+    the same files, and the concurrency ceiling is the maximum independent set of that graph.
+  source_documents:
+    - factory/lanes.py
+    - factory/worktrees.py
+    - docs/specs/architecture-v0.md
+    - docs/research/answers/R5-answer-build-velocity.md
+    - docs/research/answers/R6-answer-automation-and-alerting.md
+  maturity: measured
+  research_status: answered_and_contested
+  implementation_status: IMPLEMENTED
+  implementation_evidence: "factory/lanes.py:125 LANES; factory/worktrees.py one worktree per lane; factory/claims.py dynamic mutual exclusion with O_EXCL locks verified against the process table"
+  related_concepts: [C-TM-01, C-GV-01, C-CM-02]
+  dependencies: []
+  proposed_benefits: ["structural isolation of parallel sessions; conflicts become impossible rather than merely rare"]
+  proposed_metrics: ["cross-lane conflict count (MEASURED: 3 lanes, 20 commits, ZERO conflicts)"]
+  evidence:
+    for: ["MEASURED here: zero cross-lane conflicts across 3 lanes and 20 commits", "R5 and R6 reached worktree-per-lane independently"]
+    against:
+      - "⚠ R5's supporting figure — 41.7% cross-agent PR conflict rate over ~33,000 PRs — was flagged by R17 as 'a citation wearing a measurement's clothes'. SYNTHESIS §16.1 ran the discriminating test. Read §16.1 before quoting it."
+  unresolved_questions:
+    - "⭐ architecture-v0 §7.2: 'data work does not conflict' is ASSERTED, not measured. Two agents building two views can conflict on a shared dimension table or a naming convention. The conflict graph may need DIFFERENT EDGES, not fewer."
+
+- concept_id: C-TM-04
+  name: Adaptive team formation and mission matching
+  aliases: [dynamic team constructor, who staffs the team, eligibility filter]
+  description: >-
+    Something selects team members, sizes the team and reshapes it at runtime, by matching mission
+    requirements against evidence-backed capabilities. R19 reframes it usefully: selection is
+    REFUSAL FIRST — an eligibility filter with a negative control and a score, rather than a chooser.
+  source_documents:
+    - BRAIN-DUMP.md
+    - docs/research/answers/R19-answer-work-taxonomy-and-team-selection.md
+    - docs/raw_research/agent_factory_agents_as_configuration_research_pack/04_RESEARCH_PROMPTS/04_DEEP_RESEARCH_MISSION_MATCHING_AND_DYNAMIC_TEAMS.md
+    - docs/raw_research/agent_factory_rd_consolidation_pack/15_CONCEPT_PRIORITY_MATRIX.md
+    - docs/raw_research/agent-config-research-pack/00-executive-assessment.md
+  maturity: designed
+  research_status: answered_unverified
+  implementation_status: NOT_IMPLEMENTED
+  implementation_evidence: "factory/lanes.py:125 LANES is a literal list validated on import; factory/teamplan.py takes membership as GIVEN. Nothing selects members, sizes a team or reshapes one."
+  related_concepts: [C-AG-06, C-TM-02, C-AG-11, C-OR-01]
+  dependencies: [C-AG-04, C-AG-06]
+  proposed_benefits: ["the right team for the ticket without a human assembling it"]
+  proposed_metrics: ["misrouting rate; refusal precision"]
+  unresolved_questions:
+    - "⛔ DEFERRED with a quantified unlock: >=200 adjudicated examples plus static misrouting >=10% (SYNTHESIS §6). Neither number has been obtained."
+    - "R19's own §0 is an explicit independence disclosure; weight its conclusions accordingly"
+
+- concept_id: C-TM-05
+  name: Formations — reusable execution topologies
+  aliases: [battle plan, formation compiler, spearhead/recon screen/swarm/shield wall]
+  description: >-
+    A named, reusable execution topology treated as a first-class object: Spearhead, Recon Screen,
+    Swarm, Shield Wall, Column, Double Envelopment, Reserve Force, specialist hot-drop, reviewer
+    ring, independent challengers. The Formation Compiler extension proposes DISCOVERING formations
+    from mission traces rather than authoring them.
+  source_documents:
+    - docs/raw_research/agent_factory_chat_design_pack/00_MASTER_CONCEPT_MAP.md
+    - docs/raw_research/agent_factory_army_ui_concept_pack/00_MASTER_INDEX.md
+    - docs/raw_research/zeus_world_ui_research_pack/02_EXTREME_EXPERIMENTS.md
+  maturity: idea
+  research_status: not_researched
+  implementation_status: NOT_IMPLEMENTED
+  related_concepts: [C-TM-01, C-TM-04, C-OR-01, C-UI-03]
+  dependencies: [C-OR-01]
+  proposed_benefits: ["topology becomes a selectable, comparable, versionable object"]
+  proposed_metrics: ["per-formation success rate on a task class"]
+  unresolved_questions:
+    - "the zeus pack's own Gate 5 requires the formation compiler to 'prove representational value' before implementation, and nothing has attempted it"
+    - "⛔ requires multi-agent execution, which is deferred behind C-TM-02's unlock conditions"
+
+# ================================================================================================
+# D · ORGANIZATION AND HIGHER-ORDER STRUCTURE
+# ================================================================================================
+
+- concept_id: C-OR-01
+  name: Topology as data — arbitrarily nested service designations
+  aliases: [configurable hierarchy, organizational grammar, do not hard-code five levels]
+  description: >-
+    Do NOT hard-code Army -> Command -> Corps -> ... -> Agent. That is ONE POSSIBLE PRESET. An
+    organization is a tree of parent/child nodes whose grammar is data, and each node may own
+    objectives, doctrine, capabilities, tools, repositories, budget, permissions, communications
+    policy, health metrics, failure metrics, readiness and mission history.
+  source_documents:
+    - docs/raw_research/agent_factory_army_ui_concept_pack/05_ORGANIZATION_HIERARCHY_AND_SERVICE_DESIGNATIONS.md
+    - docs/raw_research/agent_factory_chat_design_pack/06_ORGANIZATION_HIERARCHY_AND_SERVICE_DESIGNATIONS.md
+    - docs/raw_research/agent-factory-bootstrap-pack/docs/07-implementation/FEATURE_INTEGRATION_SEEDS.md
+    - docs/raw_research/agent_factory_rd_consolidation_pack/06_ORGANIZATIONAL_GENOME_AND_TEAM_LAYERS.md
+  maturity: designed
+  research_status: not_researched
+  implementation_status: NOT_IMPLEMENTED
+  related_concepts: [C-OR-02, C-OR-03, C-TM-05, C-UI-02]
+  dependencies: []
+  proposed_benefits:
+    - "councils, guilds, federations, markets, meshes, blackboards, swarms and temporal echelons all become expressible without a schema change"
+    - "avoids committing to a hierarchy before any evidence exists that hierarchy is the right shape"
+  proposed_metrics: unknown
+  unresolved_questions:
+    - "no evidence that any nesting depth beyond one team is useful, and the estate has never run two teams"
+  preservation_note: >-
+    ⭐ THE MOST REUSABLE ORGANIZATIONAL IDEA IN THE INBOUND CORPUS, and notably it is a REFUSAL
+    to commit rather than a proposal to build. It is compatible with this repository's own
+    discipline in a way most of the pack material is not.
+
+- concept_id: C-OR-02
+  name: Org-IR and the organization compiler
+  aliases: [organizational intermediate representation, organization factory, organizational compiler]
+  description: >-
+    Represent agent/team/army/higher-order organization definitions as versioned declarative
+    intermediate representations. A mission compiles intent + constraints + capabilities + doctrine
+    into an inspectable organization plan carrying topology, roles, tools, budgets, models, memory
+    policies, communication policies, gates, success metrics, health targets, eval suite and
+    version pins.
+  source_documents:
+    - .agent-platform/bootstrap/source/Agent Factory Vision.txt
+    - .agent-platform/bootstrap/VISION.md
+    - .agent-platform/bootstrap/research/prompts/R03_ORG_IR.md
+    - docs/raw_research/agent-factory-bootstrap-pack/schemas/org-ir.seed.schema.yaml
+    - docs/raw_research/agent-factory-bootstrap-pack/docs/07-implementation/FEATURE_INTEGRATION_SEEDS.md
+    - docs/research/sources/chatgpt-five-primitives-and-the-organization-compiler.md
+  prior_art_status: known_prior_art
+  prior_art_note: >-
+    ⛔ REFUTED AS NOVEL. .agent-platform/RECONCILIATION.md §1.1, citing the sibling repo's Wave 0
+    synthesis: Artificial Organization Engineering is organisation-oriented MAS, which has a
+    metamodel (Moise+), a runtime (JaCaMo) and a textbook; the category name is taken twice in 2026
+    (arXiv:2602.13275 Waites; arXiv:2607.25446 IMACS, which IS the organizational-compiler thesis).
+    The surviving novelty claim is refuted on all four components.
+  maturity: designed
+  research_status: answered_and_contested
+  implementation_status: NOT_IMPLEMENTED
+  implementation_evidence: "zero occurrences of Org-IR or any related term in factory/, evaluator_service/ or scripts/ (CURRENT_STATE.md's term sweep returns nothing)"
+  related_concepts: [C-OR-01, C-OR-03, C-AG-04, C-OP-03]
+  dependencies: [C-OR-01, C-AG-01]
+  proposed_benefits: ["organizations become versionable, testable, comparable and diffable"]
+  proposed_metrics: unknown
+  known_risks:
+    - "the seed schema itself carries: 'Seed only. Do not implement as canonical until architecture synthesis approves it.'"
+  unresolved_questions:
+    - "⛔ THE DISPOSITION ON THIS CATEGORY IS `RESEARCH ONLY / DO NOT BUILD` (Wave 0). What survives is the ENGINEERING PATTERN — declarative, versioned, inspectable — not the category claim."
+  preservation_note: >-
+    PRESERVED IN FULL despite the refutation. The refutation is of the NOVELTY CLAIM and the
+    CATEGORY FRAMING, not of the mechanism's usefulness. A versioned declarative organization spec
+    with a resolved lockfile is a good idea whether or not it is new, and the prior art
+    (Moise+/JaCaMo, IMACS) is now a resource rather than a threat.
+
+- concept_id: C-OR-03
+  name: Organization presets
+  aliases: [ten named organizational architectures, rapid response swarm, factory reliability corps]
+  description: >-
+    Reusable topologies chosen instead of assembling individual agents: Rapid Response Swarm, Data
+    Quality Guardian, Client Discovery Council, Migration Factory Line, API Integration Pod,
+    Product/UI Studio, Evolution Lab, Knowledge Stewardship Guild, Temporal Echelons, Factory
+    Reliability Corps. Each compiles to the same Org-IR, and each is a VERSIONED CANDIDATE rather
+    than a static template — so organizational design becomes empirical.
+  source_documents:
+    - .agent-platform/bootstrap/source/Agent Factory Vision.txt
+    - docs/raw_research/agent-factory-bootstrap-pack/organizations/presets/rapid-response-swarm.seed.yaml
+    - docs/raw_research/agent-factory-bootstrap-pack/organizations/presets/factory-reliability-corps.seed.yaml
+    - docs/raw_research/agent_factory_rd_consolidation_pack/08_PRESET_AGENTS_AND_TEAMS.md
+  maturity: designed
+  research_status: not_researched
+  implementation_status: NOT_IMPLEMENTED
+  implementation_evidence: "factory/presets.py exists and does something ADJACENT but different — it maps TICKET TYPE AND SIZE to a starting agent configuration with stated reasons, escalation conditions, budgets, prohibitions and verifier state. It is a preset library for one agent, not for an organization."
+  related_concepts: [C-OR-02, C-TM-05, C-OP-03, C-SI-01]
+  dependencies: [C-OR-02]
+  proposed_benefits:
+    - "⭐ 'the system learns: for this class of incident, architecture B is superior' — organizational design becomes measurable"
+  proposed_metrics: ["per-preset cost, duration and success rate on an incident class (the vision document gives a worked comparison of three presets)"]
+  unresolved_questions:
+    - "requires many comparable runs; the estate has zero completed real runs"
+
+- concept_id: C-OR-04
+  name: Higher-order structures beyond the army
+  aliases: [councils, guilds, federations, markets, meshes, blackboards, temporal echelons, heterarchies]
+  description: >-
+    Explicit preservation of organizational shapes other than a command hierarchy — councils,
+    guilds, federations, markets, blackboards, swarms, specialist corps, temporal echelons and mixed
+    heterarchies — so the compiler is not built around one assumed shape.
+  source_documents:
+    - docs/raw_research/agent-factory-bootstrap-pack/docs/07-implementation/FEATURE_INTEGRATION_SEEDS.md
+    - docs/raw_research/agent-factory-bootstrap-pack/docs/08-research-backlog/RESEARCH_GAPS.md
+    - docs/raw_research/agent2_sihre_consolidation_pack/03_agent2_concept_registry.md
+    - docs/raw_research/Beyond_Agent_Armies_Frontier_Architectures.docx
+  maturity: designed
+  research_status: not_researched
+  implementation_status: NOT_IMPLEMENTED
+  related_concepts: [C-OR-01, C-TM-05, C-CM-06, C-OR-06, C-OR-07, C-OR-08]
+  dependencies: [C-OR-01]
+  proposed_benefits: ["the topology tournament (R-TOPO-01) has candidates to compare"]
+  proposed_metrics: ["under what task characteristics does each shape outperform the others"]
+  amended_2026_09_02: >-
+    ✅ THE SOURCE HAS NOW BEEN READ. Maturity raised idea -> designed, because the document supplies
+    what was missing: an eight-level ladder (L1 Agent, L2 Team, L3 Army, L4 Mission Command/Theater,
+    L5 Federation, L6 Institution/Constitution, L7 Ecosystem/Economy, L8 Agentic Civilization, plus
+    a self-hosting meta-substrate), and TWELVE architecture cards each carrying a "when to use it",
+    a "capabilities unlocked", a MAIN FAILURE MODE, a SMALLEST USEFUL EXPERIMENT and prior-art
+    anchors: Recursive Holarchy, Polycentric Federation, Constitutional Institution Stack,
+    Capability Economy, Collective Cognition/Global Workspace, Morphogenetic/Stigmergic,
+    Evolutionary Ecology, Temporal Echelons, Shadow Twin, Bicameral Governance, Mission
+    Hypergraph/Mesh, Self-Hosting Autonomic Organization. Also a mission-signature -> preferred
+    topology selection table (§6).
+    ⭐ THE DOCUMENT'S OWN CAVEAT MATTERS MORE THAN ITS LADDER, and it agrees with C-OR-01:
+    "L4-L8 should not all be mandatory runtime layers. They are optional organizational forms. The
+    platform should compile only the minimum structure required by the mission, risk, scale, and
+    uncertainty."
+  unresolved_questions:
+    - "⚠ the document does NOT cite the sibling repository, the Wave 0 synthesis or RECONCILIATION.md. Its only internal input is Agent Factory Vision.txt, the file that exists in six byte-identical copies. It therefore develops the premise Wave 0 refuted two days before it was written, without knowing so."
+    - "⛔ Wave 0's direct counter to the ladder is on file and unaddressed: supervisor tiers are DO NOT BUILD, 'still gated on one certified team, unmet, and the peer-reviewed title now argues the gain shrinks as models improve' (W0-foundations.md:220-221)."
+    - "⛔ every non-hierarchical mechanism in the catalog carries CRITICAL prior-art risk per the sibling's R01 Deliverable 4, and for Stigmergic Fields the 'what survives as ours' column reads 'Nothing at the mechanism level.'"
+    - "the twelve embedded figures were not extracted; captions survive, diagrams do not"
+  supplement: docs/_index/agent_army_wave0_supplement.md §1.2, §2.2, §2.3, §3.1
+
+- concept_id: C-OR-05
+  name: Stigmergic coordination and organizational fields
+  aliases: [stigmergy, pheromone gradients, stigmergic terrain, field overlays]
+  description: >-
+    Agents coordinate through changes they leave in a shared environment rather than through
+    messages — digital traces, gradients, a terrain that records where work has been.
+  source_documents:
+    - docs/raw_research/agent2_sihre_consolidation_pack/03_agent2_concept_registry.md
+    - docs/raw_research/zeus_world_ui_research_pack/02_EXTREME_EXPERIMENTS.md
+    - docs/agent-army/CURRENT_STATE.md
+  prior_art_status: known_prior_art
+  prior_art_note: "stigmergy, from social-insect coordination; long-standing in swarm robotics and MAS"
+  maturity: idea
+  research_status: not_researched
+  implementation_status: NOT_IMPLEMENTED
+  implementation_evidence: "CURRENT_STATE.md measures 'organizational fields' as NOT IMPLEMENTED with zero occurrences"
+  related_concepts: [C-CM-01, C-OR-04, C-UI-03]
+  dependencies: []
+  proposed_benefits: ["lower coordination overhead than explicit messaging"]
+  proposed_metrics: unknown
+  unresolved_questions: ["what is the shared substrate here? The nearest existing thing is git and .data/, neither designed for it."]
+  preservation_note: "Preserved as genuinely speculative. It is the one coordination model in the corpus that does not require the agent-to-agent messaging README defers."
+
+# ------------------------------------------------------------------------------------------------
+# ADDED 2026-09-02 by the supplementary coverage pass, from the two .docx converted that day.
+# Every one of these was previously invisible to this index because its source was unreadable.
+# ------------------------------------------------------------------------------------------------
+
+- concept_id: C-OR-06
+  name: Mission hypergraph — the mission as a typed graph, not as stage code
+  aliases: [mission mesh, typed mission graph, MissionNode/MissionEdge]
+  description: >-
+    Promote objectives, artifacts, risks, dependencies, gates and capability requirements out of
+    stage code and agent handoffs into a first-class typed graph of MissionNode / MissionEdge /
+    Artifact / Evidence. Leadership becomes task-local rather than permanently top-down; agents and
+    teams attach to graph REGIONS. Enables critical-path and bottleneck detection, and later
+    topology search. Explicitly NOT autonomous graph rewriting in its first version.
+  source_documents:
+    - docs/raw_research/converted/Agent_Factory_Frontier_Architecture_Prioritization_Pack.md  # §6.1, ranked P0 #1
+    - docs/raw_research/converted/Beyond_Agent_Armies_Frontier_Architectures.md               # card K
+  prior_art:
+    - "workflow/DAG systems; graph-based planning; actor/blackboard coordination (the document's own anchors)"
+  prior_art_status: known_prior_art
+  maturity: designed
+  research_status: not_researched
+  implementation_status: PARTIAL
+  implementation_evidence: >-
+    ⭐ MEASURED 2026-09-02, and it contradicts the source document's effort estimate.
+    factory/board.py:108 critical_path() computes the longest dependency chain over the live gate
+    set; factory/roadmap.py:276 renders it with each hop's live status; factory/flow.py:52 draws it
+    over 30 gates and 11 DECLARED dependency edges (MEASURED by parsing board.py with ast, so
+    readiness.measure() is not triggered: 9 keys, 11 edges). ⚠ TWO CORRECTIONS TO THE OPTIMISTIC
+    READING, both measured this pass. (a) critical_path()'s LIVE OUTPUT IS TWO HOPS —
+    ['cost', 'ceiling'] — not a deep chain; the mechanism is real and the graph it runs over is
+    shallow. (b) factory/flow.py's docstring says "twelve dependency edges" against a measured 11,
+    which is C-VD-04 again in a file that draws the graph it miscounts. Neither correction changes
+    the finding that the mechanism EXISTS; both stop it being read as more than it is.
+    At TICKET scale, docs/findings.d/F98 records that
+    blocked_by went from "exists and is unused" across 189 events to 25 live block edges written by
+    scripts/mission_marketing_model.py, and those edges hold the current mission's critical path.
+    What is ABSENT is the typing (no MissionNode/MissionEdge/Artifact/Evidence objects) and any
+    unification of the gate graph with the ticket graph.
+  related_concepts: [C-OR-01, C-OR-04, C-TM-03, C-EV-08, C-TM-06]
+  dependencies: []
+  proposed_benefits:
+    - "critical-path visibility, less idle waiting, task-local routing"
+    - "fewer 'stage succeeded but mission failed' states"
+    - "a replayable graph explains what ran, why, what evidence each node produced and what is still blocked"
+  proposed_metrics: ["time-to-green; blocked minutes; critical-path accuracy; stage-success vs mission-success mismatch; handoff count"]
+  known_risks:
+    - "the source document's own list: graph complexity, difficult human comprehension, hidden cycles, weak accountability if ownership is too fluid"
+  unresolved_questions:
+    - "⚠ the Prioritization Pack scores this Effort 3/5, Evidence High, as though greenfield. In THIS estate the mechanism is partly built and the estimate is wrong in an unmeasured direction. See current_vs_proposed.md."
+  supplement: docs/_index/agent_army_wave0_supplement.md §4.2
+
+- concept_id: C-OR-07
+  name: Constitutional type system — organizations that fail to compile
+  aliases: [OrganizationPreflight, constitutional institution stack, policy-as-type]
+  description: >-
+    Make permissions, required evidence, data/tool scope, budget, segregation-of-duty and approval
+    rules into TYPES and CONSTRAINTS checked before execution. An organization that violates
+    segregation-of-duty, budget, evidence or gate constraints does not fail at runtime — it fails
+    to compile. The institution governs armies rather than participating in their ordinary work,
+    and amendments are versioned and require recertification.
+  source_documents:
+    - docs/raw_research/converted/Beyond_Agent_Armies_Frontier_Architectures.md               # card C, hypothesis 2
+    - docs/raw_research/converted/Agent_Factory_Frontier_Architecture_Prioritization_Pack.md  # §6.2, ranked P0 #2
+  prior_art:
+    - "normative MAS; electronic institutions; MOISE+ deontic dimension; policy-as-code (the document's own anchors)"
+    - "⚠ the sibling repo measures a real enforcement point that already exists: conductor/engine/work_guard.py with conductor/config/work-guard-policy.json (blockedPaths, approvalRequiredFor, highRiskRequiresApproval, staleLockBehavior)"
+  prior_art_status: known_prior_art
+  maturity: designed
+  research_status: not_researched
+  implementation_status: NOT_IMPLEMENTED
+  implementation_evidence: >-
+    Nothing in factory/ compiles an organization. The nearest built things are C-GV-03 (human gates
+    that refuse rather than render) and C-EV-07 (deterministic gates), both of which enforce at
+    RUN time on a single agent, not at COMPILE time on an organization.
+  related_concepts: [C-GV-02, C-GV-03, C-EV-07, C-EV-03, C-OR-02]
+  dependencies: [C-OR-02]
+  proposed_benefits:
+    - "'can a type system catch entire classes of unsafe multi-agent organizations before runtime?' — the document states this as a research question, not a claim"
+    - "policy becomes inspectable, versioned and enforced independently of agent persuasion"
+  proposed_metrics: ["preflight catch rate; unsafe proposal rejection; false-block rate; post-gate defect rate; audit completeness"]
+  known_risks:
+    - "the document's own: policy ossification, rule explosion, agents optimizing to formal rules while missing intent"
+  unresolved_questions:
+    - "⛔ the sibling's UNRESOLVED question 1 applies directly: is there any boundary in the system that can actually ENFORCE authority? If not, `Mandate` demotes to RESEARCH ONLY and this concept has nothing to compile against."
+  supplement: docs/_index/agent_army_wave0_supplement.md §1.2, §2.7
+
+- concept_id: C-OR-08
+  name: Quality-diversity organization archive — many niche elites, not one winner
+  aliases: [organizational species, MAP-Elites archive, organizational ecology]
+  description: >-
+    Instead of selecting a single best organization, maintain an archive of high-performing
+    organizations indexed by behavioural niche (for example by cost and coordination density), so
+    different mission classes retain different certified specialists. Organizations are encoded as
+    genomes — role set, communication graph, memory policy, toolset, budgets, gates, retry rules,
+    evaluator, doctrine — and populations mutate/recombine in sandbox missions.
+  source_documents:
+    - docs/raw_research/converted/Beyond_Agent_Armies_Frontier_Architectures.md               # card G, hypothesis 10
+    - docs/raw_research/converted/Agent_Factory_Frontier_Architecture_Prioritization_Pack.md  # §6.11, ranked P2
+  prior_art:
+    - "Quality-Diversity / MAP-Elites (quality-diversity.github.io)"
+    - "Hannan & Freeman, Population Ecology of Organizations (1977), doi:10.1086/226424"
+    - "AgentSquare (ICLR 2025), AFlow (ICLR 2025), ADAS (arXiv:2408.08435), EvoAgent (NAACL 2025)"
+  prior_art_status: known_prior_art
+  prior_art_note: >-
+    ⚠ The sibling's R01 rates the parent concept (Evolution Chamber) MEDIUM novelty risk against
+    MAP-Elites/QD, ADAS, DGM and VDT organizational simulation. What it says survives is the
+    MUTATION PROHIBITION — constitution, hard permissions and audit rules are not in the genome —
+    plus the gate chain, NOT the search itself.
+  maturity: idea
+  research_status: not_researched
+  implementation_status: NOT_IMPLEMENTED
+  related_concepts: [C-OP-01, C-OP-04, C-SM-01, C-AG-05, C-OR-03]
+  dependencies: [C-OR-02, C-SM-01, C-EV-01]
+  proposed_benefits:
+    - "'are diverse organizational species more robust to model/tool/task drift than a globally optimized universal architecture?' — stated as a research question"
+  proposed_metrics: ["held-out improvement; search cost; generalization; diversity of elite orgs; regression safety"]
+  known_risks:
+    - "the document's own: eval gaming, enormous search cost, benchmark overfitting, unsafe auto-promotion"
+  unresolved_questions:
+    - "⛔ THE SIBLING'S IMACS FINDING BEARS DIRECTLY AND NEITHER SOURCE DOCUMENT KNOWS IT. H07 is SUPPORTED 'with a sting': every learned organizational result is MODEL-BINDING-SPECIFIC and expires with the binding. An archive of niche elites therefore has an unmeasured shelf life. This is contradictions.md CN-29."
+    - "⛔ the simulation substrate this depends on is measured ABSENT everywhere — 'a roadmap putting the evolution chamber first still proposes to evolve an organization with no sandbox' (repo-boundary/PRODUCT-BOUNDARY.md, Layer 5)"
+  supplement: docs/_index/agent_army_wave0_supplement.md §3.2
+
+- concept_id: C-KN-07
+  name: Knowledge metabolism — decay, contradiction load and active forgetting
+  aliases: [knowledge lifecycle, active curation, claim decay]
+  description: >-
+    Move past retrieval. A claim carries provenance, confidence, DECAY, contradiction load, usage
+    history and MAINTENANCE COST, and the organization digests, merges, challenges, archives or
+    FORGETS it. The stated research question is whether active forgetting and curation improve
+    multi-agent accuracy and context efficiency MORE than simply growing memory.
+  source_documents:
+    - docs/raw_research/converted/Beyond_Agent_Armies_Frontier_Architectures.md               # hypothesis 4
+    - docs/raw_research/converted/Agent_Factory_Frontier_Architecture_Prioritization_Pack.md  # §7 "Knowledge lifecycle"
+  prior_art_status: unknown
+  prior_art_note: >-
+    Not prior-art-checked by any pass. The sibling's R01 rates the parent (Collective Cognition
+    Fabric) HIGH risk against blackboard, transactive memory, distributed cognition, PROV-O and LLM
+    memory systems; what survives there is the promotion chain with sourceRootId independence
+    tracking, which is adjacent to but not the same as decay and forgetting.
+  maturity: idea
+  research_status: not_researched
+  implementation_status: NOT_IMPLEMENTED
+  implementation_evidence: >-
+    factory/context.py:121,:71 (ContextPack/ContextRef) already carry a mandatory source, freshness
+    state and confidence — the three fields a decay policy would read. Nothing decays or forgets.
+  related_concepts: [C-KN-01, C-KN-03, C-KN-04, C-KN-02]
+  dependencies: []
+  proposed_benefits: ["avoids an ever-growing uncurated memory dump"]
+  proposed_metrics: ["duplicate investigation rate; context tokens; evidence propagation latency; stale-claim usage; handoff rate"]
+  unresolved_questions:
+    - "⛔ Wave 0 DEPRECATED the word `Claim` — the vocabulary crawl measured four live senses in one codebase (lane lease / task status / bus kind / prose) and the code already names the research sense `Assertion` (factory/contract.py:41). This concept is stated in terms of a deprecated noun."
+  preservation_note: >-
+    Preserved because it is the only place in the corpus that treats knowledge as having a
+    MAINTENANCE COST. C-KN-02 (the absorption backlog) is the nearest built thing and it measures
+    the cost of NOT curating; nothing measures the cost of curating.
+
+- concept_id: C-GV-06
+  name: The Mission Assurance Receipt — trust as a product surface
+  aliases: [assurance receipt, client-facing evidence artifact]
+  description: >-
+    A concise machine-generated per-mission artifact, emitted from the SAME evidence the runtime
+    already uses, with nine sections — identity (mission, client, intent-contract version, risk
+    class); organization (preset+version, agent/model/tool versions, knowledge snapshot);
+    execution (mission graph, completed/blocked nodes, deterministic vs agentic actions); evidence
+    (tests/evals, RED->GREEN proof, parity checks, diff summary, artifact hashes); independent
+    challenge (shadow agreement/disagreement, skeptic findings, unresolved uncertainty); governance
+    (policies evaluated, gates, approvals, budget actual vs limit); recovery (rollback/canary,
+    last-certified fallback); provenance; outcome (what changed, measured result, residual risk).
+    The argument is that "more autonomous" does not persuade a client — "controlled autonomy with
+    proof" does.
+  source_documents:
+    - docs/raw_research/converted/Agent_Factory_Frontier_Architecture_Prioritization_Pack.md  # §9
+  prior_art_status: unknown
+  prior_art_note: >-
+    Not prior-art-checked. Adjacent named art exists (SLSA/in-toto attestations, SBOMs, assurance
+    cases, NIST AI RMF which the source document itself cites) and a checking pass should start there.
+  maturity: designed
+  research_status: not_researched
+  implementation_status: PARTIAL
+  implementation_evidence: >-
+    ⭐ EVERY SECTION HAS A PRODUCER ALREADY, which is why this is the cheapest idea in either
+    document. The sibling's repo-boundary/PRODUCT-BOUNDARY.md makes the same observation about its
+    own capability record: "the record is a join, not a new subsystem", citing contract.py:17-21
+    (verdict), corpus.py (corpus hash), evidence.py:48,68-70 (evidence classes and states),
+    runs.py:42 (cost basis). What is ABSENT is the join, the client-facing rendering, and the
+    `limits.unmeasured` discipline the sibling calls load-bearing.
+  related_concepts: [C-EV-06, C-EV-01, C-KN-01, C-UI-04, C-AG-04, C-EV-10]
+  dependencies: []
+  proposed_benefits:
+    - "'Agent Factory does not merely say an AI agent completed a task. It can show which certified organization ran, what evidence made the change acceptable, which controls were applied, and how the result can be replayed or rolled back.'"
+  proposed_metrics: unknown
+  unresolved_questions:
+    - "⚠ C-UI-04 applies — nothing on an operator or client surface may become a new source of truth. A receipt must be a projection over existing evidence, never a place where a number is first stated."
+    - "⛔ the sibling's rule for the analogous object: `limits.unmeasured` must NEVER be omitted, because 'a capability record that does not say what the corpus failed to exercise invites the runtime to use it outside the envelope it was graded in'. The receipt as specified in §9 has no such section."
+  preservation_note: >-
+    ⭐ The highest-leverage single idea recovered by this pass, on the ratio of client-visible value
+    to new machinery. See high_leverage_concepts.md HL-15.
+
+- concept_id: C-TM-06
+  name: Goal-aware adaptive/dynamic orchestration
+  aliases: [dynamic critical path, deadline-aware scheduling, event-driven replanning, elastic team composition, scope degradation]
+  description: >-
+    ⚠ AN OPERATOR-PROPOSED DIRECTION, RECORDED 2026-09-02, NOT DESIGNED AND NOT ENDORSED. An
+    orchestrator that holds a goal contract with a deadline, recomputes the critical path as
+    evidence arrives, reprioritises and replans on events and failures, sizes teams to demand,
+    schedules against rationed resources, gates humans dynamically, detects goal drift, and
+    degrades scope as a deadline approaches.
+  source_documents:
+    - "operator planning, 2026-09-02 (no document; recorded here so the idea has an id and a prior-art record before anything is built)"
+  prior_art:
+    - "⛔ Blumofe & Leiserson, via docs/research/SYNTHESIS.md:1389 — 'every topology is a scheduler, schedulers redistribute T1/P, none touch the critical path T-infinity'"
+    - "α(G)/maximum-independent-set ceiling and Dilworth width, SYNTHESIS.md:1380-1394 [A-24 verified, A-25, A-26, A-27]"
+    - "Contract Net and auction MAS — SYNTHESIS.md: 'auctions solve assignment UNDER UNCERTAINTY about capability or cost; with a known static graph and homogeneous agents there is nothing to discover' [A-58, A-59]"
+    - "anytime algorithms and deliberation scheduling (1988); speculative execution; planning horizons — via the sibling's R01 Deliverable 4, which rates Temporal Echelons the ONLY LOW novelty risk in a 15-concept map"
+  prior_art_status: known_prior_art
+  prior_art_note: >-
+    ⛔ NO NOVELTY IS CLAIMED, AND THE CORPUS CONSTRAINS THIS CONCEPT HARD. Twelve of the fourteen
+    named sub-ideas have prior art on file; four are ALREADY BUILT here (see below); one (goal drift)
+    exists in this corpus only as a two-occurrence quotation naming it a failure mode of hierarchy,
+    with no detector and no metric; and exactly one — SCOPE DEGRADATION AS A DEADLINE APPROACHES —
+    has ZERO occurrences in either repository and is the only genuinely unrepresented member.
+    ⭐ THE DECISIVE CONSTRAINT: reordering fixed work cannot beat T-infinity. Any version of this
+    concept that leaves the goal fixed and reorders execution is already known to be bounded. The
+    version that is NOT bounded is one that MUTATES the graph — changing scope, evidence
+    requirements or gates. A design that does not say which side of that line it sits on cannot be
+    evaluated.
+  maturity: idea
+  research_status: not_researched
+  implementation_status: PARTIAL
+  implementation_evidence: >-
+    MEASURED 2026-09-02. BUILT: dynamic critical path — factory/board.py:108 critical_path(),
+    rendered factory/roadmap.py:276, drawn factory/flow.py:52. Adaptive prioritisation —
+    factory/coordination.py:100 prioritise() orders human interventions by transitive
+    downstream-blocked count (downstream_blocked(), :80), critical-path membership, wait time and
+    session liveness, and RENDERS ITS REASONING. Mutable DAG — docs/findings.d/F98: 25 live block
+    edges on .data/tasks.jsonl. Deadline-aware scheduling — factory/schedule.py, BUILT AS A REFUSAL:
+    it declines to emit a completion date until scope velocity settles (SETTLED_HOURS = 24.0)
+    because "an ETA computed from pass-rate alone divides by a denominator that is still growing,
+    and every such estimate flatters".
+    ⛔ AND THE PRECONDITION IS UNMET: factory/schedule.py:26 — "'Ahead or behind schedule' needs a
+    target, and there isn't one. No deadline has been stated anywhere in the programme."
+    A deadline-aware orchestrator currently has no deadline to be aware of.
+  related_concepts: [C-OR-06, C-TM-03, C-TM-04, C-EV-01, C-GV-03, C-EV-08, C-OR-04]
+  dependencies: [C-EV-01]
+  proposed_benefits: unknown
+  proposed_metrics: unknown
+  known_risks:
+    - "⛔ Wave 0's type argument forbids the obvious implementation: authority, budget and deadline are `Mandate`, not `Contract`. 'A GreenContract's fold is meaningful only because every member is falsifiable; adding permissions breaks the property the object exists for.' Adopt the three-way split Contract / Mandate / Task."
+    - "factory/coordination.py's own docstring: the priority bands are 'deliberately coarse' because 'the weighting between blocks four items and has waited twenty minutes is a judgement nobody has validated'. Nothing has measured whether the ordering it produces beats any other."
+  unresolved_questions:
+    - "⛔ the one thing the corpus genuinely does not contain: a mechanism that TRADES SCOPE FOR TIME under a deadline, with a stated basis for what may be dropped and who may authorise it. admit()->DEGRADED is capability-triggered, not time-triggered; schedule.py refuses to name a deadline at all; HorizonWorkItem has an expiry but no scope-reduction rule. This is research_gap_candidates.md GAP-43."
+  preservation_note: >-
+    Recorded deliberately BEFORE any design work, so that the prior art and the T-infinity bound are
+    on file first. This is C-PR-03 (state the kill condition before building) applied to a concept
+    rather than to a build.
+  supplement: docs/_index/agent_army_wave0_supplement.md Part 4
+
+# ================================================================================================
+# E · COMMUNICATION AND COORDINATION
+# ================================================================================================
+
+- concept_id: C-CM-01
+  name: The durable record and the live channel are different things
+  aliases: [record vs channel, findings.d vs the bus, one file per writer]
+  description: >-
+    A permanent ledger and a live inter-agent channel cannot be the same file. The record is
+    append-only, in git, one FILE per entry so separate paths cannot conflict. The channel is
+    ephemeral, machine-local, gitignored, one file PER WRITER, with read cursors and re-delivery on
+    crash — and a lane never writes another lane's file.
+  source_documents:
+    - docs/agent-communication.md
+    - factory/bus.py
+    - docs/findings.d/README.md
+    - docs/findings.d/F70-a-shared-ledger-cannot-survive-parallel-lanes.md
+    - docs/findings.d/F71-lanes-still-cannot-see-each-other-live.md
+  maturity: measured
+  research_status: settled
+  implementation_status: IMPLEMENTED
+  implementation_evidence: "factory/bus.py:48 KINDS = (correction, claimed, blocked, finished, note), rejected at bus.py:74; docs/findings.d/ one file per finding; factory/findings.py reads the ledger as data"
+  related_concepts: [C-CM-02, C-CM-03, C-KN-01, C-TM-03]
+  dependencies: [C-TM-03]
+  proposed_benefits: ["worktree isolation stays a feature instead of destroying the ledger"]
+  proposed_metrics: ["messages delivered vs written (the read path is the load-bearing half)"]
+  measured_origin: >-
+    On 2026-08-22 three isolated worktrees each appended their own F11 and F12 to one file. Each
+    read F10 as the last id and took the next number — correctly, independently, and incompatibly.
+    A merge would have silently destroyed two of each, in the file whose entire job is stopping a
+    lane from paying twice for the same mistake.
+  unresolved_questions:
+    - "⛔ F71 is OPEN: fragments fix the merge, not the blindness. Lanes still cannot see each other live."
+    - "⚠ CURRENT_STATE.md: two typed event systems exist and NEITHER is an organizational event log. There is no durable, replayable, cross-entity event stream."
+
+- concept_id: C-CM-02
+  name: Claims — dynamic mutual exclusion verified against the process table
+  aliases: [lane claiming, a claim is not a process]
+  description: >-
+    A static conflict map is advice; advice does not stop a second session opening the same file.
+    Claims are the dynamic half: an exclusive lock recording who actually started a lane. Liveness
+    is checked against THE PROCESS TABLE, not the existence of a registry file, because the file
+    outlives the process. Stale claims still block, because hiding them makes a blocked lane look
+    free.
+  source_documents:
+    - factory/claims.py
+    - factory/sessions.py
+    - docs/findings.d/F73-a-claim-is-not-a-process.md
+    - docs/research/answers/R12-answer-session-manager-ui.md
+  maturity: measured
+  research_status: settled
+  implementation_status: IMPLEMENTED
+  implementation_evidence: "factory/claims.py O_EXCL locks; factory/sessions.py reads Claude Code's own registry and verifies against the process table; tests/test_claim_race.py, tests/test_contention.py"
+  related_concepts: [C-CM-01, C-TM-03, C-UI-04]
+  dependencies: [C-TM-03]
+  proposed_benefits: ["two agents cannot silently work the same lane"]
+  proposed_metrics: ["duplicate-start refusals; refusals later shown legitimate"]
+  measured_origin: "finish() released control-plane's claim while its session was still alive; a relaunch saw a free lane and started a second agent."
+  unresolved_questions: []
+
+- concept_id: C-CM-03
+  name: Typed messages at four moments, never as a tool call
+  aliases: [six message types, the envelope, communication boundaries]
+  description: >-
+    An agent communication protocol with a typed envelope, six message types (not eleven),
+    communication occurring at four defined MOMENTS rather than as an arbitrary tool call, and six
+    acknowledgement states each with a deterministic discriminator.
+  source_documents:
+    - docs/protocol/AGENT_COMMUNICATION_PROTOCOL.md
+    - docs/protocol/HANDOFF_CONTRACT.schema.json
+    - .agent-platform/bootstrap/docs/COMMUNICATION_PROTOCOL.md
+    - docs/raw_research/agent-factory-bootstrap-pack/schemas/message-event.schema.json
+  prior_art: ["FIPA ACL speech acts (named in agent_genome_research_pack/research/high_leverage_frameworks.md)"]
+  prior_art_status: adaptation
+  maturity: specified
+  research_status: not_researched
+  implementation_status: DESIGN_ONLY
+  implementation_evidence: "the document's own title: '⛔ DESIGN. Nothing here is built.'"
+  related_concepts: [C-CM-01, C-CM-04, C-EV-07]
+  dependencies: [C-CM-01]
+  proposed_benefits: ["a handoff becomes checkable rather than conventional"]
+  proposed_metrics: ["Handoff First-Pass Acceptance; and its counter-metric, downstream_rework_after_ack"]
+  unresolved_questions:
+    - "⛔ README defers agent<->agent messaging behind a quantified unlock (production-like tasks with genuine concurrent branches and >=5pp net gain after coordination cost). This v1 protocol was written before the unlock."
+    - "the built system uses FIVE kinds and runs; this specifies SIX types and does not. Nothing reconciles the two vocabularies."
+
+- concept_id: C-CM-04
+  name: Communication-defect attribution requires naming the upstream record
+  aliases: [what makes a defect communication-caused, the three conditions]
+  description: >-
+    A defect is communication-caused only when ALL THREE hold: the information existed upstream and
+    was RECORDED SOMEWHERE at handoff time; it was absent, wrong-versioned or mis-stated in the
+    envelope; and had it been correct the receiver's action would have differed, as a falsifiable
+    counterfactual. If the information was never recorded anywhere, it is an implementation or
+    analysis defect, NOT a communication defect.
+  source_documents: [docs/protocol/METRICS.md]
+  maturity: designed
+  research_status: not_researched
+  implementation_status: DESIGN_ONLY
+  related_concepts: [C-CM-03, C-VD-02, C-EV-06]
+  dependencies: [C-CM-03]
+  proposed_benefits:
+    - "stops 'communication' becoming the bucket every unattributed defect falls into"
+  proposed_metrics:
+    - "Agent Communication Defect Rate — ⛔ NOT-MEASURABLE today: the denominator is 0, because no multi-agent run has executed"
+    - "its mandatory counter-metric, implementation_defect_rate, published in the same table"
+  unresolved_questions: []
+  preservation_note: >-
+    ⭐ The most rigorous single piece of measurement design in the corpus, and it is for a system
+    that does not exist. Its table of ten symptoms with deterministic discriminators — including
+    'UNKNOWN -> FACT: a claim state upgrades across a boundary with no new evidence_ref' — is
+    reusable well beyond agent communication.
+
+- concept_id: C-CM-05
+  name: Relationship edges as first-class versioned objects
+  aliases: [team chemistry, dyadic capability, transactive memory, who knows what]
+  description: >-
+    Do not hide team chemistry in prompts. Create versioned edges between agents carrying
+    familiarity, trust, epistemic trust, reliability trust, complementarity, redundancy, deference,
+    challenge propensity, communication affinity, historical success together, conflict rate,
+    response latency, knowledge overlap and shared context overlap. Transactive memory is the
+    system-level version: the organization knows who knows what and who has succeeded where.
+  source_documents:
+    - docs/raw_research/agent_factory_agent_genome_research_pack/01_CURRENT_DESIGN_SYNTHESIS.md
+    - docs/raw_research/agent_factory_agent_genome_research_pack/schemas/relationship_edge.schema.yaml
+    - docs/raw_research/agent2_sihre_consolidation_pack/03_agent2_concept_registry.md
+  prior_art: ["transactive memory systems (Wegner); team-composition literature"]
+  prior_art_status: adaptation
+  maturity: designed
+  research_status: not_researched
+  implementation_status: NOT_IMPLEMENTED
+  related_concepts: [C-AG-05, C-AG-11, C-TM-04, C-KN-03]
+  dependencies: [C-AG-02]
+  proposed_benefits:
+    - "individually elite agents vs compatible teams becomes a testable comparison"
+    - "manager-agent fit and builder-challenger pairings become measurable"
+  proposed_metrics: ["per-edge historical success together; conflict rate; the 14 named dimensions"]
+  unresolved_questions:
+    - "zero multi-agent runs means zero edges have ever been observed"
+
+- concept_id: C-CM-06
+  name: Agent market — bidding as an allocation mechanism
+  aliases: [market allocation, agents bid for work]
+  description: "Agents bid for work based on expected success, cost and risk; allocation is by market rather than by assignment."
+  source_documents: [docs/raw_research/agent2_sihre_consolidation_pack/03_agent2_concept_registry.md, docs/raw_research/agent-factory-bootstrap-pack/docs/08-research-backlog/RESEARCH_GAPS.md]
+  prior_art_status: known_prior_art
+  prior_art_note: "contract-net protocol and market-based MAS coordination are long-established"
+  maturity: idea
+  research_status: not_researched
+  implementation_status: NOT_IMPLEMENTED
+  related_concepts: [C-OR-04, C-TM-04]
+  dependencies: [C-OR-01]
+  proposed_benefits: ["dynamic task assignment without a central selector"]
+  proposed_metrics: unknown
+  unresolved_questions: ["what does an agent bid WITH, and who audits the bid?"]
+
+# ================================================================================================
+# F · MEMORY, KNOWLEDGE AND CONTEXT
+# ================================================================================================
+
+- concept_id: C-KN-01
+  name: The finding as a knowledge object
+  aliases: [corrected premise, BELIEVED/ACTUALLY/MEASURED BY/AFFECTS, findings ledger]
+  description: >-
+    A durable, addressable, reviewed record of a premise that turned out to be wrong. Four mandatory
+    fields — BELIEVED (the premise as another lane would state it, in their words), ACTUALLY (what
+    is true), MEASURED BY (the discriminating test, so a reader can re-run it rather than trust
+    you), AFFECTS (the lanes, gates or files that inherit the premise). Three optional fields —
+    KIND, CHANGES (mandatory for a design finding), STATUS. Routed to the lanes it hits, and merged
+    with the branch.
+  source_documents:
+    - docs/findings.d/README.md
+    - docs/findings.md
+    - factory/findings.py
+  maturity: measured
+  research_status: settled
+  implementation_status: IMPLEMENTED
+  implementation_evidence: "33 files in docs/findings.d/; factory/findings.py load()/by_lane()/by_kind()/design_debt()/malformed()/unattached(); tests/test_findings.py::test_every_findings_file_is_visible_to_the_ledger"
+  related_concepts: [C-KN-02, C-KN-05, C-VD-02, C-CM-01]
+  dependencies: [C-CM-01]
+  proposed_benefits:
+    - "no lane pays twice for the same mistake"
+    - "⭐ design_debt() lists every DESIGN finding still OPEN — the list that should shrink"
+  proposed_metrics: ["open design-debt count (MEASURED 2026-09-02: 4 — F71, F90, F97, F99)"]
+  known_limits:
+    - "⚠ CURRENT_STATE.md: genuinely knowledge-object-shaped, BUT untyped Markdown with no provenance schema, no confidence, no promotion path and no reuse across repositories"
+    - "⭐ its own failure mode is documented: an unparseable title line makes a finding INVISIBLE to the parser WITHOUT WARNING. That cost eight findings (F77-F84), including corrections about the gates of the very lane writing them, and the test suite was green throughout because every check asked its question only of findings that had already parsed."
+  unresolved_questions:
+    - "should findings be typed and promoted, or is untyped Markdown the reason this one actually gets written?"
+
+- concept_id: C-KN-02
+  name: The absorption backlog — a written rejection closes a row, silence does not
+  aliases: [unabsorbed conclusions, conclusions nobody actioned]
+  description: >-
+    A separate ledger for research conclusions that reached a mechanism and were never taken up.
+    Its schema is deliberately NOT the findings ledger's, because these are not corrected premises:
+    SOURCE / SAYS / WHY IT ISN'T FILLER / ACTION. A row closes when its action is done OR when a
+    written rejection exists naming the row. Both are progress. An unabsorbed conclusion and a
+    rejected one look identical in the record, and that is the defect this file exists to fix.
+  source_documents:
+    - docs/absorption-backlog.md
+    - docs/research/SYNTHESIS.md
+    - docs/reviews/external/verification.md
+  maturity: implemented
+  research_status: settled
+  implementation_status: PARTIAL
+  implementation_evidence: "the file exists and holds 19 rows; nothing enforces closure and no row has been closed"
+  related_concepts: [C-KN-01, C-RS-02, C-RS-03]
+  dependencies: []
+  proposed_benefits: ["research stops being bought twice"]
+  proposed_metrics: ["rows closed vs rows open (MEASURED: 0 of 19 closed)"]
+  unresolved_questions:
+    - "two whole research answers (R14, R18 — 191 KB combined) are single rows here, AB-16 and AB-17, each saying 'absorb it or reject it in writing'. Neither has happened."
+
+- concept_id: C-KN-03
+  name: Collective Cognition Fabric / HyperMESH
+  aliases: [shared organizational memory, mission-shaped knowledge graph, agent KG mesh, knowledge broker]
+  description: >-
+    Shared, permissioned historical knowledge spanning missions, teams and organizations, preserving
+    provenance, confidence, freshness, temporal status and contradictions. Retrieval and graph
+    traversal are mission-specific and measured. HyperMESH adds a Mission Knowledge View, a Mission
+    Context Compiler and a Knowledge Change Request protocol.
+  source_documents:
+    - .agent-platform/bootstrap/docs/COLLECTIVE_COGNITION.md
+    - docs/raw_research/agent_factory_rd_consolidation_pack/03_HYPERMESH_ARCHITECTURE.md
+    - docs/raw_research/agent-factory-bootstrap-pack/docs/07-implementation/FEATURE_INTEGRATION_SEEDS.md
+    - docs/raw_research/agent_factory_army_ui_concept_pack/09_INTELLIGENCE_KNOWLEDGE_MEMORY.md
+    - .agent-platform/bootstrap/source/Agent Factory Vision.txt
+  maturity: designed
+  research_status: prompt_written_not_dispatched
+  implementation_status: NOT_IMPLEMENTED
+  implementation_evidence: "no memory, vector or RAG layer of any kind exists; sole runtime dependency is pyyaml (PACK_CONFORMANCE.md)"
+  related_concepts: [C-KN-01, C-KN-04, C-KN-05, C-CM-05]
+  dependencies: [C-VD-03]
+  proposed_benefits: ["cross-mission and cross-agent experience transfer"]
+  proposed_metrics: ["retrieval utility, freshness, duplicate rate, contested-claim count"]
+  known_risks:
+    - "⛔ R10, MEASURED: 'we already have SIX overlapping stores… adding a seventh would be a mistake… retire or merge at least one'"
+    - "⛔ R06B reframes the question: what, specifically and measurably, can NONE of the nine existing stores do? Every candidate view must beat the null."
+    - "⛔ the one memory mechanism actually built (factory/preflight.py) deliberately REFUSES retrieval and similarity in favour of deterministic key lookup"
+  unresolved_questions:
+    - "⭐ THE MOST CONTESTED CONCEPT IN THE CORPUS. Five packs propose it; two research answers and one built mechanism argue against building it as specified. Nothing has reconciled them. See contradictions.md CN-03."
+  preservation_note: >-
+    PRESERVED IN FULL. The objections are to the SEQUENCING and the FORM (a seventh store, built on
+    retrieval, before the six are consolidated), not to the underlying need. R06B is the pass that
+    would settle it and it has never been dispatched.
+
+- concept_id: C-KN-04
+  name: Context as structure, not one prompt-shaped blob
+  aliases: [ContextRef, mission context compiler, context logistics, supply lines]
+  description: >-
+    Context that has already been concatenated into a prompt cannot be filtered per recipient,
+    cannot say where it came from and cannot carry a date. Structure it instead: every fragment
+    carries a source and a date, and selection becomes a query. The pack material calls the
+    assembly step a Mission Context Compiler; the UI material calls the same thing supply lines.
+  source_documents:
+    - factory/context.py
+    - .agent-platform/bootstrap/docs/COLLECTIVE_COGNITION.md
+    - docs/raw_research/agent_factory_rd_consolidation_pack/03_HYPERMESH_ARCHITECTURE.md
+    - docs/raw_research/zeus_world_ui_research_pack/02_EXTREME_EXPERIMENTS.md
+  maturity: implemented
+  research_status: not_researched
+  implementation_status: PARTIAL
+  implementation_evidence: "factory/context.py:71 ContextRef with a REQUIRED non-empty source; context.py:74 refuses a ref that cannot point back at its origin. It structures a LANE PROMPT, not organizational knowledge."
+  related_concepts: [C-KN-03, C-KN-01, C-AG-07]
+  dependencies: []
+  proposed_benefits: ["per-recipient filtering; provenance; dating; the ability to subtract context and measure the effect"]
+  proposed_metrics: ["context delivery failure (in the army pack's learning chain); tokens delivered vs tokens used"]
+  unresolved_questions:
+    - "the built version and the proposed version share a name and almost nothing else"
+
+- concept_id: C-KN-05
+  name: Failure families and recurring failure rate
+  aliases: [RFR, failure fingerprint, known-failure preflight, the learning chain]
+  description: >-
+    Group semantically equivalent incidents by ROOT CAUSE rather than exact error string, into a
+    CLOSED SET of families each with a retryability and a prevention check. Then measure whether the
+    organization stops making the same mistake — Recurring Failure Rate, Recurring Incident Count,
+    Time to Recurrence, Post-Fix Recurrence Rate, Preventable Recurrence Rate. The army pack adds
+    the diagnostic sequence: knowledge existed -> retrieved? -> delivered? -> understood? ->
+    followed? -> prevention worked?
+  source_documents:
+    - docs/protocol/FAILURE_TAXONOMY.yaml
+    - docs/protocol/KNOWN_FAILURE_PREFLIGHT.md
+    - docs/protocol/METRICS.md
+    - factory/preflight.py
+    - docs/raw_research/agent_factory_army_ui_concept_pack/12_METRICS_HEALTH_AND_RECURRENCE.md
+    - docs/raw_research/agent_factory_chat_design_pack/07_METRICS_FAILURE_RECURRENCE_AND_HEALTH.md
+    - docs/raw_research/agent_factory_army_ui_concept_pack/schemas/failure_recurrence.schema.yaml
+  maturity: measured
+  research_status: settled
+  implementation_status: IMPLEMENTED
+  implementation_evidence: "factory/preflight.py FAMILIES (10, closed set); docs/protocol/FAILURE_TAXONOMY.yaml is its index; shadow-mode replay over real history via scripts/replay_recurrence.py"
+  related_concepts: [C-KN-01, C-AG-15, C-EV-06, C-SI-02]
+  dependencies: [C-KN-01]
+  proposed_benefits: ["a run is shown its own recorded failure history before it repeats it"]
+  proposed_metrics:
+    - "Known Error Recurrence Rate — ⛔ NOT-RECORDED; the field landed 2026-08-31 and every historical terminal event predates it"
+    - "Preventable Failure Rate — becomes measurable as preflight_checked events accumulate"
+    - "unclassified_failure_share — ✅ BUILT, the counter-metric against classifying everything as novel"
+  measured_origin: >-
+    Seven of eight recorded runs are ONE ticket. GP-327 ran seven times; six ended with the same
+    assertion saying the same thing, and the seventh was aborted because those six had spent the
+    attempt cap. Every attempt after the first had its predecessor's verdict on disk, and NOTHING
+    READ IT.
+  unresolved_questions:
+    - "⛔ WARN-ONLY in V0, including for families whose retryability is NEVER. A refusal has to be earned by evidence first (ROLLOUT.md)."
+  preservation_note: >-
+    ⭐ THE CORPUS'S ONE COMPLETED MINE-THE-PACK-FOR-A-MECHANISM CYCLE. The army/chat packs proposed
+    RFR with a fingerprint, similarity grouping and an organizational learning chain; what was built
+    is deliberately narrower — a closed family set, deterministic key lookup, no retrieval, warn
+    only. Study this pair before deciding what to do with any other pack concept.
+
+- concept_id: C-KN-06
+  name: The corpus as tamper-evident data, not executable code
+  aliases: [hashed corpus, MANIFEST.sha256, the known-good world]
+  description: >-
+    The world an assertion is scored against lives on disk as hashed JSON, verified on load, OUTSIDE
+    any agent-writable directory. It used to be a Python module, which made "the corpus changed" and
+    "the corpus computes something different today" indistinguishable. An agent that can edit its own
+    fitness function is not being measured.
+  source_documents:
+    - factory/corpus.py
+    - factory/calibration.py
+    - evals/MANIFEST.sha256
+    - docs/research/agent-factory-concept-inventory.md
+  maturity: measured
+  research_status: settled
+  implementation_status: IMPLEMENTED
+  implementation_evidence: "evals/corpus/*.json + MANIFEST.sha256; factory/corpus.py raises CorpusError rather than degrading silently; scripts/pin_corpus.py demands a --why"
+  related_concepts: [C-EV-02, C-EV-03, C-GV-05]
+  dependencies: []
+  proposed_benefits: ["a changed grading world raises instead of quietly scoring differently"]
+  proposed_metrics: ["corpus size and strata coverage"]
+  unresolved_questions:
+    - "⛔ THE CORPUS IS ONE FILE, ONE CONNECTOR, 6,762 BYTES. Four passes asked for 30 development + 10 held-out. 48 connectors have never been scored."
+    - "⚠ F82 (OPEN in effect): pin_corpus.py destroys the manifest history that is the whole reason it demands a --why"
+    - "corpus.py names the remaining gap honestly: grader separation is EVIDENT AND ATTRIBUTED, not yet ENFORCED"
+
+# ================================================================================================
+# G · EVALUATION, CONTRACTS AND GATES
+# ================================================================================================
+
+- concept_id: C-EV-01
+  name: The GreenContract — definition of done as a falsifiable object
+  aliases: [green contract, A1-A12, M1-M12, R1-R4]
+  description: >-
+    "Done" is a named set of assertions, each returning an observed fact or raising. EVERY assertion
+    states a POSITIVE FACT THAT MUST BE OBSERVED; none is satisfied by the absence of an error.
+    The contract is code; what "green" means for one subject is DATA loaded from a blueprint, so one
+    contract definition judges every subject of its class.
+  source_documents:
+    - factory/contract.py
+    - factory/connector_contract.py
+    - factory/pbi_contract.py
+    - factory/redesign_contract.py
+    - factory/targets.py
+    - docs/evidence/phase-a-windsorai.md
+  maturity: measured
+  research_status: settled
+  implementation_status: IMPLEMENTED
+  implementation_evidence: "three contract families exist: connector A1-A12, Power BI model M1-M12, model-redesign R1-R4 on top of M1-M12"
+  related_concepts: [C-VD-01, C-EV-02, C-EV-03, C-KN-06]
+  dependencies: [C-VD-01]
+  proposed_benefits: ["a deliverable nothing can check is not a deliverable, it is a liability"]
+  proposed_metrics: ["PASS count; assertion-level verdict distribution"]
+  measured_state: "connector-e2e/windsorai@CLIENT-A: PASS (PASS=12) — REPLAYED against corpus windsorai-2026-08-20, not a live measurement"
+  unresolved_questions:
+    - "⭐ F89: the Power BI M-contract scored PASS=12 on the exact defect the model-redesign preset exists to find. A contract can be complete and still be the wrong contract for the change class."
+
+- concept_id: C-EV-02
+  name: The negative control — an eval nobody has proved can fail is decoration
+  aliases: [mutate_and_expect_failure, can the instrument register a failure]
+  description: >-
+    Deliberately break the world and assert the contract notices. Without it, a green suite is a
+    claim rather than evidence. Extended: every assertion must have been OBSERVED FAILING, enforced
+    as a property of the whole suite.
+  source_documents:
+    - factory/evals.py
+    - tests/test_eval_can_fail.py
+    - tests/test_connector_contract.py
+    - README.md
+    - docs/findings.d/F76-the-eval-can-fail-what-it-cannot-do-is-generalise.md
+  maturity: measured
+  research_status: settled
+  implementation_status: IMPLEMENTED
+  implementation_evidence: "tests/test_connector_contract.py::test_every_assertion_has_been_proved_able_to_fail enforces the property across all twelve assertions"
+  related_concepts: [C-EV-01, C-EV-03, C-VD-02, C-KN-06]
+  dependencies: [C-EV-01]
+  proposed_benefits: ["a green suite becomes evidence"]
+  proposed_metrics: ["assertions with a calibrated known-bad / total assertions (MEASURED: 12/12)"]
+  unresolved_questions:
+    - "⚠ README itself warns that test_eval_can_fail.py is WEAKER THAN ITS REPUTATION — it builds a synthetic three-assertion contract over a hardcoded dict and never loads the corpus. Cite test_connector_contract.py instead."
+    - "⭐ F76: sensitivity is not coverage. The instrument can fail; it has not been shown to GENERALISE."
+
+- concept_id: C-EV-03
+  name: Grader separation — an agent that can edit its own grader is not graded
+  aliases: [evaluator as a principal, external evaluator service, --calibrate vs --remote]
+  description: >-
+    What separates a real trust boundary from theatre is not the process boundary — it is WHO HOLDS
+    THE CREDENTIAL and WHAT THE SUBMITTER IS ALLOWED TO SUPPLY. The evaluator resolves the corpus,
+    the corpus root, the assertion set and its own identity from ITS OWN configuration on every
+    request; the client supplies three fields and gets a verdict. Three routes and no fourth. The
+    verdict store is write-once, because rollback to a kinder answer is the cheapest attack on any
+    certification scheme.
+  source_documents:
+    - evaluator_service/
+    - factory/evaluator.py
+    - factory/certify.py
+    - docs/evidence/evaluator-isolation-2026-08-22.md
+    - docs/research/answers/R3-answer-control-plane.md
+  maturity: measured
+  research_status: settled
+  implementation_status: IMPLEMENTED
+  implementation_evidence: "evaluator_service/{app,service,store}.py; GET /health, POST /evaluate, GET /verdict/<id> and no fourth route; --calibrate is explicitly 'worthless as evidence that an agent did not grade itself'"
+  related_concepts: [C-EV-01, C-EV-02, C-KN-06, C-GV-05]
+  dependencies: [C-EV-01, C-KN-06]
+  proposed_benefits: ["a certification an agent could have influenced is distinguishable from one it could not"]
+  proposed_metrics: ["endpoint_mode() ranks the DEPLOYMENT, not the design"]
+  known_limits:
+    - "R3 ranks a separate LOCAL process as rank 5 of 5, 'mostly theatre'. The boundary is currently correct in design and weak in deployment."
+    - "corpus.py: separation is EVIDENT AND ATTRIBUTED, not yet ENFORCED"
+  unresolved_questions:
+    - "the evaluator must run somewhere the graded agent holds no credential for, and it does not yet"
+
+- concept_id: C-EV-04
+  name: Readiness as measured gates, never a checklist
+  aliases: [30 gates, the readiness board, capability readiness]
+  description: >-
+    Every gate is MEASURED from a named file at the moment you run it, and carries the path it
+    measured from. A gate that cannot be measured says so; it does not quietly pass. Gates are
+    grouped by goal, and a goal with no measurable gate reports NOT-MEASURED, never 0%.
+  source_documents:
+    - factory/readiness.py
+    - factory/goals.py
+    - factory/board.py
+    - docs/research/agent-factory-concept-inventory.md
+  maturity: measured
+  research_status: settled
+  implementation_status: IMPLEMENTED
+  implementation_evidence: "MEASURED 2026-09-02: len(factory.readiness.GATES) == 30; by phase — judgement 8, certification 8, handover 7, bounded 4, loop 3"
+  related_concepts: [C-VD-01, C-VD-02, C-EV-05, C-UI-04]
+  dependencies: [C-VD-01]
+  proposed_benefits: ["status cannot drift from the thing it reports"]
+  proposed_metrics: ["gates passing; and, separately, gates whose population is empty"]
+  unresolved_questions:
+    - "⭐ F94: SIX gates reported PASS OVER AN ABSENCE rather than a measurement, and four cited no evidence. Fixed, with 15 tests. The class is the point, not the instance."
+    - "⛔ readiness measures readiness OF THE FACTORY, not of an agent or a capability (CURRENT_STATE.md: PARTIAL)"
+
+- concept_id: C-EV-05
+  name: The board is generated from the gates, never maintained beside them
+  aliases: [derived task list, no hand-typed board, projection discipline]
+  description: >-
+    A hand-typed list whose STATUS is computed still drifts, because the list itself is not. So
+    every non-passing gate IS a task, derived. Add a gate and a task appears; delete one and no
+    orphan lingers. Stated in board.py, restated in plan_gates.py and roadmap.py, each of which
+    refuses to hold a task list on principle.
+  source_documents:
+    - factory/board.py
+    - factory/plan_gates.py
+    - factory/roadmap.py
+    - docs/board/tickets.json
+  maturity: measured
+  research_status: settled
+  implementation_status: IMPLEMENTED
+  implementation_evidence: "docs/board/tickets.json declares `_authoritative_source: .data/tasks.jsonl` and `_note: DERIVED snapshot… Never hand-edit`"
+  related_concepts: [C-EV-04, C-UI-04, C-VD-04]
+  dependencies: [C-EV-04]
+  proposed_benefits: ["list/status drift becomes structurally impossible"]
+  proposed_metrics: ["none needed — the property is structural"]
+  unresolved_questions: []
+  preservation_note: >-
+    ⭐ One of the three mechanisms CURRENT_STATE.md names as more developed than anything in the
+    research corpus, and it has no counterpart in any inbound pack. Any proposed Mission Control or
+    Org-IR design must either adopt this discipline or explain why not.
+
+- concept_id: C-EV-06
+  name: Four classes of evidence, so "missing" is sayable
+  aliases: [TARGET/CONSUMER/REGRESSION/ROLLBACK, evidence-gated close]
+  description: >-
+    Four pieces of evidence that are all the same class look identical to four that cover four
+    different questions. So evidence is TYPED — did you prove the target, validate at the consumer's
+    layer, prove no regression, capture a rollback — with states SATISFIED / ASSERTED / ABSENT. The
+    refusal lives in the STORE, not in a convention an agent can forget: a task cannot close with no
+    evidence.
+  source_documents:
+    - factory/evidence.py
+    - factory/tasks.py
+    - docs/agent-army/IMPLEMENTATION_HANDOFFS.md
+  maturity: measured
+  research_status: settled
+  implementation_status: IMPLEMENTED
+  implementation_evidence: "factory/evidence.py:48 CLASSES, :68-70 states; factory/tasks.py:163,169 EvidenceRequired raised by the store; tests/test_evidence_classes.py"
+  related_concepts: [C-VD-03, C-EV-04, C-GV-01, C-PR-01]
+  dependencies: [C-VD-03]
+  proposed_benefits: ["a delivery that never proved its target cannot close looking complete"]
+  proposed_metrics: ["evidence.coverage() per delivery"]
+  known_limits:
+    - "stated at evidence.py:27 — it CANNOT verify that ROLLBACK was captured BEFORE the mutation"
+    - "OUTPUT_CONTRACT is opt-in per call (tasks.close(require=…)), not a default"
+  unresolved_questions: []
+  preservation_note: "⭐ The strongest Agent-Army-adjacent mechanism in the repository, per CURRENT_STATE.md, and the standard IMPLEMENTATION_HANDOFFS.md applies to any future research handoff."
+
+- concept_id: C-EV-07
+  name: Deterministic gates, because an agent asked to self-assess will answer yes
+  aliases: [six of seven gates deterministic, no LLM judge, the deterministic/agentic boundary]
+  description: >-
+    Classification, invariant checks, policy enforcement, gates, state transitions and repeatable
+    validations belong to deterministic, testable machinery. Agents are strongest at ambiguity,
+    synthesis, design, novel diagnosis, explanation and code authoring UNDER EVAL. The design
+    constraint is explicit: an agent asked to introspect on whether it handed over enough context
+    will answer yes.
+  source_documents:
+    - docs/protocol/QUALITY_GATES.md
+    - docs/raw_research/agent-factory-bootstrap-pack/docs/07-implementation/FEATURE_INTEGRATION_SEEDS.md
+    - factory/provider.py
+    - .agent-platform/PACK_CONFORMANCE.md
+  maturity: measured
+  research_status: settled
+  implementation_status: IMPLEMENTED
+  implementation_evidence: "MEASURED (PACK_CONFORMANCE 1.2): no LLM judge anywhere; every verdict is deterministic Python. factory/provider.py:11-13 'a provider never names its own verdict'."
+  related_concepts: [C-EV-03, C-TM-01, C-GV-01]
+  dependencies: [C-VD-01]
+  proposed_benefits: ["the verdict is computed, not asserted"]
+  proposed_metrics: ["share of gates with a judgement component (currently 1 of 7 — KNOWN_FAILURE, and only because the prevention checks do not exist yet)"]
+  unresolved_questions:
+    - "⛔ no gate may run pytest — a start-time gate costing 200s is one people route around, and the routing-around is invisible"
+
+- concept_id: C-EV-08
+  name: Expected-work manifest and scope_hash
+  aliases: [scope closure, the biggest missing control]
+  description: >-
+    Every gate measures the work it was TOLD ABOUT. Nothing measures work that was never declared,
+    so a team can pass by doing less than the task required. R3's remedy is an expected-work
+    manifest plus a scope hash, from which SUCCEEDED is derived.
+  source_documents:
+    - docs/research/answers/R3-answer-control-plane.md
+    - docs/absorption-backlog.md
+  maturity: designed
+  research_status: answered_unverified
+  implementation_status: NOT_IMPLEMENTED
+  related_concepts: [C-EV-01, C-EV-06, C-AG-13]
+  dependencies: [C-EV-01]
+  proposed_benefits: ["closes the one hole every other gate shares"]
+  proposed_metrics: ["declared scope vs completed scope"]
+  unresolved_questions:
+    - "⛔ AB-01: R3 calls this 'the biggest missing control' and SYNTHESIS §5's nine-step build order HAS NO STEP FOR IT. It has been unabsorbed since 2026-08-21."
+  preservation_note: "⭐ The single most consequential unbuilt idea in the corpus. Carried into high_leverage_concepts.md."
+
+- concept_id: C-EV-10
+  name: The counterfactual maturity ladder — EXERCISED / IMPLEMENTED_NOT_EXERCISED / SIMULATED / PROPOSED
+  aliases: [counterfactual honesty, a capability that cannot point at its own implementation, simulated is not proven]
+  description: >-
+    ⭐ THE REPOSITORY'S OWN VOCABULARY FOR "WHAT IS BUILT VERSUS WHAT IS PROPOSED", enforced by a
+    type rather than by a convention. Four maturities: EXERCISED — it ran, against this delivery,
+    and we saw it; IMPLEMENTED_NOT_EXERCISED — the code exists and nothing has run it here;
+    SIMULATED — designed, not built; PROPOSED — named, not designed. Three enforcement rules:
+    (1) EXERCISED or IMPLEMENTED_NOT_EXERCISED with no `mechanism_refs` (module:line) RAISES —
+    "a capability that cannot point at its own implementation is a proposal wearing a build's
+    label"; (2) EXERCISED with no `exercised_proof` RAISES — naming the code shows it exists, it
+    does not show it RAN; (3) anything below EXERCISED has its `basis` FORCED to SIMULATED,
+    "whatever the authored file said". The dataclass deliberately has no `status` and no
+    `grounding` field, so it is not duck-type-compatible with a delivered outcome and CANNOT be
+    passed to the component that renders one — the rule "a SIMULATED capability must not be
+    rendered in the same visual register as an observed one" is enforced by the type.
+  source_documents:
+    - factory/assertions.py
+    - factory/case_study.py
+    - factory/case_study_render.py
+    - docs/design/artifact-generator-proposal.md
+  maturity: measured
+  research_status: settled
+  implementation_status: IMPLEMENTED
+  implementation_evidence: "factory/assertions.py MATURITIES + Counterfactual.__post_init__ + is_observed; factory/case_study_render.py:274 renders the SIMULATED caveat; tests/test_case_study.py"
+  related_concepts: [C-VD-01, C-VD-03, C-GV-04, C-EV-06, C-PR-01]
+  dependencies: [C-VD-03]
+  proposed_benefits:
+    - "a proposal cannot acquire a build's label by being described confidently"
+    - "the separation is a TYPE property, not a reviewer's vigilance"
+  proposed_metrics:
+    - "capabilities EXERCISED / total capabilities claimed (case_study_render.py:490 publishes exactly this ratio in the artifact)"
+  unresolved_questions:
+    - "it is scoped to the case-study artifact today. Nothing applies the same ladder to the readiness gates, the presets or the research answers — the three places the same confusion is most expensive."
+  preservation_note: >-
+    ⭐ THIS IS THE VOCABULARY docs/_index/current_vs_proposed.md USES, rather than inventing one.
+    It also carries an eight-value evidence basis — MEASURED / DERIVED / DOCUMENTED / INFERRED /
+    ESTIMATED / SIMULATED / NOT_RECORDED / CONTRADICTORY — where DOCUMENTED is explicitly ONE HOP
+    ("and the hop is the point"), and NOT_RECORDED is explicitly "NOT zero". The module names the
+    most dangerous possible edit to itself: letting DOCUMENTED into the promotable set, because
+    then "every claim read out of a document would promote itself to VERIFIED".
+
+- concept_id: C-EV-09
+  name: Activity metrics cannot exist alone
+  aliases: [Goodhart pairing, GoodhartViolation, the 234/0 dashboard]
+  description: >-
+    Every activity metric must name a registered OUTCOME metric, and the pairing is enforced by
+    raising, not documented by convention. The motivating case: a retired agent produced 233
+    diagnoses, 234 escalations and 0 fixes over 81 days; a dashboard of those numbers would have
+    shown steady progress, and a self-improving loop pointed at them would have optimised for
+    escalating faster.
+  source_documents:
+    - factory/metrics.py
+    - factory/reliability.py
+    - README.md
+    - docs/protocol/METRICS.md
+  maturity: measured
+  research_status: settled
+  implementation_status: IMPLEMENTED
+  implementation_evidence: "factory/metrics.py raises GoodhartViolation; reliability.suspicious() reports activity climbing over a zero outcome in one line"
+  related_concepts: [C-VD-02, C-OP-02, C-SI-04]
+  dependencies: []
+  proposed_benefits: ["the system cannot measure its own busyness and call it progress"]
+  proposed_metrics: ["each metric's declared gaming route and its counter-metric (METRICS.md gives both for all ten)"]
+  unresolved_questions: []
+  cross_reference_note: "The zeus pack's readiness Gate 7 — 'no Goodhart reward loop' — is the same rule reached independently for the UI layer."
+
+# ================================================================================================
+# H · OPTIMIZATION AND SIMULATION
+# ================================================================================================
+
+- concept_id: C-OP-01
+  name: The fitness function IS the eval score
+  aliases: [no optimizer before a working eval]
+  description: >-
+    An optimizer is unlocked by a working eval, because the eval score is what it would optimise.
+    Optimising a candidate's own score changes the ruler rather than the system; optimising eventual
+    success can simply reward more retries.
+  source_documents: [README.md, docs/research/SYNTHESIS.md, docs/research/answers/R3-answer-control-plane.md]
+  maturity: implemented
+  research_status: settled
+  implementation_status: NOT_IMPLEMENTED
+  implementation_evidence: "there is no optimizer at all; the deliberate-absence table gives the reason"
+  related_concepts: [C-OP-02, C-OP-03, C-EV-02, C-TM-02]
+  dependencies: [C-EV-02]
+  proposed_benefits: []
+  proposed_metrics: []
+  unresolved_questions: []
+
+- concept_id: C-OP-02
+  name: The never-optimise list
+  aliases: [safety specification not hyperparameters]
+  description: >-
+    Retry caps, gate thresholds, tenancy checks, timeout and concurrency limits, evaluator
+    thresholds and the corpus are SAFETY SPECIFICATION, not hyperparameters, and are permanently
+    outside any search space.
+  source_documents: [docs/research/SYNTHESIS.md, docs/research/answers/R3-answer-control-plane.md, docs/research/answers/R7-answer-session-manager.md]
+  maturity: implemented
+  research_status: settled
+  implementation_status: NOT_APPLICABLE
+  related_concepts: [C-AG-03, C-OP-01, C-GV-04]
+  dependencies: []
+  proposed_benefits: ["the search cannot make the system safer-looking by making it less safe"]
+  proposed_metrics: []
+  unresolved_questions:
+    - "⛔ R7 proposed the READINESS GATES as a fitness proxy and was REJECTED on exactly this rule (SYNTHESIS §11.4)"
+  cross_reference_note: "⭐ Identical in substance to C-AG-03's POLICY field class, reached independently in a different document family. Neither cites the other."
+
+- concept_id: C-OP-03
+  name: Repo-agnostic interfaces now, agnostic optimisation later
+  aliases: [portable architecture, the minimum repository interface]
+  description: >-
+    Build a single-repository optimiser first, but put it behind repository-agnostic interfaces
+    (contract, environment, evaluator) from day one — cheap now, expensive to retrofit. That is
+    compatible with "do not run a search yet": R4 is talking about interface shape, R3 about timing.
+  source_documents: [docs/research/answers/R4-answer-agnostic-optimizer.md, docs/research/answers/R4-answer-agnostic-optimizer-run2.md, docs/research/SYNTHESIS.md]
+  prior_art: [DSPy/MIPROv2, GEPA, TextGrad, Trace, OpenEvolve, AlphaEvolve]
+  prior_art_status: known_prior_art
+  maturity: designed
+  research_status: answered_verified
+  implementation_status: NOT_IMPLEMENTED
+  related_concepts: [C-OP-01, C-OP-04, C-AG-04]
+  dependencies: [C-EV-01]
+  proposed_benefits: ["the expensive retrofit is avoided without paying for the search"]
+  proposed_metrics: []
+  unresolved_questions:
+    - "environment reproducibility is named as the real cost, and nothing here addresses it"
+
+- concept_id: C-OP-04
+  name: The Fitness Qualification Gate
+  aliases: [five pre-search tests, prove the fitness function before searching against it]
+  description: >-
+    Before any search runs, the fitness function must pass five named tests, each with an abort
+    condition: repeatability, known-bad sensitivity, known-good invariance, discrimination, and
+    holdout validity.
+  source_documents: [docs/research/answers/R4-answer-agnostic-optimizer.md, docs/absorption-backlog.md]
+  maturity: designed
+  research_status: answered_unverified
+  implementation_status: NOT_IMPLEMENTED
+  related_concepts: [C-OP-01, C-EV-02, C-VD-02, C-KN-06]
+  dependencies: [C-EV-02]
+  proposed_benefits: ["a search cannot run against a fitness function nobody proved discriminates"]
+  proposed_metrics: ["the five tests themselves"]
+  unresolved_questions:
+    - "⛔ AB-05: SYNTHESIS §11.4 rejected gates-as-fitness and §16.6 corroborated, but NEITHER CITES THE GATE DESIGN ALREADY WRITTEN HERE. An argument was had against a paraphrase."
+  preservation_note: "⭐ Directly composable with C-EV-02, which already implements test 2 (known-bad sensitivity) for all twelve assertions. Three of the five may be nearly free."
+
+- concept_id: C-OP-05
+  name: Search screening order
+  aliases: [what to tune first, model >> effort >> tools >> context >> prompt]
+  description: >-
+    When search does start, screen in this order: model (very high — published work shows 9-13pp
+    differences between backends), reasoning effort (high, no transferable number), tool interface
+    (high), context layout (high-medium), system-prompt structure (medium), prompt micro-wording
+    (low — "do not spend live 11-hour evaluations searching commas").
+  source_documents: [docs/research/SYNTHESIS.md]
+  maturity: designed
+  research_status: answered_unverified
+  implementation_status: NOT_IMPLEMENTED
+  related_concepts: [C-OP-01, C-AG-01, C-AG-03]
+  dependencies: [C-OP-01]
+  proposed_benefits: ["search budget goes where the effect size is"]
+  proposed_metrics: ["effect size per dimension"]
+  unresolved_questions: ["the 9-13pp figure is EXTERNAL_CITED and has not been checked back to source here"]
+
+- concept_id: C-OP-06
+  name: Repetition to deterministic meta-tools
+  aliases: [agent workflow optimization, promote a stable trace to a tool]
+  description: >-
+    Mine successful execution traces for repeated stable sequences of tool calls, and promote a
+    well-understood sequence into ONE tested deterministic composite tool — after tests and a human
+    approval — so future agents are faster, cheaper and more auditable.
+  source_documents:
+    - .agent-platform/bootstrap/source/Agent Factory Vision.txt
+    - docs/raw_research/agent-factory-bootstrap-pack/docs/07-implementation/FEATURE_INTEGRATION_SEEDS.md
+    - docs/raw_research/agent-factory-bootstrap-pack/docs/08-research-backlog/RESEARCH_QUEUE.yaml
+  prior_art: ["Microsoft Research, 'Optimizing Agentic Workflows Using Meta-Tools' (cited in the vision document)"]
+  prior_art_status: known_prior_art
+  maturity: idea
+  research_status: not_researched
+  implementation_status: NOT_IMPLEMENTED
+  related_concepts: [C-EV-07, C-SI-01, C-KN-05]
+  dependencies: []
+  proposed_benefits: ["a compounding loop that makes the system MORE deterministic over time rather than less"]
+  proposed_metrics: ["LLM calls per mission before vs after promotion; success rate"]
+  unresolved_questions:
+    - "requires a structured trajectory object; deploy.py streams a transcript and there is no trajectory object (concept-inventory §4.2)"
+  preservation_note: >-
+    ⭐ ALIGNED WITH THIS REPOSITORY'S DEEPEST INSTINCT rather than against it — C-EV-07 says
+    deterministic machinery wherever practical, and this is a mechanism for moving the boundary in
+    that direction with evidence. One of the few pack concepts that does not require an
+    organizational commitment first. Carried into high_leverage_concepts.md.
+
+- concept_id: C-SM-01
+  name: Simulation and hypertuning
+  aliases: [evolution chamber, hierarchical search, organizational simulation]
+  description: >-
+    Search over prompts, models, tools, skills, team composition, communication topology, gates and
+    workflows under multiple KPIs, evaluating candidates before production promotion, with
+    multi-metric scorecards, hidden holdout evals, cost and safety constraints and periodic metric
+    review to avoid Goodhart effects.
+  source_documents:
+    - docs/raw_research/agent_factory_agent_genome_research_pack/simulation/hypertuning_spec.md
+    - docs/raw_research/agent_factory_agent_genome_research_pack/simulation/search_space.yaml
+    - docs/raw_research/agent-factory-bootstrap-pack/docs/07-implementation/FEATURE_INTEGRATION_SEEDS.md
+    - BRAIN-DUMP.md
+  maturity: designed
+  research_status: not_researched
+  implementation_status: NOT_IMPLEMENTED
+  implementation_evidence: "MEASURED: zero occurrences of simulat* in factory/. corpus.py loads a hashed fixture, which is a fixture, not a simulator."
+  related_concepts: [C-OP-01, C-OP-04, C-OR-03, C-AG-05]
+  dependencies: [C-OP-01, C-OP-04, C-KN-06]
+  proposed_benefits: ["candidate organizations compared before any of them touches production"]
+  proposed_metrics: ["multi-objective trial score; replication; anti-overfitting checks"]
+  known_risks:
+    - "⛔ docs/specs/ui-future-features.md §8 refuses 'run simulations until it completes' on measured grounds"
+    - "simulation-to-production transfer validity is listed as an unvalidated HIGH gap in the bootstrap pack's own RESEARCH_GAPS.md"
+  unresolved_questions:
+    - "what is being simulated? The corpus never says whether the simulator models the WORLD (a warehouse, a connector) or only the AGENT LOOP. Those are very different builds."
+  narrower_survivor:
+    - concept: "rehearse the harness without spending a token (docs/specs/terminal-configuration.md §5)"
+      note: "A much smaller version of the same idea that survives every objection above, and would be cheap."
+
+# ================================================================================================
+# I · SELF-IMPROVEMENT, SELF-MAINTENANCE AND GOVERNANCE
+# ================================================================================================
+
+- concept_id: C-SI-01
+  name: Self-hosting — the factory as its own client
+  aliases: [AF-SH0, reliability corps, MAPE-K loop, the recursive build story]
+  description: >-
+    The milestone at which the Factory can safely construct teams that maintain substantial parts of
+    the Factory itself. Observe platform health -> diagnose drift or failure -> propose repairs ->
+    validate in tests and a sandbox -> gate -> canary -> deploy -> measure -> write learnings back.
+    Every source that proposes it also insists it must be STAGED through tests, sandboxing, bounded
+    permissions, canaries, rollback and human gates rather than treated as an all-or-nothing
+    autonomy switch.
+  source_documents:
+    - docs/raw_research/agent_factory_rd_consolidation_pack/07_SELF_HOSTING_BUILD_SEQUENCE.md
+    - .agent-platform/bootstrap/docs/SELF_MAINTENANCE.md
+    - .agent-platform/bootstrap/docs/AUTONOMY_LADDER.md
+    - docs/raw_research/agent-factory-bootstrap-pack/docs/07-implementation/FEATURE_INTEGRATION_SEEDS.md
+    - .agent-platform/bootstrap/source/Agent Factory Vision.txt
+  prior_art: ["autonomic computing / MAPE-K", "self-healing LLM agents (arXiv:2605.06737, cited in the vision document)"]
+  prior_art_status: known_prior_art
+  maturity: idea
+  research_status: not_researched
+  implementation_status: NOT_IMPLEMENTED
+  related_concepts: [C-SI-02, C-SI-03, C-GV-02, C-TM-02, C-OR-03]
+  dependencies: [C-EV-01, C-EV-03, C-GV-01]
+  proposed_benefits: ["maintenance burden falls as the system grows rather than rising"]
+  proposed_metrics: ["factory uptime, cost, agent regression, maintenance burden"]
+  unresolved_questions:
+    - "⛔ R-SELF-01 in the bootstrap pack's own queue is CRITICAL and ADVERSARIAL: 'what boundaries, sandboxes, gates, rollback mechanisms and eval methods are required BEFORE an agent platform can safely maintain or upgrade itself?' It is unrun."
+    - "the estate has never completed one real agent run, so the base case of the recursion does not exist"
+
+- concept_id: C-SI-02
+  name: Mandatory post-run failure analysis
+  aliases: [after-action report, AAR, post-task AAR]
+  description: >-
+    Every run produces a structured analysis of what failed and why, as a mandatory step rather than
+    an optional habit — so failure classification accumulates whether or not anyone remembers.
+  source_documents:
+    - docs/raw_research/agent_factory_rd_consolidation_pack/05_OPTIMIZATION_AND_META_OPTIMIZATION.md
+    - docs/protocol/prompts/post-task-aar.md
+    - docs/raw_research/agent_factory_army_ui_concept_pack/00_MASTER_INDEX.md
+  maturity: specified
+  research_status: not_researched
+  implementation_status: DESIGN_ONLY
+  implementation_evidence: "docs/protocol/prompts/post-task-aar.md exists with input/output contracts; nothing dispatches it"
+  related_concepts: [C-KN-05, C-AG-15, C-SI-01]
+  dependencies: [C-KN-05]
+  proposed_benefits: ["the failure taxonomy fills itself"]
+  proposed_metrics: ["unclassified_failure_share (✅ built as the counter-metric)"]
+  unresolved_questions: ["who writes it, and how is it kept from being a summary an agent grades itself on?"]
+
+- concept_id: C-SI-03
+  name: Curriculum optimizer and cross-agent experience transfer
+  aliases: [training agents, experience is evidence, agentic gym]
+  description: >-
+    An explicit training loop: what should an agent be shown, in what order, so that its measured
+    capability improves — with experience treated as evidence rather than as a persona attribute.
+    The gym is the corpus plus a scoreboard.
+  source_documents:
+    - docs/raw_research/agent_factory_rd_consolidation_pack/04_AGENT_HEALTH_READINESS_TRAINING.md
+    - .agent-platform/bootstrap/docs/COLLECTIVE_COGNITION.md
+    - BRAIN-DUMP.md
+    - README.md
+  maturity: idea
+  research_status: answered_and_contested
+  implementation_status: NOT_IMPLEMENTED
+  related_concepts: [C-AG-07, C-KN-03, C-OP-01, C-SM-01]
+  dependencies: [C-KN-06, C-OP-01]
+  proposed_benefits: ["capability improves with use rather than only with configuration"]
+  proposed_metrics: ["capability before vs after a curriculum, on held-out tasks"]
+  known_risks:
+    - "⛔ SYNTHESIS §6 defers the gym behind 'a stable verifier plus hundreds of clean labelled trajectories — training on current traces risks learning pathological loops'"
+    - "⛔ R10 answered the wiki-as-training question and answered NO (SYNTHESIS §12.6 keeps one mechanism from it)"
+  unresolved_questions: []
+
+- concept_id: C-SI-04
+  name: The 965-run loop and the 233/234/0 agent — the two founding failures
+  aliases: [capable but unmeasurable, the founding cautionary tales]
+  description: >-
+    Two mechanisms in this estate ACTED without anything measuring whether the action helped. A
+    retired agent produced 233 diagnoses, 234 escalations and 0 fixes over 81 days. A separate loop
+    ran 965 times, recorded its own 1.6% success rate, and never adjusted. Both were capable.
+    Neither was measurable. Every ordering decision in this repository descends from these two.
+  source_documents: [README.md, docs/research/agent-factory-concept-inventory.md, factory/metrics.py]
+  maturity: measured
+  research_status: settled
+  implementation_status: NOT_APPLICABLE
+  related_concepts: [C-EV-09, C-VD-02, C-SI-01, C-TM-02]
+  dependencies: []
+  proposed_benefits: []
+  proposed_metrics: []
+  unresolved_questions: []
+  preservation_note: >-
+    ⭐ NOT A DESIGN CONCEPT — a pair of measured historical facts that function as the corpus's
+    axioms. An architecture proposal that would reproduce either pattern is refused on sight, and
+    the absence table exists to make that refusal cheap. Any reviewer who wants to understand WHY
+    this repository refuses so much should start here.
+
+- concept_id: C-GV-01
+  name: The isolation ladder — tier chosen by what the task touches
+  aliases: [T0/T1/T2, isolation by verb not by role, the dangerous verb is contained by construction]
+  description: >-
+    An agent's isolation tier is chosen by WHAT ITS TASK TOUCHES, declared up front and enforced —
+    not by what kind of agent it is. T0 git worktree, repo files only, no network egress, no DB
+    verbs. T1 container with an egress allowlist and a read-only warehouse role: repo plus SELECT on
+    real data. T2 container plus an EPHEMERAL ZERO-COPY CLONE SCHEMA dropped on exit: full DDL/DML
+    inside the clone only. An agent that asks for a verb its tier does not carry is REFUSED, and the
+    refusal is an audit event.
+  source_documents: [docs/specs/architecture-v0.md, docs/research/answers/R3-answer-control-plane.md, docs/research/answers/R17-answer-data-engineering-external-survey.md, docs/research/answers/R18-answer-our-factory-internal-audit.md]
+  maturity: designed
+  research_status: answered_and_contested
+  implementation_status: PARTIAL
+  implementation_evidence: "T0 is built (factory/worktrees.py, factory/deploy.py with turn and dollar caps and a persisted AttemptLedger). T1 and T2 do not exist."
+  related_concepts: [C-TM-03, C-GV-02, C-GV-05, C-EV-06]
+  dependencies: []
+  proposed_benefits:
+    - "⭐ 'do not touch prod' in a prompt is a REQUEST; a role with no grant on prod is a CONTROL"
+    - "removes the file-conflict concurrency cap for data work, because two agents in two clone schemas conflict on nothing"
+    - "promotion out of a clone becomes an approve-plane act, and the clone-to-real diff is MECHANICALLY PRODUCIBLE"
+  proposed_metrics: ["refusals recorded (MEASURED: 0 of 22 gate events have ever been a refusal)"]
+  known_risks:
+    - "⛔ R16-outside §3: a container does NOTHING about prompt injection — the lethal trifecta survives it intact. An allowlist without network isolation is not isolation."
+    - "⛔ R17 §16.3: the clone is a COMPROMISED ORACLE at exactly the layer the evidence rule exists to protect"
+    - "architecture-v0's own §7.1: if a zero-copy clone is not actually cheap to validate against, §4 collapses and the ceiling stays at 3"
+  unresolved_questions:
+    - "T1/T2 assume containers on Windows via WSL — unmeasured, and start-up cost is a guess"
+  preservation_note: "⭐ The highest-leverage UNBUILT idea originating in this repository rather than in a pack. Carried into high_leverage_concepts.md."
+
+- concept_id: C-GV-02
+  name: Bounded autonomy as a designed surface
+  aliases: [autonomy dial, rules of engagement, five auto-actions each refuse-by-default]
+  description: >-
+    Autonomy is not a slider on a config; it is a set of NAMED AUTO-ACTIONS, each of which
+    refuses by default and each of which must be individually enabled with a stated bound.
+  source_documents: [docs/research/answers/R7-answer-session-manager.md, docs/research/SYNTHESIS.md, .agent-platform/bootstrap/docs/COMMERCIAL_AUTONOMY_POLICY.md, docs/raw_research/agent_factory_army_ui_concept_pack/00_MASTER_INDEX.md]
+  maturity: designed
+  research_status: answered_unverified
+  implementation_status: PARTIAL
+  implementation_evidence: "factory/launch.py separates three questions conflated in the word 'ready', and answers 'can I press start, and what happens if I walk away'"
+  related_concepts: [C-GV-01, C-GV-03, C-AG-10, C-SI-01]
+  dependencies: [C-GV-01]
+  proposed_benefits: ["autonomy becomes auditable per action rather than per agent"]
+  proposed_metrics: ["auto-actions enabled; refusals per auto-action"]
+  unresolved_questions:
+    - "SYNTHESIS §11 grades R7's evidence WEAKER than R1-R6; this concept is R7's genuinely new contribution and inherits that grade"
+
+- concept_id: C-GV-03
+  name: Human gates that refuse rather than render
+  aliases: [needs_paul, BLAST_RADIUS, the approval surface, merging stays human]
+  description: >-
+    Some acts are permanently human: merging, per-secret approval, promotion to production, and any
+    write outside a declared resource claim. The distinction that matters is between a gate that
+    REFUSES and a field that merely DISPLAYS.
+  source_documents: [docs/protocol/QUALITY_GATES.md, factory/finish.py, factory/operator.py, docs/specs/architecture-v0.md, docs/research/answers/R13-answer-architecture-and-ui-survey.md]
+  maturity: implemented
+  research_status: answered_and_contested
+  implementation_status: PARTIAL
+  implementation_evidence: "factory/finish.py NEVER merges; factory/operator.py records human answers to blockers declared up front"
+  related_concepts: [C-GV-01, C-GV-02, C-EV-07, C-UI-05]
+  dependencies: []
+  proposed_benefits: ["the irreversible acts stay with a person"]
+  proposed_metrics: ["approvals requested vs granted; time to approval"]
+  unresolved_questions:
+    - "⛔ QUALITY_GATES.md: needs_paul is DISPLAY-ONLY today — it renders, it does not refuse. A gate built on it would be a declaration without a mechanism, 'the family this estate has recorded three times'."
+    - "⭐ R13 run 2 found that APPROVE LEAVES THE BUILDING and becomes a GitHub PR — which removes the plane a settled platform decision was justifying. Unabsorbed (AB-12)."
+    - "R13 §4 / SYNTHESIS §14.4: on non-engineer approval, the answer is that NOBODY HAS SOLVED IT."
+
+- concept_id: C-GV-04
+  name: A spec field that nothing reads is worse than no field
+  aliases: [declaration versus mechanism, every field needs a test asserting it reaches the process]
+  description: >-
+    A configuration field, gate or preset that NAMES a control nothing performs is worse than its
+    absence, because it buys the appearance of the control. Every field needs a test asserting it
+    reaches the process.
+  source_documents:
+    - docs/specs/architecture-v0.md
+    - docs/findings.d/F79-the-real-instrument-exists-and-nothing-calls-it.md
+    - docs/findings.d/F87-the-one-wired-verifier-had-nothing-behind-it.md
+    - docs/findings.d/F90-the-run-record-names-a-repo-the-controller-cannot-put-an-agent-in.md
+    - docs/findings.d/F98-the-dag-field-was-reported-unused-and-is-now-carrying-25-block-edges.md
+  maturity: measured
+  research_status: settled
+  implementation_status: PARTIAL
+  related_concepts: [C-AG-01, C-AG-03, C-GV-03, C-VD-02]
+  dependencies: []
+  proposed_benefits: ["a declared control cannot pass for a performed one"]
+  proposed_metrics: ["fields in the version hash that no code path reads"]
+  measured_incidence: "FOUR of the thirty-three findings are instances: F79, F87, F90, F98. The second most frequent defect class after C-VD-02's blind instruments."
+  unresolved_questions: []
+
+- concept_id: C-GV-05
+  name: The publication boundary is all remote refs, not main
+  aliases: [release gate, exposure already incurred, self-classification]
+  description: >-
+    What has left the building is determined by EVERY remote ref, not by the default branch. And the
+    question splits in two: exposure ALREADY INCURRED (a decision about the past, requiring human
+    authority) and exposure NOT YET INCURRED (the original question). A document that carries
+    sensitive content classifies ITSELF, with a measured token sweep.
+  source_documents: [docs/release-gate/AF-RELEASE-GATE-01-2026-09-01.md, docs/EXTERNAL-REVIEW-PROMPT.md]
+  maturity: measured
+  research_status: settled
+  implementation_status: IMPLEMENTED
+  implementation_evidence: "docs/release-gate/capture_public_exposure.py; per-commit verification with git branch -r --contains"
+  related_concepts: [C-GV-01, C-GV-03, C-KN-06]
+  dependencies: []
+  proposed_benefits: ["a review pack cannot be assembled on a false belief about what is already public"]
+  proposed_metrics: ["files carrying sensitive tokens; how many are already published byte-identically"]
+  unresolved_questions:
+    - "⛔ BLOCKED, requiring human authority. Client-identifying content is ALREADY public on a non-main branch."
+
+# ================================================================================================
+# J · OPERATOR SURFACES
+# ================================================================================================
+
+- concept_id: C-UI-01
+  name: Two projections over one domain state
+  aliases: [dense console first, animated world second, the world is not the source of truth]
+  description: >-
+    A serious, dense, precision-first Mission Command Console, and a second spatial/animated
+    projection over THE SAME domain state. The world is a projection, never the source of truth, and
+    the dense console comes first.
+  source_documents:
+    - docs/raw_research/agent_factory_army_ui_concept_pack/01_PRODUCT_VISION_AND_UI_LAYERS.md
+    - docs/raw_research/agent_factory_chat_design_pack/00_MASTER_CONCEPT_MAP.md
+    - docs/raw_research/zeus_world_ui_research_pack/06_STATE_AND_INTERACTION_MODEL.md
+  maturity: designed
+  research_status: not_researched
+  implementation_status: NOT_IMPLEMENTED
+  implementation_evidence: "the surfaces that exist (factory/switchboard*.py, docs/board/, docs/artifacts/) are single dense projections; no world view exists"
+  related_concepts: [C-UI-02, C-UI-03, C-EV-05]
+  dependencies: [C-EV-05]
+  proposed_benefits: ["a spatial view cannot drift from the console because both read one state"]
+  proposed_metrics: ["the zeus pack's Gate 4: three world interactions must BEAT BASELINE"]
+  unresolved_questions:
+    - "⛔ README defers Platform UI behind 'numbers worth looking at', and the estate has zero completed real runs"
+
+- concept_id: C-UI-02
+  name: Semantic zoom
+  aliases: [tactical zoom, company to campaign to operation to squad to agent to tool call]
+  description: >-
+    One continuous zoom from organization down to an individual tool call or file, without losing
+    context, with designation paths compressing and expanding automatically.
+  source_documents:
+    - docs/raw_research/agent_factory_army_ui_concept_pack/00_MASTER_INDEX.md
+    - docs/raw_research/zeus_world_ui_research_pack/08_RESEARCH_PROMPTS.md
+    - BRAIN-DUMP.md
+  maturity: idea
+  research_status: not_researched
+  implementation_status: NOT_IMPLEMENTED
+  related_concepts: [C-UI-01, C-OR-01, C-UI-03]
+  dependencies: [C-OR-01]
+  proposed_benefits: ["navigation cost falls; spatial memory does the work menus currently do"]
+  proposed_metrics: ["navigation actions per operator task, versus a baseline"]
+  unresolved_questions: []
+  note: "Named in BRAIN-DUMP as the original interactive-drill-down ask, before any pack existed."
+
+- concept_id: C-UI-03
+  name: Spatial command language
+  aliases: [location encodes ownership, formation encodes topology, fog encodes uncertainty]
+  description: >-
+    Spatial properties carry operational meaning: location encodes ownership or domain, distance
+    encodes relationship or urgency, movement encodes workflow, formation encodes execution
+    topology, front line encodes priority, supply lines encode context/tools/permissions/compute,
+    signals encode communication, fog of war encodes UNCERTAINTY, threats encode failure risk. World
+    gestures compile to the same typed commands the normal UI uses.
+  source_documents:
+    - docs/raw_research/agent_factory_chat_design_pack/00_MASTER_CONCEPT_MAP.md
+    - docs/raw_research/agent_factory_army_ui_concept_pack/03_ARMY_WORLD_UI.md
+    - docs/raw_research/zeus_world_ui_research_pack/06_STATE_AND_INTERACTION_MODEL.md
+  maturity: idea
+  research_status: not_researched
+  implementation_status: NOT_IMPLEMENTED
+  related_concepts: [C-UI-01, C-UI-02, C-OR-05, C-TM-05]
+  dependencies: [C-UI-01]
+  proposed_benefits: ["operator throughput at scale; uncertainty made visible rather than absent"]
+  proposed_metrics: ["the zeus pack's evaluation protocol: core metrics, a baseline task suite, target thresholds, a prototype ladder"]
+  unresolved_questions:
+    - "⚠ 'spatial can be faster' is a hypothesis the packs ask to be BENCHMARKED, not assumed — and none of the corpus's UI evidence bears on it"
+  preservation_note: >-
+    Preserved as genuinely speculative. Its FOG-OF-WAR element is the most defensible part: a UI
+    that renders uncertainty as a visible property is the direct visual analogue of C-VD-01's
+    UNMEASURABLE verdict, and the corpus has never connected the two.
+
+- concept_id: C-UI-04
+  name: Nothing on the operator surface is a new source of truth
+  aliases: [switchboard as a projection, every field read on every call]
+  description: >-
+    Every field on the operator surface is read, on every call, from something that was already
+    authoritative before the surface existed — the task store, the mission record, the claim locks
+    verified against the process table, the session registry. The surface adds a join, never a fact.
+  source_documents: [factory/switchboard.py, factory/switchboard_p1.py, factory/work.py, docs/specs/control-room.md]
+  maturity: measured
+  research_status: settled
+  implementation_status: IMPLEMENTED
+  implementation_evidence: "factory/switchboard.py module docstring enumerates each field's authoritative source; factory/work.py is 'not a second task system'"
+  related_concepts: [C-EV-05, C-CM-02, C-UI-05]
+  dependencies: [C-EV-05]
+  proposed_benefits: ["the UI cannot disagree with the system"]
+  proposed_metrics: []
+  unresolved_questions: []
+
+- concept_id: C-UI-05
+  name: A control that wears an imperative verb must actually act
+  aliases: [three controls three true statements, an invisible refusal reads as a broken feature]
+  description: >-
+    A button labelled with an imperative verb that only navigates is a defect, not a shortcut. And a
+    refusal the operator cannot see reads as a broken feature — a control must be watched refusing,
+    visibly.
+  source_documents:
+    - docs/evidence/switchboard-p1-2026-09-01/README.md
+    - docs/findings.d/F74-an-invisible-refusal-reads-as-a-broken-feature.md
+    - factory/console.py
+  maturity: measured
+  research_status: settled
+  implementation_status: IMPLEMENTED
+  related_concepts: [C-UI-04, C-GV-03, C-GV-04]
+  dependencies: []
+  proposed_benefits: ["the operator's model of the system stays true"]
+  proposed_metrics: ["controls whose label matches their effect"]
+  unresolved_questions: []
+  note: >-
+    factory/console.py applies the same rule to itself: "This is NOT a terminal, and it must never
+    be presented as one" — it cannot attach to a running process's TTY, and calling it a terminal
+    would be the same defect as a button that wears an imperative verb and only navigates.
+
+- concept_id: C-UI-06
+  name: Rendered validation is a different instrument from a static check
+  aliases: [RENDERED_CONFIRMED, the no-JS negative control, open it in a real browser]
+  description: >-
+    A query that returns rows does not prove a page paints. Every rendered surface is opened in a
+    real browser at three viewports in both colour schemes AND with JavaScript disabled — the no-JS
+    capture being the negative control for progressive enhancement. A static rule set and a render
+    pass each catch what the other structurally cannot, and the corpus states the boundary in both
+    directions.
+  source_documents:
+    - docs/evidence/render-pass-2026-08-22.md
+    - docs/evidence/impeccable-detector-pass-2026-08-22.md
+    - docs/evidence/switchboard-p1-2026-09-01/README.md
+    - docs/evidence/client-review-readiness-2026-09-01/README.md
+  maturity: measured
+  research_status: settled
+  implementation_status: IMPLEMENTED
+  implementation_evidence: "scripts/render_pass.py, render_check_switchboard.py, render_check_switchboard_p1.py, render_check_client_review.py, render_check_case_study.py, atlas_render_check.py, manual_render_check.py"
+  related_concepts: [C-VD-02, C-UI-05, C-EV-06]
+  dependencies: [C-VD-02]
+  proposed_benefits: ["a surface cannot be certified on a passing query while every visual is blank"]
+  proposed_metrics: ["render checks per surface; defects found by render that static analysis missed (MEASURED: 2 on the first pass)"]
+  unresolved_questions: []
+  preservation_note: >-
+    ⭐ Also a demonstration that a figure which would look identical if the numbers were different
+    is decoration — the first render pass found a figure declaring a category it never drew.
+
+# ================================================================================================
+# K · THE RESEARCH SYSTEM ITSELF
+# ================================================================================================
+
+- concept_id: C-RS-01
+  name: The neighbours table — every pass names what it must NOT answer
+  aliases: [pass borders, do not answer thinly, a named handoff beats a thin answer]
+  description: >-
+    The expensive failure in a research programme is two passes answering the same question
+    differently, which costs a run and then costs a reconciliation. Every prompt from R12 onward
+    carries a table naming what it OWNS and what it MUST NOT ANSWER, and every prompt is told: if a
+    question belongs to a neighbour, say so and stop.
+  source_documents: [docs/research/README.md, docs/research/R13-architecture-and-ui-survey.md, docs/research/R14-structure-model-and-joy.md, docs/research/R15-source-corpus-crawl.md, docs/research/R17-data-engineering-external-survey.md]
+  maturity: measured
+  research_status: settled
+  implementation_status: IMPLEMENTED
+  related_concepts: [C-RS-02, C-RS-03, C-RS-05]
+  dependencies: []
+  proposed_benefits: ["duplicate research is prevented at the prompt, not detected at the answer"]
+  proposed_metrics: ["passes that returned a named handoff instead of a thin answer"]
+  unresolved_questions:
+    - "it did NOT prevent the alerting question being answered five different ways across five passes (AB-19) — the neighbours table scopes SUBJECTS, not the questions that cut across them"
+  preservation_note: "⭐ The corpus's most transferable research-process invention, and it has no counterpart in any inbound pack."
+
+- concept_id: C-RS-02
+  name: Agreement is the control; divergence is the finding
+  aliases: [do not average the answers, record the disagreement and which evidence is stronger]
+  description: >-
+    Where research passes agree, that is the control. Where they diverge, that is the finding, and
+    the divergence is recorded WITH which evidence is stronger. Passes are never averaged.
+  source_documents: [docs/research/SYNTHESIS.md, docs/research/README.md]
+  maturity: implemented
+  research_status: settled
+  implementation_status: IMPLEMENTED
+  implementation_evidence: "SYNTHESIS §7 and the per-pass 'where X disagrees' subsections in §10.2, §11.4, §12.3, §13.4, §13.6, §16.2, §18.3"
+  related_concepts: [C-RS-01, C-RS-03, C-KN-02]
+  dependencies: []
+  proposed_benefits: ["a contradiction survives long enough to be resolved on evidence"]
+  proposed_metrics: []
+  unresolved_questions:
+    - "⛔ SYNTHESIS §15.5 RETRACTS an independence claim: three passes were counted as agreeing independently and were not. Agreement is only a control if the sources are independent, and for AI-generated answers over a shared pack they usually are not."
+
+- concept_id: C-RS-03
+  name: The record checks itself
+  aliases: [unsynthesised(), dispatch state, a currency gate that can go red]
+  description: >-
+    Instruments that detect the failure modes of the research record itself: an answer that landed
+    and was never reconciled (synthesis.unsynthesised(), enforced by a test that goes RED); a prompt
+    that was written and never sent (dispatch, because a prompt with no answer is invisible to a
+    glob over answers/).
+  source_documents: [factory/synthesis.py, factory/dispatch.py, tests/test_synthesis_current.py, docs/research/README.md]
+  maturity: measured
+  research_status: settled
+  implementation_status: IMPLEMENTED
+  implementation_evidence: "MEASURED 2026-09-02: factory.synthesis.unsynthesised() -> []; python -m factory.dispatch reports 18 ANSWERED and nothing written-and-unsent"
+  related_concepts: [C-RS-02, C-VD-02, C-KN-02]
+  dependencies: []
+  proposed_benefits: ["a research record cannot silently omit a landed answer"]
+  proposed_metrics: ["unsynthesised count; written-but-not-dispatched count"]
+  unresolved_questions:
+    - "⛔ F93: 'filed_after' compares file MTIMES, so any fresh checkout reports every answer outstanding"
+    - "⛔ F75: BOTH reconciliation checks passed while three answers sat unabsorbed. The instruments detect UNMENTIONED, not UNABSORBED — mentioning an answer satisfies them."
+    - "⛔ neither instrument can see R06B or the warehouse brief, because they do not match the R[0-9]* glob shape the instrument uses"
+
+- concept_id: C-RS-04
+  name: Research modes, including adversarial
+  aliases: [scout/deep/reconcile/prior-art/architecture/refresh/adversarial, the research compiler]
+  description: >-
+    Research as a set of named modes rather than one activity: scout (a short survey), deep (full
+    literature and implementation), prior-art (specifically attacks novelty claims), reconcile
+    (against the current architecture), refresh (re-run an old artifact and detect what changed),
+    ADVERSARIAL (assume the proposed architecture is unnecessarily complicated and find credible
+    evidence for something simpler). Output is structured per mission — question, search plan,
+    sources, claims, prior-art matrix, contradictions, architecture impact, experiments,
+    recommendations, graph delta — so research becomes machine-ingestible.
+  source_documents:
+    - .agent-platform/bootstrap/source/Agent Factory Vision.txt
+    - docs/raw_research/agent-factory-bootstrap-pack/docs/07-implementation/FEATURE_INTEGRATION_SEEDS.md
+    - .agent-platform/bootstrap/skills/claude-research-orchestrator/SKILL.md
+    - .agent-platform/bootstrap/docs/CLAUDE_RESEARCH_WORKFLOW.md
+  maturity: designed
+  research_status: not_researched
+  implementation_status: PARTIAL
+  implementation_evidence: "factory/research_run.py exists and declares runner types; the modes are not implemented. The estate's actual practice is one mode (deep) plus an ad-hoc adversarial pass (R16-outside, R17's verification ledger)."
+  related_concepts: [C-RS-01, C-RS-05, C-KN-03, C-AG-12]
+  dependencies: []
+  proposed_benefits:
+    - "⭐ 'otherwise a self-researching architecture can become an extremely efficient machine for confirming its creator's ideas'"
+  proposed_metrics: ["claims produced per mission; contradictions detected"]
+  unresolved_questions:
+    - "the adversarial mode is the one with demonstrated value here (Wave 0's refutation, R16-outside, R17 §8) and is the only one not automated"
+  preservation_note: "⭐ ADVERSARIAL MODE IS THE HIGH-VALUE PART and the corpus proves it: the single most consequential research result in this estate is a refutation, produced by an adversarial pass, of its own founding premise."
+
+- concept_id: C-RS-05
+  name: External answers land unverified, then are promoted in the same sitting
+  aliases: [two-stage intake, docs/reviews/external/, verification before promotion]
+  description: >-
+    An external model's answer does not enter the research record directly. Stage 1: land it in a
+    separate folder, unverified. Stage 2: verify its load-bearing claims against the code and
+    promote it, reconciling in the same sitting — including rejecting proposals IN WRITING.
+  source_documents: [docs/reviews/external/README.md, docs/reviews/external/verification.md, docs/reviews/external/deepseek.md]
+  maturity: measured
+  research_status: settled
+  implementation_status: IMPLEMENTED
+  related_concepts: [C-RS-02, C-RS-03, C-KN-02]
+  dependencies: []
+  proposed_benefits: ["an unverified external claim cannot acquire the standing of a filed answer by sitting in the right directory"]
+  proposed_metrics: ["claims verified vs claims accepted; proposals rejected in writing (MEASURED: 2)"]
+  unresolved_questions: []
+
+- concept_id: C-RS-06
+  name: Repeated AI claims are not independent evidence
+  aliases: [the corroboration trap, five packs one source]
+  description: >-
+    Agreement between model-generated documents is not corroboration when the documents share a
+    source, a prompt lineage or a generator. Stated as a principle in the bootstrap pack's own
+    manifest, and demonstrated by the corpus: five inbound packs carry the same source file
+    byte-for-byte and three carry the same 56 KB prior-research pack.
+  source_documents:
+    - docs/raw_research/agent-factory-bootstrap-pack/BOOTSTRAP_MANIFEST.yaml
+    - docs/research/SYNTHESIS.md
+    - docs/research/agent-factory-concept-inventory.md
+  maturity: measured
+  research_status: settled
+  implementation_status: NOT_APPLICABLE
+  related_concepts: [C-RS-02, C-VD-03, C-RS-05]
+  dependencies: []
+  proposed_benefits: ["the corpus's own volume stops being mistaken for its weight"]
+  proposed_metrics: ["independent-source estimate per concept (the bootstrap pack's evidence-map schema asks for exactly this field and it was never populated)"]
+  unresolved_questions: []
+  preservation_note: >-
+    ⭐ THE SINGLE MOST IMPORTANT READING RULE FOR THIS CORPUS. Applied honestly, it moves most of
+    the inbound material from "nine independent sources converge on Org-IR" to "one source,
+    reformatted nine times".
+
+# ================================================================================================
+# L · PROCESS AND WORKING DISCIPLINE
+#     Section H of the introduction: ideas the corpus PRACTISES without naming, or names only in
+#     passing. None appears in any inbound research pack, and several are the most transferable
+#     things the estate has produced.
+# ================================================================================================
+
+- concept_id: C-PR-01
+  name: The correction is made stronger, not quieter
+  aliases: [corrected in place and left visible, the retraction as a deliverable]
+  description: >-
+    When a document is found to be wrong, the correction is written INTO the document, beside the
+    original claim, with what was believed, what is true, and what changed — rather than the claim
+    being edited away. Several documents retract their own earlier statements and say the error was
+    theirs.
+  source_documents:
+    - docs/agent-army/CURRENT_STATE.md
+    - docs/specs/architecture-v0.md
+    - docs/absorption-backlog.md
+    - README.md
+    - docs/findings.d/README.md
+  maturity: measured
+  research_status: settled
+  implementation_status: NOT_APPLICABLE
+  related_concepts: [C-KN-01, C-VD-03, C-PR-02]
+  dependencies: []
+  proposed_benefits:
+    - "a reader can tell a stale claim from a live one"
+    - "a document that has been publicly wrong once is more trustworthy, not less"
+  proposed_metrics: []
+  unresolved_questions: []
+  worked_example: >-
+    CURRENT_STATE.md claimed an arXiv record had no journal version, retracted it after checking
+    Crossref, said "that was wrong, and the error was mine — I inferred a negative from an
+    instrument I had not shown could see the thing", and then observed that the RETITLE of the
+    peer-reviewed version ("Capable language models can outgrow the benefits of collaboration") was
+    a stronger finding than the correction. The record got better by being wrong in public.
+
+- concept_id: C-PR-02
+  name: An inherited premise is a hypothesis, not a finding
+  aliases: [walk the consumer route yourself, do not inherit the target]
+  description: >-
+    An object, cause or layer named by a ticket, handoff or boot prompt is a HYPOTHESIS. Verify it
+    before adopting it, and say which hop actually produces the symptom. Correcting an inherited
+    premise is itself a deliverable, and must be published wherever the premise was.
+  source_documents:
+    - docs/evidence/false-succeeded-mechanism.md
+    - docs/evidence/marketing-model-v1/R2-repo-wiki-diff.md
+    - docs/specs/marketing-model-reconstruction-v1.md
+    - docs/protocol/CLIENT_REVIEW_BACKEND.md
+  maturity: measured
+  research_status: settled
+  implementation_status: NOT_APPLICABLE
+  related_concepts: [C-PR-01, C-VD-02, C-RS-05]
+  dependencies: []
+  proposed_benefits: ["a wrong premise is caught before three research answers are built on it"]
+  proposed_metrics: ["premises corrected before work started vs after"]
+  unresolved_questions: []
+  worked_example: >-
+    The false `succeeded` was attributed to Prefect. It is a last-write-wins status field in a
+    bespoke engine. Three filed research answers rested on the misattribution, and three follow-ups
+    were written and sent rather than the answers being quietly re-read.
+
+- concept_id: C-PR-03
+  name: State the kill condition and the acceptance test before building
+  aliases: [an acceptance test a simulator cannot pass, kill criteria stated before the evidence]
+  description: >-
+    Write the condition under which the work should stop, and the test that would prove it worked,
+    BEFORE starting — so neither can be chosen to fit the result. FACTORY-UI-PROMPT opens with a
+    kill condition and specifies an acceptance test "written so a simulator cannot pass it";
+    ROLLOUT.md states its kill criteria before any evidence exists.
+  source_documents:
+    - docs/FACTORY-UI-PROMPT.md
+    - docs/protocol/ROLLOUT.md
+    - docs/specs/marketing-model-reconstruction-v1.md
+    - docs/CLIENT-INTAKE-PLATFORM-PLAN.md
+  maturity: measured
+  research_status: settled
+  implementation_status: NOT_APPLICABLE
+  related_concepts: [C-EV-02, C-TM-02, C-PR-04]
+  dependencies: []
+  proposed_benefits: ["a project cannot redefine success after seeing the result"]
+  proposed_metrics: []
+  unresolved_questions: []
+
+- concept_id: C-PR-04
+  name: The basis register — a document lists its own weakest claims
+  aliases: [attack these first, what this plan does not know, where this is most likely wrong]
+  description: >-
+    A document ends with a section naming the claims most likely to be wrong and inviting attack on
+    them specifically, plus a separate section for what it does not know. Appears independently in
+    at least five documents under four different headings.
+  source_documents:
+    - docs/specs/architecture-v0.md
+    - docs/specs/control-room.md
+    - docs/CLIENT-INTAKE-PLATFORM-PLAN.md
+    - docs/specs/product-end-state.md
+    - docs/reviews/build-vs-adopt-2026-08-29.md
+  maturity: measured
+  research_status: settled
+  implementation_status: NOT_APPLICABLE
+  related_concepts: [C-PR-03, C-RS-04, C-VD-03]
+  dependencies: []
+  proposed_benefits: ["review effort goes to the load-bearing uncertainty instead of the surface"]
+  proposed_metrics: ["basis-register entries later confirmed wrong (a hit rate for the author's own self-assessment)"]
+  unresolved_questions: []
+  preservation_note: >-
+    ⭐ A candidate for standardisation. Five documents do this under four different headings —
+    "Where this is most likely wrong — attack these first", "Basis register — attack these first",
+    "What this plan does not know", "What was NOT done". One name would make them findable.
+
+- concept_id: C-PR-05
+  name: The instrument log — what could and could not be seen
+  aliases: [validation boundary, NOT-VISIBLE inventory, what this pass did not establish]
+  description: >-
+    A pass records the limits of its own instruments: which sources it could not reach, which
+    questions its tools structurally could not answer, and what therefore remains unestablished —
+    so a later reader does not mistake an instrument limit for a finding about the world.
+  source_documents:
+    - docs/reviews/build-vs-adopt-2026-08-29.md
+    - docs/evidence/marketing-model-v1/R1-stakeholder-evidence.md
+    - docs/evidence/switchboard-security-preflight-2026-08-31.md
+    - docs/recon/leads-no-go-2026-09-01.md
+    - docs/research/answers/R17-answer-data-engineering-external-survey.md
+  maturity: measured
+  research_status: settled
+  implementation_status: NOT_APPLICABLE
+  related_concepts: [C-VD-02, C-VD-03, C-PR-04]
+  dependencies: [C-VD-02]
+  proposed_benefits: ["an absence caused by a blind instrument cannot be read as an absence in the world"]
+  proposed_metrics: []
+  unresolved_questions: []
+
+- concept_id: C-PR-06
+  name: The boot prompt — a handoff that states what is NOT done
+  aliases: [session handoff, honest incompleteness]
+  description: >-
+    A session hands work on by writing a durable file that lets a cold session resume, including an
+    honest account of what is unfinished, blocked or uncertain. Twenty-one of them exist, with a
+    maintained router.
+  source_documents: [boot-prompts/README.md, boot-prompts/]
+  maturity: measured
+  research_status: settled
+  implementation_status: IMPLEMENTED
+  related_concepts: [C-KN-01, C-PR-05, C-CM-01]
+  dependencies: []
+  proposed_benefits: ["continuity across sessions without a second state file"]
+  proposed_metrics: []
+  unresolved_questions: []
+  note: >-
+    .agent-platform/PACK_CONFORMANCE.md cites boot-prompts/README.md as one of the places durable
+    project state ALREADY lives, and is the stated reason the imported pack's PROJECT_STATE.yaml was
+    deliberately not created.
+
+- concept_id: C-PR-07
+  name: Import without granting authority
+  aliases: [a proposal from a stranger, authority declared per directory]
+  description: >-
+    External material is imported VERBATIM and UNMODIFIED, and a document beside it declares its
+    authority — which may be NONE. The named failure mode: someone reads a well-written speculative
+    architecture document, sees vocabulary they recognise, and builds on it as though it described
+    the running system.
+  source_documents:
+    - .agent-platform/README.md
+    - .agent-platform/RECONCILIATION.md
+    - .agent-platform/PACK_CONFORMANCE.md
+    - docs/agent-army/README.md
+    - docs/reviews/external/README.md
+  maturity: measured
+  research_status: settled
+  implementation_status: IMPLEMENTED
+  related_concepts: [C-RS-05, C-RS-06, C-KN-02, C-PR-02]
+  dependencies: []
+  proposed_benefits: ["a speculative document cannot become a specification by being present"]
+  proposed_metrics: ["pack instructions marked FOLLOWED / SUBSTANCE / DEVIATED / NOT YET (MEASURED: 4 deliberate deviations, each with its reason)"]
+  unresolved_questions: []
+  preservation_note: >-
+    ⭐ THE MOST IMPORTANT PROCESS CONCEPT FOR ANYONE INHERITING THIS CORPUS. Nine inbound packs and
+    a sibling research repository exist; without this discipline the volume of speculative material
+    would have set the architecture by default.
+
+# ================================================================================================
+# P · RECOVERED FROM `.agent-platform/bootstrap/` — 2026-09-02 DELTA PASS
+#
+#     ⚠ AUTHORITY: NONE, inherited. `.agent-platform/README.md` classifies everything under
+#     bootstrap/ as "a proposal from a stranger" (C-PR-07), and `.agent-platform/RECONCILIATION.md`
+#     plus `PACK_CONFORMANCE.md` outrank it wherever they carry measured live-repo evidence. Every
+#     entry below therefore states its implementation status from a grep or an import, never from
+#     what the source document claims about itself.
+#
+#     WHY THESE NINE AND NOT OTHERS. The pack was READ in full by the 2026-08-31 session; what was
+#     missing was GRANULARITY — `corpus_manifest.yaml` held the 110-file tree mostly as one bundle
+#     and this index promoted six of its 21 design docs and none of its 8 schemas. MEASURED:
+#
+#       python -c "import pathlib; r=pathlib.Path('.agent-platform/bootstrap'); i=pathlib.Path('docs/_index/concept_index.yaml').read_text(encoding='utf-8'); \
+#       f=[p for p in sorted(r.rglob('*')) if p.is_file()]; print(len(f), sum(1 for p in f if p.as_posix() in i))"
+#
+#     Nine mechanisms are promoted. Six more were reconciled WITHOUT a new id and are recorded in
+#     docs/_index/agent_platform_delta_synthesis.md §2 — including the autonomy ladder, the
+#     promotion board, the commercial autonomy policy and the pack's research-job state machine,
+#     which is REJECTED as a duplicate source of truth.
+# ================================================================================================
+
+- concept_id: C-GV-07
+  name: The execution surface is a routing constraint, not a second scheduler
+  aliases: [execution surface policy, remote_control vs cloud_web, surface selection, task execution metadata]
+  description: >-
+    A task declares what it needs from the machine it runs on — local files, local MCP servers,
+    local secrets, an isolated worktree, whether it may run beside anything else, and which paths
+    it writes — and the surface is CHOSEN from that declaration rather than assumed. "Claude
+    session" is not one uniform runtime: a local Remote Control session, a cloud web session and a
+    detached worktree differ in what they can reach, and a task placed on the wrong one fails for
+    a reason that looks like an agent defect. The collision rule is the load-bearing half — two
+    tasks may run at once only when both are read-only, or they hold separate worktrees, or a
+    deterministic lock proves their mutable resources are disjoint. "The agents will coordinate"
+    is not a locking strategy.
+  source_documents:
+    - .agent-platform/bootstrap/docs/EXECUTION_SURFACE_POLICY.md
+    - .agent-platform/bootstrap/docs/WEB_REMOTE_SESSION_RUNBOOK.md
+    - .agent-platform/PACK_CONFORMANCE.md
+  maturity: designed
+  research_status: not_researched
+  implementation_status: NOT_IMPLEMENTED
+  implementation_evidence: >-
+    ⛔ MEASURED ZERO, from an instrument shown able to see the term elsewhere:
+    `grep -rniE "remote_control|cloud_web|preferred_surface|execution_surface" factory/ scripts/ blueprints/ missions/ | wc -l`
+    returns 0. No task, mission or blueprint carries an `execution:` block. ⭐ But clause 3 of the
+    collision rule is ALREADY BUILT and is the strongest part: `factory/claims.py:200-244` takes
+    O_CREAT|O_EXCL locks verified against the process table, `factory/worktrees.py:38-39` gives
+    each write task its own tree, and `factory/lanes.py` groups work by FILE LOCALITY rather than
+    by the dependency graph. `PACK_CONFORMANCE.md` rows 4.1/4.2 record the surface half as
+    NOT YET, and row 4.3 records the honest gap — the isolation rule is "honoured by discipline,
+    not enforced; nothing allocates the worktree".
+  related_concepts: [C-GV-01, C-TM-03, C-TM-06, C-CM-02, C-EV-08]
+  dependencies: [C-GV-01, C-TM-03]
+  proposed_benefits:
+    - "a task that needs a local secret cannot be scheduled onto a surface that has none"
+    - "parallelism is derived from declared writes instead of asserted by the operator"
+    - "the branch-conflict problem gets a mechanism rather than a convention"
+  proposed_metrics:
+    - "operator interventions per parallel session; branch conflicts per week; tasks re-run after landing on an incapable surface"
+  unresolved_questions:
+    - "⚠ The Claude Code argv surface is undocumented and unpinned (GAP-38, factory/provider.py). A router that hard-codes `--spawn worktree` or `--capacity N` inherits that exposure; the installed CLI's flags must be verified at runtime, not assumed."
+    - "Who writes `writes:`? A hand-typed path list is C-GV-04's defect — a spec field nothing reads — unless the claim system checks it."
+  delta_disposition_2026_09_02: PROMOTE_AS_NEW_CONCEPT
+  preservation_note: >-
+    ⭐ THE ONE RECOVERED MECHANISM THAT IS NEAR-FREE AND NEAR-TERM. It is not a new orchestration
+    system; it is metadata plus a predicate over machinery this repo already has. Carried into
+    high_leverage_concepts.md as HL-16.
+
+- concept_id: C-TM-07
+  name: The Mission Assembly Plan — a compiled team, resolved before anything runs
+  aliases: [mission assembler, conditional swarming, availability vector, resolved assembly plan]
+  description: >-
+    A mission compiles through a deterministic sequence before execution — task family and risk,
+    then required capabilities, then prior experts, then who is actually available, then topology
+    candidates, then communication and context routes, then budget/authority/gates — and the
+    OUTPUT is a durable object (participants, routes, context packets, budget, gates, evaluation
+    contract) rather than a decision made inside stage code. Two refinements travel with it.
+    SWARMING IS CONDITIONAL — a temporary swarm forms only for parallel exploration, diverse
+    expertise or independent verification, never as the default shape. And AVAILABILITY IS NOT
+    IDLE/BUSY — it is load, tool and environment access, cost lane, latency expectation, recent
+    relevant experience, health, budget remaining and permission scope.
+  source_documents:
+    - .agent-platform/bootstrap/docs/MISSION_ASSEMBLY_AND_SWARMING.md
+    - .agent-platform/bootstrap/schemas/mission-assembly.schema.json
+    - .agent-platform/bootstrap/skills/mission-assembler/SKILL.md
+  maturity: specified
+  research_status: not_researched
+  implementation_status: NOT_IMPLEMENTED
+  implementation_evidence: >-
+    No mission object, schema or lifecycle exists — `.agent-platform/RECONCILIATION.md` §3 and
+    `docs/agent-army/CURRENT_STATE.md`. `grep -rniE "swarm" factory/ scripts/ blueprints/ missions/ evals/ tests/`
+    returns 1 line, none of it a mechanism. What exists instead is a lane brief plus a gate, and
+    `blueprints/orchestrator_team.yaml` — a 3-agent blueprint BUILT, TESTED AND REJECTED on
+    evidence, kept deliberately with its unlock threshold in its header.
+  related_concepts: [C-TM-04, C-TM-05, C-TM-06, C-AG-06, C-OR-06, C-EV-01]
+  dependencies: [C-AG-16, C-TM-02]
+  proposed_benefits:
+    - "the team that ran a mission is reconstructable, because it was compiled into an object rather than decided in code"
+    - "swarming acquires a stated precondition instead of being the default"
+  proposed_metrics:
+    - "missions whose assembly plan was resolved before dispatch; swarms formed vs swarms justified by one of the three named conditions"
+  unresolved_questions:
+    - "⛔ Its unlock condition is already written down and unmet. `blueprints/orchestrator_team.yaml` states the threshold a second agent must clear, and `.data/runs.jsonl` holds 10 rows with 0 PASS. Building the assembler before one certified team means compiling teams nobody can grade."
+    - "The availability vector overlaps C-AG-06's health/requirement vectors. Whether these are one object or two is unresolved in both sources."
+  delta_disposition_2026_09_02: PROMOTE_AS_NEW_CONCEPT
+  preservation_note: >-
+    Promoted for the COMPILE SEQUENCE and the two refinements, not for the assembler. C-TM-04 owns
+    the decision "which team suits this mission"; this owns "what the resolved plan is as an
+    object". Do not build it before C-AG-16 has records to route on.
+
+- concept_id: C-AG-16
+  name: The capability record — a claim bound to the conditions it was measured under
+  aliases: [certified agent/team registry, evidence-backed capability, certification envelope, validity window]
+  description: >-
+    What an agent or team can do is recorded as a claim PLUS the envelope the claim was measured
+    in — exact config/version identity, task family, the conditions, how many pieces of evidence
+    and where they are, success and regression history, cost, latency, and a validity window after
+    which the claim expires. A capability asserted without its conditions invites the runtime to
+    use it outside the envelope it was graded in.
+  source_documents:
+    - .agent-platform/bootstrap/schemas/capability-record.schema.json
+    - .agent-platform/bootstrap/docs/PLATFORM_COMPLETION_FEATURES.md
+  maturity: specified
+  research_status: not_researched
+  implementation_status: PARTIAL
+  implementation_evidence: >-
+    ⭐ HALF-BUILT UNDER A DIFFERENT NAME. `factory/registry.py` maps (shape, layer) → workflow,
+    versions each workflow by the SHA of its `SKILL.md` text ("the version of a workflow is the
+    hash of its text"), carries a PROVEN|DECLARED|UNBUILT state and an `evidence` string, and
+    `unproven()` reports coverage honestly. ⛔ What it does NOT carry, measured against the pack
+    schema's 11 properties: `conditions`, `success_rate`, `evidence_count`, `cost`, `latency`,
+    `valid_from`, `valid_until`. `grep -rniE "capability_record|CapabilityRecord" factory/` → 0.
+    The certification half also exists separately in `factory/certify.py`, which is not joined to
+    the registry.
+  related_concepts: [C-AG-01, C-AG-04, C-EV-01, C-EV-06, C-EV-10, C-OP-03, C-GV-06]
+  dependencies: [C-EV-01]
+  proposed_benefits:
+    - "a certification cannot silently transfer to a configuration that was never graded"
+    - "it is the input Mission Assembly needs to route safely, and the join C-GV-06's receipt needs"
+  proposed_metrics:
+    - "capability claims with a validity window vs without; claims used outside their measured conditions"
+  unresolved_questions:
+    - "⚠ Discovery vocabulary should not be reinvented — A2A Agent Cards already standardise identity, skills, capabilities and security requirements. The differentiated layer is the EVIDENCE ENVELOPE, not discovery. This is RB-20's territory and the delta pass added it there rather than answering it."
+    - "⛔ There is nothing to certify. `.data/runs.jsonl`: 10 rows, 0 PASS; all 7 `agent_returned` events carry dry_run=True. A record schema built now would be graded against nothing."
+  delta_disposition_2026_09_02: CANONICAL_BUT_UNDER-SPECIFIED
+  preservation_note: >-
+    ⭐ The largest compounding multiplier recovered by this pass, and the one most at risk of being
+    built as a parallel registry. It is an EXTENSION of factory/registry.py. Carried into
+    high_leverage_concepts.md as HL-17.
+
+- concept_id: C-UI-07
+  name: The synthesis inbox — a disposition queue, derived and not stored
+  aliases: [synthesis inbox, reconciliation queue, outputs awaiting disposition]
+  description: >-
+    Completed research, reviews and agent outputs are queued in one place whose defining property
+    is that the NEXT OPERATION ON EVERY ROW IS A DISPOSITION — adopt, adapt, research, reject,
+    superseded — and a row closes only when someone writes one down. Its purpose is to stop
+    finished work disappearing into transcripts across many parallel sessions.
+  source_documents:
+    - .agent-platform/bootstrap/docs/GAMIFIED_MISSION_CONTROL.md
+    - .agent-platform/bootstrap/docs/SESSION_UI_MVP.md
+  maturity: designed
+  research_status: not_researched
+  implementation_status: PARTIAL
+  implementation_evidence: >-
+    ⭐ BOTH HALVES EXIST AND ARE NOT JOINED. The CONTENT MODEL is `docs/absorption-backlog.md`
+    (C-KN-02 — "a written rejection closes a row, silence does not"), which holds 19 unactioned
+    rows and whose ACTION field already includes "reject it in writing". The SURFACE is
+    `factory/switchboard_p1.py`, whose first panel is NEEDS YOU, fed by `sessions.blocked()` and
+    `bus.unread(reader)`. What is missing is the join: the absorption backlog is a markdown file
+    no projection reads, so a completed research answer with no disposition is invisible on the
+    operator surface.
+  related_concepts: [C-KN-02, C-UI-01, C-UI-04, C-UI-05, C-RS-05, C-EV-06]
+  dependencies: [C-KN-02, C-UI-04]
+  proposed_benefits:
+    - "an answer that nobody actioned becomes visible as a row rather than as an absence"
+    - "it costs no new state — C-UI-04 is satisfiable because the backlog is already the source of truth"
+  proposed_metrics:
+    - "rows with no disposition, and their age (MEASURED today: 19 rows and 2 whole answers, GAP-07)"
+  unresolved_questions:
+    - "⚠ C-UI-05 applies with force — a row that renders 'needs disposition' and cannot be dispositioned from anywhere is a control wearing an imperative verb."
+    - "Whether inbox rows can be DERIVED from existing task/artifact/research state, or whether closing one requires writing to a file no projection owns."
+  delta_disposition_2026_09_02: CANONICAL_BUT_UNDER-SPECIFIED
+  preservation_note: >-
+    The pack's Promotion Board, listed beside this in the same source, is NOT promoted — it is
+    C-EV-05 ("the board is generated from the gates, never maintained beside them") already, and
+    the pack's `platform-progress.schema.json` is precisely the parallel PROGRESS file that
+    `factory/roadmap.py` refuses on principle.
+
+- concept_id: C-OR-09
+  name: Compute and integration fabric — the node contract before the provider
+  aliases: [compute node, integration fabric, adapter contract, DGX Spark]
+  description: >-
+    Runtime and tool adapters are a different layer from agent-to-agent communication, and the
+    generic contract comes first — a compute node declares id, kind, provider, health,
+    capabilities, resources, runtime, permissions, cost and labels, and the adapter must cover
+    health, cost, lifecycle, rollback and wake/subscription events. Provider-specific control
+    planes are implementations of that contract, never the thing itself.
+  source_documents:
+    - .agent-platform/bootstrap/docs/COMPUTE_AND_INTEGRATION_FABRIC.md
+    - .agent-platform/bootstrap/schemas/compute-node.schema.json
+  maturity: idea
+  research_status: not_researched
+  implementation_status: NOT_IMPLEMENTED
+  implementation_evidence: >-
+    `grep -rniE "DGX|compute_node|compute node" factory/ scripts/ blueprints/ missions/ evals/ tests/`
+    → 0. Execution is synchronous Python plus `subprocess`; the sole runtime dependency is pyyaml.
+    `.agent-platform/RECONCILIATION.md` §3 disposition on this row is DEFER.
+  related_concepts: [C-GV-07, C-TM-06, C-GV-01]
+  dependencies: [C-GV-07]
+  proposed_benefits:
+    - "keeps the message fabric and the runtime fabric from being conflated into one protocol"
+  proposed_metrics: unknown
+  unresolved_questions:
+    - "⛔ There is no second compute surface to abstract over. An adapter contract written against one runtime is a guess about the second."
+  delta_disposition_2026_09_02: PRESERVE_AS_FUTURE_VERTICAL
+  preservation_note: >-
+    ⚠ Label chosen from a fixed vocabulary and imperfect: this is a future RUNTIME CONTRACT, not a
+    product vertical. Preserved rather than built, and preserved BELOW C-GV-07 — surface routing is
+    the cheap version of the same question and must be measured first.
+
+- concept_id: C-OR-10
+  name: The venture vertical — a product lifecycle over the existing substrate
+  aliases: [Venture Compiler, autonomous product lifecycle, opportunity intelligence, VenturePlan]
+  description: >-
+    A commercial loop expressed as missions rather than as a second platform — market evidence
+    becomes a structured OpportunityHypothesis (problem, segment, evidence, assumptions, an
+    explicit FALSIFICATION, and a BUILD/VALIDATE/PARK/REJECT recommendation); a surviving
+    hypothesis compiles into a VenturePlan carrying a mission graph, budgets, gates, success AND
+    failure criteria and an authority policy; and the lifecycle runs Discover → Validate → Design
+    → Build → Launch → Learn → Operate → Improve → Decide. The load-bearing claim is that this is
+    a VERTICAL over the same mission/eval/policy primitives, not a separate autonomous-business
+    platform.
+  source_documents:
+    - .agent-platform/bootstrap/docs/AUTONOMOUS_PRODUCT_LIFECYCLE.md
+    - .agent-platform/bootstrap/docs/REVENUE_AND_VENTURE_FLYWHEEL.md
+    - .agent-platform/bootstrap/docs/PLATFORM_COMPLETION_FEATURES.md
+    - .agent-platform/bootstrap/schemas/opportunity-hypothesis.schema.json
+    - .agent-platform/bootstrap/schemas/venture-plan.schema.json
+    - .agent-platform/bootstrap/skills/venture-compiler/SKILL.md
+    - .agent-platform/bootstrap/skills/opportunity-intelligence/SKILL.md
+  maturity: specified
+  research_status: not_researched
+  implementation_status: NOT_IMPLEMENTED
+  implementation_evidence: >-
+    `grep -rniE "venture|VenturePlan|opportunity_hypothesis|OpportunityHypothesis" factory/ scripts/ blueprints/ missions/ evals/ tests/`
+    → 0, both terms. `.agent-platform/RECONCILIATION.md` §3: ABSENT, NOT YET JUSTIFIED, gated
+    behind a certified team.
+  related_concepts: [C-OR-02, C-TM-06, C-GV-02, C-OP-07, C-KN-08, C-PR-03]
+  dependencies: [C-AG-16, C-TM-07, C-OP-04]
+  proposed_benefits:
+    - "gives the factory a route to operating a business without inventing a second control plane"
+    - "⭐ the OpportunityHypothesis schema REQUIRES a falsification field — the same discipline as C-PR-03, arrived at independently"
+  proposed_metrics: unknown
+  unresolved_questions:
+    - "⛔ Gated behind one certified team; the ledger is 0 PASS. README.md:96's absence table governs this row and its precondition is unmet."
+    - "Which decisions must remain human — money, public claims, outreach, contracts and deployment are named in the source but not bounded."
+  delta_disposition_2026_09_02: PRESERVE_AS_FUTURE_VERTICAL
+  preservation_note: >-
+    Preserved, not scheduled, and explicitly kept OFF the deadline critical path. The single
+    transferable idea available today at zero cost is the required `falsification` field: it is
+    C-PR-03 in a commercial coat, and it is the reason this row is worth keeping at all.
+
+- concept_id: C-KN-08
+  name: The customer and market learning loop
+  aliases: [market learning, permissioned telemetry as evidence, cheapest falsification experiment]
+  description: >-
+    Permissioned telemetry, support contact and experiment results are converted into
+    provenance-preserving EVIDENCE about a product, from which the cheapest experiment that could
+    falsify the current belief is selected. Its discipline is the separation of observed signal
+    from inference about the signal, and the preservation of where each datum came from.
+  source_documents:
+    - .agent-platform/bootstrap/docs/PLATFORM_COMPLETION_FEATURES.md
+    - .agent-platform/bootstrap/skills/customer-learning-loop/SKILL.md
+  maturity: idea
+  research_status: not_researched
+  implementation_status: NOT_IMPLEMENTED
+  implementation_evidence: "No product, no telemetry, no customers of the factory itself. Nothing in factory/ reads an external signal of any kind."
+  related_concepts: [C-KN-01, C-KN-07, C-EV-06, C-VD-02, C-VD-03, C-OR-10]
+  dependencies: [C-OR-10]
+  proposed_benefits:
+    - "market belief acquires a basis register in the same way a figure does (C-VD-03)"
+  proposed_metrics: unknown
+  unresolved_questions:
+    - "⛔ Tenancy and privacy boundaries are unbounded in the source, and GAP-30 shows this estate already has two unsettled tenancy questions on a client it DOES have."
+    - "⚠ C-VD-02 applies directly: a silent telemetry channel and a customer who never had the problem are indistinguishable unless the instrument is proved able to see a non-zero."
+  delta_disposition_2026_09_02: PRESERVE_AS_FUTURE_VERTICAL
+  preservation_note: >-
+    Kept because the estate's own measurement discipline (C-VD-02, C-VD-03, C-EV-06) is exactly
+    what this loop would need and does not yet specify. If the vertical is ever built, those three
+    are the reason it would be better than the source describes.
+
+- concept_id: C-OP-07
+  name: Portfolio allocation under opportunity cost
+  aliases: [portfolio experiment manager, KILL/HOLD/IMPROVE/SCALE, multi-objective allocation]
+  description: >-
+    Resource allocation across several concurrent bets is a multi-objective decision under hard
+    constraints, resolved to one of KILL / HOLD / IMPROVE / SCALE / MORE_EVIDENCE, in which the
+    cost of NOT doing the alternative is represented explicitly. The refusal it encodes is of the
+    single scalar reward — a portfolio collapsed to one number optimises the number.
+  source_documents:
+    - .agent-platform/bootstrap/docs/PLATFORM_COMPLETION_FEATURES.md
+    - .agent-platform/bootstrap/skills/portfolio-experiment-manager/SKILL.md
+  maturity: idea
+  research_status: not_researched
+  implementation_status: NOT_IMPLEMENTED
+  implementation_evidence: "`grep -rniE \"portfolio.*allocat|KILL/HOLD\" factory/ scripts/ blueprints/ missions/ evals/ tests/` → 0. factory/schedule.py refuses to project even a single completion date, for a related reason."
+  related_concepts: [C-OP-01, C-OP-04, C-OP-05, C-TM-02, C-OR-10]
+  dependencies: [C-OP-04]
+  proposed_benefits:
+    - "MORE_EVIDENCE is a first-class outcome, which is the same move as C-EV-06 making 'missing' sayable"
+  proposed_metrics: unknown
+  unresolved_questions:
+    - "⛔ C-OP-01 says the fitness function IS the eval score, and the eval corpus is one connector (GAP-08). Multi-objective allocation over an unvalidated single objective is premature by two steps."
+  delta_disposition_2026_09_02: PRESERVE_AS_FUTURE_VERTICAL
+  preservation_note: >-
+    Recorded chiefly for its refusal of the single scalar reward, which agrees with C-OP-02's
+    never-optimise list from a completely different direction.
+
+- concept_id: C-PR-08
+  name: Mine the mechanism, never the identity
+  aliases: [pattern extraction policy, reference implementation mining, ADOPT_CONCEPT/ADAPT/EXPERIMENT/REJECT]
+  description: >-
+    A reference implementation is read for the MECHANISM and never for the artefact — licence
+    first, then architecture, then feature by feature, each classified ADOPT_CONCEPT / ADAPT /
+    EXPERIMENT / REJECT with its provenance recorded. Product identity, UI, branding, prompts and
+    code are explicitly out of scope. ⭐ The corollary that makes it pay: a mined pattern that lets
+    you DELETE a subsystem is worth more than one that adds a feature, and the defects of the
+    mined repo transfer as readily as its virtues, so they are recorded and inverted rather than
+    inherited.
+  source_documents:
+    - .agent-platform/bootstrap/docs/PATTERN_EXTRACTION_POLICY.md
+    - .agent-platform/bootstrap/docs/REFERENCE_IMPLEMENTATIONS.md
+    - .agent-platform/bootstrap/skills/reference-implementation-miner/SKILL.md
+    - .agent-platform/RECONCILIATION.md
+  maturity: measured
+  research_status: settled
+  implementation_status: IMPLEMENTED
+  implementation_evidence: >-
+    ⭐ PRACTISED AND NEVER NAMED, which is why it is in this index (index rule 5). Executed on
+    2026-08-31 against three MIT repositories with agents reading SOURCE, not READMEs — Paperclip
+    (shallow-cloned, 6,169 files), SSSF (21 files), Inkwell (24). `.agent-platform/RECONCILIATION.md`
+    §4 records the outcome: no code taken, obligations recorded, five SSSF patterns that would let
+    this estate DELETE rather than add, one Inkwell boundary statement, and one inverted defect —
+    SSSF ships every quality block as `["echo", "PLACEHOLDER"]`, `echo` exits 0, so a stamped repo
+    reports verified=True having tested nothing. The durable artefact is
+    `wiki/concepts/patterns/agent-control-plane-prior-art.md`.
+  related_concepts: [C-PR-07, C-RS-05, C-RS-06, C-KN-06, C-VD-02]
+  dependencies: []
+  proposed_benefits:
+    - "prior art becomes a source of deletions and of known traps, instead of a source of dependencies"
+  proposed_metrics:
+    - "patterns classified per repo mined; defects inverted rather than inherited (MEASURED: 1, the PLACEHOLDER quality block)"
+  unresolved_questions:
+    - "⚠ One artefact from the 2026-08-31 mining has no in-repo home and lives only in the wiki. A mined conclusion outside every gate is invisible to every gate."
+  delta_disposition_2026_09_02: PROMOTE_AS_NEW_CONCEPT
+  preservation_note: >-
+    ⭐ The pack proposed this as a subsystem to build. It is already a practice with a measured
+    result, and promoting it as a NAMED concept is the whole of the correct response — the pack's
+    `reference-implementation-miner` skill was never installed and its procedure was followed by
+    hand (PACK_CONFORMANCE 2.3, SUBSTANCE).
+
+# ================================================================================================
+
+index_summary:
+  # ⚠ EVERY COUNT BELOW IS RE-MEASURED, NOT EDITED BY HAND (C-VD-04). Regenerate all three blocks:
+  #   python -c "import yaml,collections; c=yaml.safe_load(open('docs/_index/concept_index.yaml',encoding='utf-8'))['concepts']; \
+  #   print(len(c)); print(collections.Counter(x['concept_id'].split('-')[1] for x in c)); \
+  #   print(collections.Counter(x.get('maturity') for x in c)); \
+  #   print(collections.Counter(x.get('implementation_status') for x in c))"
+  concepts_recorded: 101         # was 92; +9 added 2026-09-02 by the .agent-platform delta pass
+  by_area:                       # RE-MEASURED 2026-09-02 (delta pass)
+    VD: 4
+    AG: 16                       # +1  C-AG-16
+    TM: 7                        # +1  C-TM-07
+    OR: 10                       # +2  C-OR-09, C-OR-10
+    CM: 6
+    KN: 8                        # +1  C-KN-08
+    EV: 10
+    OP: 7                        # +1  C-OP-07
+    SM: 1
+    SI: 4
+    GV: 7                        # +1  C-GV-07
+    UI: 7                        # +1  C-UI-07
+    RS: 6
+    PR: 8                        # +1  C-PR-08
+  by_maturity:                   # RE-MEASURED 2026-09-02 (delta pass)
+    measured: 37                 # +1  C-PR-08 — practised, and the practice was measured
+    implemented: 9
+    designed: 27                 # +2
+    specified: 5                 # +3  three of the recovered mechanisms ship a JSON schema
+    prototyped: 1
+    idea: 22                     # +3
+    refuted: 0
+  by_implementation_status:      # RE-MEASURED 2026-09-02 (delta pass)
+    IMPLEMENTED: 32              # +1
+    PARTIAL: 15                  # +2  C-AG-16 and C-UI-07 are each half-built under another name
+    DESIGN_ONLY: 3
+    NOT_IMPLEMENTED: 43          # +6
+    NOT_APPLICABLE: 8
+  delta_pass_2026_09_02: |
+    ⭐ THE DELTA PASS REPEATED THE SUPPLEMENTARY PASS'S SURPRISE, NARROWLY. Two of the nine
+    recovered mechanisms are PARTIAL rather than NOT_IMPLEMENTED — C-AG-16 (the capability record:
+    factory/registry.py already versions a workflow by the hash of its text and reports coverage
+    honestly; it lacks conditions, cost, latency and a validity window) and C-UI-07 (the synthesis
+    inbox: docs/absorption-backlog.md is the content model, switchboard_p1's NEEDS YOU is the
+    surface, and nothing joins them). One is IMPLEMENTED and was simply never named — C-PR-08.
+    ⛔ The other six are NOT_IMPLEMENTED and six of six are measured zeros from greps run this
+    pass, not inferences: no execution-surface metadata, no mission object, no compute node, no
+    venture, no customer signal, no allocator.
+  supplementary_pass_2026_09_02: |
+    ⭐ THE SIX ADDITIONS DID NOT LAND WHERE THE DISTRIBUTION BELOW PREDICTS. The note beneath says
+    almost everything arriving from an inbound pack is NOT_IMPLEMENTED. Three of the six concepts
+    recovered from the two .docx are PARTIAL — the mechanisms are already here and the source
+    documents propose them as new P0 substrate. C-OR-06 (mission hypergraph): board.py:108 computes
+    a critical path, F98 records 25 live block edges. C-GV-06 (assurance receipt): every section
+    has a producer; only the join is missing. C-TM-06 (adaptive orchestration): four of its
+    fourteen sub-ideas are running code. That is the opposite of the pattern, and it means the
+    frontier documents' EFFORT estimates are wrong in this estate rather than their direction.
+  the_shape_of_it: |
+    ⭐ THE DISTRIBUTION IS THE FINDING. Almost everything MEASURED is a measurement or process
+    discipline (areas VD, EV, PR, RS) that this repository invented for itself. Almost everything
+    NOT_IMPLEMENTED is an organizational, cognitive or optimisation concept that arrived in an
+    inbound pack (areas AG, OR, OP, SM, UI). The two halves of the corpus barely touch: the built
+    half is about knowing whether anything worked, and the proposed half is about what to build.
+    They meet in exactly one place — C-KN-05, failure families — where a pack concept was mined for
+    a mechanism, narrowed deliberately, built and measured. That single crossing is the best
+    available template for what to do with the other sixty-odd.
+  what_is_deliberately_absent_from_this_index:
+    - "Any ranking of the concepts. See high_leverage_concepts.md, which identifies candidates without selecting winners."
+    - "Any resolution of the contradictions between them. See contradictions.md."
+    - "Any judgement that a speculative concept should be dropped. Several entries carry preservation_note explaining why an unusual idea is kept."

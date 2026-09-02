@@ -1,0 +1,1126 @@
+# Candidate research missions — NOT DISPATCHED
+#
+# GENERATED 2026-09-02 against agent-factory @ fc78074 (main), by the corpus-preparation pass whose
+# outputs live in docs/_index/.
+#
+# AMENDED 2026-09-02 @ 7b19baf (main) by the .agent-platform delta pass. RB-02, RB-15 and RB-20 each
+# gained sources and questions IN PLACE; four candidates (RB-22..RB-25) were recorded in the
+# `agent_platform_delta_2026_09_02` block near the end and are NOT counted in `summary.missions`.
+# ⚠ Note RB-21 was already taken by the supplementary pass; the inbound addendum's numbering was off
+# by one and is corrected there. Reconciliation: docs/_index/agent_platform_delta_synthesis.md.
+#
+# ⛔ NOTHING HERE HAS BEEN LAUNCHED. This is a candidate list for a human to select from, prune and
+#    order. Dispatching any of it is a separate decision.
+#
+# ------------------------------------------------------------------------------------------------
+# READ BEFORE DISPATCHING ANY OF THESE
+# ------------------------------------------------------------------------------------------------
+#
+# 1. ⭐ SIX OF THE EIGHT CRITICAL GAPS ARE NOT RESEARCH. docs/_index/research_gap_candidates.md
+#    records this and it is the most important thing on this page. GAP-01 is a file conversion.
+#    GAP-08 is scoring a second connector. GAP-09 is fixing one open finding and running the loop.
+#    GAP-26 and GAP-27 are decisions for a human. GAP-30 is asking a client two questions.
+#    They appear below under `type: NOT_RESEARCH` so they are visible in the queue and cannot be
+#    dispatched by accident. Buying a research answer to a question that measurement would settle
+#    more cheaply is this corpus's characteristic failure, and it has been paid for at least twice
+#    (SYNTHESIS §17.7, absorption-backlog AB-05).
+#
+# 2. THE NEIGHBOURS RULE APPLIES. docs/research/README.md §2: every pass carries a table naming what
+#    it owns and what it must NOT answer, and is told — if a question belongs to a neighbour, say so
+#    and stop, rather than answering it thinly. Every mission below carries `owns` and `must_not_answer`.
+#
+# 3. THE DO-NOT-RE-ASK LIST APPLIES. docs/research/agent-factory-concept-inventory.md §3 records
+#    what R1-R9 settled. Re-asking "buys the same answer at full price". Nothing below re-opens a
+#    settled question; where a mission touches one, it says which part is genuinely new.
+#
+# 4. DEFERRALS ARE NOT GAPS. README.md's absence table gates ten subsystems behind named unlock
+#    conditions. No mission below proposes researching whether to build a deferred subsystem. Two
+#    missions test an unlock CONDITION, which is a different thing and is stated as such.
+#
+# 5. ⚠ TIER EVERY CLAIM, IN A TABLE. R17's prompt records why: "prose tiering did not survive two
+#    runs". And R17 is the only pass that checked its own citations (§8, a verification ledger).
+#    Every mission below requires one.
+#
+# 6. ⚠ REPEATED AI CLAIMS ARE NOT INDEPENDENT EVIDENCE. Five of the nine inbound packs carry the
+#    same source file byte-for-byte. A mission that returns "five sources agree" has found one
+#    source, reformatted.
+#
+# ------------------------------------------------------------------------------------------------
+
+schema_version: 1
+status: CANDIDATES_NOT_DISPATCHED
+generated_at: 2026-09-02
+generated_against: {repo: agent-factory, head: fc78074, branch: main}
+
+classification_vocabulary:
+  FOUNDATIONAL:      a question whose answer changes what the other questions mean
+  VALIDATION:        checks a specific claim this corpus already makes
+  COMPARISON:        weighs two or more designs that are both already on file
+  PRIOR_ART:         asks what already exists outside, before anything is designed
+  ADVERSARIAL:       attempts to disprove a position this estate currently holds
+  IMPLEMENTATION:    answers a build question, not a knowledge question
+  EXPERIMENT_DESIGN: produces a protocol for a measurement, not the measurement
+  NOT_RESEARCH:      ⛔ listed for visibility; must NOT be dispatched as a research pass
+
+priority_vocabulary:
+  CRITICAL: a decision is blocked now
+  HIGH:     changes what gets built, or in what order
+  MEDIUM:   worth knowing before the relevant build starts
+  LOW:      exploratory
+
+missions:
+
+# ================================================================================================
+# WAVE 0 — the things that are not research, listed so they are not dispatched as research
+# ================================================================================================
+
+- research_id: RB-00A
+  title: Convert the two .docx source documents to text and index them
+  type: NOT_RESEARCH
+  priority: CRITICAL
+  status: ✅ DONE 2026-09-02
+  completion:
+    what_was_done: |
+      Both converted by scripts/docx_to_md.py (python-docx is not installed; it parses
+      word/document.xml directly), originals preserved byte-for-byte, renderings at
+      docs/raw_research/converted/. Extraction VERIFIED at 100.1% of raw <w:t> characters, not
+      assumed. Both read in full.
+    outputs_produced:
+      - docs/raw_research/converted/*.md (46,047 and 42,261 chars)
+      - "corpus_manifest.yaml: the two AF-RAW-LOOSE bundle members rewritten, two added"
+      - "document_catalog.md: rows under 'Agent armies', 'Organizational architecture' and the limits table"
+      - "concept_index.yaml: SIX new concepts — C-OR-06 mission hypergraph, C-OR-07 constitutional type system, C-OR-08 quality-diversity org archive, C-KN-07 knowledge metabolism, C-GV-06 Mission Assurance Receipt, C-TM-06 goal-aware adaptive orchestration. C-OR-04 raised idea -> designed and its blocking note removed."
+      - "contradictions.md: CN-29 added (BLOCKING), CN-01 amended with a dated note"
+      - "supersession_candidates.md: SP-15 — the documents' vocabulary is superseded by Wave 0, their content is not"
+      - "current_vs_proposed.md: eight rows added to Part 3, the GAP-01 limit closed"
+      - "high_leverage_concepts.md: HL-15 — the Mission Assurance Receipt"
+      - "research_gap_candidates.md: GAP-01 closed, GAP-03 downgraded and corrected, GAP-43 added"
+      - docs/_index/agent_army_wave0_supplement.md
+    residual: |
+      ⚠ TWELVE EMBEDDED FIGURES WERE NOT EXTRACTED (8 in the first document, 4 in the second).
+      All twelve captions survive; the diagrams do not. GAP-01 is narrowed to that and downgraded
+      to LOW. Opening the two .docx in Word is minutes of work and closes it.
+    verdict_on_the_note_below: |
+      ⭐ THE NOTE WAS RIGHT AND IS WORTH KEEPING AS EVIDENCE. It predicted "under a day" for a
+      NOT_RESEARCH item and claimed it gated any claim the corpus had been read. It took under an
+      hour and produced six concepts, a BLOCKING contradiction and an amendment to CN-01 —
+      a better return than most of the CRITICAL research missions on this page will give.
+      This is the strongest available argument for the backlog's own rule 1.
+  objective: >-
+    Make the last 635 KB of the corpus readable. Beyond_Agent_Armies_Frontier_Architectures.docx
+    (430,863 bytes) and Agent_Factory_Frontier_Architecture_Prioritization_Pack.docx (203,671 bytes)
+    have never been read by any indexing pass. Their titles name exactly the two questions an
+    architecture synthesis must answer.
+  source_documents: [docs/raw_research/Beyond_Agent_Armies_Frontier_Architectures.docx, docs/raw_research/Agent_Factory_Frontier_Architecture_Prioritization_Pack.docx]
+  source_concepts: [C-OR-04]
+  addresses_gaps: [GAP-01]
+  dependencies: []
+  expected_outputs:
+    - a text or markdown rendering of each, committed beside the original
+    - records added to docs/_index/corpus_manifest.yaml
+    - any contradiction they introduce added to docs/_index/contradictions.md
+  unblocks: [RB-01, RB-02, RB-05]
+  effort: "under a day"
+  note: >-
+    ⛔ Every deliverable in docs/_index/ currently carries this as a stated limit. It gates any
+    claim that the corpus has been read.
+
+- research_id: RB-00B
+  title: Score a second real connector end to end
+  type: NOT_RESEARCH
+  priority: CRITICAL
+  objective: >-
+    Convert n=1 into evidence of generality. The eval corpus is one file, 6,762 bytes, one
+    connector; 48 have never been scored. All twelve assertions are calibrated; what is unproven is
+    that any of it GENERALISES.
+  source_documents: [docs/absorption-backlog.md, docs/findings.d/F76-the-eval-can-fail-what-it-cannot-do-is-generalise.md, evals/corpus/windsorai-2026-08-20.json]
+  source_concepts: [C-KN-06, C-EV-02]
+  addresses_gaps: [GAP-08]
+  dependencies: [RB-00D]
+  expected_outputs:
+    - a second ConnectorTarget blueprint
+    - a second hashed corpus fixture
+    - a record of every assumption the windsorai fixture baked in that the second one exposed
+  unblocks: [RB-04, RB-09]
+  effort: "days, mostly access and data"
+  note: >-
+    AB-04: this "will find the assumptions baked into the windsorai fixture faster than
+    manufacturing 38 more". ⛔ Blocked by RB-00D — if the declared primary key is wrong, the second
+    connector inherits the error.
+
+- research_id: RB-00C
+  title: Complete one real agent run
+  type: NOT_RESEARCH
+  priority: CRITICAL
+  objective: >-
+    MEASURED: .data/runs.jsonl holds 10 rows with zero PASS; all 7 agent_returned events carry
+    dry_run=True. No agent has ever been dispatched for real. Every metric with a denominator of
+    runs is currently over an empty population.
+  source_documents: [.agent-platform/RECONCILIATION.md, docs/findings.d/F90-the-run-record-names-a-repo-the-controller-cannot-put-an-agent-in.md, docs/protocol/METRICS.md]
+  source_concepts: [C-VD-02, C-AG-01]
+  addresses_gaps: [GAP-09]
+  dependencies: []
+  blocking_defect: >-
+    F90 (OPEN, DESIGN): TeamSpec.repo is inside the version hash and nothing reads it;
+    worktrees.REPO is bound to this checkout; both presets with a runnable verifier target
+    ~/repos/clients. F90 proposes two remedies and an order — make the controller REFUSE a ticket
+    whose repo is not this checkout, then thread the repository through for real.
+  expected_outputs:
+    - one run reaching a terminal verdict with dry_run=False
+    - the first non-zero denominator for METRICS.md's run-based metrics
+  unblocks: [RB-04, RB-07, RB-09, RB-11, RB-13]
+  effort: "days"
+  note: >-
+    ⭐ This is the single highest-leverage item in the whole backlog. It converts perhaps a dozen
+    research questions below into measurements.
+
+- research_id: RB-00D
+  title: Settle the two open tenancy questions with the client
+  type: NOT_RESEARCH
+  priority: CRITICAL
+  objective: >-
+    docs/research/README.md §4 questions 2 and 3. (a) Which CLIENT-A account ids are in scope —
+    this blocks the tenancy assertion and therefore blocks certification of the one green connector.
+    (b) Is the landing table one account or two — "20 rows across 18 campaigns on one date cannot be
+    unique on (account_id, campaign_id, date). If it is one account, the declared primary key is
+    wrong and the calibration world is built on a mistake."
+  source_documents: [docs/research/README.md, blueprints/windsorai_client_a.yaml]
+  addresses_gaps: [GAP-30]
+  dependencies: []
+  expected_outputs: ["a recorded answer to each, with its basis"]
+  unblocks: [RB-00B]
+  effort: "one conversation"
+  note: "⛔ If (b) resolves against the current fixture, everything replayed against it is suspect."
+
+- research_id: RB-00E
+  title: Enumerate the knowledge stores
+  type: NOT_RESEARCH
+  priority: HIGH
+  objective: >-
+    R10 says six overlapping stores; R06B, eight days later, says nine. Neither enumerates them in a
+    form the other can be checked against. absorption-backlog AB-13 asks for the enumeration and a
+    decision to retire or merge one BEFORE any new store lands.
+  source_documents: [docs/research/answers/R10-answer-hierarchical-wiki-agent-training.md, docs/research/R06B-collective-cognition-and-knowledge-architecture.md, docs/absorption-backlog.md]
+  source_concepts: [C-KN-03]
+  addresses_gaps: [GAP-04]
+  dependencies: []
+  expected_outputs:
+    - one enumerated list with, per store, what it holds, who writes it, who reads it and what only it can answer
+    - a decision on which to retire or merge, or a written rejection
+  unblocks: [RB-03]
+  effort: "hours"
+  note: "⭐ A measurement, not a mission. It blocks the corpus's largest unresolved design question."
+
+- research_id: RB-00F
+  title: Give every open absorption row and unabsorbed answer a disposition
+  type: NOT_RESEARCH
+  priority: HIGH
+  objective: >-
+    0 of 19 absorption rows are closed. AB-16 and AB-17 are whole research answers — R14 (87 KB) and
+    R18 (105 KB) — each carrying "absorb it or reject it in writing". Neither has happened. Per the
+    corpus's own rule, a written rejection closes a row as well as action does; silence does not.
+  source_documents: [docs/absorption-backlog.md, docs/research/answers/R14-answer-structure-model-and-joy.md, docs/research/answers/R18-answer-our-factory-internal-audit.md]
+  source_concepts: [C-KN-02]
+  addresses_gaps: [GAP-07]
+  dependencies: []
+  expected_outputs: ["a disposition per row: actioned, or rejected in writing naming the row"]
+  effort: "a day of reading"
+  note: >-
+    ⭐ AB-12's APPROVE finding should be taken FIRST — absorption-backlog says so explicitly,
+    "because a decision depends on it". See RB-14.
+
+# ================================================================================================
+# WAVE 1 — foundational and prior-art missions
+# ================================================================================================
+
+- research_id: RB-01
+  title: What organisation-oriented MAS already provides
+  type: PRIOR_ART
+  priority: CRITICAL
+  objective: >-
+    The sibling repo's Wave 0 established that Artificial Organization Engineering IS
+    organisation-oriented MAS — with a metamodel (Moise+), a runtime (JaCaMo), a textbook — and that
+    arXiv:2607.25446 (IMACS) IS the organizational-compiler thesis. That work refuted a novelty
+    claim and stopped. Nobody has asked what the existing art PROVIDES.
+  research_questions:
+    - What does Moise+ model, and which of Org-IR's proposed fields does it already cover?
+    - What does JaCaMo actually run, and at what cost to adopt or to reimplement?
+    - What does IMACS compile, from what input, and what does it refuse to compile?
+    - Which of the fifteen FEATURE_INTEGRATION_SEEDS are already solved in that literature?
+    - What does the prior art NOT cover for a workload that deploys containers and writes to a warehouse?
+  owns: "the external organisation-oriented MAS literature and its runtimes"
+  must_not_answer:
+    - "whether this estate should build an organization compiler (that is a decision, after this)"
+    - "our own code (RB-13 owns that)"
+    - "UI or operator surfaces"
+  source_concepts: [C-OR-01, C-OR-02, C-OR-03, C-OR-04]
+  source_documents: [.agent-platform/RECONCILIATION.md, docs/raw_research/agent-factory-bootstrap-pack/schemas/org-ir.seed.schema.yaml, docs/raw_research/agent-factory-bootstrap-pack/docs/07-implementation/FEATURE_INTEGRATION_SEEDS.md]
+  addresses_gaps: [GAP-02]
+  addresses_contradictions: [CN-01]
+  dependencies: [RB-00A]
+  expected_outputs:
+    - a capability matrix — proposed Org-IR field vs prior-art coverage
+    - an adopt / adapt / build verdict per component, with migration cost as the acceptance criterion
+    - a tiered claims table (OBSERVED / DOCUMENTED / MARKETED) and a verification ledger
+  architecture_components_affected: [organization model, schemas, governance]
+  unblocks_implementation_decisions:
+    - "whether to design Org-IR or adopt a metamodel"
+    - "whether topology-as-data needs building or is available"
+  note: >-
+    ⭐ A refutation that stops at "this is not novel" leaves the strongest available asset unused.
+    The prior art is now a resource, not a threat.
+
+- research_id: RB-02
+  title: Observability and trace standards for agent runs
+  type: PRIOR_ART
+  priority: HIGH
+  objective: >-
+    concept-inventory §4.2 names this a NOT-SEARCHED axis. R1 was scoped to EVAL FRAMEWORKS and its
+    "don't add one" verdict does not cover TRACING. deploy.py streams a raw transcript; there is no
+    structured trajectory object — and five other concepts are blocked on one.
+  research_questions:
+    - Are the OpenTelemetry GenAI semantic conventions stable enough to adopt, and what do they cover?
+    - What would a certified run emit — and is a standard-shaped trajectory compatible with the five-verdict contract?
+    - What do Langfuse / LangSmith / W&B Weave store, and what do they require in return?
+    - What is the minimum trajectory shape that supports meta-tool mining, phenotype measurement, communication attribution, credit assignment and replay?
+    - What does emitting it cost per run?
+    # ⓘ ADDED 2026-09-02 by the .agent-platform delta pass:
+    - >-
+      Which correlation / causation / provenance fields should map DIRECTLY onto OpenTelemetry
+      messaging and GenAI semantics rather than becoming a proprietary trajectory shape? The pack's
+      message-event.schema.json supplies a concrete 15-field candidate envelope (message_id,
+      mission_id, organization_id, sender, recipients, topic, type, priority, created_at,
+      expires_at, correlation_id, causation_id, confidence, provenance_refs, payload). MEASURED:
+      `grep -rniE "correlation_id|causation_id" factory/` → 0 — the three genuinely absent
+      semantics are correlation, causation and provenance_refs. ⛔ The rest of the envelope must
+      NOT displace factory/bus.py's 5 KINDS or factory/events.py's 9 closed kinds; both were
+      derived from events that actually happened here.
+  owns: "trace and telemetry standards, and the trajectory object's shape"
+  must_not_answer:
+    - "eval frameworks (R1 settled it: do not add one)"
+    - "whether to build a UI over the traces"
+    - "alerting (see AB-19; that question has five unreconciled positions already)"
+  source_concepts: [C-OP-06, C-AG-02, C-CM-04, C-CM-01, C-CM-03]
+  source_documents: [docs/research/agent-factory-concept-inventory.md, docs/research/answers/R13-answer-architecture-and-ui-survey.md, docs/raw_research/agent_factory_agent_genome_research_pack/schemas/agent_runtime_event.schema.yaml, .agent-platform/bootstrap/schemas/message-event.schema.json, .agent-platform/bootstrap/docs/COMMUNICATION_PROTOCOL.md]
+  addresses_gaps: [GAP-33]
+  high_leverage_concepts: [HL-08, HL-05]
+  dependencies: []
+  expected_outputs:
+    - adopt / adapt / build verdict on OTel GenAI, with the specific fields
+    - a candidate trajectory schema
+    - a table showing which of the five downstream concepts each field serves
+  architecture_components_affected: [execution, observability, events]
+  unblocks_implementation_decisions: ["what deploy.py emits alongside the transcript"]
+  note: "⭐ The best-scoped mission in this backlog: the answer is a standard to accept or reject, not an architecture to invent."
+
+- research_id: RB-03
+  title: What none of the existing knowledge stores can do
+  type: FOUNDATIONAL
+  priority: HIGH
+  objective: >-
+    Dispatch docs/research/R06B-collective-cognition-and-knowledge-architecture.md, which is written
+    and has never been sent. It asks the inverted question — given nine stores already exist and one
+    already works, what specifically and measurably can none of them do — and requires every
+    candidate view to BEAT THE NULL.
+  research_questions: "as written in the R06B prompt; do not re-scope it"
+  owns: "the memory and knowledge architecture question"
+  must_not_answer: ["UI", "the optimizer", "team topology"]
+  source_concepts: [C-KN-03, C-KN-04, C-KN-01]
+  source_documents: [docs/research/R06B-collective-cognition-and-knowledge-architecture.md]
+  addresses_gaps: [GAP-16]
+  addresses_contradictions: [CN-03]
+  dependencies: [RB-00E]
+  expected_outputs: "as specified in the prompt, including a benchmark against our corpus or an admission that we cannot"
+  architecture_components_affected: [memory, context, knowledge]
+  unblocks_implementation_decisions: ["whether any knowledge fabric is built at all"]
+  note: >-
+    ⚠ The prompt records that factory/ CANNOT SEE IT — dispatch has never listed it as outstanding.
+    File that finding (GAP-06) whether or not the mission runs.
+
+- research_id: RB-04
+  title: Topology-task fit — which architecture suits which task shape
+  type: COMPARISON
+  priority: HIGH
+  objective: >-
+    R2 answered a narrow question (one agent or three) and answered it well. The source has since
+    moved: arXiv:2512.08296 v3 / Nature MI 8(7) leads not with an aggregate mean but with
+    "architecture-task alignment determines collaborative success", ranging +80.8% to -70.0%. The
+    interesting question is no longer whether multi-agent helps.
+  research_questions:
+    - Which TASK CHARACTERISTICS predict that a given topology outperforms a single agent?
+    - Where does connector migration and warehouse work actually sit on those axes?
+    - What is the capability-saturation effect, and does it apply at current model capability?
+    - What would a same-budget A/B need to look like to move blueprints/orchestrator_team.yaml's threshold?
+  owns: "external evidence on topology-task fit"
+  must_not_answer:
+    - "⛔ whether to build a supervisor tier — DEFERRED behind a named unlock; this mission tests the UNLOCK CONDITION, it does not pre-empt the decision"
+    - "our own code"
+    - "agent configuration (RB-06 owns that)"
+  source_concepts: [C-TM-01, C-TM-02, C-TM-05, C-OR-04]
+  source_documents: [docs/research/answers/R2-answer-topology.md, blueprints/orchestrator_team.yaml, docs/agent-army/CURRENT_STATE.md]
+  addresses_gaps: [GAP-14]
+  dependencies: [RB-00C]
+  expected_outputs:
+    - a task-characteristic → topology fit table, tiered
+    - a re-reading of the -3.5% figure WITH its interval, and of the v3/Nature framing
+    - the specification of an A/B that could clear the blueprint's stated threshold
+  architecture_components_affected: [team topology, orchestration]
+  unblocks_implementation_decisions: ["whether the certified-team gate's second clause — 'evidence a tier helps' — is reachable"]
+
+- research_id: RB-05
+  title: Compensation and rollback semantics for side-effecting agent work
+  type: FOUNDATIONAL
+  priority: HIGH
+  objective: >-
+    R8 §0's sharp version: git revert does not undo a dropped table. "Side-effect replay semantics"
+    is a missing version dimension, nobody has designed the compensating action, and
+    evidence.py:27 states its own related limit — it cannot verify that ROLLBACK was captured
+    BEFORE the mutation.
+  research_questions:
+    - What compensating-action patterns exist for warehouse DDL/DML, and which are mechanically verifiable?
+    - How is "rollback captured before the mutation" proved rather than asserted?
+    - What does a side-effect reconciliation check look like — duplicate loads, orphaned deployments, unintended tables, stale containers?
+    - Does the T2 ephemeral-clone design change the answer, or is the clone a compromised oracle (R17 §16.3)?
+  owns: "compensation, rollback and side-effect reconciliation"
+  must_not_answer: ["container isolation generally (RB-08)", "the eval harness (R1 settled it)"]
+  source_concepts: [C-GV-01, C-EV-06, C-EV-08]
+  source_documents: [docs/research/agent-factory-concept-inventory.md, docs/research/answers/R1-answer-eval-harness.md, docs/research/answers/R17-answer-data-engineering-external-survey.md, docs/specs/architecture-v0.md]
+  addresses_gaps: [GAP-37]
+  dependencies: []
+  expected_outputs:
+    - a compensating-action design per mutation class
+    - candidate assertions for the GreenContract set (R1 graded this a HIGH omission; R17 rediscovered it independently)
+  architecture_components_affected: [contract, evidence, isolation]
+  unblocks_implementation_decisions: ["whether T2 is worth building, and what it must produce"]
+
+- research_id: RB-06
+  title: Which agent-configuration parameters actually change outcomes
+  type: COMPARISON
+  priority: MEDIUM
+  objective: >-
+    Four packs specify large parameter surfaces. agent-config-research-pack — the only one that read
+    this repository — states the counter-position: "an agent with 500 decorative personality fields
+    is less useful than one with 40 causal, certified parameters. Every behavior-changing field
+    multiplies the search and recertification space."
+  research_questions:
+    - Which configuration dimensions have published effect sizes, and how transferable are they?
+    - Does the screening order in SYNTHESIS §6 (model >> effort >> tool interface >> context layout >> prompt structure >> wording) survive scrutiny? The 9-13pp backend figure has never been checked back to source here.
+    - What is the minimum field set that a certification must cover to be meaningful?
+    - What does recertification cost as the field count grows?
+  owns: "agent configuration parameters and their measured effects"
+  must_not_answer: ["team composition (RB-04)", "whether to build an optimizer — DEFERRED"]
+  source_concepts: [C-AG-01, C-AG-02, C-AG-03, C-OP-05]
+  source_documents: [docs/raw_research/agent-config-research-pack/03-parameter-catalog.md, docs/raw_research/agent_factory_agent_genome_research_pack/01_CURRENT_DESIGN_SYNTHESIS.md, docs/research/SYNTHESIS.md]
+  addresses_gaps: [GAP-10]
+  high_leverage_concepts: [HL-03]
+  dependencies: []
+  expected_outputs: ["a parameter → effect-size table, tiered, with the 9-13pp claim checked back to source"]
+  architecture_components_affected: [agent configuration, versioning]
+  unblocks_implementation_decisions: ["which fields belong in the version hash — currently 6 of 15"]
+
+# ================================================================================================
+# WAVE 2 — validation, adversarial and experiment design
+# ================================================================================================
+
+- research_id: RB-07
+  title: Which agent and team health metrics predict mission outcome
+  type: VALIDATION
+  priority: HIGH
+  objective: >-
+    Four packs specify health vectors, struggle scores and readiness composites. R-HEALTH-01 asks
+    which metrics actually predict mission success and how a composite avoids hiding failure modes.
+    Every source that proposes composite health also warns against collapsing it.
+  research_questions:
+    - Which readiness, reliability, coordination and knowledge metrics have published predictive validity?
+    - How do composite scores hide failure modes, and what decomposition prevents it?
+    - What is the minimum metric set with a real outcome variable behind it?
+    - Which of METRICS.md's eight NOT-RECORDED metrics would become measurable first, and what field does each need?
+  owns: "health and readiness metrics, and their predictive validity"
+  must_not_answer: ["the Goodhart pairing rule (already built and enforced)", "UI presentation"]
+  source_concepts: [C-AG-06, C-AG-07, C-EV-09]
+  source_documents: [docs/protocol/METRICS.md, docs/raw_research/agent-config-research-pack/04-team-metrics-and-formulas.md, docs/raw_research/agent_factory_agent_genome_research_pack/evaluation/monitoring_benchmarking_spec.md]
+  addresses_gaps: [GAP-17]
+  addresses_contradictions: [CN-18]
+  dependencies: [RB-00C]
+  expected_outputs: ["a metric → predictive-validity table", "a decomposition rule for any composite"]
+  architecture_components_affected: [metrics, readiness, agent model]
+  unblocks_implementation_decisions: ["whether an agent health vector is built, and with which dimensions"]
+  note: "⚠ With zero completed runs there is no outcome variable. This mission is external-evidence-only until RB-00C lands."
+
+- research_id: RB-08
+  title: What container isolation does and does not defend against
+  type: ADVERSARIAL
+  priority: HIGH
+  objective: >-
+    Attack the isolation ladder. R16-outside §3 already lands one blow — "a container does nothing
+    about prompt injection; the lethal trifecta survives it intact" — and absorption-backlog AB-09
+    notes that a sandbox move was adopted partly on isolation grounds. If the sandbox does not
+    address the actual threat, the justification is wrong even if the move is right.
+  research_questions:
+    - What threat classes does a container with an egress allowlist actually defend against, for an agent with warehouse credentials?
+    - What survives it, and what would defend against those?
+    - Is the ephemeral clone a compromised oracle at the layer the evidence rule protects (R17 §16.3)?
+    - What is the cheapest control that defends against the threat that matters most here?
+  owns: "the threat model for agent isolation"
+  must_not_answer: ["compensation and rollback (RB-05)", "the cost of a container (that is a measurement, GAP-11)"]
+  source_concepts: [C-GV-01, C-GV-02]
+  source_documents: [docs/specs/architecture-v0.md, docs/research/answers/R16-outside-evidence-lane.md, docs/research/answers/R17-answer-data-engineering-external-survey.md, docs/absorption-backlog.md]
+  addresses_gaps: [GAP-11, GAP-42]
+  addresses_contradictions: [CN-05]
+  dependencies: []
+  expected_outputs:
+    - a threat matrix — threat class vs control, marking what T0/T1/T2 each defend
+    - a narrowed claim for architecture-v0 §4, naming what is still undefended
+  architecture_components_affected: [isolation, execution, governance]
+  unblocks_implementation_decisions: ["whether T1 and T2 are built, and what they may be claimed to buy"]
+
+- research_id: RB-09
+  title: An evaluation protocol for organizational and agent-team designs
+  type: EXPERIMENT_DESIGN
+  priority: HIGH
+  objective: >-
+    C-OR-03 proposes that organization presets are versioned candidates so organizational design
+    becomes empirical, and supplies NO METHOD. The zeus pack supplies a graduation rule with core
+    metrics, a baseline task suite, target thresholds and a prototype ladder — written for UI
+    concepts. Nothing connects them.
+  research_questions:
+    - What is the baseline task suite for an organizational comparison in this estate?
+    - What thresholds must a candidate beat, stated before any candidate exists?
+    - How is the Goodhart risk handled (the zeus pack's Gate 7 names it and gives no mechanism)?
+    - What sample size makes a difference between two structures detectable?
+  owns: "the protocol for comparing organizational or team designs"
+  must_not_answer: ["which topology wins (RB-04)", "which health metrics to use (RB-07)"]
+  source_concepts: [C-OR-03, C-TM-02, C-EV-09]
+  source_documents: [docs/raw_research/zeus_world_ui_research_pack/05_EVALUATION_PROTOCOL.md, docs/raw_research/zeus_world_ui_research_pack/09_IMPLEMENTATION_READINESS.md, blueprints/orchestrator_team.yaml, docs/research/SYNTHESIS.md]
+  addresses_gaps: [GAP-15]
+  high_leverage_concepts: [HL-10]
+  dependencies: [RB-00B, RB-00C]
+  expected_outputs:
+    - a graduation rule usable by any deferred concept on README.md's absence table
+    - a baseline suite specification
+  architecture_components_affected: [evaluation, governance]
+  unblocks_implementation_decisions: ["how any organizational proposal earns implementation"]
+  note: >-
+    ⭐ It would give README.md's absence table a METHOD it currently lacks. The table states unlock
+    conditions; it does not say how a candidate is scored against them.
+
+- research_id: RB-10
+  title: Near-miss capture in high-reliability organisations
+  type: PRIOR_ART
+  priority: MEDIUM
+  objective: >-
+    A successful mission can still carry a safety lesson, and this estate currently records none.
+    At least three near misses exist in the corpus as prose only — for example
+    docs/evidence/live-probes-a1-a5 §6, "a trap this session walked into and backed out of" — and
+    none is in any ledger, so none is retrievable.
+  research_questions:
+    - How do aviation, healthcare and industrial safety define and capture a near miss?
+    - What triggers capture without relying on self-report? (an agent asked "did anything nearly go wrong?" will answer no)
+    - What is the minimum record that makes a near miss retrievable and actionable?
+    - What is the measured yield — do near-miss programmes actually reduce incidents?
+  owns: "near-miss capture as a mechanism"
+  must_not_answer: ["failure classification (built, factory/preflight.py)", "the findings ledger's schema (built)"]
+  source_concepts: [C-AG-15, C-KN-01, C-KN-05]
+  source_documents: [docs/raw_research/agent2_sihre_consolidation_pack/03_agent2_concept_registry.md, docs/findings.d/README.md]
+  high_leverage_concepts: [HL-12]
+  dependencies: []
+  expected_outputs: ["a capture-trigger design", "a minimal near-miss record shape compatible with findings.d/"]
+  architecture_components_affected: [memory, findings ledger]
+  unblocks_implementation_decisions: ["whether the findings ledger gains a fifth KIND"]
+
+- research_id: RB-11
+  title: Error correlation between agent configurations
+  type: EXPERIMENT_DESIGN
+  priority: MEDIUM
+  objective: >-
+    The only proposal in the corpus offering a MECHANISM for why a team might beat a single agent:
+    select by expected utility AND error covariance, so diversity reduces correlated failure rather
+    than merely adding members. R2's evidence is that the naive version does not help.
+  research_questions:
+    - What is the prior art on ensemble error correlation, and does it transfer to LLM agents?
+    - How is failure-vector covariance measured over a small number of runs?
+    - ⭐ What is the cheapest version — do two presets that differ in model and effort fail on the same things?
+    - What sample size would make a covariance estimate meaningful?
+  owns: "error correlation as a team-composition criterion"
+  must_not_answer: ["whether to build a team — DEFERRED", "topology fit (RB-04)"]
+  source_concepts: [C-AG-11, C-TM-01, C-TM-04]
+  source_documents: [docs/raw_research/agent2_sihre_consolidation_pack/05_quantitative_agent2_features.md, docs/raw_research/agent2_sihre_consolidation_pack/research_prompts/DR02_COGNITIVE_PORTFOLIO_THEORY.md, docs/research/answers/R2-answer-topology.md]
+  addresses_gaps: [GAP-20]
+  high_leverage_concepts: [HL-07]
+  dependencies: [RB-00C]
+  expected_outputs: ["a measurement protocol", "a cheap first experiment needing two runs, not an architecture"]
+  architecture_components_affected: [team composition, evaluation]
+  unblocks_implementation_decisions: ["whether 'evidence a tier helps' is reachable cheaply"]
+  note: >-
+    ⭐ Reframes the multi-agent question usefully: not "should we build a supervisor tier" but "do
+    two configurations of the same agent fail on the same things?" — which needs two runs.
+
+- research_id: RB-12
+  title: Credit assignment across a team
+  type: FOUNDATIONAL
+  priority: MEDIUM
+  objective: >-
+    Named in monitoring_benchmarking_spec.md, in the bootstrap RESEARCH_GAPS.md, and as Shapley
+    Cognitive Credit in agent2_sihre. No pass has looked at it. METRICS.md §H's attribution rules
+    cover COMMUNICATION defects only.
+  research_questions:
+    - What credit-assignment methods exist for multi-agent outcomes, and what do they cost to compute?
+    - How is credit attributed when a deterministic verifier, not an agent, owns the verdict?
+    - Can METRICS.md §H's three-condition test generalise from communication defects to contribution?
+  owns: "outcome attribution across contributors"
+  must_not_answer: ["communication defect attribution (specified in METRICS.md §H)", "health metrics (RB-07)"]
+  source_concepts: [C-AG-11, C-CM-04]
+  source_documents: [docs/protocol/METRICS.md, docs/raw_research/agent_factory_agent_genome_research_pack/evaluation/monitoring_benchmarking_spec.md]
+  addresses_gaps: [GAP-19]
+  dependencies: [RB-00C, RB-02]
+  expected_outputs: ["a credit-assignment design compatible with a deterministic verifier"]
+  architecture_components_affected: [metrics, evaluation]
+
+# ================================================================================================
+# WAVE 3 — internal audits and comparisons that need earlier findings
+# ================================================================================================
+
+- research_id: RB-13
+  title: Audit this repository against RB-01's and RB-02's findings
+  type: VALIDATION
+  priority: HIGH
+  objective: >-
+    The R17 → R18 pattern, repeated. R18 audits R17's recommendations against our code with
+    path:line citations, and running it first throws away the comparison. Same rule here.
+  research_questions:
+    - Which of RB-01's prior-art components does this estate already have under a different name?
+    - Which of RB-02's trajectory fields can factory/events.py already emit?
+    - What would each cost to add, measured against the existing seams?
+    - Which existing modules would be made redundant?
+  owns: "our own code, audited from inside, with path:line citations"
+  must_not_answer: ["re-deriving what other people built (RB-01, RB-02 own that)"]
+  ordering_constraint: "MUST run after RB-01 and RB-02. This is the R17-before-R18 rule."
+  source_concepts: [C-OR-02, C-OP-06]
+  source_documents: [docs/agent-army/CURRENT_STATE.md, .agent-platform/RECONCILIATION.md, docs/_index/repo_snapshot.md]
+  dependencies: [RB-01, RB-02]
+  expected_outputs: ["a have/lack/cost table with path:line evidence per row"]
+  architecture_components_affected: [all]
+
+- research_id: RB-14
+  title: Does APPROVE leave the building, and what does that do to the platform decision?
+  type: VALIDATION
+  priority: CRITICAL
+  objective: >-
+    R13 run 2 found that APPROVE becomes a GitHub PR — "which removes the very plane §14.2's
+    platform argument was justifying". absorption-backlog AB-12 names it the first of five findings
+    to action, "because a decision depends on it". Not done.
+  research_questions:
+    - Is the finding correct — does every approval this estate needs actually leave for a PR?
+    - If so, which parts of the four-plane model still hold? (architecture-v0 §7.3 independently asks whether four planes may be three)
+    - What does that do to the settled platform decision in SYNTHESIS §14.2?
+  owns: "the approval plane and its consequences for the platform decision"
+  must_not_answer: ["non-engineer approval — SYNTHESIS §14.4 records that nobody has solved it"]
+  source_concepts: [C-GV-03, C-UI-01]
+  source_documents: [docs/research/answers/R13-answer-architecture-and-ui-survey-run2.md, docs/absorption-backlog.md, docs/research/SYNTHESIS.md, docs/specs/architecture-v0.md]
+  addresses_gaps: [GAP-27]
+  addresses_contradictions: [CN-14]
+  dependencies: [RB-00F]
+  expected_outputs: ["a verdict on the finding", "a restatement or a defence of the platform decision"]
+  architecture_components_affected: [approval plane, UI, platform choice]
+  unblocks_implementation_decisions: ["whether the approval surface is built here at all"]
+  note: "⚠ Closer to a decision than a research mission. Listed because a decision depends on it and it has been open since 2026-08-23."
+
+- research_id: RB-15
+  title: Rank ladder versus absence table — two encodings of one discipline
+  type: COMPARISON
+  priority: MEDIUM
+  objective: >-
+    An ordered autonomy ladder with promotion rules (ROADMAP_TO_VISION.md) and a table of
+    independent gates each with a quantified unlock (README.md + SYNTHESIS §6) encode the same
+    discipline in different shapes. Neither cites the other; no document compares them.
+  research_questions:
+    - Which representation is harder to game?
+    - Does an ordered ladder impose a false total order on independent capabilities?
+    - What does the safety and autonomy literature use, and why?
+    - Can the two be composed — a ladder for communication, a table for gating?
+    # ⓘ ADDED 2026-09-02 by the .agent-platform delta pass:
+    - >-
+      Can rank be a DERIVED UI PROJECTION over independent gates — LOCKED / EXPERIMENTAL /
+      PROVISIONAL / EARNED — without imposing a false total order and without creating a second
+      source of truth? MEASURED this pass: factory/readiness.py holds 30 gates across 5 phases
+      (judgement 8, certification 8, handover 7, bounded 4, loop 3) with NO order between phases,
+      while AUTONOMY_LADDER.md specifies 8 strictly ordered ranks each with a required proof; and
+      `grep -rniE "LOCKED|EXPERIMENTAL|PROVISIONAL|EARNED" factory/*.py` finds no such vocabulary.
+      ⛔ platform-progress.schema.json (currentRank/ranks/updatedAt) is the parallel PROGRESS file
+      factory/roadmap.py refuses on principle; the mission must not recommend it.
+  owns: "the representation of staged autonomy"
+  must_not_answer: ["what the individual unlock conditions should be"]
+  source_concepts: [C-TM-02, C-GV-02, C-SI-01, C-EV-04, C-EV-05]
+  source_documents: [.agent-platform/bootstrap/ROADMAP_TO_VISION.md, .agent-platform/bootstrap/docs/AUTONOMY_LADDER.md, .agent-platform/bootstrap/schemas/platform-progress.schema.json, .agent-platform/bootstrap/skills/roadmap-rank-tracker/SKILL.md, README.md, docs/research/SYNTHESIS.md, docs/research/answers/R7-answer-session-manager.md]
+  addresses_gaps: [GAP-21, GAP-23]
+  addresses_contradictions: [CN-02, CN-23]
+  dependencies: []
+  expected_outputs: ["a comparison with a recommendation, or a composition of the two"]
+  architecture_components_affected: [governance, roadmap]
+
+- research_id: RB-16
+  title: Four planes versus five layers
+  type: COMPARISON
+  priority: MEDIUM
+  objective: >-
+    Two decompositions of the same system are on file and nobody has compared them: DECIDE / RUN /
+    PROVE / APPROVE (architecture-v0) and L1 elicitation / L2 contract state machine / L3 execution /
+    L4 assurance / L5 learning (the DeepSeek external review). architecture-v0 §7.3 independently
+    wonders whether four planes may be three.
+  research_questions:
+    - Do the two decompositions disagree about anything real, or are they different cuts of one structure?
+    - Does either place the L5 learning layer anywhere? architecture-v0 has no learning plane.
+    - Which better predicts where a change lands?
+  owns: "the top-level system decomposition"
+  must_not_answer: ["the isolation ladder (RB-08)", "the organization model (RB-01)"]
+  source_concepts: [C-GV-01, C-EV-05]
+  source_documents: [docs/specs/architecture-v0.md, docs/reviews/external/deepseek.md]
+  addresses_gaps: [GAP-22]
+  dependencies: []
+  expected_outputs: ["a mapping between the two, and a verdict on the missing learning plane"]
+  architecture_components_affected: [architecture]
+
+- research_id: RB-17
+  title: A crosswalk for the six evidence vocabularies
+  type: IMPLEMENTATION
+  priority: MEDIUM
+  objective: >-
+    Six incompatible basis vocabularies are in active use (contradictions.md CN-06). Only one
+    crosswalk exists (SYNTHESIS §16.12). factory/assertions.py's eight-value set is a superset of
+    three of the six and is the obvious canonical candidate — but nothing declares it as one.
+  research_questions:
+    - Can the six be mapped onto one canonical set without losing a distinction any of them makes?
+    - Is assertions.py's eight-value set the right canon, or does it lose REASONED and BET?
+    - What would enforce it — a shared module, or a test?
+  owns: "the evidence-basis vocabulary"
+  must_not_answer: ["the verdict enum (contract.py; separate, and settled)"]
+  source_concepts: [C-VD-03, C-EV-10]
+  source_documents: [factory/assertions.py, factory/tasks.py, factory/runs.py, docs/specs/architecture-v0.md, docs/research/R8-data-engineering-agent-factory.md]
+  addresses_gaps: [GAP-05]
+  addresses_contradictions: [CN-06]
+  dependencies: []
+  expected_outputs: ["a crosswalk table", "a canonical set with a migration note per site"]
+  architecture_components_affected: [evidence, assertions, task store]
+
+- research_id: RB-18
+  title: Mid-run human approval and escalation
+  type: FOUNDATIONAL
+  priority: MEDIUM
+  objective: >-
+    concept-inventory §4.6 — a NOT-SEARCHED axis. operator.py handles blockers declared BEFORE a
+    session. R5 calls for a human approval step before any container launch and it is unbuilt. R9
+    asked what the operator SEES, not what the approval WORKFLOW is. The gap between those two is
+    unexamined.
+  research_questions:
+    - What mid-run approval patterns exist for long-running autonomous processes?
+    - How does an agent block on a human without wasting the session it is in?
+    - What is the latency budget, and what happens when it is exceeded?
+    - Does the answer change if approval leaves for a PR (RB-14)?
+  owns: "the mid-run approval and escalation workflow"
+  must_not_answer: ["what the operator sees (a UI question)", "autonomy representation (RB-15)"]
+  source_concepts: [C-GV-02, C-GV-03]
+  source_documents: [docs/research/agent-factory-concept-inventory.md, factory/operator.py, docs/research/answers/R5-answer-build-velocity.md, docs/research/answers/R12-answer-session-manager-ui.md]
+  addresses_gaps: [GAP-36]
+  dependencies: [RB-14]
+  expected_outputs: ["an approval workflow design with a stated latency budget"]
+  architecture_components_affected: [governance, control plane, operator surface]
+
+- research_id: RB-19
+  title: Task and environment packaging standards
+  type: PRIOR_ART
+  priority: LOW
+  objective: >-
+    concept-inventory §4.3 — a NOT-SEARCHED axis. METR's task standard, Inspect's task format,
+    SWE-Gym-style environment packaging. Relevant because the deferred gym is partly a packaging
+    question, and a standard format would make the eval corpus portable.
+  research_questions:
+    - What do the existing task standards specify, and what do they omit for side-effecting work?
+    - Could evals/corpus/ be expressed in one of them without loss?
+    - What would portability buy, concretely?
+  owns: "task and environment packaging formats"
+  must_not_answer: ["⛔ whether to build a gym — DEFERRED", "eval frameworks (R1 settled it)"]
+  source_concepts: [C-KN-06, C-SI-03]
+  source_documents: [docs/research/agent-factory-concept-inventory.md, evals/MANIFEST.sha256]
+  addresses_gaps: [GAP-34]
+  dependencies: [RB-00B]
+  expected_outputs: ["a format comparison, with a verdict on expressing our corpus in one"]
+  architecture_components_affected: [eval corpus]
+
+- research_id: RB-20
+  title: Interop as a factory primitive — MCP, A2A, AGNTCY as interface standards
+  type: PRIOR_ART
+  priority: LOW
+  objective: >-
+    concept-inventory §4.4 — a NOT-SEARCHED axis. MCP is used across the estate but is not a factory
+    CONCEPT here. A2A and AGNTCY were deferred as MESSAGING TOPOLOGY, correctly, but never examined
+    as an INTERFACE STANDARD, which is a different question.
+  research_questions:
+    - What does each standard actually specify, and at which layer?
+    - Would adopting one change the provider seam, and what would it buy?
+    - Is there an interoperability requirement here at all, or is this a solution looking for one?
+    # ⓘ ADDED 2026-09-02 by the .agent-platform delta pass. This is where C-AG-16 gets settled.
+    - >-
+      Map the existing capability registry onto A2A Agent Card / skill discovery semantics. WHICH
+      FIELDS ARE DISCOVERY AND WHICH ARE THE EVIDENCE ENVELOPE? MEASURED: factory/registry.py
+      carries id/kind/shapes/layers/ends_at/state/evidence and a text-hash version;
+      capability-record.schema.json adds conditions, success_rate, evidence_count, confidence,
+      cost, latency, valid_from, valid_until, evidence_refs — none of which exist in code
+      (`grep -rniE "capability_record|CapabilityRecord" factory/` → 0).
+    - "Which evidence/certification fields are intentionally OUTSIDE A2A and should stay local extensions?"
+    - "What adapter contract would a compute node need for health, cost, lifecycle, rollback and wake/subscription events — and is there a second compute surface to justify one? (MEASURED: `grep -rniE \"DGX|compute_node\"` → 0; there is one runtime.)"
+  owns: "agent interoperability standards, as interfaces"
+  must_not_answer: ["⛔ messaging topology — DEFERRED, and correctly", "⛔ whether to BUILD a capability marketplace — C-CM-06 is deferred behind an unmet gate"]
+  source_concepts: [C-CM-03, C-AG-04, C-AG-16, C-OR-09]
+  source_documents: [docs/research/agent-factory-concept-inventory.md, factory/provider.py, factory/registry.py, .agent-platform/bootstrap/docs/COMPUTE_AND_INTEGRATION_FABRIC.md, .agent-platform/bootstrap/schemas/capability-record.schema.json, .agent-platform/bootstrap/schemas/compute-node.schema.json]
+  addresses_gaps: [GAP-35]
+  dependencies: []
+  expected_outputs: ["a standard-by-layer table, and an honest verdict on whether a requirement exists"]
+  architecture_components_affected: [provider seam, integration]
+  note: "⚠ The third question is the important one. Do not return a recommendation to adopt a standard for which no requirement was found."
+
+# ================================================================================================
+
+# ================================================================================================
+# SUPPLEMENTARY PASS — 2026-09-02
+#
+# ⛔ NOTHING BELOW WAS DISPATCHED. This block records what the newly-read material implies for the
+#    ORDER of the 26 missions. It is an assessment for a human to accept or reject, and it changes
+#    no `priority:` field above — every mission's stated priority is as the original pass wrote it.
+#    Where this block and a mission record disagree, the mission record is the current state and
+#    this is the argument for changing it.
+# ================================================================================================
+
+supplementary_assessment_2026_09_02:
+  basis: |
+    Two .docx converted and read in full (RB-00A, done); the sibling repository's Wave 0 synthesis
+    and architecture layer read; R00/R01/R02 sampled. See docs/_index/agent_army_wave0_supplement.md.
+    ⚠ EVERY JUDGEMENT HERE IS DERIVED FROM READING, NOT FROM A MEASUREMENT. The one measured input
+    is the code inventory in §4.2 of the supplement, which is why RB-04's entry is the firmest.
+
+  completed:
+    - id: RB-00A
+      note: "✅ DONE. See its record above. Its `unblocks: [RB-01, RB-02, RB-05]` is now satisfied."
+
+  should_rise:
+    - id: RB-01
+      title: What organisation-oriented MAS already provides
+      from: CRITICAL
+      to: CRITICAL (unchanged) — but it is now the TOP research-shaped mission, and its scope grew
+      why: |
+        Its stated dependency [RB-00A] is satisfied. And the newly-read documents give it a concrete
+        target list it did not have: twelve named architectures with prior-art anchors the documents
+        themselves supply (MOISE+, Contract Net, blackboard/Global Workspace, stigmergy, VSM,
+        Erlang/OTP, Kubernetes reconciliation, MAP-Elites, AgentSquare/AFlow/ADAS/EvoAgent).
+        ⭐ The mission can now ask "what does the prior art give us for EACH of these twelve"
+        rather than the vaguer "what does organisation-oriented MAS provide".
+      add_to_scope:
+        - "the twelve prior-art anchors in Beyond_Agent_Armies §3, which are an index the estate did not have"
+        - "⛔ whether IMACS's model-binding result (CN-29) generalises — the single highest-value external question now open"
+
+    - id: RB-04
+      title: Topology-task fit
+      from: HIGH
+      to: HIGH (unchanged) — but its OUTPUT SHAPE should change
+      why: |
+        ⭐ MEASURED, not inferred: the twelve architecture cards each carry a MAIN FAILURE MODE and a
+        SMALLEST USEFUL EXPERIMENT, and Beyond_Agent_Armies §6 supplies a mission-signature ->
+        topology table. That is most of the comparison harness RB-04 was going to have to invent.
+        The mission should now VALIDATE AND CORRECT an existing table rather than build one, which
+        is cheaper and produces a falsifiable artifact.
+      still_blocked_by: RB-00C
+      caution: "⛔ the table is model-generated and unevidenced. Treat it as the hypothesis under test, never as a source."
+
+    - id: RB-09
+      title: An evaluation protocol for organizational and agent-team designs
+      from: HIGH
+      to: "argues for CRITICAL"
+      why: |
+        Three things converged on it this pass. (1) The Prioritization Pack's promotion gates G0-G7
+        and the sibling's Evolution Chamber chain (offline sim -> replay -> shadow -> limited live ->
+        production) were written independently and AGREE — that is a settled design RB-09 can adopt
+        rather than derive. (2) Beyond_Agent_Armies §8 supplies a ten-dimension evaluation framework
+        with an explicit Pareto rule: "an architecture that adds three agents and 5x coordination
+        cost for a 1% gain may be worse." (3) ⛔ CN-29 means any organizational evaluation must carry
+        a model binding, or it measures something with an unmeasured shelf life.
+      note: "This is the mission that CN-29 makes urgent, and it is not currently CRITICAL."
+
+  should_fall:
+    - id: RB-02
+      title: Observability and trace standards
+      from: HIGH
+      to: HIGH (unchanged priority) — but it is no longer the best-scoped mission in the backlog
+      why: |
+        The original pass called it "the best-scoped mission in the backlog, because the answer is a
+        standard to accept or reject". That is still true. It falls only RELATIVE to RB-01 and RB-09,
+        both of which acquired concrete targets this pass while RB-02 acquired none.
+
+  should_merge:
+    - ids: [RB-16]
+      with: "the newly-recovered THREE-AXIS MODEL"
+      why: |
+        RB-16 (four planes versus five layers) is a comparison of two encodings. ⭐ The sibling's
+        Wave 0 promoted a third and better-argued one that this backlog does not know exists:
+        standing / basis / window as three ORTHOGONAL axes, of which the nine existing vocabularies
+        are different collapses (W0-foundations.md:59-62, promoted as "the most substantive original
+        contribution of W0" and explicitly "descriptive of code that already exists").
+      also_affects: [RB-17]
+      note: |
+        ⛔ RB-17 (a crosswalk for the six evidence vocabularies) may be PARTLY ANSWERED ALREADY.
+        Experiment E2 in the sibling states the test: "can every one of the nine be reconstructed
+        from (standing, basis, window)? If any needs a fourth axis, the model is wrong."
+        DO NOT dispatch RB-17 before reading agent-army-research/research/sources/
+        agent-factory-vocabulary-crawl.md (89,803 bytes, UNREAD — see GAP-03).
+
+  should_split: []
+
+  should_be_removed: []
+
+  becomes_not_research:
+    - id: RB-17
+      title: A crosswalk for the six evidence vocabularies
+      why: |
+        ⚠ CANDIDATE ONLY, and conditional. If the vocabulary crawl already contains the crosswalk —
+        which the three-axis model implies but this pass did not verify, having not read the file —
+        then RB-17 is a READING task, not a research mission, and dispatching it would buy an answer
+        the estate already owns. THE CHEAP MOVE IS TO READ THE CRAWL FIRST. That is 90 KB and an
+        hour, and it is the same shape as RB-00A, which paid.
+
+  new_candidates_recorded_not_dispatched:
+    - id: RB-21
+      title: Do the twelve architecture cards' failure modes occur in this estate?
+      type: VALIDATION
+      priority: LOW
+      status: CANDIDATE — NOT DISPATCHED, and probably premature
+      objective: |
+        Each of the twelve cards names a main failure mode (recursive overhead, protocol complexity,
+        policy ossification, bid gaming, attention bottleneck, thrashing, eval gaming, horizon
+        mismatch, correlated failure, gridlock, hidden cycles, recursive repair damage).
+      blocked_by: [RB-00C]
+      why_low: |
+        ⛔ With zero completed real runs there is no population in which a coordination pathology
+        could be observed. This is GAP-09 again. Recorded so the cards' failure modes are not lost;
+        it should not be dispatched until one real run exists.
+
+  unchanged_and_why_that_matters: |
+    ⭐ TWENTY OF THE TWENTY-SIX MISSIONS ARE UNAFFECTED BY EVERYTHING READ THIS PASS. Two documents
+    totalling 635 KB and a sibling repository's research programme moved the order of six items and
+    the priority of none. That is worth stating plainly to an architecture reviewer: the backlog was
+    not waiting on this material, and the corpus's binding constraint is unchanged — GAP-09 / RB-00C,
+    no agent has ever completed a real run. Every mission that got cheaper this pass got cheaper by
+    acquiring a target, not by acquiring evidence.
+
+# ================================================================================================
+# .agent-platform DELTA PASS — 2026-09-02
+#
+# ⛔ NOTHING BELOW WAS DISPATCHED, and nothing below is counted in `summary.missions`. These are
+#    CANDIDATES recovered by indexing the 110-file bootstrap tree at a finer granularity than the
+#    corpus-preparation pass used. The full reconciliation, including the six mechanisms that were
+#    deliberately given NO new concept id, is docs/_index/agent_platform_delta_synthesis.md.
+#
+# ⚠ ID COLLISION, CORRECTED. The inbound RESEARCH_ADDENDUM.yaml proposes RB-21..RB-24. RB-21 is
+#   ALREADY TAKEN by `new_candidates_recorded_not_dispatched` above ("Do the twelve architecture
+#   cards' failure modes occur in this estate?"). These are therefore RB-22..RB-25.
+#
+# ⛔ AND THE RULE THAT GOVERNS ALL FOUR: do not create a second research program. Three EXISTING
+#   missions (RB-02, RB-15, RB-20) were expanded in place this pass and carry most of the recovered
+#   questions; only what none of them owns appears below.
+# ================================================================================================
+
+agent_platform_delta_2026_09_02:
+  policy:
+    before_deadline: "⛔ dispatch nothing. Implementation and measurement are still binding; see the Deadline Impact section of the synthesis."
+    after_deadline: "merge with this backlog; RB-22 and RB-24 are EXPERIMENT-FIRST and may retire their own research."
+
+  existing_missions_expanded_in_place:
+    - id: RB-15
+      added: "3 sources (AUTONOMY_LADDER.md, platform-progress.schema.json, roadmap-rank-tracker/SKILL.md) + 1 question on rank as a derived projection"
+      why: "⭐ The pack supplies a concrete 8-rung ordered ladder to test the estate's 5 UNORDERED readiness phases against. That is the sharpest form this mission has had."
+    - id: RB-20
+      added: "3 sources (COMPUTE_AND_INTEGRATION_FABRIC.md, capability-record.schema.json, compute-node.schema.json) + 3 questions"
+      why: "This is where C-AG-16 (the capability record) gets settled — which fields are A2A discovery and which are the local evidence envelope."
+      note: "⚠ Its stated priority remains LOW as the original pass wrote it. The delta pass argues it should rise once one real run exists; that is an argument, not a change."
+    - id: RB-02
+      added: "2 sources (message-event.schema.json, COMMUNICATION_PROTOCOL.md) + 1 question on OpenTelemetry mapping"
+      why: "RB-02 is HL-08's prerequisite and sits underneath five other concepts. The envelope gives it a concrete 15-field candidate to accept or reject."
+
+  new_candidates_recorded_not_dispatched:
+
+    - id: RB-22
+      title: Execution surface routing and multi-session scheduling
+      type: PRIOR_ART_PLUS_EXPERIMENT
+      priority: HIGH_AFTER_DEADLINE_IF_NOT_IMPLEMENTED
+      status: CANDIDATE — NOT DISPATCHED
+      experiment_first: true
+      objective: >-
+        Validate task-to-surface routing across local Remote Control sessions, cloud sessions and
+        isolated worktrees, and measure whether metadata-driven routing reduces manual coordination
+        and branch collisions.
+      source_concepts: [C-GV-07, C-GV-01, C-TM-03, C-CM-02, C-TM-06]
+      source_documents:
+        - .agent-platform/bootstrap/docs/EXECUTION_SURFACE_POLICY.md
+        - .agent-platform/bootstrap/docs/WEB_REMOTE_SESSION_RUNBOOK.md
+        - .agent-platform/PACK_CONFORMANCE.md
+      research_questions:
+        - "Which live tasks TRULY require local files, MCP or secrets, and which are cloud-eligible?"
+        - "Can declared writes plus existing resource claims derive collision-safe parallelism?"
+        - "Does routing reduce operator interventions and branch conflicts — measured against a real week, not a simulation?"
+      owns: "task-to-surface routing as a scheduling constraint"
+      must_not_answer:
+        - "⛔ what the isolation TIERS should be — C-GV-01 and RB-08 own that"
+        - "⛔ whether to build a remote-execution platform. The substrate already exists; this is a routing policy over it"
+      dependencies: []
+      expected_outputs: ["an execution metadata schema, one scheduler predicate, and a measured before/after on operator interventions"]
+      architecture_components_affected: [scheduling, worktrees, claims, sessions]
+      note: >-
+        ⭐ EXPERIMENT BEFORE RESEARCH, and the experiment is small enough to retire the mission.
+        Attach the `execution:` block to the FIVE tasks of missions/client-review-v1 and write one
+        `can_run_together(a, b)` predicate over the three collision-rule clauses; check it against
+        what actually happened in the last week of parallel lanes. MEASURED 2026-09-02:
+        `grep -rniE "remote_control|cloud_web|preferred_surface|execution_surface" factory/ scripts/ blueprints/ missions/ | wc -l`
+        → 0, so there is no existing implementation to compare against.
+        ⚠ GAP-38 applies: the Claude Code argv surface is undocumented and unpinned. Verify the
+        installed CLI's flags at runtime; do not hard-code them into a router.
+
+    - id: RB-23
+      title: Evidence-backed capability record and the certification boundary
+      type: PRIOR_ART_PLUS_SCHEMA
+      priority: HIGH_AFTER_TWO_REAL_WORKLOADS
+      status: CANDIDATE — NOT DISPATCHED
+      objective: >-
+        Define the smallest capability record that supports trustworthy mission routing without
+        inventing a marketplace and without claiming transfer beyond the conditions measured.
+      source_concepts: [C-AG-16, C-AG-04, C-AG-01, C-EV-01, C-EV-10, C-GV-06]
+      source_documents:
+        - .agent-platform/bootstrap/schemas/capability-record.schema.json
+        - .agent-platform/bootstrap/docs/PLATFORM_COMPLETION_FEATURES.md
+        - factory/registry.py
+        - factory/certify.py
+      research_questions:
+        - "Which fields are descriptive identity/discovery, and which are certification evidence?"
+        - "How do validity windows and model/config bindings invalidate a capability claim?"
+        - "What is the minimum record C-TM-07's mission assembly would need to route safely?"
+      owns: "the certification envelope around a capability claim"
+      must_not_answer:
+        - "⛔ generic agent DISCOVERY vocabulary — that is RB-20's A2A question"
+        - "⛔ whether to build a capability market — C-CM-06 is deferred behind an unmet gate"
+      dependencies: [RB-00C, RB-00B]
+      expected_outputs: ["a registry extension ADR, a schema, and invalidation tests"]
+      architecture_components_affected: [registry, certification, evals]
+      note: >-
+        ⛔ BLOCKED BY RB-00C AND IT IS NOT A FORMALITY. .data/runs.jsonl holds 10 rows with 0 PASS
+        and all 7 agent_returned events carry dry_run=True, so a record schema written now would be
+        graded against nothing. ⭐ MEASURED: factory/registry.py already hashes a workflow's
+        SKILL.md TEXT as its version — the identity half is built; the CONDITIONS half is absent.
+
+    - id: RB-24
+      title: Synthesis inbox and the research disposition workflow
+      type: EXPERIMENT_DESIGN
+      priority: MEDIUM
+      status: CANDIDATE — NOT DISPATCHED
+      experiment_first: true
+      objective: >-
+        Measure whether a canonical inbox for completed research, review and agent outputs reduces
+        lost handoffs and unabsorbed conclusions across many parallel sessions.
+      source_concepts: [C-UI-07, C-KN-02, C-UI-04, C-UI-05, C-RS-05]
+      source_documents:
+        - .agent-platform/bootstrap/docs/GAMIFIED_MISSION_CONTROL.md
+        - .agent-platform/bootstrap/docs/SESSION_UI_MVP.md
+        - docs/absorption-backlog.md
+        - factory/switchboard_p1.py
+      research_questions:
+        - "Can inbox rows be DERIVED from existing task/artifact/research state without a new source of truth?"
+        - "What dispositions close a row — ADOPT, ADAPT, RESEARCH, REJECT, SUPERSEDED — and who may write one?"
+      owns: "the disposition queue as an operator projection"
+      must_not_answer:
+        - "⛔ the broader gamified mission control UI — README.md:98 gates the Platform UI behind numbers worth looking at"
+        - "⛔ what any individual row's disposition should be"
+      dependencies: []
+      expected_outputs: ["a small switchboard projection plus a before/after count of undispositioned rows"]
+      architecture_components_affected: [operator surface, absorption backlog]
+      note: >-
+        ⭐ THE BEFORE-MEASUREMENT ALREADY EXISTS: 19 absorption rows and 2 whole answers carry no
+        disposition (GAP-07). Both halves of the mechanism are built and unjoined — the content
+        model is docs/absorption-backlog.md, the surface is switchboard_p1's NEEDS YOU panel.
+        ⚠ C-UI-05 binds: if a row cannot be dispositioned from the surface, render a COUNT, not a
+        button.
+
+    - id: RB-25
+      title: Venture lifecycle, customer learning and portfolio allocation
+      type: PRODUCT_SYSTEMS_RESEARCH
+      priority: DEFER_UNTIL_CERTIFIED_TEAM
+      status: CANDIDATE — NOT DISPATCHED, and deliberately last
+      objective: >-
+        Test whether the proposed commercial loop can be implemented as a VERTICAL over existing
+        mission/eval/policy primitives, rather than as a second autonomous-business platform.
+      source_concepts: [C-OR-10, C-KN-08, C-OP-07, C-GV-02, C-PR-03]
+      source_documents:
+        - .agent-platform/bootstrap/docs/AUTONOMOUS_PRODUCT_LIFECYCLE.md
+        - .agent-platform/bootstrap/docs/REVENUE_AND_VENTURE_FLYWHEEL.md
+        - .agent-platform/bootstrap/docs/PLATFORM_COMPLETION_FEATURES.md
+        - .agent-platform/bootstrap/docs/COMMERCIAL_AUTONOMY_POLICY.md
+        - .agent-platform/bootstrap/schemas/opportunity-hypothesis.schema.json
+        - .agent-platform/bootstrap/schemas/venture-plan.schema.json
+        - .agent-platform/bootstrap/skills/venture-compiler/SKILL.md
+        - .agent-platform/bootstrap/skills/opportunity-intelligence/SKILL.md
+        - .agent-platform/bootstrap/skills/customer-learning-loop/SKILL.md
+      research_questions:
+        - "What is the minimum durable product/venture state?"
+        - "How is market and customer EVIDENCE separated from inference about it?"
+        - "Which decisions must remain human or policy-gated — money, public claims, outreach, privacy, contracts, deployment?"
+        - "How are opportunity cost and multi-objective constraints represented without collapsing to one reward?"
+      owns: "the commercial loop as a vertical over existing primitives"
+      must_not_answer:
+        - "⛔ anything about Org-IR or the organization compiler. RECONCILIATION.md §1.1 records that refutation and it stands"
+        - "⛔ whether the factory should pursue revenue. That is a decision for a human"
+      dependencies: [RB-00C, RB-09]
+      expected_outputs: ["one bounded venture pilot design, not a platform-wide build"]
+      architecture_components_affected: [none today]
+      note: >-
+        ⛔ GATED BY README.md:96 — one certified team, and the ledger is 0 PASS. Recorded so the two
+        schemas are not lost. ⭐ The one idea transferable TODAY at zero cost is that
+        opportunity-hypothesis.schema.json REQUIRES a `falsification` field and venture-plan.schema.json
+        requires BOTH success_criteria and failure_criteria — which is C-PR-03 (state the kill
+        condition before building) reached independently, and stricter than most gates here.
+
+  what_this_delta_deliberately_did_not_add:
+    - "⛔ A research-job queue. schemas/research-job.schema.json is REJECTED as a duplicate source of truth; agent-army-research already holds the queue with stronger epistemics (PACK_CONFORMANCE 3.3/3.4). One field is worth borrowing — `execution_surface` — and it belongs to RB-22."
+    - "⛔ A mission on any deferred subsystem. README.md's absence table gates those on unlock conditions, not on missing knowledge."
+    - "⛔ Any RESEARCH_REQUIRED label. Every candidate for one turned out to be answerable by reading the repo or by a measurement this estate can already take."
+
+
+summary:
+  missions: 26                   # unchanged; RB-21 above is a CANDIDATE and is deliberately not counted
+  # MEASURED 2026-09-02 by parsing this file:
+  #   python -c "import yaml,collections;m=yaml.safe_load(open('docs/research/backlog.yaml',encoding='utf-8'))['missions'];print(len(m),dict(collections.Counter(x['type'] for x in m)),dict(collections.Counter(x['priority'] for x in m)))"
+  by_type:
+    NOT_RESEARCH: 6
+    PRIOR_ART: 5
+    FOUNDATIONAL: 4
+    COMPARISON: 4
+    VALIDATION: 3
+    EXPERIMENT_DESIGN: 2
+    ADVERSARIAL: 1
+    IMPLEMENTATION: 1
+  by_priority:
+    CRITICAL: 6
+    HIGH: 10
+    MEDIUM: 8
+    LOW: 2
+  the_shape_of_this_backlog: |
+    ⭐ SIX OF THE TWENTY-SIX ARE NOT RESEARCH AT ALL, and they include four of the six CRITICAL
+    items. That ratio is the most useful thing on this page. This corpus has 26 filed research
+    answers, ~1.9 MB of them, and a 19-row backlog of conclusions nobody actioned. Its constraint
+    has not been a shortage of research for some time.
+
+    The genuinely research-shaped work is narrower than the gap list suggests: two prior-art passes
+    that would stop the estate re-deriving things (RB-01 organisation-oriented MAS, RB-02 trace
+    standards), one adversarial pass on a control the design leans on (RB-08), one protocol design
+    that would give the absence table a method (RB-09), and one dispatch of a prompt already
+    written (RB-03).
+
+    Everything else is either downstream of a measurement, or is a decision waiting for a human.
+  what_this_backlog_deliberately_omits:
+    - "Any mission asking whether to build a deferred subsystem. Those are gated by README.md's absence table, not by missing knowledge."
+    - "Any re-run of R1-R19. concept-inventory §3 records what they settled."
+    - "Any mission on the embedded terminal. docs/research/README.md §4 states it as a decision for Paul, explicitly not a research task, and warns that it has been answered by accident twice."
+    - "A synthesis or architecture-selection pass. The corpus-preparation prompt's stop condition forbids proposing the north star in the same pass, and this pass has honoured it."
