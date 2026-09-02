@@ -1,0 +1,369 @@
+apiVersion: agentfactory.ai/v1alpha1
+kind: AgentDefinition
+
+metadata:
+  id: string
+  name: string
+  version: semver
+  status: [draft, candidate, shadow, certified, active, degraded, quarantined, retired]
+  config_hash: derived
+  labels: {}
+  created_at: timestamp
+  created_by: string
+  provenance: []
+
+classification:
+  # DECLARED / POLICY — not learned telemetry
+  family: string
+  archetype: string
+  organizational_level: [agent, manager, commander, curator, evaluator, governor]
+  mission_positions: []
+  domains: []
+  temporal_class: [realtime, tactical, operational, strategic]
+  risk_class: [low, medium, high, critical]
+
+identity:
+  # DECLARED
+  purpose: string
+  north_star: string
+  role_contract:
+    responsibilities: []
+    non_responsibilities: []
+    required_outputs: []
+    forbidden_behaviors: []
+  doctrine:
+    principles: []
+    prohibited: []
+  style_labels: []
+  natural_language_profile: string
+
+model:
+  # TUNABLE except allowed-model policy
+  primary:
+    provider: string
+    model: string
+    profile: string
+  fallbacks: []
+  reasoning_effort: [low, medium, high, adaptive]
+  stochasticity:
+    temperature: null
+    top_p: null
+  routing:
+    uncertainty_escalation_threshold: 0.35
+    complexity_escalation_threshold: 0.70
+    risk_escalation_threshold: high
+    context_overflow_strategy: [compress, delegate, escalate, partition]
+  ensemble:
+    enabled: false
+    strategy: [none, majority, judge, confidence_weighted, diversity_vote]
+    member_count: 1
+
+cognition:
+  # TUNABLE
+  planning:
+    strategy: [reactive, plan_then_execute, hierarchical, rolling_horizon, graph]
+    horizon: 5
+    max_subtasks: 12
+    decomposition_granularity: 0.5
+    replan_threshold: 0.4
+  reasoning:
+    verification_tendency: 0.7
+    self_critique_frequency: 0.4
+    hypothesis_count_target: 3
+    alternative_generation: 0.5
+    exploration_rate: 0.25
+    exploit_rate: 0.75
+    uncertainty_reporting_threshold: 0.25
+    assumption_explicitness: 0.8
+    evidence_requirement: 0.8
+  stopping:
+    confidence_threshold: 0.82
+    diminishing_return_threshold: 0.08
+    max_reflection_cycles: 2
+  recovery:
+    retry_policy: classified
+    max_retries: 2
+    replan_on_failure: true
+    ask_for_help_threshold: 0.60
+    escalate_threshold: 0.78
+    abandon_threshold: 0.95
+
+context:
+  # TUNABLE
+  token_budget: 60000
+  reserve:
+    reasoning_fraction: 0.25
+    tools_fraction: 0.10
+    output_fraction: 0.10
+  retrieval:
+    top_k: 30
+    relevance_min: 0.68
+    provenance_weight: 0.25
+    freshness_weight: 0.20
+    mission_dependency_weight: 0.20
+    contradiction_weight: 0.15
+    diversity_weight: 0.10
+    teammate_locality_weight: 0.10
+    source_diversity_min: 3
+  include:
+    evidence: true
+    decisions: true
+    unresolved_contradictions: true
+    prior_failures: true
+    similar_missions: true
+    raw_transcripts: false
+  compression:
+    strategy: semantic_delta
+    max_compression_ratio: 0.75
+  refresh:
+    on_material_event: true
+    periodic_seconds: 600
+  sharing:
+    default_scope: role_specific
+
+memory:
+  working:
+    enabled: true
+    ttl: mission
+    isolation: instance
+  episodic:
+    read: true
+    write: true
+    retrieval_weight: 0.8
+  semantic:
+    read: true
+    write: proposal_only
+    promotion_threshold: 0.85
+  procedural:
+    read: true
+    write: review_required
+  organizational:
+    global_workspace_read: true
+    global_workspace_publish: scored
+    publish_threshold: 0.80
+  forgetting:
+    enabled: true
+    stale_decay_rate: 0.02
+    preserve_decisions: true
+    preserve_contradictions: true
+  consolidation:
+    enabled: true
+    interval: mission_end
+
+skills:
+  # DECLARED + MEASURED references; the proficiency evidence is in registry
+  required: []
+  optional: []
+  bindings:
+    - skill_id: string
+      version: semver
+      certification: string
+      minimum_proficiency: 0.0
+      freshness_days: null
+  skillup:
+    enabled: true
+    max_seconds: 180
+    allowed_actions:
+      - retrieve_domain_brief
+      - replay_similar_mission
+      - load_examples
+      - run_micro_eval
+      - request_specialist
+    require_micro_eval: true
+
+tools:
+  # POLICY + TUNABLE preference
+  allow: []
+  deny: []
+  preferred_order: []
+  max_parallel_calls: 5
+  max_calls_per_mission: 60
+  write_boundaries: []
+  deterministic_first_for:
+    - classification
+    - validation
+    - gating
+  fallback_policy: classified
+  meta_tools:
+    allow_certified_only: true
+
+communication:
+  # TUNABLE genotype
+  protocol: ACP/0.2
+  phenotype_preset: concise_scout
+  initiative: 0.55
+  unsolicited_message_probability: 0.20
+  update_frequency_target_per_hour: 3.0
+  batching_window_seconds: 60
+  verbosity_target: 0.35
+  semantic_density_target: 0.80
+  novelty_threshold: 0.72
+  broadcast_threshold: 0.86
+  escalation_threshold: 0.76
+  acknowledgement_probability: 0.95
+  clarification_threshold: 0.35
+  evidence_attachment_required_above_risk: medium
+  deference: 0.40
+  assertiveness: 0.60
+  challenge_propensity: 0.55
+  disagreement_persistence: 0.50
+  commitment_explicitness: 0.90
+  response_slo_seconds: 180
+  routing:
+    default: capability
+    direct_peer: true
+    manager_mediated: false
+    global_workspace: selective
+    max_hops: 3
+    ttl_seconds: 3600
+  subscriptions: []
+  publish_types: []
+
+collaboration:
+  # TUNABLE
+  autonomy_preference: 0.65
+  delegation_tendency: 0.45
+  help_seeking_tendency: 0.55
+  peer_review_tendency: 0.65
+  consensus_preference: 0.40
+  conflict_tolerance: 0.60
+  diversity_preference: 0.70
+  specialization_preference: 0.80
+  load_sharing_tendency: 0.50
+  context_sharing_tendency: 0.45
+
+behavioral_parameters:
+  # Prefer measurable operational dimensions over human personality labels.
+  caution: 0.70
+  persistence: 0.70
+  curiosity: 0.65
+  exploration: 0.35
+  precision: 0.85
+  novelty_seeking: 0.40
+  risk_tolerance: 0.35
+  initiative: 0.60
+  social_initiation: 0.40
+  challenge: 0.55
+  user_sensitivity: 0.75
+
+authority:
+  # POLICY — not auto-mutated
+  may_delegate: true
+  delegation_depth: 1
+  may_create_agents: false
+  may_create_teams: false
+  approval_scopes: []
+  forbidden_approval_scopes:
+    - production_policy_change
+  spend:
+    soft_limit_usd: 3.0
+    hard_limit_usd: 6.0
+  environments:
+    read: [sandbox, development]
+    write: [sandbox]
+  secrets:
+    read_scopes: []
+    write: false
+
+runtime:
+  # TUNABLE within policy bounds
+  max_turns: 18
+  timeout_seconds: 900
+  concurrency: 1
+  priority: normal
+  budget:
+    soft_usd: 3.0
+    hard_usd: 6.0
+  retry:
+    max: 2
+    backoff: exponential
+  checkpoint_frequency_steps: 5
+
+readiness:
+  # DERIVED configuration for formula, not stored score
+  dimensions:
+    capability_fit: 0.25
+    knowledge_freshness: 0.15
+    recent_reliability: 0.20
+    tool_environment: 0.10
+    context_capacity: 0.10
+    model_suitability: 0.10
+    communication_fit: 0.05
+    policy_certification: 0.05
+  aggregation: weighted_geometric_mean
+  thresholds:
+    certified_ready: 0.85
+    deployable: 0.75
+    degraded: 0.60
+    block: 0.0
+
+evaluation:
+  # POLICY/DECLARED links
+  required_suites: []
+  mission_classes: []
+  minimums:
+    quality: 0.85
+    reliability: 0.90
+    unsupported_claim_rate_max: 0.02
+  challenger:
+    enabled_above_risk: high
+  repetitions:
+    stochastic_min: 3
+
+monitoring:
+  # DECLARED telemetry contract; values live in event store
+  required_events:
+    - mission_started
+    - context_compiled
+    - tool_called
+    - message_sent
+    - message_received
+    - decision_made
+    - artifact_produced
+    - eval_completed
+    - failure
+    - recovery
+    - mission_completed
+  dimensions:
+    execution: true
+    quality: true
+    communication: true
+    cognition: true
+    collaboration: true
+    trust: true
+
+optimization:
+  # POLICY
+  mutable_fields:
+    - model.reasoning_effort
+    - cognition.*
+    - context.*
+    - communication.*
+    - collaboration.*
+    - behavioral_parameters.*
+    - runtime.*
+  frozen_fields:
+    - metadata.id
+    - identity.role_contract
+    - authority
+    - doctrine.prohibited
+  recertification_on_change:
+    - model.*
+    - skills.*
+    - tools.*
+    - communication.routing
+    - memory.*
+  search:
+    enabled: true
+    promotion_requires_shadow: true
+    promotion_requires_heldout_eval: true
+    direct_production_mutation: false
+
+lock:
+  # DERIVED immutable dependency snapshot for a run/version
+  model_version: string
+  skill_versions: {}
+  tool_versions: {}
+  policy_version: string
+  schema_version: string
+  eval_suite_versions: {}

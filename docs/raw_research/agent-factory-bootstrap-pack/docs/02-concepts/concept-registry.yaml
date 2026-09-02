@@ -1,0 +1,20 @@
+schema_version: 1
+concepts: []
+
+# Suggested fields:
+# - concept_id
+# - name
+# - aliases
+# - category
+# - description
+# - source_documents
+# - maturity: idea|researched|designed|prototyped|implemented|measured|production
+# - novelty_status: known_prior_art|adaptation|hybrid|potentially_novel|novel_claim_unverified|unknown
+# - evidence_strength
+# - implementation_status
+# - related_concepts
+# - possible_integrations
+# - claimed_benefits
+# - known_costs
+# - known_risks
+# - unanswered_questions

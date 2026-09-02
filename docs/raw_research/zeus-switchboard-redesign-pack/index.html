@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en" data-theme="obsidian" data-density="compact">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Zeus Switchboard — an operator console for agent armies.">
+  <title>Zeus Switchboard</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to command surface</a>
+  <div class="ambient" aria-hidden="true"><span></span><span></span></div>
+
+  <div class="app-shell">
+    <aside class="rail" aria-label="Primary navigation">
+      <button class="brand" data-tooltip="Zeus Command" aria-label="Zeus Command">
+        <svg viewBox="0 0 48 48" role="img" aria-label="Zeus lightning insignia"><path d="M27 3 10 27h11l-2 18 19-27H27l0-15Z"/></svg>
+      </button>
+      <nav class="rail-nav">
+        <button class="rail-item" data-view="overview" data-tooltip="Overview" aria-label="Overview"><svg viewBox="0 0 24 24"><path d="M4 13h6V4H4v9Zm0 7h6v-4H4v4Zm10 0h6v-9h-6v9Zm0-16v4h6V4h-6Z"/></svg></button>
+        <button class="rail-item active" data-view="switchboard" data-tooltip="Switchboard" aria-label="Switchboard"><svg viewBox="0 0 24 24"><path d="M6 3v4m0 4v10M18 3v8m0 4v6M3 7h6v4H3V7Zm12 4h6v4h-6v-4ZM12 3v12m0 4v2M9 15h6v4H9v-4Z"/></svg></button>
+        <button class="rail-item" data-view="formations" data-tooltip="Formations" aria-label="Agent formations"><svg viewBox="0 0 24 24"><path d="M12 4a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM5 12a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Zm14 0a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5ZM8 21v-1c0-2 1.8-3.5 4-3.5s4 1.5 4 3.5v1H8Zm-7 0v-.5c0-1.5 1.3-2.7 3-2.7 1 0 1.8.3 2.4.9-.3.7-.4 1.5-.4 2.3H1Zm17 0c0-.8-.1-1.6-.4-2.3.6-.6 1.4-.9 2.4-.9 1.7 0 3 1.2 3 2.7v.5h-5Z"/></svg></button>
+        <button class="rail-item" data-view="knowledge" data-tooltip="Knowledge" aria-label="Knowledge"><svg viewBox="0 0 24 24"><path d="M12 3 2 8l10 5 8-4v6h2V8L12 3Zm-7 9v5l7 4 7-4v-5l-7 3.5L5 12Z"/></svg></button>
+        <button class="rail-item" data-view="analytics" data-tooltip="Performance" aria-label="Performance analytics"><svg viewBox="0 0 24 24"><path d="M4 20V10h4v10H4Zm6 0V4h4v16h-4Zm6 0v-7h4v7h-4Z"/></svg></button>
+      </nav>
+      <div class="rail-footer">
+        <button class="rail-item" id="helpButton" data-tooltip="Shortcuts" aria-label="Keyboard shortcuts"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 17h-2v-2h2v2Zm2.1-7.8-.9.9c-.8.7-1.2 1.4-1.2 2.9h-2v-.5c0-1.1.4-2.1 1.2-2.8l1.2-1.2c.4-.4.6-.9.6-1.5a2 2 0 0 0-4 0H8a4 4 0 1 1 7.1 2.2Z"/></svg></button>
+        <button class="rail-item" id="settingsButton" data-tooltip="Settings" aria-label="Open settings"><svg viewBox="0 0 24 24"><path d="m19.4 13 .1-1-.1-1 2-1.5-2-3.5-2.5 1a8 8 0 0 0-1.7-1L15 3h-4l-.4 3a8 8 0 0 0-1.7 1l-2.5-1-2 3.5 2 1.5-.1 1 .1 1-2 1.5 2 3.5 2.5-1a8 8 0 0 0 1.7 1l.4 3h4l.4-3a8 8 0 0 0 1.7-1l2.5 1 2-3.5-2-1.5ZM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/></svg></button>
+        <button class="operator-avatar" data-tooltip="Operator: Paul" aria-label="Operator profile">PR<span class="presence"></span></button>
+      </div>
+    </aside>
+
+    <header class="topbar">
+      <button class="mission-selector" id="missionSelector" aria-haspopup="listbox" aria-expanded="false">
+        <span class="eyebrow">ACTIVE CAMPAIGN</span>
+        <span class="mission-name"><i class="status-dot running"></i> Agent Factory / Client Review</span>
+        <svg viewBox="0 0 20 20"><path d="m5 7 5 5 5-5H5Z"/></svg>
+      </button>
+      <button class="global-search" id="searchButton"><svg viewBox="0 0 24 24"><path d="m21 20-5.2-5.2a7.5 7.5 0 1 0-1 1L20 21l1-1ZM5 10.5a5.5 5.5 0 1 1 11 0 5.5 5.5 0 0 1-11 0Z"/></svg><span>Search missions, agents, runs…</span><kbd>⌘ K</kbd></button>
+      <div class="top-actions">
+        <div class="telemetry"><span class="pulse-dot"></span><strong>LIVE</strong><span>14 agents · 6 runs</span></div>
+        <button class="icon-button notification-button" id="notificationButton" aria-label="Open alerts"><svg viewBox="0 0 24 24"><path d="M18 16v-5a6 6 0 0 0-5-6V3h-2v2a6 6 0 0 0-5 6v5l-2 2v1h16v-1l-2-2Zm-8 5h4v-1h-4v1Z"/></svg><span class="count">3</span></button>
+        <button class="launch-button" id="newMissionButton"><svg viewBox="0 0 20 20"><path d="M9 4h2v5h5v2h-5v5H9v-5H4V9h5V4Z"/></svg>Deploy mission <kbd>N</kbd></button>
+      </div>
+    </header>
+
+    <main id="main" class="workspace" tabindex="-1">
+      <section class="objective-strip" aria-labelledby="objective-title">
+        <div class="objective-copy">
+          <span class="rank-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <div><p class="eyebrow">PRIMARY OBJECTIVE · PRIORITY ALPHA</p><h1 id="objective-title">Ship marketing model for client review</h1></div>
+          <button class="ghost-button compact" id="focusButton"><svg viewBox="0 0 20 20"><path d="M3 3h5v2H5v3H3V3Zm9 0h5v5h-2V5h-3V3ZM3 12h2v3h3v2H3v-5Zm12 0h2v5h-5v-2h3v-3Z"/></svg>Focus</button>
+        </div>
+        <div class="objective-metrics" aria-label="Objective metrics">
+          <div><span>READINESS</span><strong>82%</strong><i class="microbar"><b style="width:82%"></b></i></div>
+          <div><span>ETA</span><strong>01:42</strong><small>−18m vs plan</small></div>
+          <div><span>BUDGET</span><strong>$34.82</strong><small>of $60 cap</small></div>
+          <div><span>CONFIDENCE</span><strong class="good">High</strong><small>7/8 gates green</small></div>
+        </div>
+      </section>
+
+      <div class="pane-grid">
+        <aside class="queue-pane panel" aria-label="Mission queue">
+          <div class="panel-heading"><div><p class="eyebrow">THEATRE QUEUE</p><h2>Missions</h2></div><div class="heading-actions"><button class="icon-button" aria-label="Filter missions"><svg viewBox="0 0 20 20"><path d="M3 4h14l-5.5 6v5L8 17v-7L3 4Z"/></svg></button><button class="icon-button" aria-label="More options">•••</button></div></div>
+          <div class="queue-tabs" role="tablist"><button class="active" role="tab" aria-selected="true">Active <span>6</span></button><button role="tab">Queued <span>4</span></button><button role="tab">All</button></div>
+          <div class="queue-list" id="missionQueue"></div>
+          <button class="queue-add" id="queueAddButton"><span>＋</span> Queue another mission</button>
+        </aside>
+
+        <section class="command-pane panel" aria-label="Mission command surface">
+          <div class="command-header">
+            <div class="command-title"><span class="insignia">A1</span><div><div class="title-line"><h2>CLIENT-REV-042</h2><span class="status-chip running"><i></i>Executing</span></div><p>Marketing model reconciliation and review artifact</p></div></div>
+            <div class="command-actions"><button class="ghost-button" id="pauseRunButton"><svg viewBox="0 0 20 20"><path d="M5 4h3v12H5V4Zm7 0h3v12h-3V4Z"/></svg>Pause</button><button class="ghost-button danger" id="abortRunButton">Abort</button><button class="icon-button">•••</button></div>
+          </div>
+          <div class="view-tabs" role="tablist" aria-label="Mission views">
+            <button class="active" data-tab="live" role="tab" aria-selected="true">Live formation</button>
+            <button data-tab="timeline" role="tab">Timeline</button>
+            <button data-tab="artifacts" role="tab">Artifacts <span>7</span></button>
+            <button data-tab="evidence" role="tab">Evidence <span>23</span></button>
+            <div class="tab-spacer"></div>
+            <button class="view-control" id="recenterButton"><svg viewBox="0 0 20 20"><path d="M10 3a7 7 0 1 0 6.3 4H14v2h5V4h-2v1.5A9 9 0 1 1 10 1v2Z"/></svg>Recenter</button>
+            <label class="follow-toggle"><input type="checkbox" id="followToggle" checked><span></span>Follow execution</label>
+          </div>
+
+          <div class="formation-stage" id="formationStage" tabindex="0" aria-label="Interactive agent execution graph">
+            <svg class="formation-lines" viewBox="0 0 900 430" preserveAspectRatio="none" aria-hidden="true">
+              <defs><linearGradient id="activeEdge" x1="0" x2="1"><stop stop-color="#6e84ff"/><stop offset="1" stop-color="#51e1c3"/></linearGradient></defs>
+              <path class="edge resolved" d="M126 93 C200 93 188 193 260 193"/>
+              <path class="edge resolved" d="M376 193 C430 193 422 93 482 93"/>
+              <path class="edge active" d="M376 193 C430 193 422 293 482 293"/>
+              <path class="edge pending" d="M598 93 C670 93 660 193 720 193"/>
+              <path class="edge pending" d="M598 293 C670 293 660 193 720 193"/>
+              <circle class="packet" r="4"><animateMotion dur="2.8s" repeatCount="indefinite" path="M376 193 C430 193 422 293 482 293"/></circle>
+            </svg>
+            <div class="node resolved" style="--x:8%;--y:11%" tabindex="0" data-node="architect"><div class="node-rank">ARCH</div><div class="node-status"><i></i>Complete</div><h3>Architect</h3><p>Scope + success contract</p><div class="node-meta"><span>4m 18s</span><span>$2.14</span></div></div>
+            <div class="node resolved" style="--x:28%;--y:34%" tabindex="0" data-node="analyst"><div class="node-rank">ANL</div><div class="node-status"><i></i>Complete</div><h3>Data analyst</h3><p>Defect reconciliation</p><div class="node-meta"><span>12m 04s</span><span>$7.80</span></div></div>
+            <div class="node resolved" style="--x:52%;--y:11%" tabindex="0" data-node="reviewer"><div class="node-rank">REV</div><div class="node-status"><i></i>Complete</div><h3>Evidence reviewer</h3><p>Claims + source checks</p><div class="node-meta"><span>8m 51s</span><span>$4.42</span></div></div>
+            <div class="node active" style="--x:52%;--y:58%" tabindex="0" data-node="builder"><div class="node-rank">BLD</div><div class="node-status"><i></i>Running · 68%</div><h3>Artifact builder</h3><p>Compiling client review</p><div class="node-progress"><b></b></div><div class="node-meta"><span>6m 27s</span><span>$11.26</span></div></div>
+            <div class="node pending" style="--x:80%;--y:34%" tabindex="0" data-node="gate"><div class="node-rank">GATE</div><div class="node-status"><i></i>Waiting</div><h3>Human approval</h3><p>Review + publish decision</p><div class="node-meta"><span>Required</span><span>G7</span></div></div>
+            <div class="stage-legend"><span><i class="resolved"></i>Resolved</span><span><i class="active"></i>Executing</span><span><i class="pending"></i>Waiting</span><span class="demo-label">ILLUSTRATIVE DATA</span></div>
+          </div>
+
+          <div class="runtime-dock">
+            <div class="dock-tabs" role="tablist"><button class="active" data-dock="activity">Activity</button><button data-dock="terminal">Terminal</button><button data-dock="metrics">Metrics</button><button data-dock="context">Context</button><span class="dock-live"><i></i>streaming</span></div>
+            <div class="activity-stream" id="activityStream" aria-live="polite"></div>
+          </div>
+        </section>
+
+        <aside class="comms-pane panel" aria-label="Communications and approvals">
+          <div class="panel-heading"><div><p class="eyebrow">COMMAND UPLINK</p><h2>Comms</h2></div><div class="heading-actions"><button class="icon-button" id="popoutComms" aria-label="Expand communications"><svg viewBox="0 0 20 20"><path d="M11 3h6v6h-2V6.4l-6.3 6.3-1.4-1.4L13.6 5H11V3ZM4 5h5v2H6v7h7v-3h2v5H4V5Z"/></svg></button></div></div>
+          <div class="comms-tabs" role="tablist"><button class="active" data-comms="thread">Thread <span>8</span></button><button data-comms="handoffs">Handoffs <span>2</span></button><button data-comms="approvals">Approvals <span class="urgent">1</span></button></div>
+          <div class="comms-feed" id="commsFeed"></div>
+          <form class="composer" id="composerForm">
+            <div class="recipient-row"><button type="button" id="recipientButton"><span class="recipient-icon">↗</span>To: <strong>Mission squad</strong><svg viewBox="0 0 16 16"><path d="m4 6 4 4 4-4H4Z"/></svg></button><span class="secure"><i></i>context attached</span></div>
+            <textarea id="messageInput" rows="3" placeholder="Issue a command, ask a question, or @mention…" aria-label="Message"></textarea>
+            <div class="context-pills"><button type="button"># current run <span>×</span></button><button type="button">+ Add context</button></div>
+            <div class="composer-actions"><div><button type="button" class="icon-button" aria-label="Attach artifact">＋</button><button type="button" class="icon-button" aria-label="Record voice note"><svg viewBox="0 0 20 20"><path d="M10 13a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Zm-5-3H3a7 7 0 0 0 6 6.9V19h2v-2.1A7 7 0 0 0 17 10h-2a5 5 0 0 1-10 0Z"/></svg></button><button type="button" class="icon-button" aria-label="Use prompt template"><svg viewBox="0 0 20 20"><path d="M4 3h12v14H4V3Zm2 3h8V5H6v1Zm0 4h8V8H6v2Zm0 3h5v-1H6v1Z"/></svg></button></div><button class="send-button" type="submit">Transmit <kbd>⌘↵</kbd></button></div>
+          </form>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="paletteBackdrop" hidden>
+    <section class="command-palette" role="dialog" aria-modal="true" aria-labelledby="palette-title">
+      <div class="palette-search"><svg viewBox="0 0 24 24"><path d="m21 20-5.2-5.2a7.5 7.5 0 1 0-1 1L20 21l1-1ZM5 10.5a5.5 5.5 0 1 1 11 0 5.5 5.5 0 0 1-11 0Z"/></svg><input id="paletteInput" autocomplete="off" placeholder="Search or issue a command…"><kbd>ESC</kbd></div>
+      <div class="palette-body"><p id="palette-title" class="eyebrow">SUGGESTED COMMANDS</p><div id="paletteResults"></div></div>
+      <footer><span><kbd>↑</kbd><kbd>↓</kbd> Navigate</span><span><kbd>↵</kbd> Run</span><span>Search across missions, agents, artifacts and actions</span></footer>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" id="missionBackdrop" hidden>
+    <section class="deploy-modal" role="dialog" aria-modal="true" aria-labelledby="deploy-title">
+      <header><div><p class="eyebrow">NEW DEPLOYMENT</p><h2 id="deploy-title">Launch a mission</h2></div><button class="icon-button modal-close" aria-label="Close">×</button></header>
+      <div class="deploy-grid">
+        <label class="field field-wide"><span>Objective</span><textarea rows="3" placeholder="Describe the outcome. The constructor will propose a formation and success contract."></textarea></label>
+        <label class="field"><span>Formation</span><select><option>Auto-compose</option><option>Implementation squad</option><option>Triage squad</option><option>Research cell</option></select></label>
+        <label class="field"><span>Priority</span><select><option>Alpha — immediate</option><option>Bravo — standard</option><option>Charlie — background</option></select></label>
+        <label class="field"><span>Budget cap</span><input value="$60.00"></label>
+        <label class="field"><span>Human gates</span><select><option>Risk-based</option><option>All changes</option><option>Final only</option></select></label>
+      </div>
+      <div class="contract-preview"><div><p class="eyebrow">PROPOSED SUCCESS CONTRACT</p><strong>Objective evidence + regression suite + human review</strong></div><button class="ghost-button">Edit contract</button></div>
+      <footer><button class="ghost-button modal-close">Cancel</button><button class="launch-button" id="launchDemoButton">Review formation →</button></footer>
+    </section>
+  </div>
+
+  <aside class="settings-drawer" id="settingsDrawer" aria-label="Interface settings" aria-hidden="true">
+    <header><div><p class="eyebrow">OPERATOR CONFIG</p><h2>Design system</h2></div><button class="icon-button" id="settingsClose" aria-label="Close settings">×</button></header>
+    <div class="settings-scroll">
+      <section><h3>Theme preset</h3><div class="preset-grid"><button class="preset active" data-theme-value="obsidian"><i class="swatch obsidian"></i><span>Obsidian</span></button><button class="preset" data-theme-value="blueprint"><i class="swatch blueprint"></i><span>Blueprint</span></button><button class="preset" data-theme-value="signal"><i class="swatch signal"></i><span>Signal</span></button></div></section>
+      <section><h3>Interface density</h3><div class="segmented"><button data-density-value="compact" class="active">Compact</button><button data-density-value="comfortable">Comfortable</button></div></section>
+      <section><h3>Motion personality</h3><label class="setting-row"><span>Execution motion<small>Semantic traces and status pulses</small></span><input type="checkbox" id="motionToggle" checked></label><label class="setting-row"><span>Reduce motion<small>Disable non-essential transitions</small></span><input type="checkbox" id="reduceMotionToggle"></label></section>
+      <section><h3>Command surface</h3><label class="setting-row"><span>Follow execution</span><input type="checkbox" id="settingsFollowToggle" checked></label><label class="setting-row"><span>Show payload labels</span><input type="checkbox" checked></label><label class="setting-row"><span>Pause on error</span><input type="checkbox" checked></label></section>
+      <section><h3>Live preview</h3><div class="settings-preview"><div class="mini-node done">Architect</div><i></i><div class="mini-node run">Builder</div><i></i><div class="mini-node wait">Gate</div></div></section>
+    </div>
+    <footer><button class="ghost-button" id="resetSettings">Reset</button><button class="ghost-button" id="exportSettings">Export JSON</button><button class="launch-button" id="saveSettings">Save preset</button></footer>
+  </aside>
+  <div class="drawer-scrim" id="drawerScrim" hidden></div>
+
+  <div class="toast-region" id="toastRegion" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>

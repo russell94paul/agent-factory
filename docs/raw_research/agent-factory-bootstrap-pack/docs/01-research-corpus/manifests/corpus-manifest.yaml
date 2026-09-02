@@ -1,0 +1,29 @@
+schema_version: 1
+artifacts: []
+
+# Suggested artifact fields:
+# - id
+# - title
+# - path
+# - origin
+# - original_filename
+# - created_at
+# - modified_at
+# - sha256
+# - artifact_type
+# - domains
+# - summary
+# - keywords
+# - research_status
+# - evidence_level
+# - external_sources_present
+# - implementation_status
+# - related_code
+# - related_documents
+# - related_concepts
+# - supersedes
+# - superseded_by
+# - duplicates
+# - contradicts
+# - depends_on
+# - open_questions

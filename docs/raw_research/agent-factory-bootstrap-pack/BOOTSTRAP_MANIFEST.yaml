@@ -1,0 +1,26 @@
+pack:
+  name: agent-factory-research-architecture-bootstrap
+  version: 1.0.0
+  purpose: >-
+    Non-destructive corpus, evidence, synthesis, architecture and implementation
+    scaffolding for the existing agent-factory repository.
+  install_target: existing_agent_factory_repo_root
+  creates_agent_platform_subfolder: false
+
+principles:
+  - preserve_raw_sources
+  - code_and_tests_define_current_implementation
+  - vision_defines_intent_not_implementation
+  - proposals_are_not_decisions
+  - repeated_ai_claims_are_not_independent_evidence
+  - unresolved_conflicts_remain_visible
+  - architecture_selection_follows_reconciliation
+  - implementation_requires_measurable_eval_gates
+
+entrypoints:
+  install: INSTALL_IN_EXISTING_AGENT_FACTORY.md
+  corpus_prompt: docs/08-research-backlog/prompts/CLAUDE_CORPUS_PREPARATION_PROMPT.md
+  synthesis_prompt: docs/09-synthesis/MASTER_SYNTHESIS_PROMPT.md
+  tournament_prompt: docs/09-synthesis/ARCHITECTURE_TOURNAMENT_PROMPT.md
+  implementation_prompt: docs/09-synthesis/IMPLEMENTATION_PACK_PROMPT.md
+  handoff: AGENT_RESEARCH_HANDOFF.yaml

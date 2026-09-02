@@ -1,0 +1,22 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$title: ResearchArtifact
+$type: object
+required: [id, title, path, origin, artifact_type]
+properties:
+  id: {type: string}
+  title: {type: string}
+  path: {type: string}
+  origin: {type: string}
+  original_filename: {type: [string, 'null']}
+  sha256: {type: [string, 'null']}
+  artifact_type: {type: string}
+  domains: {type: array, items: {type: string}}
+  summary: {type: [string, 'null']}
+  research_status: {type: [string, 'null']}
+  evidence_level: {type: [string, 'null']}
+  implementation_status: {type: [string, 'null']}
+  related_code: {type: array, items: {type: string}}
+  related_concepts: {type: array, items: {type: string}}
+  duplicates: {type: array, items: {type: string}}
+  contradicts: {type: array, items: {type: string}}
+  open_questions: {type: array, items: {type: string}}

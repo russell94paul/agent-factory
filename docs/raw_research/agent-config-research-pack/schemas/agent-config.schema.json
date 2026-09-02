@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-factory.dev/schemas/agent-config/v0",
+  "title": "Agent Factory AgentConfig v0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "kind", "metadata", "organization", "mission_fit", "model", "instructions", "tools", "authority", "budget", "evaluation"],
+  "properties": {
+    "schema_version": {"const": "agent-config/v0"},
+    "kind": {"const": "AgentConfig"},
+    "metadata": {"$ref": "#/$defs/metadata"},
+    "extends": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "organization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["org_type", "operational_role", "authority_grade"],
+      "properties": {
+        "org_type": {"type": "string", "minLength": 1},
+        "operational_role": {"type": "string", "minLength": 1},
+        "authority_grade": {"type": "string", "minLength": 1},
+        "reports_to": {"type": "string", "minLength": 1}
+      }
+    },
+    "mission_fit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["task_families", "domains"],
+      "properties": {
+        "task_families": {"$ref": "#/$defs/nonEmptyStringSet"},
+        "domains": {"$ref": "#/$defs/nonEmptyStringSet"},
+        "technologies": {"$ref": "#/$defs/stringSet"},
+        "excluded_risk_classes": {"$ref": "#/$defs/stringSet"}
+      }
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "name", "snapshot", "reasoning_effort"],
+      "properties": {
+        "provider": {"type": "string", "minLength": 1},
+        "name": {"type": "string", "minLength": 1},
+        "snapshot": {"type": "string", "minLength": 1},
+        "reasoning_effort": {"enum": ["low", "medium", "high", "xhigh", "max", "ultra"]},
+        "fallback_models": {"$ref": "#/$defs/stringSet"}
+      }
+    },
+    "behavior": {
+      "type": "object",
+      "propertyNames": {"pattern": "^[a-z][a-z0-9_]*$"},
+      "additionalProperties": {"type": "number", "minimum": 0, "maximum": 1}
+    },
+    "instructions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["system_prompt_ref", "prohibitions"],
+      "properties": {
+        "system_prompt_ref": {"type": "string", "minLength": 1},
+        "output_contract": {"type": "string", "minLength": 1},
+        "prohibitions": {"$ref": "#/$defs/nonEmptyStringSet"}
+      }
+    },
+    "tools": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["allow", "deny"],
+      "properties": {
+        "allow": {"$ref": "#/$defs/stringSet"},
+        "deny": {"$ref": "#/$defs/stringSet"},
+        "parallelism": {"type": "integer", "minimum": 1, "maximum": 32}
+      }
+    },
+    "skills": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "required": {"$ref": "#/$defs/stringSet"},
+        "optional": {"$ref": "#/$defs/stringSet"}
+      }
+    },
+    "knowledge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mesh_policy"],
+      "properties": {
+        "mesh_policy": {"type": "string", "minLength": 1},
+        "scan_triggers": {"$ref": "#/$defs/stringSet"},
+        "publish_triggers": {"$ref": "#/$defs/stringSet"},
+        "provenance_required": {"type": "boolean"}
+      }
+    },
+    "memory": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "checkpoint_triggers": {"$ref": "#/$defs/stringSet"},
+        "compaction_threshold": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
+        "long_term_write_policy": {"type": "string", "minLength": 1}
+      }
+    },
+    "communication": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "doctrine": {"type": "string", "minLength": 1},
+        "allowed_targets": {"$ref": "#/$defs/stringSet"},
+        "acknowledgment_required_for": {"$ref": "#/$defs/stringSet"},
+        "base_frequency": {"type": "string", "minLength": 1},
+        "deduplicate": {"type": "boolean"},
+        "cooldown_minutes": {"type": "integer", "minimum": 0},
+        "severity_model": {"$ref": "#/$defs/stringSet"}
+      }
+    },
+    "authority": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {"pattern": "^[a-z][a-z0-9_]*$"},
+      "additionalProperties": {"type": ["string", "boolean", "number"]}
+    },
+    "budget": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {"pattern": "^[a-z][a-z0-9_]*$"},
+      "additionalProperties": {"type": ["integer", "number"]}
+    },
+    "evaluation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_ref"],
+      "properties": {
+        "contract_ref": {"type": "string", "minLength": 1},
+        "negative_control_required": {"type": "boolean"},
+        "independent_verifier_required": {"type": "boolean"},
+        "recertify_on": {"$ref": "#/$defs/stringSet"},
+        "false_positive_budget": {"type": "number", "minimum": 0, "maximum": 1},
+        "missed_incident_budget": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    }
+  },
+  "$defs": {
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "display_name", "tags"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+        "display_name": {"type": "string", "minLength": 1},
+        "generation": {"type": "integer", "minimum": 1},
+        "tags": {"$ref": "#/$defs/stringSet"}
+      }
+    },
+    "stringSet": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "nonEmptyStringSet": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+  }
+}

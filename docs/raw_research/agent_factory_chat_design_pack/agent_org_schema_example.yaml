@@ -1,0 +1,71 @@
+schema_version: 0.1
+
+organization:
+  id: engineering-army
+  name: Engineering Army
+  node_type: army
+  config_version: 1
+
+  children:
+    - id: engineering-command
+      name: Engineering Command
+      node_type: command
+
+      children:
+        - id: integration-corps
+          name: Integration Corps
+          node_type: corps
+
+          children:
+            - id: connector-division
+              name: Connector Division
+              node_type: division
+
+              children:
+                - id: api-brigade
+                  name: API Brigade
+                  node_type: brigade
+
+                  children:
+                    - id: auth-battalion
+                      name: Authentication Battalion
+                      node_type: battalion
+
+                      children:
+                        - id: oauth-company
+                          name: OAuth Company
+                          node_type: company
+
+                          children:
+                            - id: vendor-platoon
+                              name: Vendor Platoon
+                              node_type: platoon
+
+                              children:
+                                - id: incident-squad
+                                  name: Incident Squad
+                                  node_type: squad
+
+                                  children:
+                                    - id: raven-17
+                                      name: RAVEN-17
+                                      node_type: agent
+                                      role: reconnaissance_agent
+                                      callsign: Night Owl
+
+defaults:
+  inheritance:
+    doctrine: inherit_then_override
+    rules_of_engagement: most_restrictive_wins
+    budget: explicit_allocation
+    tools: union_with_denials
+    memory_scope: explicit_plus_inherited
+    metrics: aggregate_upward
+
+semantic_zoom:
+  strategic:
+    show_types: [army, command, corps]
+  operational:
+    show_types: [division, brigade, battalion, company]
+  tactical:
+    show_types: [platoon, squad, agent]

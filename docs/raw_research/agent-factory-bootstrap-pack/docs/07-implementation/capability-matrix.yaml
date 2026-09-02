@@ -1,0 +1,40 @@
+schema_version: 1
+capabilities:
+  - name: Agent Creation
+  - name: Agent Configuration
+  - name: Agent Versioning
+  - name: Skill Registry
+  - name: Capability Registry
+  - name: Tool Registry
+  - name: Agent Evaluation
+  - name: Agent Health
+  - name: Team Construction
+  - name: Team Evaluation
+  - name: Team Communication
+  - name: Team Memory
+  - name: Army Construction
+  - name: Mission Planning
+  - name: Mission Execution
+  - name: Knowledge Graph
+  - name: Collective Memory
+  - name: Context Compilation
+  - name: Simulation
+  - name: Optimization
+  - name: Self-Healing
+  - name: Self-Maintenance
+  - name: Self-Improvement
+  - name: Research Automation
+  - name: Observability
+  - name: Governance
+  - name: Human Gates
+  - name: Cost Management
+  - name: Security
+  - name: Provenance
+  - name: Replay
+  - name: Benchmarking
+  - name: Mission Control UI
+  - name: Agentic IDE
+  - name: Organization Presets
+  - name: Experimentation
+
+# Populate each with: status, maturity, code_paths, research_documents, known_gaps, dependencies.

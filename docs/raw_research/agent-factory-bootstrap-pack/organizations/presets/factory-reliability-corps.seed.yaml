@@ -1,0 +1,25 @@
+status: research_seed
+organization:
+  name: Factory Reliability Corps
+  topology: persistent_watchers_plus_bounded_repair_cells
+mission_fit:
+  - agent_factory_self_maintenance
+roles:
+  - runtime_doctor
+  - architecture_maintainer
+  - knowledge_gardener
+  - eval_auditor
+  - repair_implementer
+policies:
+  self_change_requires:
+    - sandbox_validation
+    - regression_eval
+    - bounded_permissions
+    - canary
+    - rollback_plan
+metrics:
+  - factory_uptime
+  - regression_rate
+  - false_remediation_rate
+  - time_to_green
+  - maintenance_cost

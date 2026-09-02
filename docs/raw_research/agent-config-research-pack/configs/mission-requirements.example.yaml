@@ -1,0 +1,37 @@
+schema_version: mission-requirements/v0
+kind: MissionRequirements
+metadata:
+  id: warehouse-connector-change-042
+  display_name: Add a verified warehouse connector change
+mission:
+  task_family: sequential_connector_change
+  domain: data-platform
+  risk_class: medium
+  deadline_minutes: 180
+requirements:
+  capabilities:
+    - id: repository_symbol_resolution
+      minimum_confidence: 0.85
+      criticality: critical
+    - id: python_implementation
+      minimum_confidence: 0.80
+      criticality: critical
+    - id: warehouse_semantics
+      minimum_confidence: 0.70
+      criticality: high
+    - id: deterministic_verification
+      minimum_confidence: 0.90
+      criticality: critical
+  tools: [tool://filesystem/read-write-scoped, tool://shell/sandboxed]
+  knowledge_packets: [knowledge://repo/symbol-map/current, knowledge://connector-contract/v1]
+  prohibitions: [production_deploy, grader_edit, self_verification_only]
+workflow_constraints:
+  topology: continuous_worker_then_independent_verifier
+  max_parallel_repo_writers: 1
+  human_gates: [scope, privileged_change, production_promotion]
+selection:
+  objective: maximize_mission_fit_minus_risk_cost_coordination
+  minimum_match_score: 80
+  allow_readiness_uplift: true
+  allow_team_substitution: true
+

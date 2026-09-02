@@ -1,0 +1,97 @@
+schema_version: "0.1"
+
+team:
+  id: azure-auth-triage-pod
+  version: "1.0.0"
+  preset: triage_pod
+
+  type: implementation_triage
+  lifecycle: mission
+  temporal_horizon: immediate
+
+  north_star: >
+    Restore connector authentication safely with the smallest justified
+    production change and explicit RED-to-GREEN evidence.
+
+  success:
+    required:
+      - recorded_failure_resolved
+      - no_regressions
+      - human_approval_before_production
+
+  domain:
+    technologies:
+      - python
+      - azure
+      - oauth
+      - sql
+
+  topology:
+    manager: incident_commander
+    agents:
+      - role: investigator
+        preset: investigator
+      - role: oauth_specialist
+        preset: auditor
+      - role: implementer
+        preset: surgeon
+      - role: regression_guardian
+        preset: guardian
+
+  communication:
+    mode: event_plus_checkpoint
+    checkpoint_interval_minutes: 15
+    share_blockers_immediately: true
+    acknowledgement_required_for:
+      - changed_hypothesis
+      - production_risk
+      - cross_agent_dependency
+
+  working_style:
+    hypothesis_parallelism: 2
+    duplicate_work_tolerance: low
+    consensus_required_for:
+      - root_cause
+      - production_change
+
+  memory:
+    shared_context:
+      - mission_brief
+      - repo_topology
+      - recent_deployments
+      - prior_auth_incidents
+    specialist_private_context_allowed: true
+
+  gates:
+    production_change: human_required
+    merge: human_required
+
+  health:
+    readiness_threshold: 0.90
+    max_manager_load: 0.80
+    min_capability_coverage: 0.92
+    max_critical_single_point_failure: 0.25
+
+  metrics:
+    primary:
+      - time_to_green
+      - accepted_outcome_rate
+      - regression_rate
+      - cost_per_accepted_outcome
+    coordination:
+      - handoff_correction_rate
+      - communication_effectiveness
+      - shared_state_convergence
+      - duplicate_message_rate
+
+  ready_up:
+    enabled: true
+    max_cost_usd: 3.00
+    max_duration_minutes: 8
+    allowed_interventions:
+      - load_skill_capsule
+      - retrieve_prior_incidents
+      - refresh_repo_topology
+      - add_specialist
+      - increase_verification
+      - run_micro_eval

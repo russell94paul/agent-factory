@@ -1,0 +1,60 @@
+version: 0.1
+schema: failure_recurrence
+
+failure_incident:
+  fields:
+    incident_id: string
+    operation_id: string
+    occurred_at: datetime
+    subsystem: string
+    component: string
+    stage: string
+    error_signature: string|null
+    root_cause: string|null
+    failure_family_id: string|null
+    attempt_count: integer
+    resolution_status: [unresolved, mitigated, fixed, unknown]
+
+failure_family:
+  fields:
+    failure_family_id: string
+    name: string
+    semantic_fingerprint: string|null
+    first_seen_at: datetime
+    last_seen_at: datetime
+    incident_count: integer
+    recurrence_count: integer
+    doctrine_id: string|null
+    preventive_control_ids: array
+
+metrics:
+  recurring_failure_rate:
+    formula: recurring_incidents / total_incidents
+  post_fix_recurrence_rate:
+    formula: fixed_failure_families_that_recur / failure_families_marked_fixed
+  preventable_recurrence_rate:
+    formula: preventable_recurring_incidents / recurring_incidents
+  time_to_recurrence:
+    formula: occurred_at_current - occurred_at_previous_same_family
+
+learning_failure_classification:
+  - missing_knowledge
+  - retrieval_failure
+  - communication_failure
+  - context_interpretation_failure
+  - execution_failure
+  - doctrine_failure
+
+recurrence_policy:
+  occurrence_2:
+    - retrieve_prior_incident
+    - notify_unit_commander
+  occurrence_3:
+    - deploy_specialist
+    - require_root_cause_analysis
+  occurrence_4:
+    - open_doctrine_review
+    - refer_to_advanced_projects_command
+  occurrence_5:
+    - launch_war_game
+    - test_structural_prevention

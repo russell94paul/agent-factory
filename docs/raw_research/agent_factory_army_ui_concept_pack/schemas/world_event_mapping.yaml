@@ -1,0 +1,27 @@
+version: 0.1
+schema: world_event_mapping
+
+mappings:
+  operation.blocked:
+    visual: unit_pinned
+    severity_from: blocker.severity
+  context.missing:
+    visual: intelligence_supply_severed
+  credential.unavailable:
+    visual: logistics_blockade
+  environment.unready:
+    visual: base_unready
+  collision.detected:
+    visual: friendly_unit_convergence
+  approval.requested:
+    visual: command_authorization_required
+  failure.recurred:
+    visual: known_threat_returns
+  agent.needs_help:
+    visual: distress_signal
+  operation.completed:
+    visual: objective_captured
+  operation.rolled_back:
+    visual: tactical_withdrawal
+  doctrine.promoted:
+    visual: doctrine_certified

@@ -1,0 +1,88 @@
+apiVersion: agentfactory.ai/v1alpha1
+kind: CommunicationPhenotypeCatalog
+
+presets:
+
+  quiet_specialist:
+    description: "Low-chatter expert. Communicates on material deltas, requests or blockers."
+    initiative: 0.30
+    unsolicited_message_probability: 0.08
+    update_frequency_target_per_hour: 1.0
+    batching_window_seconds: 240
+    verbosity_target: 0.35
+    semantic_density_target: 0.88
+    novelty_threshold: 0.82
+    broadcast_threshold: 0.93
+    escalation_threshold: 0.82
+    clarification_threshold: 0.28
+    challenge_propensity: 0.45
+    acknowledgement_probability: 0.92
+
+  loud_coordinator:
+    description: "High-initiative coordinator; useful where state changes rapidly, risky for congestion."
+    initiative: 0.88
+    unsolicited_message_probability: 0.58
+    update_frequency_target_per_hour: 10.0
+    batching_window_seconds: 20
+    verbosity_target: 0.55
+    semantic_density_target: 0.70
+    novelty_threshold: 0.48
+    broadcast_threshold: 0.62
+    escalation_threshold: 0.58
+    clarification_threshold: 0.25
+    challenge_propensity: 0.55
+    acknowledgement_probability: 0.98
+
+  concise_scout:
+    description: "High novelty detection; short evidence-rich updates."
+    initiative: 0.72
+    unsolicited_message_probability: 0.35
+    update_frequency_target_per_hour: 5.0
+    batching_window_seconds: 45
+    verbosity_target: 0.20
+    semantic_density_target: 0.94
+    novelty_threshold: 0.72
+    broadcast_threshold: 0.85
+    escalation_threshold: 0.68
+    clarification_threshold: 0.32
+    challenge_propensity: 0.50
+    acknowledgement_probability: 0.95
+
+  challenger:
+    description: "Purpose-built skeptical peer."
+    initiative: 0.62
+    unsolicited_message_probability: 0.32
+    update_frequency_target_per_hour: 4.0
+    batching_window_seconds: 60
+    verbosity_target: 0.42
+    semantic_density_target: 0.88
+    novelty_threshold: 0.70
+    broadcast_threshold: 0.90
+    escalation_threshold: 0.74
+    clarification_threshold: 0.20
+    challenge_propensity: 0.92
+    disagreement_persistence: 0.82
+    deference: 0.12
+    evidence_requirement: 0.95
+
+  dispatcher:
+    description: "Routes information and work rather than solving deeply."
+    initiative: 0.78
+    unsolicited_message_probability: 0.40
+    update_frequency_target_per_hour: 7.0
+    batching_window_seconds: 30
+    verbosity_target: 0.18
+    semantic_density_target: 0.90
+    novelty_threshold: 0.58
+    broadcast_threshold: 0.72
+    escalation_threshold: 0.60
+    acknowledgement_probability: 0.99
+
+  mumbler_antipattern:
+    description: "Detected anti-pattern: ambiguous, low-density, weak commitments. Use as an eval label, not a desired production personality."
+    desired: false
+    detection:
+      semantic_density_lt: 0.45
+      commitment_explicitness_lt: 0.45
+      unresolved_pronoun_or_reference_rate_gt: 0.25
+      clarification_generated_per_message_gt: 0.35

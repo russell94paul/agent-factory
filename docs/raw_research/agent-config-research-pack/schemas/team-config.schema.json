@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-factory.dev/schemas/team-config/v0",
+  "title": "Agent Factory TeamConfig v0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "kind", "metadata", "team", "hierarchy", "members", "communication", "working_style", "workflow", "metrics", "certification"],
+  "properties": {
+    "schema_version": {"const": "team-config/v0"},
+    "kind": {"const": "TeamConfig"},
+    "metadata": {"$ref": "#/$defs/metadata"},
+    "team": {"$ref": "#/$defs/openNamedObject"},
+    "hierarchy": {"$ref": "#/$defs/openNamedObject"},
+    "members": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["agent_ref", "seat", "required"],
+        "properties": {
+          "agent_ref": {"type": "string", "pattern": "^agent://"},
+          "seat": {"type": "string", "minLength": 1},
+          "required": {"type": "boolean"}
+        }
+      }
+    },
+    "relationships": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type", "agents"],
+        "properties": {
+          "type": {"type": "string", "minLength": 1},
+          "agents": {"type": "array", "minItems": 2, "uniqueItems": true, "items": {"type": "string", "pattern": "^agent://"}}
+        },
+        "additionalProperties": {"type": ["string", "number", "boolean", "array"]}
+      }
+    },
+    "communication": {"$ref": "#/$defs/openNamedObject"},
+    "working_style": {"$ref": "#/$defs/openNamedObject"},
+    "workflow": {"$ref": "#/$defs/openNamedObject"},
+    "metrics": {"$ref": "#/$defs/openNamedObject"},
+    "certification": {"$ref": "#/$defs/openNamedObject"},
+    "ui": {"$ref": "#/$defs/openNamedObject"}
+  },
+  "$defs": {
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "display_name", "tags"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+        "display_name": {"type": "string", "minLength": 1},
+        "tags": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "openNamedObject": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {"pattern": "^[a-z][a-z0-9_]*$"},
+      "additionalProperties": {"type": ["string", "number", "boolean", "array", "object"]}
+    }
+  }
+}

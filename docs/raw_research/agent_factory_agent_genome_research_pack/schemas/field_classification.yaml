@@ -1,0 +1,18 @@
+field_classes:
+  TUNABLE: Allowed search/mutation variable within policy bounds.
+  DECLARED: Intent/identity/contract field; versioned but not learned from telemetry.
+  MEASURED: Append-only observation from runtime/evaluation.
+  DERIVED: Computed from evidence; never directly set by optimizer.
+  POLICY: Externally governed constraint; optimizer cannot mutate.
+recommended_first_tunable_dimensions:
+- model.reasoning_effort
+- cognition.planning.strategy
+- cognition.reasoning.verification_tendency
+- context.retrieval.top_k
+- context.retrieval.relevance_min
+- communication.initiative
+- communication.novelty_threshold
+- communication.broadcast_threshold
+- communication.challenge_propensity
+- runtime.max_turns
+- runtime.budget.soft_usd

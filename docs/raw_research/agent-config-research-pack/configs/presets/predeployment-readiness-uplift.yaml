@@ -1,0 +1,43 @@
+schema_version: intervention-preset/v0
+kind: InterventionPreset
+metadata:
+  id: predeployment-readiness-uplift
+  display_name: Mission Pick-Me-Up
+mode: recommend_only
+trigger:
+  phase: pre_deployment
+  when_any:
+    - team_health_below: 85
+    - critical_agent_health_below: 80
+    - capability_confidence_below_mission_minimum: true
+    - long_running_context_above: 0.80
+inputs:
+  - mission_requirement_graph
+  - deployment_deadline
+  - current_health_components
+  - capability_evidence
+  - known_failure_modes
+  - available_interventions
+candidate_actions:
+  - knowledge_packet_refresh
+  - credential_and_tool_probe
+  - symbol_resolution_probe
+  - context_checkpoint_and_compaction
+  - task_specific_micro_eval
+  - specialist_substitution
+  - add_bonded_reviewer
+  - reduce_scope
+  - recommend_delay
+selection:
+  objective: expected_risk_reduction_per_time_cost_coordination
+  max_actions: 4
+  require_post_action_measurement: true
+  never_mutate_health_directly: true
+decisions: [deploy, narrow, substitute, delay, refuse]
+authority:
+  may_change_config: false
+  may_propose_config_diff: true
+  human_approval_required: true
+telemetry:
+  record: [health_before, expected_uplift, confidence, action, measurement, health_after, remaining_gap]
+

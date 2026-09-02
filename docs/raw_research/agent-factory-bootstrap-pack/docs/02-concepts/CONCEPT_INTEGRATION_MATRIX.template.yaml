@@ -1,0 +1,16 @@
+schema_version: 1
+integrations: []
+
+# Suggested record:
+# - integration_id
+# - concepts
+# - combined_hypothesis
+# - why_combination_may_be_more_valuable
+# - dependencies
+# - evidence_for_each_component
+# - evidence_for_combination
+# - implementation_touchpoints
+# - metrics
+# - experiment
+# - risk
+# - priority

@@ -1,0 +1,217 @@
+[
+  {
+    "path": "AGENT_RESEARCH_HANDOFF.yaml",
+    "bytes": 1935,
+    "sha256": "cb666e0b8cd96b2378ff67335f0590d655ac541068f9e2b40ebfb735adeaca77"
+  },
+  {
+    "path": "BOOTSTRAP_MANIFEST.yaml",
+    "bytes": 1078,
+    "sha256": "d31dd9c5b87540737c5da1f5f866d239e8cd9ea197b2a6eef8dcd741044f8a50"
+  },
+  {
+    "path": "INSTALL_IN_EXISTING_AGENT_FACTORY.md",
+    "bytes": 1681,
+    "sha256": "d026fb92d8bc6f48e245e9825094eea193e5c8c3ed75c39eb3dd105286688a22"
+  },
+  {
+    "path": "README.md",
+    "bytes": 3078,
+    "sha256": "885df34cc17abd15e71d915ad77ac814e3621b7c3dc2528c5fc19c13e3d21456"
+  },
+  {
+    "path": "docs/00-source-of-truth/CURRENT_CONSTRAINTS.md",
+    "bytes": 178,
+    "sha256": "eaad40c59207cac48ace85b0fa65dbeb4cb4ac6ac2c50610be88265774187b35"
+  },
+  {
+    "path": "docs/00-source-of-truth/CURRENT_PRIORITIES.md",
+    "bytes": 177,
+    "sha256": "cf77d2dbb19eb5e8dadfd001d5cf188ad6ef1c571a72bcf0099296984a0362ee"
+  },
+  {
+    "path": "docs/00-source-of-truth/CURRENT_REPO_MAP.md",
+    "bytes": 181,
+    "sha256": "ddd78ea4f1f91aabf424ea2805a9dd73314e88637b8c28718c83ea7ff289d096"
+  },
+  {
+    "path": "docs/00-source-of-truth/CURRENT_SYSTEM_SNAPSHOT.md",
+    "bytes": 182,
+    "sha256": "d2beb190e9390324ce5d7d0cb8a4fc3b4b4892fbdd57bb8f468ada862d166334"
+  },
+  {
+    "path": "docs/00-source-of-truth/OWNER_INPUT_REQUIRED.md",
+    "bytes": 179,
+    "sha256": "c6f8cd1f95765252a1127fe90f15b7606edff8bd0e3675ee764a3bb4efc8a7e8"
+  },
+  {
+    "path": "docs/00-source-of-truth/PRODUCT_VISION.md",
+    "bytes": 1360,
+    "sha256": "b42ce3d5cbe1316190945026ca5b29d70cf3deb01333ed3bd83981f640bf2d55"
+  },
+  {
+    "path": "docs/01-research-corpus/manifests/corpus-manifest.yaml",
+    "bytes": 470,
+    "sha256": "b8721f73e0402d3ef84b878eb23a26a2f0e65516f703e7ea92b62238440044a2"
+  },
+  {
+    "path": "docs/01-research-corpus/manifests/duplicate-map.yaml",
+    "bytes": 63,
+    "sha256": "9b7e91ef021d975c789a86fc1b2eea4aaca295a4dac8fd66eaf0d7cf942f6d9a"
+  },
+  {
+    "path": "docs/01-research-corpus/manifests/provenance.yaml",
+    "bytes": 30,
+    "sha256": "fae115974505850ed73871e70bbac54e018bfb55f05f38882d8eec4e092d642a"
+  },
+  {
+    "path": "docs/01-research-corpus/raw/source-snapshots/Agent Factory Vision.txt",
+    "bytes": 21179,
+    "sha256": "f4dacee07247e4688e80f11f8dd714d32c162e75ba4f885cc0aa6c3259bd3849"
+  },
+  {
+    "path": "docs/02-concepts/CONCEPT_INTEGRATION_MATRIX.template.yaml",
+    "bytes": 311,
+    "sha256": "f4545cd5e2c3b5f92eb33fbc74b3ca8d559b8a854d4fbae33c7228d02c562471"
+  },
+  {
+    "path": "docs/02-concepts/concept-registry.yaml",
+    "bytes": 496,
+    "sha256": "567008d4d1cb7e7e9aeda04192b60f2f64166cd52b6afcf30fc2293a1f655ddd"
+  },
+  {
+    "path": "docs/03-design/REPO_ARCHITECTURE_SEED.md",
+    "bytes": 1097,
+    "sha256": "9a5a1e55ae221b9dd686df9053208e8bc3977bd670f7cd8c2d27da13d56230db"
+  },
+  {
+    "path": "docs/04-evidence/claims.jsonl",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "docs/04-evidence/evidence-map.yaml",
+    "bytes": 39,
+    "sha256": "bfa39faa24717c518545cf4307b65cfcbe9314204e83283ae72d4ae5866ba788"
+  },
+  {
+    "path": "docs/05-decisions/contradictions.md",
+    "bytes": 125,
+    "sha256": "61bd4d331ce676c7785c91f0964921c6af4bc25e7837c7c0b04c5e4bfec6a4b3"
+  },
+  {
+    "path": "docs/05-decisions/decision-ledger.yaml",
+    "bytes": 32,
+    "sha256": "7f3f62462ef131224961c6fe9b39ed3f63110a6b69971c3fa1f7bde9f34c854b"
+  },
+  {
+    "path": "docs/05-decisions/unresolved-decisions.md",
+    "bytes": 120,
+    "sha256": "b1671d2da8e5eb2e6ef1ef88a7ff8b67ae7f46763c2f1281a7efd03b6f50f975"
+  },
+  {
+    "path": "docs/06-experiments/EVALUATION_GATES.md",
+    "bytes": 1124,
+    "sha256": "42958697b54cf8e6e41f5feef0f9027ed3acf2276d6e30718b938c6640f8570e"
+  },
+  {
+    "path": "docs/06-experiments/EXPERIMENT_TEMPLATE.md",
+    "bytes": 392,
+    "sha256": "2c3941eb7dae1947e28398dbdbfa0cdf13e8bd167104906dbba088c10e143929"
+  },
+  {
+    "path": "docs/07-implementation/FEATURE_INTEGRATION_SEEDS.md",
+    "bytes": 5438,
+    "sha256": "69cea22b0f6b886f8f39ff0c1662dd2e7086deea294db6c8f808f0812e7b1c86"
+  },
+  {
+    "path": "docs/07-implementation/IMPLEMENTATION_DAG_SEED.yaml",
+    "bytes": 1716,
+    "sha256": "45895bfd9c151d3e0ac0d97d783fc25ba355e830ef3107e38e51a37113359182"
+  },
+  {
+    "path": "docs/07-implementation/capability-matrix.yaml",
+    "bytes": 1046,
+    "sha256": "18aa24ef9e1a911e2e3b7e58fb9f799077fabea89d558514c42d841fe645e92e"
+  },
+  {
+    "path": "docs/07-implementation/doc-code-drift.md",
+    "bytes": 147,
+    "sha256": "33ae793f51c962659f5ff7c19f37d045c41e3c48bd1e0a3df2f0004b92fa4c1b"
+  },
+  {
+    "path": "docs/07-implementation/implementation-map.yaml",
+    "bytes": 35,
+    "sha256": "4a46bcb01b8b78fc29e1e06d8ef8460c089bfae292f3a13e20c0a7ea4cc5b730"
+  },
+  {
+    "path": "docs/08-research-backlog/RESEARCH_GAPS.md",
+    "bytes": 1373,
+    "sha256": "1f0041bc06fba37b4a7b00fd9419d5cbd789f6620eb1381876590c8fd634830d"
+  },
+  {
+    "path": "docs/08-research-backlog/RESEARCH_QUEUE.yaml",
+    "bytes": 2180,
+    "sha256": "d037f628c9d34043691df1ceab4b9cc5e528b7cea7186295464ffd53d7ba839e"
+  },
+  {
+    "path": "docs/08-research-backlog/prompts/CLAUDE_CORPUS_PREPARATION_PROMPT.md",
+    "bytes": 5945,
+    "sha256": "331939b73c71e513f4c76f02a794ea6c781ccc5189a23a68b620c6d5b2e8fed0"
+  },
+  {
+    "path": "docs/09-synthesis/ARCHITECTURE_TOURNAMENT_PROMPT.md",
+    "bytes": 1675,
+    "sha256": "79d9167222fe5bdd88e46628c4f9080d0f309c7c1d6b252245d4711998ad1f24"
+  },
+  {
+    "path": "docs/09-synthesis/IMPLEMENTATION_PACK_PROMPT.md",
+    "bytes": 1494,
+    "sha256": "0b3f362cbcb5241897e5bf4080459be376045378aa0b55bafb33a48ad0a7bba7"
+  },
+  {
+    "path": "docs/09-synthesis/MASTER_SYNTHESIS_PROMPT.md",
+    "bytes": 4287,
+    "sha256": "563227c56673f1999b448f00baecac55ec728a3a2f5b905acbc262041ebdb693"
+  },
+  {
+    "path": "docs/START_HERE_RESEARCH_SYNTHESIS.md",
+    "bytes": 2258,
+    "sha256": "83dfea22a159ba7c059950f5bfe12563bdaead1c30d5cba6f8cccab9cf81d88a"
+  },
+  {
+    "path": "organizations/presets/factory-reliability-corps.seed.yaml",
+    "bytes": 547,
+    "sha256": "d83287589ca46258010f595c7ce4c5635b8ffe68a036fe3c25b41b75e5ca3b65"
+  },
+  {
+    "path": "organizations/presets/rapid-response-swarm.seed.yaml",
+    "bytes": 448,
+    "sha256": "59a1cb7376a08de162f08471b5ed2dad569c45e437b3d2a1aa645af50ba94da5"
+  },
+  {
+    "path": "schemas/concept.schema.yaml",
+    "bytes": 1032,
+    "sha256": "8466904f7a603c7f77219785b0af8c7f0e3888e3aeaa352658e885239fd9f45e"
+  },
+  {
+    "path": "schemas/org-ir.seed.schema.yaml",
+    "bytes": 1121,
+    "sha256": "f3dda0481d4eb55c47e14720cf9a42cb134de3c5b2de9bb6e1090acd44fa5d54"
+  },
+  {
+    "path": "schemas/research-artifact.schema.yaml",
+    "bytes": 851,
+    "sha256": "abd18a89e0b9c71ebe7a90f3f182be0a8bb80ffe0dc82746e8b5aabacfa848e2"
+  },
+  {
+    "path": "tools/bootstrap/build_corpus_hash_manifest.py",
+    "bytes": 934,
+    "sha256": "701ba0c2ed6ada5e11f6e94fd38ee2facfeb1c3a8fb9d871de2ba4b8136f34fb"
+  },
+  {
+    "path": "tools/bootstrap/install_research_pack.py",
+    "bytes": 1382,
+    "sha256": "db692406a732aa69982107f89a5d715ce247eb09a140095e1231e1c7f0c4985d"
+  }
+]

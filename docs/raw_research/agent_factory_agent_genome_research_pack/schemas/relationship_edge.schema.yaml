@@ -1,0 +1,60 @@
+apiVersion: agentfactory.ai/v1alpha1
+kind: AgentRelationshipEdge
+
+relationship:
+  id: string
+  subject_agent: string
+  object_agent: string
+  direction: [directed, symmetric]
+  valid_from: timestamp
+  valid_to: null
+  context_scope:
+    mission_classes: []
+    domains: []
+
+declared:
+  # POLICY / organizational structure
+  relation_types:
+    - peer
+  authority_weight: 0.0
+  mentor_weight: 0.0
+  reviewer_weight: 0.0
+  escalation_target: false
+
+measured:
+  # MEASURED, never tuned directly
+  missions_together: 0
+  accepted_outcomes_together: 0
+  pair_success_rate: null
+  handoff_success_rate: null
+  mean_response_latency_ms: null
+  disagreement_rate: null
+  resolution_rate: null
+  duplicate_work_rate: null
+  communication_efficiency: null
+  shared_context_overlap: null
+  expertise_overlap: null
+
+derived:
+  # DERIVED
+  epistemic_trust: null
+  execution_trust: null
+  familiarity: null
+  complementarity: null
+  redundancy: null
+  compatibility: null
+  confidence_intervals: {}
+
+tunable_pair_policy:
+  # TUNABLE in simulations, not rewriting measured history
+  challenge_intensity: 0.5
+  deference_bias: 0.0
+  peer_review_probability: 0.5
+  direct_message_preference: 0.5
+  context_share_threshold: 0.75
+
+anti_confounds:
+  minimum_joint_missions_before_relationship_claim: 10
+  compare_against_individual_baselines: true
+  mission_class_stratification: true
+  model_version_stratification: true

@@ -1,0 +1,63 @@
+apiVersion: agentfactory.ai/events/v1alpha1
+kind: AgentRuntimeEvent
+
+event:
+  event_id: uuid
+  timestamp: timestamp
+  type: enum
+  mission_id: string
+  organization_id: string
+  team_id: string
+  agent_id: string
+  agent_instance_id: string
+
+version_context:
+  agent_config_hash: string
+  agent_version: semver
+  org_ir_hash: string
+  model_profile: string
+  skills: {}
+  tools: {}
+  policy_version: string
+  benchmark_version: null
+
+causality:
+  trace_id: string
+  span_id: string
+  parent_span_id: null
+  caused_by_event_ids: []
+  mission_node_id: string
+  relationship_edge_ids: []
+
+payload:
+  # type-specific structured content
+  input_refs: []
+  output_refs: []
+  evidence_refs: []
+  message_ref: null
+  tool_ref: null
+  decision_ref: null
+  failure_class: null
+  recovery_action: null
+
+observations:
+  latency_ms: null
+  token_input: null
+  token_output: null
+  cost_usd: null
+  confidence: null
+  uncertainty: null
+  semantic_density: null
+  novelty: null
+  context_relevance_estimate: null
+  evidence_coverage: null
+
+outcome_link:
+  local_success: null
+  mission_success: null
+  evaluator_score: null
+  accepted: null
+
+provenance:
+  source_type: runtime
+  immutable: true

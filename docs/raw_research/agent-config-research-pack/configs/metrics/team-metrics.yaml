@@ -1,0 +1,44 @@
+schema_version: metric-catalog/v0
+kind: MetricCatalog
+definitions:
+  - id: team.health
+    version: 1
+    unit: score_0_100
+    type: outcome_guardrail
+    formula: "100 * reliability^0.20 * correctness^0.20 * progress^0.20 * verification^0.15 * budget^0.10 * knowledge^0.10 * latency^0.05"
+    inputs: [reliability, correctness, progress, verification, budget, knowledge, latency]
+    missing_data: unmeasurable
+    hard_caps:
+      - "critical_safety_gate_failed => 39"
+      - "independent_verification_missing => 69"
+      - "no_recent_evidence => 59"
+  - id: team.struggle
+    version: 1
+    unit: score_0_100
+    type: intervention_signal
+    formula: "100 * ewma(0.25*stall + 0.20*failures + 0.15*thrash + 0.15*uncertainty + 0.10*dependencies + 0.10*burn + 0.05*contradictions)"
+    inputs: [stall, failures, thrash, uncertainty, dependencies, burn, contradictions]
+    thresholds: {watch: 45, assist: 65, intervene: 80}
+    missing_data: unmeasurable
+  - id: team.communication.effectiveness
+    version: 1
+    unit: score_0_100
+    type: paired_activity_outcome
+    formula: "100*(0.15*delivery + 0.25*correct_consumption + 0.20*actionability + 0.15*information_gain + 0.10*timeliness + 0.10*contradiction_resolution + 0.05*(1-noise))"
+    inputs: [delivery, correct_consumption, actionability, information_gain, timeliness, contradiction_resolution, noise]
+    missing_data: unmeasurable
+  - id: team.verified_value_efficiency
+    version: 1
+    unit: accepted_value_per_cost
+    type: north_star
+    formula: "verified_retained_value / (cost_usd + coordination_cost + regression_cost)"
+    inputs: [verified_retained_value, cost_usd, coordination_cost, regression_cost]
+    missing_data: unmeasurable
+  - id: queue.expected_retained_value_per_token
+    version: 1
+    unit: relative_score
+    type: scheduler_rank
+    formula: "(value*success_probability*retention*reversibility) / (tokens + time_cost + interruption_risk)"
+    inputs: [value, success_probability, retention, reversibility, tokens, time_cost, interruption_risk]
+    missing_data: ineligible
+

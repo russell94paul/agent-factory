@@ -1,0 +1,48 @@
+version: 0.1
+schema: service_designation
+
+organization_node:
+  required:
+    - id
+    - node_type
+    - display_name
+  fields:
+    id: string
+    node_type: string
+    display_name: string
+    callsign: string|null
+    parent_id: string|null
+    commander_id: string|null
+    config_version: string
+    insignia: string|null
+    metadata: object
+
+example:
+  - id: engineering-command
+    node_type: command
+    display_name: Engineering Command
+    parent_id: null
+  - id: integration-corps
+    node_type: corps
+    display_name: Integration Corps
+    parent_id: engineering-command
+  - id: connector-division
+    node_type: division
+    display_name: Connector Division
+    parent_id: integration-corps
+  - id: auth-battalion
+    node_type: battalion
+    display_name: Authentication Battalion
+    parent_id: connector-division
+  - id: oauth-squad
+    node_type: squad
+    display_name: OAuth Incident Squad
+    parent_id: auth-battalion
+
+semantic_zoom:
+  strategic:
+    max_depth_visible: 1
+  theatre:
+    max_depth_visible: 3
+  tactical:
+    max_depth_visible: 999

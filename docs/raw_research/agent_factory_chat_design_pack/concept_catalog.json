@@ -1,0 +1,289 @@
+[
+  {
+    "id": "agentic_ide",
+    "name": "Agentic IDE",
+    "category": "product_paradigm",
+    "status": "core",
+    "summary": "IDE for directing artificial organizations rather than merely chatting with agents."
+  },
+  {
+    "id": "mission_command_console",
+    "name": "Mission Command Console",
+    "category": "ui",
+    "status": "current",
+    "summary": "Primary serious operating interface; should precede animated world."
+  },
+  {
+    "id": "army_world",
+    "name": "Army Command World",
+    "category": "ui",
+    "status": "current",
+    "summary": "Alternative spatial/gamified projection over the same operational state."
+  },
+  {
+    "id": "spatial_command_language",
+    "name": "Spatial Command Language",
+    "category": "interaction",
+    "status": "core",
+    "summary": "Location, zoom, target, formation, movement and gesture encode context and commands."
+  },
+  {
+    "id": "semantic_zoom",
+    "name": "Semantic Zoom",
+    "category": "interaction",
+    "status": "experimental",
+    "summary": "Zoom company\u2192campaign\u2192operation\u2192team\u2192agent\u2192task/tool while preserving context."
+  },
+  {
+    "id": "target_lock",
+    "name": "Target Lock",
+    "category": "interaction",
+    "status": "current",
+    "summary": "Set one object as the operator context and reorganize relevant UI around it."
+  },
+  {
+    "id": "surveillance_mode",
+    "name": "Surveillance Mode",
+    "category": "interaction",
+    "status": "business_value",
+    "summary": "Anomaly-only view for incidents, blockers, queues, spend, uncertainty and approvals."
+  },
+  {
+    "id": "rapid_task_force",
+    "name": "Rapid Task Force",
+    "category": "coordination",
+    "status": "current",
+    "summary": "Automatically recommend and deploy a team for mission requirements."
+  },
+  {
+    "id": "reinforcement_router",
+    "name": "Reinforcement Router",
+    "category": "coordination",
+    "status": "business_value",
+    "summary": "Route help to the best available specialist/team based on evidence and availability."
+  },
+  {
+    "id": "distress_signal",
+    "name": "Distress Signal",
+    "category": "coordination",
+    "status": "current",
+    "summary": "Structured intelligent help request replacing broad manual broadcasts."
+  },
+  {
+    "id": "hot_drop",
+    "name": "Hot Drop Specialist",
+    "category": "coordination",
+    "status": "current",
+    "summary": "Insert specialist with compiled context and permissions."
+  },
+  {
+    "id": "recon",
+    "name": "Recon Mission",
+    "category": "coordination",
+    "status": "current",
+    "summary": "Cheap uncertainty-reduction pass before expensive execution."
+  },
+  {
+    "id": "fog_of_war",
+    "name": "Fog of War",
+    "category": "visual_semantics",
+    "status": "experimental",
+    "summary": "Visual representation of unknown or low-confidence mission state."
+  },
+  {
+    "id": "supply_lines",
+    "name": "Cognitive Logistics / Supply Lines",
+    "category": "visual_semantics",
+    "status": "experimental",
+    "summary": "Context, credentials, tools, compute, budget and dependencies visualized as supply."
+  },
+  {
+    "id": "signals",
+    "name": "Signals Network",
+    "category": "communication",
+    "status": "current",
+    "summary": "Consequential communication channels and overlays."
+  },
+  {
+    "id": "collision_control",
+    "name": "Collision Control",
+    "category": "coordination",
+    "status": "business_value",
+    "summary": "Detect duplicate work, overlapping changes, conflicting assumptions and resource collisions."
+  },
+  {
+    "id": "smart_handoff",
+    "name": "Smart Handoff",
+    "category": "coordination",
+    "status": "current",
+    "summary": "Typed context/state transfer between agents or teams."
+  },
+  {
+    "id": "formations",
+    "name": "Formations",
+    "category": "organization",
+    "status": "current",
+    "summary": "Reusable execution topologies such as Spearhead, Swarm, Recon Screen, Shield Wall and Column."
+  },
+  {
+    "id": "formation_compiler",
+    "name": "Formation Compiler",
+    "category": "interaction",
+    "status": "experimental",
+    "summary": "Compile visual agent arrangements into executable team topology."
+  },
+  {
+    "id": "nested_designations",
+    "name": "Nested Service Designations",
+    "category": "organization",
+    "status": "core",
+    "summary": "Arbitrarily deep configurable organization tree/graph."
+  },
+  {
+    "id": "org_node",
+    "name": "Organization Node",
+    "category": "data_model",
+    "status": "core",
+    "summary": "Parent-linked entity owning policy, doctrine, metrics, capabilities and resources."
+  },
+  {
+    "id": "commander_intent",
+    "name": "Commander's Intent",
+    "category": "strategy",
+    "status": "current",
+    "summary": "Frozen/explicit outcome objective and constraints propagated through missions."
+  },
+  {
+    "id": "rules_of_engagement",
+    "name": "Rules of Engagement",
+    "category": "governance",
+    "status": "core",
+    "summary": "Autonomy, authority, approval and safety policy."
+  },
+  {
+    "id": "aar",
+    "name": "After-Action Report",
+    "category": "learning",
+    "status": "core",
+    "summary": "Structured outcome, tactics, failures, reusable lessons and candidate doctrine."
+  },
+  {
+    "id": "doctrine",
+    "name": "Operational Doctrine",
+    "category": "learning",
+    "status": "core",
+    "summary": "Versioned validated reusable organization/workflow pattern."
+  },
+  {
+    "id": "war_game",
+    "name": "War Game",
+    "category": "evaluation",
+    "status": "core",
+    "summary": "Controlled champion/challenger simulation and evaluation."
+  },
+  {
+    "id": "replay",
+    "name": "After-Action Replay",
+    "category": "debugging",
+    "status": "current",
+    "summary": "Causal replay with counterfactual restart from earlier point."
+  },
+  {
+    "id": "advanced_projects",
+    "name": "Advanced Projects Command",
+    "category": "research",
+    "status": "experimental",
+    "summary": "Autonomous improvement organization mining company experience for high-leverage changes."
+  },
+  {
+    "id": "leverage_board",
+    "name": "Leverage Board",
+    "category": "research",
+    "status": "experimental",
+    "summary": "Multi-objective opportunity ranking against Commander's Intent."
+  },
+  {
+    "id": "workflow_compression",
+    "name": "Workflow Compression",
+    "category": "optimization",
+    "status": "business_value",
+    "summary": "Mine repeated stable agent sequences and convert to deterministic tools/skills."
+  },
+  {
+    "id": "rfr",
+    "name": "Recurring Failure Rate",
+    "category": "metric",
+    "status": "core",
+    "summary": "Share of failure volume that repeats known failure families."
+  },
+  {
+    "id": "preventable_recurrence",
+    "name": "Preventable Recurrence Rate",
+    "category": "metric",
+    "status": "core",
+    "summary": "Recurring incidents where sufficient preventive knowledge/control already existed."
+  },
+  {
+    "id": "post_fix_recurrence",
+    "name": "Post-Fix Recurrence Rate",
+    "category": "metric",
+    "status": "core",
+    "summary": "Failure families marked fixed that later recur."
+  },
+  {
+    "id": "time_to_recurrence",
+    "name": "Time to Recurrence",
+    "category": "metric",
+    "status": "supporting",
+    "summary": "Time from claimed remediation to next incident in same family."
+  },
+  {
+    "id": "failure_family",
+    "name": "Failure Family",
+    "category": "data_model",
+    "status": "core",
+    "summary": "Semantically grouped root-cause class across incidents."
+  },
+  {
+    "id": "learning_chain",
+    "name": "Organizational Learning Chain",
+    "category": "learning",
+    "status": "core",
+    "summary": "Knowledge exist\u2192retrieve\u2192deliver\u2192understand\u2192follow\u2192prevent."
+  },
+  {
+    "id": "social_world",
+    "name": "Social Army Base",
+    "category": "gamification",
+    "status": "supporting",
+    "summary": "Persistent remote-company world for humans and agents."
+  },
+  {
+    "id": "team_hq",
+    "name": "Team Headquarters",
+    "category": "gamification",
+    "status": "supporting",
+    "summary": "Spatial home for each team/unit."
+  },
+  {
+    "id": "bug_zoo",
+    "name": "Bug Zoo",
+    "category": "gamification",
+    "status": "experimental",
+    "summary": "Memorable recurring bugs/failure families as collectible historical entities."
+  },
+  {
+    "id": "failed_exp_graveyard",
+    "name": "Failed Experiment Graveyard",
+    "category": "gamification",
+    "status": "supporting",
+    "summary": "Celebrate cheap informative failures and preserve lessons."
+  },
+  {
+    "id": "zeus_world",
+    "name": "Zeus/Olympus World",
+    "category": "design_history",
+    "status": "superseded",
+    "summary": "Earlier mythology-based world; retained only as reference."
+  }
+]

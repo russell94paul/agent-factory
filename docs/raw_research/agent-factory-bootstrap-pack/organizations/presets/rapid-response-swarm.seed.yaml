@@ -1,0 +1,20 @@
+status: research_seed
+organization:
+  name: Rapid Response Swarm
+  topology: parallel_diagnosis_then_synthesis
+mission_fit:
+  - incident_response
+  - ambiguous_failures
+roles:
+  - diagnostician
+  - historical_case_specialist
+  - incident_commander
+  - remediation_specialist
+policies:
+  production_change: human_or_policy_gate
+metrics:
+  - time_to_diagnosis
+  - diagnosis_accuracy
+  - time_to_green
+  - rollback_rate
+  - cost_per_resolved_incident

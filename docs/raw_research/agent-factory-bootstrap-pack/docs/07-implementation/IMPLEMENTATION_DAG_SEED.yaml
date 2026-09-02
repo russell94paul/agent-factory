@@ -1,0 +1,76 @@
+schema_version: 1
+status: seed_not_approved
+phases:
+  - id: P0
+    name: Ground Truth and Corpus
+    depends_on: []
+    outputs:
+      - current_system_snapshot
+      - corpus_manifest
+      - concept_registry
+      - implementation_map
+  - id: P1
+    name: Evidence Reconciliation
+    depends_on: [P0]
+    outputs:
+      - evidence_map
+      - contradictions
+      - decision_ledger
+      - research_gaps
+  - id: P2
+    name: Decision-Blocking Research
+    depends_on: [P1]
+    outputs:
+      - verified_research_updates
+      - experiment_specs
+  - id: P3
+    name: Architecture Tournament
+    depends_on: [P2]
+    outputs:
+      - candidate_architectures
+      - scorecards
+      - selected_north_star
+  - id: P4
+    name: Contracts and Ontology
+    depends_on: [P3]
+    outputs:
+      - canonical_ontology
+      - org_ir_schema
+      - mission_contracts
+      - event_and_provenance_contracts
+  - id: P5
+    name: Vertical Integration
+    depends_on: [P4]
+    outputs:
+      - first_production_vertical
+      - migration_adapters
+      - eval_baseline
+  - id: P6
+    name: Mission Control and Operations
+    depends_on: [P4, P5]
+    outputs:
+      - operator_surfaces
+      - replay_and_audit
+      - health_and_gate_views
+  - id: P7
+    name: Evolution and Self-Maintenance
+    depends_on: [P5]
+    outputs:
+      - simulation_loop
+      - optimization_loop
+      - self_maintenance_vertical
+  - id: P8
+    name: Self-Hosting Expansion
+    depends_on: [P6, P7]
+    outputs:
+      - bounded_factory_maintenance
+      - canary_and_rollback_proofs
+
+required_gate_fields:
+  - measurable_success_criterion
+  - red_to_green_evidence
+  - regression_suite
+  - rollback_plan
+  - owner
+  - blast_radius
+  - observability

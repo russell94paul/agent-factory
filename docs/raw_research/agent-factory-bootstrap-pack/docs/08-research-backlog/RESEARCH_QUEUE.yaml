@@ -1,0 +1,53 @@
+schema_version: 1
+status: seed_only
+items:
+  - research_id: R-EVAL-01
+    title: Private multi-agent eval harness
+    priority: critical
+    mode: deep
+    question: >-
+      How should a private repository estate evaluate multi-agent coding teams using
+      real historical failures, RED->GREEN proofs, regression suites, cost, time-to-green,
+      human rejection and rework?
+  - research_id: R-ORGIR-01
+    title: Organization IR prior art
+    priority: critical
+    mode: prior_art
+    question: >-
+      What declarative schemas or intermediate representations exist for defining and
+      versioning multi-agent organizations, workflows, roles, policies, memory, tools and gates?
+  - research_id: R-HEALTH-01
+    title: Predictive agent and team health
+    priority: critical
+    mode: deep
+    question: >-
+      Which readiness, reliability, coordination, knowledge and evaluation metrics actually
+      predict mission success, and how should composite health scores avoid hiding failure modes?
+  - research_id: R-SELF-01
+    title: Safe self-maintaining agent platforms
+    priority: critical
+    mode: adversarial
+    question: >-
+      What boundaries, sandboxes, gates, rollback mechanisms and eval methods are required
+      before an agent platform can safely maintain or upgrade itself?
+  - research_id: R-TOPO-01
+    title: Organizational topology tournament
+    priority: high
+    mode: deep
+    question: >-
+      Under what task characteristics do hierarchy, swarm, mesh, blackboard, market,
+      council and hybrid topologies outperform one another in multi-agent systems?
+  - research_id: R-META-01
+    title: Agent trace to deterministic meta-tools
+    priority: high
+    mode: architecture
+    question: >-
+      How can repeated successful agent traces be mined, verified and promoted into deterministic
+      composite tools without losing useful adaptability?
+  - research_id: R-UI-01
+    title: Agentic IDE operator surface
+    priority: high
+    mode: deep
+    question: >-
+      Which controls, views, alerts, replay surfaces, configuration diffs and mission artifacts
+      most improve operator effectiveness for multi-agent engineering systems?

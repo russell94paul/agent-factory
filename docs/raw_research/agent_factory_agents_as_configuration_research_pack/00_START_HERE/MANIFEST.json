@@ -1,0 +1,13 @@
+{
+  "pack_name": "Agent Factory \u2014 Agents-as-Configuration Research Pack",
+  "version": "1.0",
+  "created": "2026-09-01",
+  "purpose": "Claude-ready context, concepts, schemas, and deep-research prompts for Agents-as-Configuration, readiness, phenotypes, matching, resident agents, and quota harvesting.",
+  "research_prompts": [
+    "01_DEEP_RESEARCH_AGENTS_AS_CONFIGURATION.md",
+    "02_DEEP_RESEARCH_AGENT_HEALTH_AND_MISSION_READINESS.md",
+    "03_DEEP_RESEARCH_AGENT_PHENOTYPES.md",
+    "04_DEEP_RESEARCH_MISSION_MATCHING_AND_DYNAMIC_TEAMS.md",
+    "05_CROSS_RESEARCH_SYNTHESIS.md"
+  ]
+}

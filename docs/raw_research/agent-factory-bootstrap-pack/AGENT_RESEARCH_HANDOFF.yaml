@@ -1,0 +1,47 @@
+schema_version: 1
+repository:
+  expected_repo_name: agent-factory
+  commit: null
+  branch: null
+  generated_at: null
+
+vision:
+  source_snapshot: docs/01-research-corpus/raw/source-snapshots/Agent Factory Vision.txt
+  product_vision: docs/00-source-of-truth/PRODUCT_VISION.md
+
+current_state:
+  snapshot: docs/00-source-of-truth/CURRENT_SYSTEM_SNAPSHOT.md
+  repo_map: docs/00-source-of-truth/CURRENT_REPO_MAP.md
+  priorities: docs/00-source-of-truth/CURRENT_PRIORITIES.md
+  constraints: docs/00-source-of-truth/CURRENT_CONSTRAINTS.md
+
+research:
+  corpus_manifest: docs/01-research-corpus/manifests/corpus-manifest.yaml
+  duplicate_map: docs/01-research-corpus/manifests/duplicate-map.yaml
+  provenance: docs/01-research-corpus/manifests/provenance.yaml
+  concept_registry: docs/02-concepts/concept-registry.yaml
+  claims: docs/04-evidence/claims.jsonl
+  evidence_map: docs/04-evidence/evidence-map.yaml
+
+architecture_governance:
+  decision_ledger: docs/05-decisions/decision-ledger.yaml
+  contradictions: docs/05-decisions/contradictions.md
+  unresolved_decisions: docs/05-decisions/unresolved-decisions.md
+
+implementation:
+  implementation_map: docs/07-implementation/implementation-map.yaml
+  capability_matrix: docs/07-implementation/capability-matrix.yaml
+  doc_code_drift: docs/07-implementation/doc-code-drift.md
+  integration_seeds: docs/07-implementation/FEATURE_INTEGRATION_SEEDS.md
+  implementation_dag_seed: docs/07-implementation/IMPLEMENTATION_DAG_SEED.yaml
+
+research_backlog:
+  gaps: docs/08-research-backlog/RESEARCH_GAPS.md
+  queue: docs/08-research-backlog/RESEARCH_QUEUE.yaml
+  owner_questions: docs/00-source-of-truth/OWNER_INPUT_REQUIRED.md
+
+synthesis:
+  start_here: docs/START_HERE_RESEARCH_SYNTHESIS.md
+  master_prompt: docs/09-synthesis/MASTER_SYNTHESIS_PROMPT.md
+  architecture_tournament: docs/09-synthesis/ARCHITECTURE_TOURNAMENT_PROMPT.md
+  implementation_pack: docs/09-synthesis/IMPLEMENTATION_PACK_PROMPT.md

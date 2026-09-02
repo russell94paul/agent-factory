@@ -1,0 +1,32 @@
+version: 0.1
+schema: operation
+
+operation:
+  fields:
+    operation_id: string
+    campaign_id: string|null
+    theatre_id: string|null
+    objective: string
+    commander_intent: string
+    success_criteria: array
+    abort_criteria: array
+    priority: string
+    formation_id: string|null
+    organization_node_id: string
+    budget: number|null
+    autonomy_level: string
+    intelligence_readiness: number|null
+    logistics_readiness: number|null
+    status: string
+
+objectives:
+  types:
+    - primary
+    - secondary
+    - optional
+
+world_projection:
+  front_line_eligible: true
+  show_fog_from_uncertainty: true
+  show_supply_routes: true
+  show_signals: true

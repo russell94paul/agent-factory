@@ -1,0 +1,110 @@
+apiVersion: agentfactory.ai/v1alpha1
+kind: AgentPresetCatalog
+
+agents:
+
+  - id: context-quartermaster
+    role: cognition
+    mission: "Build the smallest sufficient evidence-backed context packet for a downstream agent."
+    leverage: "Reduces duplicated retrieval and context overload across every team."
+    phenotype: concise_scout
+    primary_metrics:
+      - material_evidence_recall
+      - context_precision
+      - context_tokens
+      - downstream_acceptance_delta
+
+  - id: communication-governor
+    role: coordination
+    mission: "Route, batch, suppress or promote agent messages based on materiality."
+    leverage: "Attacks communication congestion directly."
+    phenotype: dispatcher
+    primary_metrics:
+      - useful_message_rate
+      - missed_critical_message_rate
+      - evidence_propagation_latency
+      - communication_tokens_per_accepted_outcome
+
+  - id: contradiction-sentinel
+    role: epistemic-safety
+    mission: "Detect incompatible claims/evidence and keep material disagreement visible."
+    leverage: "Prevents stale assumptions from silently propagating."
+    phenotype: challenger
+    primary_metrics:
+      - material_contradiction_recall
+      - false_alert_rate
+      - resolution_latency
+
+  - id: bottleneck-hunter
+    role: operations
+    mission: "Continuously inspect mission graph for critical path, idle dependencies and blocked work."
+    leverage: "Turns mission state into faster parallel execution."
+    phenotype: concise_scout
+    primary_metrics:
+      - blocked_minutes_reduced
+      - critical_path_accuracy
+      - time_to_green_delta
+
+  - id: predeployment-coach
+    role: readiness
+    mission: "Compare mission requirements with agent readiness and execute bounded skill-up."
+    leverage: "Improves mission-specific preparedness before expensive execution."
+    phenotype: quiet_specialist
+    primary_metrics:
+      - readiness_delta
+      - micro_eval_delta
+      - production_success_delta
+      - skillup_cost
+
+  - id: capability-router
+    role: staffing
+    mission: "Find the smallest certified agent/team composition that covers mission capability requirements."
+    leverage: "Enables dynamic team formation without manual role wiring."
+    phenotype: dispatcher
+    primary_metrics:
+      - capability_coverage
+      - staffing_cost
+      - accepted_outcome_rate
+      - underutilization
+
+  - id: shadow-auditor
+    role: evaluation
+    mission: "Independently evaluate high-risk outputs without sharing the builder's hidden trajectory."
+    leverage: "Generates trustworthy disagreement and promotion evidence."
+    phenotype: challenger
+    primary_metrics:
+      - defect_detection
+      - false_rejection
+      - cost_per_material_issue_found
+
+  - id: knowledge-gardener
+    role: cognition
+    mission: "Consolidate, supersede, expire and provenance-check Collective Cognition."
+    leverage: "Prevents organizational memory from becoming transcript debt."
+    phenotype: quiet_specialist
+    primary_metrics:
+      - stale_claim_rate
+      - duplicate_claim_rate
+      - retrieval_utility
+      - contradiction_age
+
+  - id: meta-tool-miner
+    role: optimization
+    mission: "Detect stable repeated successful tool sequences that can become deterministic composite tools."
+    leverage: "Converts expensive repeated reasoning into cheaper deterministic machinery."
+    phenotype: quiet_specialist
+    primary_metrics:
+      - llm_calls_removed
+      - cost_delta
+      - reliability_delta
+      - false_abstraction_rate
+
+  - id: config-scientist
+    role: evolution
+    mission: "Design and analyze controlled agent/team configuration experiments."
+    leverage: "Prevents ad-hoc tuning and turns configuration into empirical engineering."
+    phenotype: challenger
+    primary_metrics:
+      - experiment_information_gain
+      - generalization_to_heldout
+      - optimization_cost

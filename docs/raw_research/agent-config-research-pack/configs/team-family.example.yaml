@@ -1,0 +1,75 @@
+schema_version: team-config/v0
+kind: TeamConfig
+metadata:
+  id: data-platform-lineage
+  display_name: Data Platform Family
+  tags: [lineage, persistent-specialization, cognitive-bonds]
+team:
+  type: capability-lineage
+  org_type: army
+  domain: data-platform
+  north_star: verified_outcomes_per_unit_cost_without_regression
+  purpose: Maintain complementary cloud, warehouse, implementation and evidence capabilities.
+hierarchy:
+  manager_ref: agent://data-platform-captain
+  topology: manager_to_specialists
+  max_span_of_control: 5
+members:
+  - agent_ref: agent://python-implementation-specialist
+    seat: implementation
+    required: true
+  - agent_ref: agent://snowflake-specialist
+    seat: warehouse
+    required: false
+  - agent_ref: agent://azure-integration-specialist
+    seat: cloud
+    required: false
+  - agent_ref: agent://evidence-reviewer
+    seat: independent-verifier
+    required: true
+relationships:
+  - type: cognitive-pair
+    agents: [agent://python-implementation-specialist, agent://evidence-reviewer]
+    shared_context: typed_handoff_only
+    wake_on_struggle: 70
+    rescue_permissions: recommend_and_review
+  - type: lineage-parent
+    agents: [agent://data-platform-captain, agent://azure-integration-specialist]
+    shared_knowledge: approved_domain_objects
+communication:
+  topology: manager_to_specialists
+  frequency: adaptive
+  wiki_scan: event_triggered
+  alerts:
+    struggle: 70
+    contradiction: 55
+    budget: 80
+  effectiveness_metric: metric://team.communication.effectiveness/v1
+working_style:
+  planning: manager_intent_with_worker_plan
+  execution: continuous_context_per_sequential_change
+  review: independent_deterministic_verifier
+  conflict_resolution: evidence_then_human
+workflow:
+  ref: workflow://data-platform-change/v1
+  human_gates: [scope, privileged_change, production_promotion]
+  max_parallel_changes_per_repo: 1
+metrics:
+  north_star: metric://team.verified_value_efficiency/v1
+  required:
+    - metric://team.terminal_success_rate/v1
+    - metric://team.cost_per_accepted_outcome/v1
+    - metric://team.handoff_correct_consumption/v1
+    - metric://team.regression_escape/v1
+    - metric://team.health/v1
+certification:
+  required_before_production: true
+  minimum_real_missions: 1
+  evidence_tier: measured
+ui:
+  tab: lineage
+  show_generation: true
+  show_bonds: true
+  show_capability_growth: true
+  show_decorative_social_activity: false
+

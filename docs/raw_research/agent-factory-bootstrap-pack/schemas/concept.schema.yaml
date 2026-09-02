@@ -1,0 +1,23 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$title: ResearchConcept
+$type: object
+required: [concept_id, name, category, description]
+properties:
+  concept_id: {type: string}
+  name: {type: string}
+  aliases: {type: array, items: {type: string}}
+  category: {type: string}
+  description: {type: string}
+  source_documents: {type: array, items: {type: string}}
+  maturity:
+    enum: [idea, researched, designed, prototyped, implemented, measured, production, unknown]
+  novelty_status:
+    enum: [known_prior_art, adaptation, hybrid, potentially_novel, novel_claim_unverified, unknown]
+  evidence_strength: {type: [string, 'null']}
+  implementation_status: {type: [string, 'null']}
+  related_concepts: {type: array, items: {type: string}}
+  possible_integrations: {type: array, items: {type: string}}
+  claimed_benefits: {type: array, items: {type: string}}
+  known_costs: {type: array, items: {type: string}}
+  known_risks: {type: array, items: {type: string}}
+  unanswered_questions: {type: array, items: {type: string}}

@@ -1,0 +1,145 @@
+{
+  "pack_name": "Agent Factory Chat Design Consolidation Pack",
+  "generated_date": "2026-09-01",
+  "current_ui_theme": "Army / Mission Command",
+  "primary_ui": "Agentic IDE / Mission Command Console",
+  "alternate_ui": "Army Command World / Battlefield View",
+  "files": [
+    {
+      "path": "00_MASTER_CONCEPT_MAP.md",
+      "bytes": 6033
+    },
+    {
+      "path": "01_PRIMARY_AGENTIC_IDE.md",
+      "bytes": 2495
+    },
+    {
+      "path": "02_ARMY_COMMAND_WORLD.md",
+      "bytes": 2700
+    },
+    {
+      "path": "03_ARMY_INTERACTION_LANGUAGE.md",
+      "bytes": 2331
+    },
+    {
+      "path": "04_GAMIFICATION_SOCIAL_WORLD.md",
+      "bytes": 2486
+    },
+    {
+      "path": "05_ADVANCED_PROJECTS_COMMAND.md",
+      "bytes": 3350
+    },
+    {
+      "path": "06_ORGANIZATION_HIERARCHY_AND_SERVICE_DESIGNATIONS.md",
+      "bytes": 2802
+    },
+    {
+      "path": "07_METRICS_FAILURE_RECURRENCE_AND_HEALTH.md",
+      "bytes": 3463
+    },
+    {
+      "path": "08_EXPERIMENTAL_RESEARCH_CONCEPTS.md",
+      "bytes": 2847
+    },
+    {
+      "path": "09_BUSINESS_VALUE_FEATURES.md",
+      "bytes": 2776
+    },
+    {
+      "path": "10_AGENTIC_RESEARCH_PROGRAM.md",
+      "bytes": 3756
+    },
+    {
+      "path": "11_IMPLEMENTATION_AND_INTEGRATION_GUIDE.md",
+      "bytes": 3931
+    },
+    {
+      "path": "12_NAMING_AND_DESIGN_HISTORY.md",
+      "bytes": 1838
+    },
+    {
+      "path": "13_RESEARCH_PROMPTS.md",
+      "bytes": 5761
+    },
+    {
+      "path": "CHAT_CONSOLIDATED_SPEC.md",
+      "bytes": 46660
+    },
+    {
+      "path": "README.md",
+      "bytes": 3640
+    },
+    {
+      "path": "agent_org_schema_example.yaml",
+      "bytes": 2075
+    },
+    {
+      "path": "concept_catalog.json",
+      "bytes": 8755
+    },
+    {
+      "path": "failure_recurrence_schema.yaml",
+      "bytes": 1609
+    },
+    {
+      "path": "legacy_reference/Agent Factory Vision.txt",
+      "bytes": 21179
+    },
+    {
+      "path": "legacy_reference/ZEUS_World_UI_Research_Pack.md",
+      "bytes": 56107
+    },
+    {
+      "path": "legacy_reference/ZEUS_World_UI_Research_Pack.zip",
+      "bytes": 29993
+    },
+    {
+      "path": "legacy_reference/zeus_world_ui_research_pack/00_BASELINE_AND_DOCTRINE.md",
+      "bytes": 5294
+    },
+    {
+      "path": "legacy_reference/zeus_world_ui_research_pack/01_REFERENCE_SYSTEMS.md",
+      "bytes": 6943
+    },
+    {
+      "path": "legacy_reference/zeus_world_ui_research_pack/02_EXTREME_EXPERIMENTS.md",
+      "bytes": 7673
+    },
+    {
+      "path": "legacy_reference/zeus_world_ui_research_pack/03_BUSINESS_VALUE_CONCEPTS.md",
+      "bytes": 5301
+    },
+    {
+      "path": "legacy_reference/zeus_world_ui_research_pack/04_AGENTIC_RESEARCH_PROGRAM.md",
+      "bytes": 6156
+    },
+    {
+      "path": "legacy_reference/zeus_world_ui_research_pack/05_EVALUATION_PROTOCOL.md",
+      "bytes": 4093
+    },
+    {
+      "path": "legacy_reference/zeus_world_ui_research_pack/06_STATE_AND_INTERACTION_MODEL.md",
+      "bytes": 3547
+    },
+    {
+      "path": "legacy_reference/zeus_world_ui_research_pack/07_TECHNICAL_OPTIONS.md",
+      "bytes": 4138
+    },
+    {
+      "path": "legacy_reference/zeus_world_ui_research_pack/08_RESEARCH_PROMPTS.md",
+      "bytes": 5304
+    },
+    {
+      "path": "legacy_reference/zeus_world_ui_research_pack/09_IMPLEMENTATION_READINESS.md",
+      "bytes": 3654
+    },
+    {
+      "path": "legacy_reference/zeus_world_ui_research_pack/README.md",
+      "bytes": 2805
+    },
+    {
+      "path": "legacy_reference/zeus_world_ui_research_pack/SOURCES.md",
+      "bytes": 3754
+    }
+  ]
+}

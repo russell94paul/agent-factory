@@ -1,0 +1,68 @@
+schema_version: 0.1
+
+failure_event:
+  attempt_id: string
+  incident_id: string
+  mission_id: string
+  organization_node_id: string
+  occurred_at: timestamp
+  stage: string
+  raw_error_ref: string
+
+incident:
+  incident_id: string
+  opened_at: timestamp
+  closed_at: timestamp|null
+  mission_id: string
+  failure_family_id: string|null
+  attempt_count: integer
+  claimed_fixed: boolean
+  remediation_ref: string|null
+
+failure_fingerprint:
+  failure_family: string
+  subsystem: string
+  component: string
+  root_cause: string
+  stage: string
+  error_signature: string
+  dependency: string|null
+  semantic_fingerprint: string|null
+
+failure_family:
+  id: string
+  canonical_name: string
+  first_seen_at: timestamp
+  last_seen_at: timestamp
+  incident_count: integer
+  recurrence_count: integer
+  doctrine_refs: [string]
+  preventive_control_refs: [string]
+
+recurrence_assessment:
+  incident_id: string
+  prior_incident_ids: [string]
+  is_recurrence: boolean
+  recurrence_index: integer
+  time_since_last_occurrence_seconds: number|null
+
+  preventive_knowledge:
+    existed: boolean
+    retrieved: boolean|null
+    delivered: boolean|null
+    understood: boolean|null
+    followed: boolean|null
+    prevention_worked: boolean|null
+
+metrics:
+  recurring_failure_rate:
+    numerator: repeated_failure_occurrences
+    denominator: total_failure_occurrences
+
+  post_fix_recurrence_rate:
+    numerator: fixed_failure_families_that_recurred
+    denominator: failure_families_marked_fixed
+
+  preventable_recurrence_rate:
+    numerator: recurrences_with_preventive_knowledge_or_control
+    denominator: recurring_incidents

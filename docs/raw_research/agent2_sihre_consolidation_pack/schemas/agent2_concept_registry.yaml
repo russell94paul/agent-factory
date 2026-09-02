@@ -1,0 +1,78 @@
+version: 0.1
+status: research
+entity:
+  working_name: viable_cognitive_entity
+  aliases:
+    - agent_2_0
+    - adaptive_cognitive_entity
+
+core_hypotheses:
+  - mutable_cognition
+  - recursive_sihre
+  - cognitive_portfolio_optimization
+  - contextual_bayesian_trust
+  - uncertainty_governance
+  - value_of_information
+  - predictive_cognitive_immunity
+  - cognitive_homeostasis
+  - agent_kg_mesh
+  - earned_autonomy
+  - developmental_specialization
+  - cognitive_genome
+
+cognitive_kernel:
+  orchestration: sihre
+  modalities:
+    - deterministic_reflex
+    - llm_reasoning
+    - retrieval
+    - knowledge_graph
+    - statistical
+    - causal
+    - planning
+    - simulation
+    - adversarial
+    - verification
+
+control_signals:
+  - uncertainty
+  - disagreement
+  - mission_risk
+  - context_regime
+  - contextual_trust
+  - cost
+  - latency
+  - cognitive_health
+  - tail_risk
+
+adaptation_targets:
+  - routing
+  - expert_weights
+  - verification_policy
+  - evidence_acquisition
+  - model_selection
+  - tool_selection
+  - memory_policy
+  - communication_topology
+  - authority
+  - cognitive_genome
+
+evaluation:
+  required:
+    - temporal_validation
+    - ablation
+    - calibration
+    - outcome_quality
+    - cost
+    - latency
+    - human_rework
+    - tail_risk
+    - failure_correlation
+    - drift_recovery
+
+novelty_policy:
+  claim_individual_components_as_novel: false
+  focus:
+    - architectural_integration
+    - recursive_application
+    - measurable_joint_governance

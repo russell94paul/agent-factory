@@ -1,0 +1,26 @@
+{
+  "schema_version": "resolved-config/v0",
+  "compiler_version": "agent-factory-config-compiler/0.1.0",
+  "resolved_at": "2026-09-02T00:00:00Z",
+  "source_refs": [
+    "agent://data-platform-specialist",
+    "preset://base/evidence-first",
+    "preset://domain/data-platform",
+    "mission://warehouse-connector-change-042"
+  ],
+  "resolution_order": ["base", "domain", "agent", "mission", "policy_caps"],
+  "effective": {
+    "agent_id": "data-platform-specialist",
+    "model": {"provider": "configurable", "name": "capable-coding-model", "snapshot": "pinned-model-snapshot"},
+    "workflow": "continuous_worker_then_independent_verifier",
+    "tools": ["tool://filesystem/read-write-scoped", "tool://shell/sandboxed", "tool://git/worktree-scoped"],
+    "authority": {"merge_access": false, "deploy_access": false, "grader_edit_access": false},
+    "budgets": {"max_turns": 60, "usd": 8.0, "timeout_minutes": 90},
+    "contracts": ["contract://agent-output/v1", "contract://warehouse-connector-change/v1"]
+  },
+  "config_hash": "sha256:replace-with-canonical-json-hash",
+  "certification": {
+    "status": "uncertified",
+    "reason": "Example only; behavior-changing resolved configurations require evidence before production use."
+  }
+}

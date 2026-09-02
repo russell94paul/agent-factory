@@ -1,0 +1,41 @@
+# Seed only. Do not implement as canonical until architecture synthesis approves it.
+$schema: https://json-schema.org/draft/2020-12/schema
+$title: OrganizationIRSeed
+$type: object
+required: [schema_version, organization, mission, topology, policies, metrics]
+properties:
+  schema_version: {type: string}
+  organization:
+    type: object
+    properties:
+      id: {type: string}
+      kind: {type: string}
+      blueprint: {type: [string, 'null']}
+      version: {type: string}
+  mission:
+    type: object
+    properties:
+      intent: {type: string}
+      risk: {type: string}
+      temporal_class: {type: string}
+      repos: {type: array, items: {type: string}}
+  topology:
+    type: object
+    properties:
+      mode: {type: string}
+      nodes: {type: array}
+      edges: {type: array}
+  policies:
+    type: object
+    properties:
+      human_gates: {type: array}
+      permissions: {type: array}
+      memory: {type: object}
+      communication: {type: object}
+  metrics:
+    type: object
+    properties:
+      success: {type: array}
+      safety: {type: array}
+      cost: {type: array}
+      health: {type: array}

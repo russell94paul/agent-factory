@@ -1,0 +1,30 @@
+{
+  "pack": "Agent 2.0 / SIHRE Consolidation Pack",
+  "created": "2026-09-01",
+  "purpose": "Consolidate current Agent Factory design and research concepts around SIHRE-derived Agent 2.0 architecture.",
+  "files": [
+    "01_agent_definition_and_layers.md",
+    "02_sihre_to_agent_factory.md",
+    "03_agent2_concept_registry.md",
+    "04_recursive_sihre_and_morphological_cognition.md",
+    "05_quantitative_agent2_features.md",
+    "06_cross_domain_inspirations.md",
+    "07_architecture_and_implementation_roadmap.md",
+    "08_novelty_claims_and_research_boundaries.md",
+    "README.md",
+    "handoff/COLD_START_HANDOFF_PROMPT.md",
+    "research_prompts/DR01_PRIOR_ART_AND_NOVELTY.md",
+    "research_prompts/DR02_COGNITIVE_PORTFOLIO_THEORY.md",
+    "research_prompts/DR03_RECURSIVE_SIHRE_MORPHOLOGICAL_COGNITION.md",
+    "research_prompts/DR04_CONTEXTUAL_TRUST_KG_MESH.md",
+    "research_prompts/DR05_HOMEOSTASIS_IMMUNITY_SELF_MODEL.md",
+    "research_prompts/DR06_EVALUATION_AND_BENCHMARKS.md",
+    "research_prompts/DR07_CROSS_DOMAIN_TRANSFER.md",
+    "research_prompts/DR08_ENTITY_DEFINITION_AND_NAMING.md",
+    "research_prompts/MASTER_DEEP_RESEARCH_PROMPT.md",
+    "schemas/agent2_concept_registry.yaml"
+  ],
+  "recommended_entrypoint": "README.md",
+  "master_research_prompt": "research_prompts/MASTER_DEEP_RESEARCH_PROMPT.md",
+  "cold_start_handoff": "handoff/COLD_START_HANDOFF_PROMPT.md"
+}

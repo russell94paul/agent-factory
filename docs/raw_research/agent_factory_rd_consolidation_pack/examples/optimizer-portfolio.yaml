@@ -1,0 +1,43 @@
+optimizer:
+  architecture: adaptive_portfolio_v1
+
+  strategies:
+    explorer:
+      type: evolutionary
+      budget: adaptive
+
+    refiner:
+      type: bayesian
+      budget: adaptive
+
+    repair:
+      type: counterfactual
+      budget: adaptive
+
+    robustness:
+      type: reverse_ablation
+      budget: adaptive
+
+  controller:
+    type: bandit
+
+  racing:
+    enabled: true
+
+  multi_fidelity:
+    enabled: true
+
+  surrogate:
+    enabled: true
+    uncertainty_aware: true
+
+  decomposition:
+    mode: interaction_graph
+
+  archive:
+    strategy: quality_diversity
+
+  immutable:
+    - evaluator
+    - success_contract
+    - security_policy

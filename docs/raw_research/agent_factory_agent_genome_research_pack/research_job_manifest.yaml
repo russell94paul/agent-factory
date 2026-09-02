@@ -1,0 +1,38 @@
+research_pack: agent_factory_agent_genome_research_pack
+version: 1.0.0
+primary_prompt: 02_DEEP_RESEARCH_BOOT_PROMPT.md
+research_tracks:
+- id: ACONF-01
+  priority: P0
+  prompt: research/AGENT_CONFIG_RESEARCH_PROMPT.md
+- id: ACOMM-01
+  priority: P0
+  prompt: research/AGENT_COMMUNICATION_RESEARCH_PROMPT.md
+- id: AEVAL-01
+  priority: P0
+  prompt: research/AGENT_EVAL_MONITORING_RESEARCH_PROMPT.md
+- id: AKGM-01
+  priority: P1
+  prompt: research/AGENT_KG_MESH_RESEARCH_PROMPT.md
+- id: AXFER-01
+  priority: P1
+  prompt: research/CROSS_DOMAIN_TRANSFER_RESEARCH_PROMPT.md
+implementation_order:
+- AgentDefinition v0.1
+- Agent Registry + Lockfile
+- Runtime Event Store
+- Benchmark Vault
+- Communication Protocol v0.1
+- Relationship Edges
+- A/B Replay
+- Safe Agent Genome Tuning
+- Team Genome
+- Shadow Twin
+- Capability Staffing
+- Evolution Chamber
+decision_labels:
+- ADOPT
+- ADAPT
+- EXPERIMENT
+- DEFER
+- REJECT

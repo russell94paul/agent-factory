@@ -1,0 +1,32 @@
+schema_version: scheduler-policy/v0
+kind: SchedulerPolicy
+metadata:
+  id: surplus-capacity-queue
+  display_name: Capacity Harvester
+trigger:
+  remaining_window_minutes_max: 20
+  surplus_usage_minimum: 0.25
+eligibility:
+  reversible_only: true
+  production_mutations: false
+  grader_or_eval_changes: false
+  verifier_required: true
+  checkpointable: true
+  expected_value_floor: 0.60
+task_families:
+  - evaluation_replay
+  - documentation_integrity_scan
+  - missing_test_proposal
+  - knowledge_index_refresh
+  - low_risk_research_synthesis
+ranking:
+  formula_ref: metric://queue.expected_retained_value_per_token/v1
+stop:
+  before_reset_minutes: 3
+  on_unmeasurable: true
+  on_scope_expansion: true
+  on_no_positive_value_candidate: true
+authority:
+  dispatch_mode: recommend_or_sandbox
+  human_approval_required_for_repo_write: true
+

@@ -1,0 +1,51 @@
+schema_version: agent-config/v0
+kind: AgentConfig
+metadata:
+  id: sentinel-observer
+  display_name: Sentinel
+  tags: [long-running, read-only, intelligence, observability]
+organization:
+  org_type: staff-service
+  operational_role: intelligence-observer
+  authority_grade: observer
+mission_fit:
+  task_families: [watch, correlate, triage, recommend]
+  domains: [factory-operations]
+model:
+  provider: configurable
+  name: efficient-analysis-model
+  snapshot: pinned-at-resolution
+  reasoning_effort: low
+behavior:
+  skepticism: 0.85
+  alert_sensitivity: 0.60
+  evidence_threshold: 0.85
+instructions:
+  system_prompt_ref: prompt://agents/sentinel/v1
+  prohibitions:
+    - must_not_modify_repositories
+    - must_not_execute_deployments
+    - must_not_read_secret_values
+    - must_not_convert_missing_telemetry_to_healthy
+tools:
+  allow: [tool://events/read, tool://metrics/read, tool://tickets/create-draft]
+  deny: [tool://shell/write, tool://git/write, tool://deploy]
+knowledge:
+  mesh_policy: policy://mesh/operations-observer/v1
+communication:
+  allowed_targets: [operator, responsible_manager]
+  deduplicate: true
+  cooldown_minutes: 30
+  severity_model: [sev1, sev2, sev3, watch]
+authority:
+  autonomy_level: observe_and_recommend
+  external_actions: false
+  ticket_creation: draft_only
+budget:
+  usd_per_hour: 0.50
+  max_tool_calls_per_cycle: 20
+evaluation:
+  contract_ref: contract://sentinel-silence-means-health/v1
+  false_positive_budget: 0.05
+  missed_incident_budget: 0.01
+

@@ -1,0 +1,158 @@
+{
+  "pack": "Agent Factory Army UI Concept Pack",
+  "version": "1.0",
+  "files": [
+    {
+      "path": "00_MASTER_INDEX.md",
+      "bytes": 5043
+    },
+    {
+      "path": "01_PRODUCT_VISION_AND_UI_LAYERS.md",
+      "bytes": 2360
+    },
+    {
+      "path": "02_PRIMARY_AGENTIC_IDE.md",
+      "bytes": 2513
+    },
+    {
+      "path": "03_ARMY_WORLD_UI.md",
+      "bytes": 3730
+    },
+    {
+      "path": "04_ARMY_INTERACTION_LANGUAGE.md",
+      "bytes": 1685
+    },
+    {
+      "path": "05_ORGANIZATION_HIERARCHY_AND_SERVICE_DESIGNATIONS.md",
+      "bytes": 2165
+    },
+    {
+      "path": "06_AGENT_IDENTITIES_RANKS_CALLSIGNS.md",
+      "bytes": 1307
+    },
+    {
+      "path": "07_MISSIONS_CAMPAIGNS_OPERATIONS_GAMIFICATION.md",
+      "bytes": 1442
+    },
+    {
+      "path": "08_COMMUNICATION_AND_COORDINATION.md",
+      "bytes": 1529
+    },
+    {
+      "path": "09_INTELLIGENCE_KNOWLEDGE_MEMORY.md",
+      "bytes": 1464
+    },
+    {
+      "path": "10_ADVANCED_PROJECTS_COMMAND_AUTONOMOUS_LAB.md",
+      "bytes": 2400
+    },
+    {
+      "path": "11_EVALUATION_WARGAMES_DOCTRINE.md",
+      "bytes": 1315
+    },
+    {
+      "path": "12_METRICS_HEALTH_AND_RECURRENCE.md",
+      "bytes": 2639
+    },
+    {
+      "path": "13_STATE_EVENT_COMMAND_SCHEMA.md",
+      "bytes": 1747
+    },
+    {
+      "path": "14_RESEARCH_BACKLOG_20_TRACKS.md",
+      "bytes": 4134
+    },
+    {
+      "path": "15_IMPLEMENTATION_ROADMAP.md",
+      "bytes": 1994
+    },
+    {
+      "path": "16_CONCEPT_EVOLUTION_AND_DECISIONS.md",
+      "bytes": 1868
+    },
+    {
+      "path": "17_PROMPT_PACK.md",
+      "bytes": 5025
+    },
+    {
+      "path": "18_ARTIFACT_CATALOG.md",
+      "bytes": 1938
+    },
+    {
+      "path": "README.md",
+      "bytes": 1920
+    },
+    {
+      "path": "prior_research/ZEUS_World_UI_Research_Pack.md",
+      "bytes": 56107
+    },
+    {
+      "path": "prior_research/zeus_world_ui_research_pack/00_BASELINE_AND_DOCTRINE.md",
+      "bytes": 5294
+    },
+    {
+      "path": "prior_research/zeus_world_ui_research_pack/01_REFERENCE_SYSTEMS.md",
+      "bytes": 6943
+    },
+    {
+      "path": "prior_research/zeus_world_ui_research_pack/02_EXTREME_EXPERIMENTS.md",
+      "bytes": 7673
+    },
+    {
+      "path": "prior_research/zeus_world_ui_research_pack/03_BUSINESS_VALUE_CONCEPTS.md",
+      "bytes": 5301
+    },
+    {
+      "path": "prior_research/zeus_world_ui_research_pack/04_AGENTIC_RESEARCH_PROGRAM.md",
+      "bytes": 6156
+    },
+    {
+      "path": "prior_research/zeus_world_ui_research_pack/05_EVALUATION_PROTOCOL.md",
+      "bytes": 4093
+    },
+    {
+      "path": "prior_research/zeus_world_ui_research_pack/06_STATE_AND_INTERACTION_MODEL.md",
+      "bytes": 3547
+    },
+    {
+      "path": "prior_research/zeus_world_ui_research_pack/07_TECHNICAL_OPTIONS.md",
+      "bytes": 4138
+    },
+    {
+      "path": "prior_research/zeus_world_ui_research_pack/08_RESEARCH_PROMPTS.md",
+      "bytes": 5304
+    },
+    {
+      "path": "prior_research/zeus_world_ui_research_pack/09_IMPLEMENTATION_READINESS.md",
+      "bytes": 3654
+    },
+    {
+      "path": "prior_research/zeus_world_ui_research_pack/README.md",
+      "bytes": 2805
+    },
+    {
+      "path": "prior_research/zeus_world_ui_research_pack/SOURCES.md",
+      "bytes": 3754
+    },
+    {
+      "path": "schemas/failure_recurrence.schema.yaml",
+      "bytes": 1567
+    },
+    {
+      "path": "schemas/mission_operation.schema.yaml",
+      "bytes": 667
+    },
+    {
+      "path": "schemas/service_designation.schema.yaml",
+      "bytes": 1068
+    },
+    {
+      "path": "schemas/world_event_mapping.yaml",
+      "bytes": 686
+    },
+    {
+      "path": "sources/Agent Factory Vision.txt",
+      "bytes": 21179
+    }
+  ]
+}
