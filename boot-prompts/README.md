@@ -1,6 +1,11 @@
 # Boot prompts — read this first, then read exactly one
 
-Nine prompts accumulated here in about fifty hours (`ls boot-prompts/*.md | grep -v README | wc -l`). Each was correct when written; most describe a
+Prompts accumulate here fast — count them, do not read a number here:
+`ls boot-prompts/*.md | grep -v README | wc -l`. (This sentence said **"Nine"** from 2026-08-31
+until 2026-09-02, by which point the real answer was **22**. The command was already printed beside
+it and the stale word still won, because a reader's eye takes the number and not the instruction.
+So the number is gone rather than corrected — that is the only fix that holds.)
+Each prompt was correct when written; most describe a
 plan that a later measurement retired. **A boot prompt carrying a retired plan is worse than none,
 because it is confidently wrong and sits further from the reader's eye than the correction.**
 
@@ -19,21 +24,25 @@ about to type a number here, put its command beside it or leave it out.
 
 ## ⭐ Read this one
 
-### Two threads are live. Pick the one you are here for.
+### Three threads are live. Pick the one you are here for.
 
 ⚠ **Corrected 2026-08-31.** This heading read *"There is no CURRENT prompt"* — true when written,
 false within the hour. A second session had a workstream open the whole time.
 
 | thread | prompt | `next:` |
 |---|---|---|
-| **⭐ MISSION (current)** | [`mission-commander-2026-09-01.md`](mission-commander-2026-09-01.md) | **The R3 human gate, then R3, then the DAG.** Read `mission-handoff-2026-09-01.md` alongside it for the evidence detail |
+| **⭐ PLATFORM (current)** | [`p0-autonomy-pump-2026-09-02.md`](p0-autonomy-pump-2026-09-02.md) | **Prove Gates 4 and 5 on the live UI.** The autonomy pump is built and 1020 tests pass, but it has never started a real agent. Run `marketing-meeting-v1-20260902-111431` is deliberately PAUSED — the pump fires on page render, and the live servers only run pre-pump code. Branch `switchboard/p0-autonomy`, **uncommitted** |
+| **⭐ CLIENT DELIVERY / GP-318 (current — 2026-09-03)** | [`marketing-model-grants-2026-09-03.md`](marketing-model-grants-2026-09-03.md) | **One grant, and it is not the model's to give: restore `SELECT` for `R3_CARTOGRAPHY_RO` on the refreshed `TEST_DG1_GEP.WAREHOUSE` objects.** It unblocks *both* remaining rendering checks. ✅ TEST data currency cleared (6 objects, current to the day). ⛔ Warehouse mode 500s for the reader role — **grant decay, not missing data**; `SELECT ON ALL` dies with the object when a task does `CREATE OR REPLACE`, measured 0 of 34 visible objects post-date the grant. GP-318 comment `36270` posted; wiki `PD-3` written |
+| MISSION | [`mission-commander-2026-09-01.md`](mission-commander-2026-09-01.md) | **⛔ Its §3 human gate is DONE — do not re-create the role.** `R3_CARTOGRAPHY_RO` exists, is **key-pair** (not password), and was watched refusing a write on 2026-09-02. Read `mission-handoff-2026-09-01.md` for evidence detail. ⚠ The `marketing-model-reconstruction-v1` mission it describes is now **complete** — all 8 labelled tasks DONE, measured 2026-09-02 |
 | mission — evidence detail + §0 self-corrections | [`mission-handoff-2026-09-01.md`](mission-handoff-2026-09-01.md) | **R3 read-only access, then D1.** Wave 1 done — R1/R2 closed with evidence. ⛔ §0 corrects two claims I made that measurement refuted |
 | mission — earlier checkpoint (§1 credential exposure still stands) | [`mission-wave1-checkpoint-2026-09-01.md`](mission-wave1-checkpoint-2026-09-01.md) | **Paul's credential decision, then Wave 1.** R1/R2 unblocked, R3 blocked. ⛔ Read §1 first — three credentials were exposed into a transcript and one reaches PROD |
 | **execution plane** (paused for the mission) | [`first-real-dispatch-2026-08-31.md`](first-real-dispatch-2026-08-31.md) | **F90 remedy (a) + sparse-checkout, then one live dispatch.** The credential problem is solved, not deferred — sparse-checkout excludes all three credential files from the worktree, tested against the real repo |
+| **corpus / architecture review (new 2026-09-02)** | [`corpus-index-2026-09-02.md`](corpus-index-2026-09-02.md) | **`RB-00A` — convert the two `.docx` and index them.** ⭐ The top three items are NOT research: 635 KB of the corpus has never been read, the calibration fixture's primary key may be wrong, and no agent has completed a real run. `docs/_index/` (10 artifacts) + `docs/research/backlog.yaml` |
 | **workflow library / client delivery** | [`workflow-library-2026-08-31.md`](workflow-library-2026-08-31.md) | run `keel` on the GEP marketing model **as an instrumented experiment** — §3a's five setup steps come before any agent spawns |
 
-They do not conflict: one owns *what the factory can execute*, the other owns *which workflow a
-ticket routes to* and the client-facing delivery.
+They do not conflict: one owns *what the factory can execute*, one owns *which workflow a
+ticket routes to* and the client-facing delivery, and the third owns *what the corpus says and
+what it is missing* — it dispatched nothing and decided nothing, deliberately.
 
 ⚠ **The execution-plane row was `none — write one before you start` until 2026-08-31.** It now has
 a prompt: the bootstrap pack was installed (and deliberately left inert), five instruments were
