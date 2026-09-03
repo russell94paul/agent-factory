@@ -132,8 +132,10 @@ nothing. That is exactly the failure the lane exists to catch (*"the class of bu
 passes straight over"*), and it is the blind-instrument family this estate has now met six times.
 A refused run is a better outcome than a green one over the wrong provider.
 
-**What it needs:** port 3010 free, so the lane can start its own server in warehouse mode. PID
-40440 is very likely the operator's session and was not killed.
+**What it needs:** the `.next` lock released, so the lane can start its own server in warehouse
+mode. ⚠ **It is a per-DIRECTORY lock, not a port collision** — MEASURED: the lane set `PORT=3101`
+via `webServer.env` and Next still refused, naming the **Dir**. Changing the port does not help.
+PID 40440 is very likely the operator's session and was not killed.
 
 ```bash
 taskkill /PID 40440 /F     # operator's call, not taken here
@@ -141,14 +143,84 @@ cd ~/repos/navira-marketing-dashboard && \
   SNOWFLAKE_ACCOUNT=og35375.canada-central.azure SNOWFLAKE_USER=R3_CARTOGRAPHY \
   SNOWFLAKE_ROLE=R3_CARTOGRAPHY_RO SNOWFLAKE_WAREHOUSE=COMPUTE_WH \
   SNOWFLAKE_DATABASE=TEST_DG1_GEP \
-  SNOWFLAKE_PASSWORD="$(az keyvault secret show --vault-name aldc-vault-test \
-    --name snowflake-r3-cartography-nonprod --query value -o tsv)" \
+  SNOWFLAKE_PRIVATE_KEY="$(az keyvault secret show --vault-name aldc-vault-test \
+    --name snowflake-r3-cartography-nonprod --query value -o tsv | base64 -w0)" \
   npx playwright test --config=playwright.warehouse.config.ts --reporter=list
 ```
+
+⛔ **CORRECTED 2026-09-02, after this file was first committed.** The command above originally
+passed `SNOWFLAKE_PASSWORD`. **That was wrong and would have failed.** `R3_CARTOGRAPHY` is
+**key-pair**, not password: `scripts/snowflake_bootstrap_r3.py:157` branches on `-----BEGIN` in the
+retrieved credential, and `warehouse.ts:2038-2041` wants `SNOWFLAKE_PRIVATE_KEY` as a
+**base64-encoded PKCS8 PEM** with `authenticator: "SNOWFLAKE_JWT"` — because *"password sign-ins
+require MFA, which a headless app can't satisfy."*
+
+⭐ **How the error presents is the reusable part.** A password attempt against a key-pair identity
+returns:
+
+```
+250001 (08001): Failed to connect to DB … Incorrect username or password was specified.
+```
+
+That reads as *a wrong credential* and is actually *a wrong auth method* — with the correct secret,
+the correct user and the correct role. It sent this session looking at the vault for a better
+password when nothing was wrong with the one it had. **F99's identity binding must therefore carry
+the auth METHOD, not just account/user/role/scope**, or its own failure mode is indistinguishable
+from a bad password.
 
 ⭐ **And whoever runs it must check `isWarehouse: true` and a ~110-brand payload BEFORE trusting a
 single assertion.** The mode check is not a nicety; it is the difference between the lane measuring
 something and the lane decorating a synthetic run.
+
+---
+
+## 3a. ✅ TEST holds current marketing data — the "greenfield" concern is retired
+
+**MEASURED 2026-09-02** as `R3_CARTOGRAPHY_RO`, read-only, against the schema the app defaults to
+(`warehouse.ts:2029`). This was run **before** the render lane on purpose: the lane asserts
+presence/non-blank/positivity, so if these tables were empty it would fail *correctly* and the
+failure would be filed against the dashboard instead of against the data.
+
+```
+TEST_DG1_GEP.WAREHOUSE_TEST_GP226 — 31 objects visible to R3_CARTOGRAPHY_RO
+
+  PRESENT_WITH_DATA   MARKETING_FCT_ACTIVITY_UNIFIED       rows=916,051   ACTIVITY_DATE 2024-01-01 -> 2026-09-02
+  PRESENT_WITH_DATA   MARKETING_ATTRIBUTED_ROAS_BY_BRAND   rows=3,623     ACTIVITY_DATE 2024-01-01 -> 2026-09-02
+  PRESENT_WITH_DATA   MARKETING_ATTRIBUTED_SALES_BY_DEST   rows=829       ACTIVITY_DATE 2024-06-01 -> 2026-09-01
+  PRESENT_WITH_DATA   MARKETING_GOOGLE_SPEND_BY_DEST       rows=1,548     ACTIVITY_DATE 2024-06-01 -> 2026-09-02
+  PRESENT_WITH_DATA   MARKETING_META_SPEND_BY_DEST         rows=135       ACTIVITY_DATE 2026-04-20 -> 2026-09-02
+  PRESENT_WITH_DATA   SHARED_DIM_MARKETPLACE               rows=21,901    (no date column)
+```
+
+⭐ **All six objects the dashboard reads are present and current to today.**
+`mission-wave1-checkpoint-2026-09-01.md` §3 flagged TEST's currency as unverified, citing a Navira
+re-land that was *"planned, not executed"* and Lectric's *"greenfield in TEST (no objects)"*. **That
+condition is retired for these six objects.** ⚠ It is retired *for these six only* — the claim is
+about the objects enumerated above, not about TEST as a whole.
+
+⛔ **AND THE FINDING THAT MATTERS FOR READING THE RENDER LANE: Meta's history is 22 months shorter
+than Google's.**
+
+| | first | last | rows |
+|---|---|---|---|
+| `MARKETING_GOOGLE_SPEND_BY_DEST` | **2024-06-01** | 2026-09-02 | 1,548 |
+| `MARKETING_META_SPEND_BY_DEST` | **2026-04-20** | 2026-09-02 | 135 |
+
+**Any date range starting before 2026-04-20 will show Meta spend as zero or blank — correctly.**
+That is data coverage, not a dashboard defect, and it is exactly the shape a render check misreads:
+a blank tile where the reader expects a number. The lane must interpret a Meta blank against this
+window before calling it a failure, and a client-facing surface showing a 2024 range needs to say
+why Meta is absent rather than showing a silent `—`.
+
+⚠ Also noted, minor: `MARKETING_ATTRIBUTED_SALES_BY_DEST` ends **2026-09-01**, one day behind the
+other four. Whether that is a refresh lag or a source boundary is **NOT-ESTABLISHED**.
+
+Regenerate — the probe imports `_connect` from `scripts/snowflake_bootstrap_r3.py` rather than
+reimplementing auth, so it inherits the key-pair branch and the credential-use log:
+
+```bash
+python scripts/probe_test_data_currency.py      # see §3 note on auth
+```
 
 ---
 
