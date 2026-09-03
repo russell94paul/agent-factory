@@ -9,10 +9,16 @@ This session set out to clear the remaining blockers in
 closed before the session began, one confirmed correct as recorded, and one turned into a measured
 FAIL with a named cause.**
 
-⭐ **The headline is §3b.** Warehouse mode does not render — the dashboard returns **HTTP 500**
-because `TEST_DG1_GEP.WAREHOUSE.SALES_FCT_ORDERLINE` is not in TEST. That is true of the committed
-branch and of the operator's working tree alike, so it is not an artifact of how this was run.
-The concern going in was silent blanks; the reality is a hard error before the first tile.
+⭐ **The headline is §3b.** Warehouse mode does not render **for the read-only identity** — the
+dashboard returns **HTTP 500** because `R3_CARTOGRAPHY_RO` cannot resolve
+`TEST_DG1_GEP.WAREHOUSE.SALES_FCT_ORDERLINE`. The concern going in was silent blanks; the reality is
+a hard error before the first tile.
+
+⛔ **AMENDED 2026-09-03.** This line first said the object *"is not in TEST"* and that warehouse mode
+was *"broken for everyone on this branch"*. **Both are retracted.** The next measurement found two
+secure views that read from it returning **12,378** and **10,418** rows — which an absent object
+cannot do. What is measured is that **R3 cannot reach it**; whether it exists at all needs a
+privileged identity. See §3b.
 
 ---
 
@@ -311,12 +317,86 @@ the file carries **11** `REPORT_COMMON` references — so the efficiency family 
 **the sales fact was left pointing at an object that is no longer there**. Warehouse mode is
 therefore broken for everyone, on the current branch, not just for this run.
 
-⚠ **The residual ambiguity, named rather than resolved.** `R3_CARTOGRAPHY_RO` holds
-`SELECT ON ALL` **and** `ON FUTURE` tables and views in the database, so an existing object ought to
-appear in its `INFORMATION_SCHEMA`. That makes **ABSENT** much the likelier branch — but
-`INFORMATION_SCHEMA` shows only what a role has privileges on, so a privileged identity is the only
-instrument that can turn `ABSENT_OR_INVISIBLE` into `ABSENT`. That check was **not** run: it needs
-an admin identity, and which object should be canonical is a decision, not a measurement.
+⛔ **CORRECTED 2026-09-03 — the lean above was wrong, and the diagnosis has changed.**
+
+This section originally read: *"`R3_CARTOGRAPHY_RO` holds `SELECT ON ALL` and `ON FUTURE` tables and
+views in the database, so an existing object ought to appear in its `INFORMATION_SCHEMA`. That makes
+**ABSENT** much the likelier branch."* **The next measurement pointed the other way**, and it was a
+measurement this session should have taken before writing that sentence.
+
+`scripts/probe_absent_vs_invisible.py` — three readings side by side:
+
+```
+1. role-visible objects named SALES_FCT_ORDERLINE* in WAREHOUSE
+   SHOW VIEWS   -> 0: []
+   SHOW TABLES  -> 2: ['SALES_FCT_ORDERLINE_PREBUILD_ROLLBACK', 'SALES_FCT_ORDERLINE_RB_20260708']
+
+2. direct SELECT as R3 — the dashboard's own path
+   REFUSED -> 002003 (42S02): SQL compilation error
+
+3. the secure-view chain that depends on it (executes with OWNER's rights)
+   MARKETING_EFFICIENCY         rows=12,378
+   MARKETING_EFFICIENCY_MARGIN  rows=10,418
+
+4. lineage — the decisive instrument
+   SNOWFLAKE.ACCOUNT_USAGE.OBJECT_DEPENDENCIES not readable by this role
+```
+
+⭐ **Reading 3 is the one that breaks the earlier conclusion.** Per the repo, five `report_common`
+views read `FROM WAREHOUSE.SALES_FCT_ORDERLINE` — and two of them return **12,378** and **10,418**
+rows in TEST right now. **A secure view executes with its owner's rights, but owner's rights cannot
+conjure an object that is not there.** So either:
+
+| | branch | consequence |
+|---|---|---|
+| **A** | The object **exists** and `R3_CARTOGRAPHY_RO` simply lacks `SELECT` on it | The 500 is an **under-granted role**. The fix is a grant. Warehouse mode may be broken **only for R3** — the deployed app runs as a different Snowflake user which may well hold the grant |
+| **B** | The **deployed** `MARKETING_EFFICIENCY` in TEST differs from its repo file and reads elsewhere | The object may indeed be gone, and the repo does not describe what is deployed |
+
+⚠ **Branch B is not hypothetical.** `wiki/tickets/gep/GP-318.md` records that **11 of 15
+`REPORT_COMMON` objects had no file anywhere in `clients`** — *"REPORT_COMMON was almost entirely
+unmanaged"*. So a deployed view diverging from the repo is a documented condition here, not a
+stretch.
+
+⛔ **Neither branch can be settled with `R3_CARTOGRAPHY_RO`**, and this is a real instrument limit,
+not a gap in effort: `SHOW`/`INFORMATION_SCHEMA` expose only what a role holds privileges on,
+`ACCOUNT_USAGE.OBJECT_DEPENDENCIES` is denied to it, and a secure view's DDL is hidden from
+non-owners. **The decisive reading needs a privileged identity**, and it is one query:
+
+```sql
+-- as an admin: settles branch A vs B outright
+SELECT REFERENCED_SCHEMA, REFERENCED_OBJECT_NAME, REFERENCED_OBJECT_DOMAIN
+FROM SNOWFLAKE.ACCOUNT_USAGE.OBJECT_DEPENDENCIES
+WHERE REFERENCING_OBJECT_NAME = 'MARKETING_EFFICIENCY';
+
+SHOW VIEWS LIKE 'SALES_FCT_ORDERLINE' IN SCHEMA TEST_DG1_GEP.WAREHOUSE;   -- exists at all?
+```
+
+### What survives the correction, and what does not
+
+| Claim | Status |
+|---|---|
+| The dashboard returns HTTP 500 in warehouse mode as `R3_CARTOGRAPHY` | ✅ **MEASURED, stands** |
+| `R3_CARTOGRAPHY_RO` cannot see or select `WAREHOUSE.SALES_FCT_ORDERLINE` (`002003`) | ✅ **MEASURED, stands** |
+| `warehouse.ts:82` is identical at `df76dfb` and in the working tree | ✅ **MEASURED, stands** |
+| Two rollback copies exist and the primary is not role-visible | ✅ **MEASURED, stands** |
+| *"The sales fact is not in TEST"* | ⛔ **RETRACTED — NOT ESTABLISHED.** Reading 3 is evidence against it |
+| *"Warehouse mode is broken for everyone on this branch"* | ⛔ **RETRACTED — NOT ESTABLISHED.** Measured broken **for R3**; the deployed app authenticates as a different user whose grants were never checked |
+
+⭐ **And the repo says the schema convention is the other one.** Every `GEP/snowflake/warehouse/*.sql`
+builds into **`WAREHOUSE_SOURCE`**, never `WAREHOUSE` —
+`create or replace secure view WAREHOUSE_SOURCE.SALES_FCT_ORDERLINE(...)`. **Nothing in `clients`
+creates `WAREHOUSE.SALES_FCT_ORDERLINE`**, yet five `report_common` views read from it. MEASURED,
+and readable by R3:
+
+```
+READABLE   TEST_DG1_GEP.WAREHOUSE_SOURCE.SALES_FCT_ORDERLINE   VIEW
+```
+
+So a third possibility sits underneath both branches: the `WAREHOUSE` schema is populated by
+something outside the repository, and `WAREHOUSE_SOURCE` is where the managed definition lives.
+⛔ **Which of the two the dashboard SHOULD read is a decision, not a measurement**, and it is not
+taken here — the wiki's own GP-318 census counts `SALES_FCT_ORDERLINE` among objects with live
+entity-scoping consequences, so repointing it is a data-ownership call with a blast radius.
 
 ⛔ **Not fixed here, deliberately.** Three candidates exist — the two rollback copies and whatever
 GP-318 intends as canonical — and picking one by name similarity is exactly the wrong-target failure
@@ -359,7 +439,7 @@ list**, not a failed request. An instrument treating empty-as-zero there reports
 | R3 read-only identity | proved 2026-09-01 | ✅ **re-proved 2026-09-02** | MEASURED — refusal watched |
 | deployed `SNOWFLAKE_SCHEMA` | `NOT-VISIBLE` | **`NOT-VISIBLE`** (confirmed correct) | MEASURED that it exists and is encrypted |
 | TEST marketing-data currency | UNVERIFIED since 2026-09-01 | ✅ **cleared** — 6 objects, current to today | MEASURED, §3a |
-| warehouse-mode rendering | `NOT-EXERCISED` | ⛔ **FAIL** — HTTP 500, sales fact absent | MEASURED, §3b |
+| warehouse-mode rendering | `NOT-EXERCISED` | ⛔ **FAIL for R3** — HTTP 500, object unresolvable | MEASURED, §3b. ⚠ Cause is under-granted role **or** absent object; not yet separated |
 | `DATE RANGE` inertness | `NOT-MEASURED` | **UNMEASURABLE** — the page never renders | §3b |
 | Power BI rendered figures | `NOT-EXERCISED` | ✅ **closed 2026-09-01** | the blocker list was stale |
 
