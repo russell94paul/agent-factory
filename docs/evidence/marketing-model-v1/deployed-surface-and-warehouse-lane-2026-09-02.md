@@ -5,20 +5,19 @@
 basis **MEASURED** except where a row says otherwise.
 
 This session set out to clear the remaining blockers in
-`boot-prompts/switchboard-p1-and-finalization-2026-09-01.md`. Outcome: **two cleared, one already
-closed before the session began, one confirmed correct as recorded, and one turned into a measured
-FAIL with a named cause.**
+`boot-prompts/switchboard-p1-and-finalization-2026-09-01.md`. **Final outcome: four cleared, one
+already closed before the session began, one confirmed correct as recorded.**
 
-⭐ **The headline is §3b.** Warehouse mode does not render **for the read-only identity** — the
-dashboard returns **HTTP 500** because `R3_CARTOGRAPHY_RO` cannot resolve
-`TEST_DG1_GEP.WAREHOUSE.SALES_FCT_ORDERLINE`. The concern going in was silent blanks; the reality is
-a hard error before the first tile.
+⭐ **The headline is §3c — warehouse mode renders, and it is proved over real data.** HTTP 200, a
+2.88 MB payload, and the GP-288 data-integrity spec **7/7 green**, with `isWarehouse: true` and 82
+real vendor brands verified **before** any assertion was trusted.
 
-⛔ **AMENDED 2026-09-03.** This line first said the object *"is not in TEST"* and that warehouse mode
-was *"broken for everyone on this branch"*. **Both are retracted.** The next measurement found two
-secure views that read from it returning **12,378** and **10,418** rows — which an absent object
-cannot do. What is measured is that **R3 cannot reach it**; whether it exists at all needs a
-privileged identity. See §3b.
+⛔ **This header carried two wrong claims on the way there, and both are retracted in place.** It
+first said the object *"is not in TEST"* and that warehouse mode was *"broken for everyone on this
+branch"*. `ACCOUNTADMIN` settled it: the object existed the whole time, as a **TABLE** in
+`WAREHOUSE`, and the reader role simply held no grant on it. The route from wrong to right runs
+§3b → §3b's correction → §3c, and is left visible rather than tidied away — the intermediate
+readings are the reason the final one is trustworthy.
 
 ---
 
@@ -416,6 +415,110 @@ between a prerequisite and a wasted step.
 
 ---
 
+## 3c. ✅ RESOLVED 2026-09-03 — the object existed, the reader was under-granted, and the lane now passes 7/7
+
+**The diagnosis in §3b's correction was right, and `ACCOUNTADMIN` settled it outright.** With
+operator approval, `scripts/grant_reader_refresh.py --apply` connected as `PAULRUSSELLADMIN` /
+`ACCOUNTADMIN` (secret from Key Vault, in-process, never printed) and **proved the target exists
+before mutating anything**:
+
+```
+as ACCOUNTADMIN, TEST_DG1_GEP.WAREHOUSE.SALES_FCT_ORDERLINE -> [('TABLE', 'SALES_FCT_ORDERLINE')]
+```
+
+⭐ **`ABSENT_OR_INVISIBLE` resolves to INVISIBLE.** The object was there the whole time. And it is a
+**TABLE** in `WAREHOUSE` while `WAREHOUSE_SOURCE` holds a **VIEW** of the same name — which is
+exactly the architecture the operator described: *"warehouse source flows into warehouse then it's a
+straight copy. We just don't copy some of the utility tables into warehouse."* The dashboard's
+reference was correct all along; nothing needed repointing.
+
+### The grant-side corroboration, from an instrument proved able to see non-zeros
+
+Before the fix, `SHOW GRANTS TO ROLE R3_CARTOGRAPHY_RO`:
+
+```
+1,227 grants total, 34 on TEST_DG1_GEP.WAREHOUSE objects  (SELECT: 7 TABLE + 27 VIEW)
+grants naming SALES_FCT_ORDERLINE: 2
+    TEST_DG1_GEP.WAREHOUSE.SALES_FCT_ORDERLINE_PREBUILD_ROLLBACK
+    TEST_DG1_GEP.WAREHOUSE.SALES_FCT_ORDERLINE_RB_20260708
+```
+
+**No grant on the object itself — only on its two rollback copies.** ⭐ This is a `ZERO`, not a
+`NOT-VISIBLE`: the same query returned 34 grants in that very schema, so the instrument was
+demonstrably able to report a non-zero there.
+
+### The fix, gated
+
+```sql
+GRANT SELECT ON ALL    TABLES IN SCHEMA TEST_DG1_GEP.WAREHOUSE TO ROLE R3_CARTOGRAPHY_RO;
+GRANT SELECT ON ALL    VIEWS  IN SCHEMA TEST_DG1_GEP.WAREHOUSE TO ROLE R3_CARTOGRAPHY_RO;
+GRANT SELECT ON FUTURE TABLES IN SCHEMA TEST_DG1_GEP.WAREHOUSE TO ROLE R3_CARTOGRAPHY_RO;
+GRANT SELECT ON FUTURE VIEWS  IN SCHEMA TEST_DG1_GEP.WAREHOUSE TO ROLE R3_CARTOGRAPHY_RO;
+```
+
+⭐ **The FUTURE pair is the load-bearing half.** `ON ALL` is point-in-time and would decay again on
+the next `CREATE OR REPLACE`; a **schema-level** future grant survives it and takes precedence over
+the database-level future grant that proved inert here. Running only the `ALL` half would have bought
+one render check and re-earned the same incident.
+
+- **Rollback captured BEFORE the mutation** → [`rollback-reader-grants.sql`](rollback-reader-grants.sql).
+  It revokes `FUTURE` first, because leaving those behind would keep re-granting after the `ALL`
+  grants were removed — a rollback that does not roll back.
+- `--apply` **refuses** if the canary is not observed to exist, because a grant on an absent object
+  succeeds silently and would ship a fix that fixes nothing.
+
+### Validated at the consumer's layer, in the right order
+
+| # | check | result |
+|---|---|---|
+| 1 | reader can select the object | ✅ `READABLE`; grants on that schema **34 → 46** |
+| 2 | ⭐ still read-only after widening | ✅ `CREATE TABLE` refused `003001 (42501)`; **1,239 grants, all `USAGE`/`SELECT`** |
+| 3 | page returns | ✅ **HTTP 200**, payload **2,882,077 bytes** (synthetic was 111,993) |
+| 4 | ⭐ **mode verified BEFORE any assertion** | ✅ `isWarehouse: true` ×2, and **82 real vendor brands** — NAVAC, Brinno, Thomastik-Infeld, K&M, Kuvings, PENN-PLAX — not the two synthetic ones |
+| 5 | warehouse data-integrity spec | ✅ **7 passed (37.0s)** |
+
+```
+✓ Overview — every headline tile carries a real value on the default window
+✓ GP-288 lock: a Google→Amazon platform filter does NOT blank the portfolio tiles
+✓ Brand → Google→Amazon attribution card (GP-287/288) — real rows, populated Total cost / Sales / ROAS
+✓ Card views — campaign / product / brand / platform each render a table with rows, not an empty shell
+```
+
+⭐ **Check 4 is why check 5 means anything.** The same spec would have passed on the synthetic
+provider — that is the failure `playwright.warehouse.config.ts` exists to catch. The mode was
+measured first, so this GREEN is over real data rather than over a provider that cannot fail.
+
+⚠ **Check 2 matters too and is easy to skip.** Widening a read-only role's grants is exactly when its
+read-only proof goes stale. It was re-run, not assumed.
+
+### ✅ `DATE RANGE` responds in warehouse mode — it is not inert
+
+The open question was whether the timeframe control does anything once real data is behind it.
+Exercised by requesting the presets directly (`?range=`) and comparing both payload size and
+figures:
+
+| `?range=` | payload bytes | first `spend` values | `isWarehouse` |
+|---|---:|---|---|
+| `ytd` | 2,882,202 | 87,148.82 · 47,796.62 · 0 | `true` |
+| `30d` | 1,743,022 | 16,676.21 · 4,967.49 · 13,472.95 · 30,321.11 | `true` |
+
+**Different volumes and different figures, and `30d` is a proper subset of `ytd`** — the control is
+wired through to the query, not decorative. `UNMEASURABLE` → **responsive**.
+
+⚠ **Scope of this check, stated exactly.** Two of the five presets were exercised individually
+(`DATE_RANGES = ["all", "7d", "30d", "90d", "ytd"]`, `filters.ts:91`), plus the default window via
+the spec. `all`, `90d` and `7d` were **not** individually exercised — a `7d` fetch was started and
+did not return before this was written. So the finding is *"the control responds"*, **not** *"all
+five presets are correct"*. Each round-trip is a live warehouse query of 1.7–2.9 MB and costs
+minutes; a full five-preset sweep is worth doing as a scripted pass rather than by hand.
+
+⛔ **And §3a's Meta window is the caveat that governs any range check.** Meta spend begins
+2026-04-20, so a `ytd` or `all` range **will** show Meta contributing zero for the months before it.
+The `ytd` row above already shows a `0` among its first three spend figures. That is coverage, not a
+defect — and it is exactly the value someone will screenshot as a bug.
+
+---
+
 ## 4. One blocker was already closed before this session
 
 The blocker list records *"every Power BI rendered figure — `NOT-EXERCISED` — needs a DAX
@@ -439,8 +542,8 @@ list**, not a failed request. An instrument treating empty-as-zero there reports
 | R3 read-only identity | proved 2026-09-01 | ✅ **re-proved 2026-09-02** | MEASURED — refusal watched |
 | deployed `SNOWFLAKE_SCHEMA` | `NOT-VISIBLE` | **`NOT-VISIBLE`** (confirmed correct) | MEASURED that it exists and is encrypted |
 | TEST marketing-data currency | UNVERIFIED since 2026-09-01 | ✅ **cleared** — 6 objects, current to today | MEASURED, §3a |
-| warehouse-mode rendering | `NOT-EXERCISED` | ⛔ **FAIL for R3** — HTTP 500, object unresolvable | MEASURED, §3b. ⚠ Cause is under-granted role **or** absent object; not yet separated |
-| `DATE RANGE` inertness | `NOT-MEASURED` | **UNMEASURABLE** — the page never renders | §3b |
+| warehouse-mode rendering | `NOT-EXERCISED` | ✅ **PASS 2026-09-03** — HTTP 200, 7/7 assertions, mode verified first | MEASURED, §3c. Cause of the earlier 500 was an under-granted reader; object existed throughout |
+| `DATE RANGE` inertness | `NOT-MEASURED` | ✅ **RESPONSIVE 2026-09-03** — ytd vs 30d differ in volume and figures | MEASURED, §3c. ⚠ 2 of 5 presets exercised individually |
 | Power BI rendered figures | `NOT-EXERCISED` | ✅ **closed 2026-09-01** | the blocker list was stale |
 
 ## Basis register — the weakest claims here
