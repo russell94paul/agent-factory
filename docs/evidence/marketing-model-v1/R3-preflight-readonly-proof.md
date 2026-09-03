@@ -1,6 +1,6 @@
 # R3 pre-flight — the cartography role watched refusing a write
 
-**Measured 2026-09-01T04:29:02.894765+00:00** by `scripts/snowflake_bootstrap_r3.py --verify`.
+**Measured 2026-09-02T13:20:29.841027+00:00** by `scripts/snowflake_bootstrap_r3.py --verify`.
 `evidence_class` **TARGET** · basis **MEASURED**.
 
 Spec `docs/specs/marketing-model-reconstruction-v1.md` §2.1 step 1: *a role assumed read-only is
@@ -29,7 +29,7 @@ Insufficient privileges to operate on schema 'PUBLIC'. Your primary role R3_CART
 dropped the table and exited non-zero rather than write this file — read-only is proved by the
 refusal, and there is no path through `--verify` that writes this evidence without one.
 
-## Every privilege the role holds (1239)
+## Every privilege the role holds (1227)
 
 | privilege | on | object |
 |---|---|---|
@@ -876,24 +876,12 @@ refusal, and there is no path through `--verify` that writes this evidence witho
 | `SELECT` | TABLE | `TEST_DG1_GEP.SUPPLEMENT.STATE_NAME_MAP_CSV` |
 | `SELECT` | TABLE | `TEST_DG1_GEP.SUPPLEMENT.TIME_CALENDAR` |
 | `SELECT` | TABLE | `TEST_DG1_GEP.SUPPLEMENT.TIME_CALENDAR_1` |
-| `SELECT` | TABLE | `TEST_DG1_GEP.WAREHOUSE.EXTRACT_WAREHOUSE_METADATA` |
-| `SELECT` | TABLE | `TEST_DG1_GEP.WAREHOUSE.INVENTORY_FCT_BALANCE` |
 | `SELECT` | TABLE | `TEST_DG1_GEP.WAREHOUSE.MARKETING_FCT_CREATIVE` |
 | `SELECT` | TABLE | `TEST_DG1_GEP.WAREHOUSE.MARKETING_FCT_CREATIVE_PLACEMENT` |
 | `SELECT` | TABLE | `TEST_DG1_GEP.WAREHOUSE.NAVIRA_MAP_VIOLATORS` |
-| `SELECT` | TABLE | `TEST_DG1_GEP.WAREHOUSE.PURCHASING_FCT_BALANCE` |
-| `SELECT` | TABLE | `TEST_DG1_GEP.WAREHOUSE.SALES_DIM_ORDER` |
-| `SELECT` | TABLE | `TEST_DG1_GEP.WAREHOUSE.SALES_DIM_ORDER_BASE` |
-| `SELECT` | TABLE | `TEST_DG1_GEP.WAREHOUSE.SALES_FCT_AMAZON_ORDERLINE` |
-| `SELECT` | TABLE | `TEST_DG1_GEP.WAREHOUSE.SALES_FCT_COST` |
-| `SELECT` | TABLE | `TEST_DG1_GEP.WAREHOUSE.SALES_FCT_COST_ESTIMATES` |
-| `SELECT` | TABLE | `TEST_DG1_GEP.WAREHOUSE.SALES_FCT_ORDERLINE` |
 | `SELECT` | TABLE | `TEST_DG1_GEP.WAREHOUSE.SALES_FCT_ORDERLINE_PREBUILD_ROLLBACK` |
 | `SELECT` | TABLE | `TEST_DG1_GEP.WAREHOUSE.SALES_FCT_ORDERLINE_RB_20260708` |
 | `SELECT` | TABLE | `TEST_DG1_GEP.WAREHOUSE.SALES_FCT_SCOL_GP259A_VAL` |
-| `SELECT` | TABLE | `TEST_DG1_GEP.WAREHOUSE.SALES_FCT_SELLER_CLOUD_ORDERLINE` |
-| `SELECT` | TABLE | `TEST_DG1_GEP.WAREHOUSE.SHARED_DIM_PRODUCT` |
-| `SELECT` | TABLE | `TEST_DG1_GEP.WAREHOUSE.SHARED_DIM_PRODUCT_BASE` |
 | `SELECT` | TABLE | `TEST_DG1_GEP.WAREHOUSE.SHARED_FCT_EXCHANGE_RATE` |
 | `SELECT` | TABLE | `TEST_DG1_GEP.WAREHOUSE_ROLLBACK_GP254.SALES_DIM_ORDER` |
 | `SELECT` | TABLE | `TEST_DG1_GEP.WAREHOUSE_ROLLBACK_GP254.SALES_DIM_ORDER_BASE` |
