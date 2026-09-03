@@ -4,11 +4,15 @@
 `~/repos/navira-marketing-dashboard` @ working tree. `evidence_class` **CONSUMER** ·
 basis **MEASURED** except where a row says otherwise.
 
-This session set out to clear three of the four blockers in
-`boot-prompts/switchboard-p1-and-finalization-2026-09-01.md`. **One was cleared, one was already
-closed before this session started, one is unchanged and its original verdict was right, and two
-rendering checks remain `NOT_RUN` — deliberately, because the only shortcut available to run them
-would have manufactured a false GREEN.**
+This session set out to clear the remaining blockers in
+`boot-prompts/switchboard-p1-and-finalization-2026-09-01.md`. Outcome: **two cleared, one already
+closed before the session began, one confirmed correct as recorded, and one turned into a measured
+FAIL with a named cause.**
+
+⭐ **The headline is §3b.** Warehouse mode does not render — the dashboard returns **HTTP 500**
+because `TEST_DG1_GEP.WAREHOUSE.SALES_FCT_ORDERLINE` is not in TEST. That is true of the committed
+branch and of the operator's working tree alike, so it is not an artifact of how this was run.
+The concern going in was silent blanks; the reality is a hard error before the first tile.
 
 ---
 
@@ -75,10 +79,15 @@ vercel env ls
 
 ⭐ **Two facts worth carrying that the listing gives away for free.**
 
-1. **The deployed app authenticates with a private key** (`SNOWFLAKE_PRIVATE_KEY`), not a password.
-   `R3_CARTOGRAPHY` is password-based, so it is **not** drop-in for the deployed surface even if
-   that were wanted. Any plan to repoint production at the read-only identity has a key-generation
-   step nobody has costed.
+1. **The deployed app authenticates with a private key** (`SNOWFLAKE_PRIVATE_KEY`), under
+   `authenticator: "SNOWFLAKE_JWT"` — *"password sign-ins require MFA, which a headless app can't
+   satisfy"* (`warehouse.ts:2038`).
+   ⛔ **CORRECTED after this file was first committed.** This row originally said *"`R3_CARTOGRAPHY`
+   is password-based, so it is not drop-in."* **Both halves were wrong.** `R3_CARTOGRAPHY` is
+   **key-pair too** — proved when a password connection returned `250001` and the working path
+   turned out to branch on `-----BEGIN` (see §3). So the auth methods **match**, and repointing the
+   deployed surface at the read-only identity needs no key-generation step, only the existing PEM
+   base64-encoded. Whether it *should* be repointed is a separate decision and is not taken here.
 2. **`SNOWFLAKE_SCHEMA` is 31 days newer than every other Snowflake variable** (55d vs 86d). It was
    changed alone, after the rest were set. Whatever it now holds, it is not the value the other
    nine were configured alongside.
@@ -90,7 +99,7 @@ declined it. It stays `NOT-VISIBLE`, which is an honest verdict rather than a mi
 
 ---
 
-## 3. The warehouse lane — `NOT_RUN`, and why the shortcut was refused
+## 3. The warehouse lane — two refused attempts, then a pinned worktree that ran
 
 `playwright.warehouse.config.ts` (GP-288) is the right instrument: it runs the app against live
 `TEST_DG1_GEP` on port 3101 and asserts **presence / non-blank / positivity**, never exact figures,
@@ -132,8 +141,22 @@ nothing. That is exactly the failure the lane exists to catch (*"the class of bu
 passes straight over"*), and it is the blind-instrument family this estate has now met six times.
 A refused run is a better outcome than a green one over the wrong provider.
 
-**What it needs:** the `.next` lock released, so the lane can start its own server in warehouse
-mode. ⚠ **It is a per-DIRECTORY lock, not a port collision** — MEASURED: the lane set `PORT=3101`
+**Attempt 3 — a pinned worktree, which worked.** See §3b for the result. The route that avoided
+the operator entirely:
+
+```bash
+cd ~/repos/navira-marketing-dashboard
+git worktree add --detach C:/Users/PaulRussell/repos/navira-wt-warehouse df76dfb
+cmd //c mklink //J "<worktree>/node_modules" "<repo>/node_modules"    # a junction, not a copy
+```
+
+⚠ **And the junction does not survive Turbopack.** Next 16 defaults to it and refuses:
+*"Symlink [project]/node_modules is invalid, it points out of the filesystem root"*. Running
+`npx next dev --webpack` instead works — webpack follows the junction. That one flag is the
+difference between this lane being runnable in a worktree and needing a full `npm install`.
+
+**What the earlier attempts needed:** the `.next` lock released, so the lane could start its own
+server in warehouse mode. ⚠ **It is a per-DIRECTORY lock, not a port collision** — MEASURED: the lane set `PORT=3101`
 via `webServer.env` and Next still refused, naming the **Dir**. Changing the port does not help.
 PID 40440 is very likely the operator's session and was not killed.
 
@@ -224,6 +247,95 @@ python scripts/probe_test_data_currency.py      # see §3 note on auth
 
 ---
 
+## 3b. ⛔ WAREHOUSE MODE DOES NOT RENDER — the sales fact is not in TEST
+
+**MEASURED 2026-09-02.** The lane was finally run, in a **pinned worktree** at `df76dfb` with
+`node_modules` junctioned, so the operator's own dev server was never touched. The dashboard
+**started, served, and returned HTTP 500**:
+
+```
+OperationFailedError: SQL compilation error:
+Object 'TEST_DG1_GEP.WAREHOUSE.SALES_FCT_ORDERLINE' does not exist or not authorized.
+```
+
+⭐ **This is the answer to "warehouse-mode rendering is NOT-EXERCISED", and it is not the answer
+anyone was expecting.** The concern was silent blanks and zeros. The actual behaviour is a hard
+500 on the first request — the surface does not render at all.
+
+### `does not exist` OR `not authorized`? They are different worlds, so they were separated
+
+Snowflake deliberately conflates the two so it cannot leak the existence of hidden objects. Good
+security, useless as a measurement: one branch means *the data was never landed in TEST*, the other
+means *the reading role is under-granted*, and the fixes are unrelated. `scripts/probe_object_reachability.py`
+resolves it against the catalogue:
+
+```
+ABSENT_OR_INVISIBLE   TEST_DG1_GEP.WAREHOUSE.SALES_FCT_ORDERLINE
+    schema WAREHOUSE IS visible and lists 34 objects, but not SALES_FCT_ORDERLINE
+    nearest names present: EXTRACT_SALES_BY_DAY, EXTRACT_SALES_DETAIL, SALES_FCT_BUDGET,
+      SALES_FCT_COST_HISTORY, SALES_FCT_ORDERLINE_PREBUILD_ROLLBACK,
+      SALES_FCT_ORDERLINE_RB_20260708, SALES_FCT_SCOL_GP259A_VAL
+```
+
+**The schema is readable and lists 34 objects. The table is not one of them — but two rollback
+copies of it are**, one stamped `RB_20260708`. That shape says a rebuild made backups and the
+primary was dropped or renamed and never restored.
+
+`REPORT_COMMON`, the schema GP-318 repoints toward, does not have it either:
+
+```
+ABSENT_OR_INVISIBLE   TEST_DG1_GEP.REPORT_COMMON.SALES_FCT_ORDERLINE
+    schema REPORT_COMMON IS visible and lists 17 objects, but not SALES_FCT_ORDERLINE
+    nearest names present: RETAIL_DAILY_SALES_DATE, RETAIL_DAILY_SALES_FACT,
+      RETAIL_DAILY_SALES_LOCATION
+```
+
+### It is not my worktree, and it is not stale code
+
+MEASURED in both states, so nobody has to wonder whether the pinned checkout caused it:
+
+```bash
+grep -n "SALES_FCT_TABLE\s*=" src/lib/data/providers/warehouse.ts   # working tree
+git show df76dfb:src/lib/data/providers/warehouse.ts | grep -n SALES_FCT_ORDERLINE
+```
+
+Both give `warehouse.ts:82`:
+
+```ts
+const SALES_FCT_TABLE = "TEST_DG1_GEP.WAREHOUSE.SALES_FCT_ORDERLINE";
+```
+
+⭐ **The committed state and the operator's uncommitted working tree are identical on this line.**
+`df76dfb` is *"fix(GP-318): repoint the efficiency family reads to REPORT_COMMON (canonical)"*, and
+the file carries **11** `REPORT_COMMON` references — so the efficiency family was repointed and
+**the sales fact was left pointing at an object that is no longer there**. Warehouse mode is
+therefore broken for everyone, on the current branch, not just for this run.
+
+⚠ **The residual ambiguity, named rather than resolved.** `R3_CARTOGRAPHY_RO` holds
+`SELECT ON ALL` **and** `ON FUTURE` tables and views in the database, so an existing object ought to
+appear in its `INFORMATION_SCHEMA`. That makes **ABSENT** much the likelier branch — but
+`INFORMATION_SCHEMA` shows only what a role has privileges on, so a privileged identity is the only
+instrument that can turn `ABSENT_OR_INVISIBLE` into `ABSENT`. That check was **not** run: it needs
+an admin identity, and which object should be canonical is a decision, not a measurement.
+
+⛔ **Not fixed here, deliberately.** Three candidates exist — the two rollback copies and whatever
+GP-318 intends as canonical — and picking one by name similarity is exactly the wrong-target failure
+this session already paid for once (`F101`). Naming the successor is the data owner's call.
+
+### What this means for the two rendering blockers
+
+| | verdict | why |
+|---|---|---|
+| warehouse-mode rendering | ⛔ **FAIL — measured** | HTTP 500 on `/`, missing sales fact. Not a blank; a hard error |
+| `DATE RANGE` inertness in warehouse mode | **NOT-MEASURABLE** | the page never renders, so no filter can be exercised. This is `UNMEASURABLE`, not `FAIL` — the instrument could not look |
+
+⭐ **And the Meta window from §3a never got to matter.** It was measured before the lane on the
+theory that a blank Meta tile would be misread as a defect. The lane never reached a tile. The
+measurement stands and will matter the moment the sales fact is restored — that is the difference
+between a prerequisite and a wasted step.
+
+---
+
 ## 4. One blocker was already closed before this session
 
 The blocker list records *"every Power BI rendered figure — `NOT-EXERCISED` — needs a DAX
@@ -246,8 +358,9 @@ list**, not a failed request. An instrument treating empty-as-zero there reports
 |---|---|---|---|
 | R3 read-only identity | proved 2026-09-01 | ✅ **re-proved 2026-09-02** | MEASURED — refusal watched |
 | deployed `SNOWFLAKE_SCHEMA` | `NOT-VISIBLE` | **`NOT-VISIBLE`** (confirmed correct) | MEASURED that it exists and is encrypted |
-| warehouse-mode rendering | `NOT-EXERCISED` | **`NOT_RUN`** | blocked on port 3010 |
-| `DATE RANGE` inertness | `NOT-MEASURED` | **`NOT_RUN`** | same |
+| TEST marketing-data currency | UNVERIFIED since 2026-09-01 | ✅ **cleared** — 6 objects, current to today | MEASURED, §3a |
+| warehouse-mode rendering | `NOT-EXERCISED` | ⛔ **FAIL** — HTTP 500, sales fact absent | MEASURED, §3b |
+| `DATE RANGE` inertness | `NOT-MEASURED` | **UNMEASURABLE** — the page never renders | §3b |
 | Power BI rendered figures | `NOT-EXERCISED` | ✅ **closed 2026-09-01** | the blocker list was stale |
 
 ## Basis register — the weakest claims here
