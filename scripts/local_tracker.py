@@ -66,6 +66,8 @@ from factory import events as evlib  # noqa: E402
 from factory import presets as presetlib  # noqa: E402
 from factory import provider as provlib  # noqa: E402
 from factory import repo as rp  # noqa: E402
+from factory import autonomy as autolib  # noqa: E402
+from factory import missions as misslib  # noqa: E402
 from factory import switchboard as sblib  # noqa: E402
 from factory import switchboard_render as sbr  # noqa: E402
 from factory import switchboard_p1 as sbp1  # noqa: E402
@@ -670,6 +672,230 @@ def create_work(title: str, objective: str = "", repo: str = "", visibility: str
                   + f"; visibility {w.visibility}"
                   + (f"; depends on {', '.join(deps)}" if deps else "")
                   + ". Readiness is derived, so it was not created READY.")
+
+
+# ------------------------------------------------------------------ mission runs + the pump
+#
+# ⭐ **This is the seam P1 deliberately left open.** `work.guarded_start` has always answered
+# "may the system start this without a human?" and P1's inspector said, in as many words,
+# *"GUARDED decides; it does not act."* Everything else existed — readiness, claims, conflicts,
+# the recorded start mode, pause. The only missing piece was something that reads the decision
+# and pulls the trigger.
+#
+# ⛔ **The planner is in `factory/autonomy.py` and it is pure.** It cannot reach `start_synced`,
+# `subprocess` or a spawn, and a test asserts that structurally. The two halves are split so the
+# REFUSALS can be tested without spawning a real session — which is the half that matters.
+#
+# ⛔ **`pump` starts exactly what `plan` authorised, and nothing else.** It does not consult the
+# policy a second time, does not relax a refusal, and does not have its own idea of readiness. It
+# re-reads canonical state between starts (a start changes what is READY and what conflicts), and
+# `start_synced` is called with `require_ready=True` so the readiness gate still has the final
+# word even if the plan were stale.
+#
+# ⛔ **No timer, no thread, no loop.** The pump is called from four places, every one of them
+# either an operator action or a page the operator is looking at: the RUN control, after
+# APPROVE/REJECT, on RESUME, and once per Switchboard render while an active unpaused run exists.
+# The last of those is the completion wakeup, and it is honest about its latency: there is no
+# in-process completion event in this repo, so continuation happens on the next render rather
+# than instantaneously. A background poller would have been faster and would also have been the
+# "uncontrolled recursive autonomous execution" the brief forbids.
+
+
+#: The last pump result, rendered back into the Switchboard. In memory only, like `_DISPATCH`:
+#: a pump result is a statement about a moment, and persisting it would create the stale second
+#: source of truth this page refuses to have.
+_PUMP = None
+
+#: ⛔ Re-entrancy guard. `render()` can be re-entered by a second HTTP request on the threaded
+#: server while the first is still measuring, and two pumps interleaving would each read the same
+#: pre-start state and each start the same node — the duplicate-session failure `resume_session`
+#: already documents, arrived at from the other direction.
+_PUMPING = False
+
+
+def _pump_allowed() -> tuple:
+    """May a pump run in this process at all? Deny by default."""
+    if os.environ.get("AGENT_FACTORY_IN_SUITE"):
+        # The suite renders this page. A pump during a test would open real terminals running
+        # real agents — the same recursion `readiness.g_contract_suite_green` reports NOT-RUN for.
+        return False, "inside the test suite — a pump here would spawn real sessions"
+    if _PUMPING:
+        return False, "a pump is already in flight in this process"
+    return True, ""
+
+
+def pump(run_id: str, actor: str = "switchboard", dry: bool = False):
+    """Turn the planner's START decisions into real starts through the existing mechanism.
+
+    Returns `(ok, message)` like every other action here. `dry` plans and reports without
+    starting anything, which is what the RUN control's "plan only" button submits.
+
+    ⛔ A failed start is recorded on the mandate and NOT retried. `start_synced` failing leaves
+    the work READY, so without that record the next pump would try again, and again — the
+    accidental infinite retry this estate has already seen in a prior system. One attempt,
+    visible in the UI, cleared deliberately by a human.
+    """
+    global _PUMP, _PUMPING
+    m = autolib.load_mandate(run_id)
+    if m is None:
+        return False, (f"REFUSED: no run {run_id!r} under {autolib.runs_dir()}. "
+                       f"Known: {', '.join(x.run_id for x in autolib.mandates()) or 'none'}")
+
+    ok, why = _pump_allowed()
+    if not ok and not dry:
+        return False, f"REFUSED: {why}"
+
+    plan = autolib.plan(m)
+    _PUMP = {"run": m.run_id, "plan": plan, "mandate": m, "at": datetime.datetime.now()}
+    if dry:
+        return True, (f"PLAN ONLY — {len(plan.starts)} node(s) would start "
+                      f"({', '.join(plan.starts) or 'none'}); nothing was started")
+    if not plan.starts:
+        return True, (f"{m.run_id}: nothing eligible to start — "
+                      + (plan.note or f"{len(plan.by_verdict(autolib.HUMAN_GATE))} at a human "
+                         f"gate, {len(plan.by_verdict(autolib.BLOCKED))} blocked, "
+                         f"{len(plan.by_verdict(autolib.WAIT))} waiting"))
+
+    started, refused = [], []
+    _PUMPING = True
+    try:
+        for wid in plan.starts:
+            # ⭐ Re-read between starts. The previous start took a slot, may have taken a claim,
+            # and changed what conflicts. A batch decided once and executed blindly is how a
+            # concurrency cap gets exceeded by exactly the number of nodes in the batch.
+            fresh = autolib.plan(m)
+            if wid not in fresh.starts:
+                d = next((x for x in fresh.decisions if x.work_id == wid), None)
+                refused.append(f"{wid} ({d.reason[:80] if d else 'no longer eligible'})")
+                continue
+            good, msg = start_synced(target=wid, note=f"autonomous start · run {m.run_id}",
+                                     require_ready=True,
+                                     start_mode=worklib._tasks.AUTO_START)
+            if good:
+                started.append(wid)
+            else:
+                # Recorded on the mandate, so the next pump refuses this id rather than retrying.
+                m.failed[wid] = msg[:400]
+                m.save()
+                refused.append(f"{wid} ({msg[:80]})")
+    finally:
+        _PUMPING = False
+
+    _PUMP = {"run": m.run_id, "plan": autolib.plan(m), "mandate": m,
+             "at": datetime.datetime.now()}
+    return bool(started or not refused), (
+        f"{m.run_id}: started {len(started)}"
+        + (f" — {', '.join(started)}" if started else "")
+        + (f"; {len(refused)} refused — {'; '.join(refused)}" if refused else "")
+        + ". Autonomous starts are recorded as AUTO_START.")
+
+
+def create_mission_run(preset: str = "", mode: str = "", run_mode: str = "",
+                       max_parallel: str = "", deadline: str = "", run_id: str = ""):
+    """Compile a mission preset into canonical work and open a run over it.
+
+    ⛔ **The preset is a compiler, not a database.** `factory.missions.create` writes the stages
+    into the existing TaskStore with durable `depend` edges and the contract ON the task; from
+    that moment the projection is the only thing that knows the mission exists. The mandate this
+    opens holds ONLY what the operator chose — mode, selection, concurrency, deadline. Every
+    derived fact is re-read from `work.project()` each time it is asked, which is why there is no
+    `PROJECT_STATE.yaml` and nothing here to go stale.
+    """
+    preset = (preset or "").strip()
+    if not preset:
+        return False, ("REFUSED: no mission preset chosen. Available: "
+                       + (", ".join(misslib.available()) or "none"))
+    try:
+        p = misslib.load(preset)
+    except misslib.PresetRefused as exc:
+        return False, str(exc)
+
+    mode = (mode or worklib._tasks.GUARDED).strip().upper()
+    if mode not in worklib._tasks.AUTONOMIES:
+        return False, f"REFUSED: autonomy must be one of {worklib._tasks.AUTONOMIES}, got {mode!r}"
+    run_mode = (run_mode or autolib.DAG).strip().upper()
+    if run_mode not in autolib.RUN_MODES:
+        return False, f"REFUSED: run mode must be one of {autolib.RUN_MODES}, got {run_mode!r}"
+    try:
+        cap = int(max_parallel or autolib.DEFAULT_MAX_PARALLEL)
+    except ValueError:
+        return False, f"REFUSED: max parallel must be a number, got {max_parallel!r}"
+    if not 1 <= cap <= 8:
+        return False, (f"REFUSED: max parallel {cap} is outside 1-8. Every start opens a real "
+                       f"terminal running a real agent; an unbounded cap is not a setting.")
+    deadline = (deadline or "").strip()
+    if deadline:
+        try:
+            datetime.datetime.fromisoformat(deadline)
+        except ValueError:
+            return False, (f"REFUSED: {deadline!r} is not an ISO 8601 timestamp. A deadline that "
+                           f"cannot be parsed would render as 'no deadline', which is a silent "
+                           f"loss of the operator's intent.")
+
+    rid = (run_id or "").strip() or (
+        f"{p.id}-{datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}")
+    if autolib.load_mandate(rid) is not None:
+        return False, f"REFUSED: a run named {rid!r} already exists."
+
+    try:
+        made = misslib.create(p, actor="operator")
+    except misslib.PresetRefused as exc:
+        return False, str(exc)
+    except Exception as exc:                                       # noqa: BLE001
+        return False, f"could not compile {p.id}: {type(exc).__name__}: {exc}"
+
+    m = autolib.Mandate(run_id=rid, mission=p.mission_id, target=p.target, mode=mode,
+                        run_mode=run_mode, max_parallel=cap, deadline=deadline,
+                        actor="operator")
+    m.save()
+    plan = autolib.plan(m)
+    return True, (f"created run {rid} over {len(made)} row(s) from {p.id}; mode {mode}/{run_mode}, "
+                  f"max_parallel {cap}"
+                  + (f", deadline {deadline}" if deadline else "")
+                  + f". {len(plan.starts)} node(s) eligible now — nothing has started; press "
+                    f"RUN DAG.")
+
+
+def run_control(run_id: str = "", go: str = ""):
+    """RUN DAG / RUN CRITICAL PATH / PAUSE / RESUME. One route, the mode on the button's value.
+
+    ⭐ The submit button's own value carries the action, exactly as `/run-ticket` and
+    `/switchboard/start` already do. A checkbox somebody forgets to tick is how a dry run
+    dispatches for real.
+
+    ⭐ PAUSE is always available and never conditional — the same rule `set_autonomy` follows for
+    per-work pause. A stop that could be refused because of the state it is trying to stop would
+    not be a stop.
+    """
+    run_id, go = (run_id or "").strip(), (go or "").strip().lower()
+    m = autolib.load_mandate(run_id)
+    if m is None:
+        return False, (f"REFUSED: no run {run_id!r}. Known: "
+                       + (", ".join(x.run_id for x in autolib.mandates()) or "none"))
+
+    if go == "pause":
+        m.paused = True
+        m.save()
+        return True, (f"{m.run_id}: PAUSED. Work already running may finish; nothing new starts. "
+                      f"Nothing was cancelled.")
+    if go == "resume":
+        m.paused = False
+        m.save()
+        ok, msg = pump(m.run_id)
+        return ok, f"{m.run_id}: resumed. {msg}"
+    if go in ("dag", "critical"):
+        want = autolib.DAG if go == "dag" else autolib.CRITICAL_PATH
+        if m.run_mode != want:
+            m.run_mode = want
+            m.save()
+        if want == autolib.CRITICAL_PATH and not m.target:
+            return False, ("REFUSED: RUN CRITICAL PATH needs a target milestone, and this run "
+                           "declares none. Aiming at nothing would select nothing.")
+        return pump(m.run_id)
+    if go == "plan":
+        return pump(m.run_id, dry=True)
+    return False, (f"REFUSED: {go!r} is not a run action. "
+                   f"Expected dag, critical, pause, resume or plan.")
 
 
 def resume_session(session_id: str, dry: bool = False):
@@ -3020,6 +3246,23 @@ def render(when: datetime.datetime, tab: str = "tickets", team: str = "",
         #
         # P0's `switchboard_render.page` is NOT deleted — it is the MISSION view, reached from
         # the nav. Every panel it renders is still on the estate; none of them is first.
+        # ⭐ **The completion wakeup, and the honest version of it.** There is no in-process
+        # event for "a task finished" in this repo — a task completes when an agent in another
+        # terminal writes the store. So an active unpaused run is pumped once per render, which
+        # means continuation happens on the next page load rather than instantaneously.
+        #
+        # ⛔ That latency is a deliberate choice, not a limitation nobody noticed. The faster
+        # design is a background poller, and a background poller is exactly the "uncontrolled
+        # recursive autonomous execution" the brief forbids: it starts sessions on a timer with
+        # nobody watching. This runs only while a human is looking at the page, is bounded by
+        # their refresh rate, is re-entrancy guarded, and refuses outright inside the test suite.
+        # The run panel states the real latency rather than implying none.
+        if view != "dispatch":
+            for _m in autolib.active():
+                _ok, _why = pump(_m.run_id)
+                if _ok and "started 0" not in _why and "nothing eligible" not in _why:
+                    print(f"  render -> pump {_m.run_id}: {_why}")
+
         try:
             _st = sblib.state()
             if view == "dispatch":
@@ -3179,6 +3422,19 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 decision=(q.get("go") or [""])[0],
                 note=(q.get("note") or [""])[0])
             print(f"  switchboard/resolve: {_SB_MSG[1]}")
+            # ⭐ **Approval is an event, not a second manual launch.** This is the whole of the
+            # auto-continuation requirement: releasing a hold changes what is READY, so an active
+            # unpaused run is pumped immediately rather than waiting for the operator to go and
+            # press START on the node their own approval just unblocked.
+            #
+            # ⛔ Only for runs that are already active. A REJECT is also an answer, and it must
+            # not start anything — but it cannot, because rejecting leaves the downstream
+            # dependency unsatisfied and the planner refuses on state, not on the verdict text.
+            if _SB_MSG[0]:
+                for _m in autolib.active():
+                    _ok, _why = pump(_m.run_id)
+                    print(f"  resolve -> pump {_m.run_id}: {_why}")
+                    _SB_MSG = (_SB_MSG[0], _SB_MSG[1] + f" · {_why}")
             self.send_response(303)
             self.send_header("Location", "/switchboard?view=now")
             self.send_header("Cache-Control", "no-store"); self.end_headers()
@@ -3194,6 +3450,35 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.send_response(303)
             self.send_header("Location", "/switchboard?view=now&inspect="
                              + urllib.parse.quote((q.get("work_id") or [""])[0].strip()[:64]))
+            self.send_header("Cache-Control", "no-store"); self.end_headers()
+            return
+        if self.path.rstrip("/") == "/switchboard/mission":
+            raw = self.rfile.read(int(self.headers.get("Content-Length") or 0)).decode("utf-8", "replace")
+            q = urllib.parse.parse_qs(raw, keep_blank_values=True)
+            _SB_MSG = create_mission_run(
+                preset=(q.get("preset") or [""])[0],
+                mode=(q.get("mode") or [""])[0],
+                run_mode=(q.get("run_mode") or [""])[0],
+                max_parallel=(q.get("max_parallel") or [""])[0],
+                deadline=(q.get("deadline") or [""])[0])
+            print(f"  switchboard/mission: {_SB_MSG[1]}")
+            self.send_response(303)
+            self.send_header("Location", "/switchboard?view=now" if _SB_MSG[0]
+                             else "/switchboard?view=create")
+            self.send_header("Cache-Control", "no-store"); self.end_headers()
+            return
+        if self.path.rstrip("/") == "/switchboard/run":
+            raw = self.rfile.read(int(self.headers.get("Content-Length") or 0)).decode("utf-8", "replace")
+            q = urllib.parse.parse_qs(raw, keep_blank_values=True)
+            # ⚠ The submit button's own value carries the action, exactly as `/run-ticket` and
+            # `/switchboard/start` already do. A checkbox somebody forgets to tick is how a plan
+            # becomes a real start; four buttons on one form cannot be mistyped.
+            _SB_MSG = run_control(
+                run_id=(q.get("run") or [""])[0],
+                go=(q.get("go") or [""])[0])
+            print(f"  switchboard/run: {_SB_MSG[1]}")
+            self.send_response(303)
+            self.send_header("Location", "/switchboard?view=now")
             self.send_header("Cache-Control", "no-store"); self.end_headers()
             return
         if self.path.rstrip("/") == "/switchboard/restart":

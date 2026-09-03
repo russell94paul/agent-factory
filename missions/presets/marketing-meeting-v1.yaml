@@ -1,0 +1,142 @@
+# Marketing Model — meeting-ready deliverable.
+#
+# A mission PRESET: it compiles to canonical work in the existing TaskStore and then stops
+# existing. There is no mission database, no second ledger and no manifest — `work.create()`
+# writes `repo`, `objective`, `visibility`, the resource claim and the durable `depend` edges
+# onto the tasks themselves, so the projection is the only source of truth.
+#
+# ⛔ Two fields here are load-bearing in a way that is easy to miss, and both were MEASURED on
+#    this checkout on 2026-09-02 rather than assumed:
+#
+#    `repo:` and `resource_claim:` — without BOTH, `work.readiness()` returns `repo UNMEASURED`
+#    and `contract UNMEASURED`, `_state_for` makes an UNMEASURED check DRAFT (never READY), and
+#    every stage sits in DRAFT forever. 54 of the 91 rows in the live store are in exactly that
+#    position. A preset without them compiles work the autonomy pump can never start.
+#
+#    Every WRITE `resource_claim` must be UNIQUE across the preset. `work._conflicts` pairs any
+#    two stages sharing a claim when either declares WRITE, and `work.guarded_start` refuses on a
+#    DECLARED conflict — live or not. Two stages sharing one WRITE claim are therefore both
+#    permanently ineligible for an autonomous start, which is the same inert-pump failure by a
+#    subtler route. READ-only stages may share a claim; writers may not.
+#
+# ⚠ `model`/`effort` are recorded on the contract so the spawned session's banner names what it
+#   is actually running. They are a BINDING, not a routing rule: there is no router yet, and a
+#   banner that names a model the process is not using is worse than no banner.
+
+version: 1
+id: marketing-meeting-v1
+title: Marketing Model — meeting-ready deliverable
+objective: >-
+  Re-validate the evidence-backed Marketing Model deliverable and produce a meeting-ready
+  artifact, without writing to any client system.
+repo: agent-factory
+visibility: PRIVATE
+target: MARKETING-MEETING-001-READY
+
+# Recorded on every stage's contract as provenance. These are the mission's own refusals; they
+# are not enforced by code here, so they are written where the executing session will read them.
+constraints:
+  - read_only_client_systems
+  - no_client_system_writes
+  - no_fabricated_missing_evidence
+  - preserve_known_unknowns
+  - do_not_treat_inference_as_confirmed_requirement
+
+stages:
+  - id: MARKETING-MEETING-001-CONTEXT
+    title: Assemble authoritative context and existing evidence references
+    kind: deterministic
+    autonomy: GUARDED
+    resource_claim: res-marketing-context
+    access: READ
+    model: claude-opus-5
+    effort: max
+    depends_on: []
+    objective: >-
+      Read the mission record and enumerate every evidence reference the deliverable cites.
+      Run: python scripts/mission_marketing_model.py --status
+      and: python -c "import sys;sys.path.insert(0,'.');from factory import switchboard as s;st=s.state();print(st['critical_path'])"
+      Write the enumeration to docs/evidence/deadline-2026-09-02/context.md as a list of
+      cited refs with, for each, whether it resolves on disk. Do not fix anything; report.
+
+  - id: MARKETING-MEETING-001-REVIEW
+    title: Review the evidence and the current recommendation
+    kind: agent
+    autonomy: GUARDED
+    resource_claim: res-marketing-review
+    access: READ
+    model: claude-opus-5
+    effort: max
+    depends_on: [MARKETING-MEETING-001-CONTEXT]
+    objective: >-
+      This is the real agent step. Read docs/evidence/deadline-2026-09-02/context.md and the
+      cited evidence under docs/evidence/marketing-model-v1/ (resolve against .worktrees/mission
+      where the mission branch holds it). Answer three questions in
+      docs/evidence/deadline-2026-09-02/review.md:
+      (1) does every headline figure in the client artifact still trace to cited evidence;
+      (2) which claims are CONFIRMED vs SUPPORTED vs INFERRED vs UNKNOWN;
+      (3) what must the presenter be told that the artifact does not say.
+      Do NOT edit the artifact. Do NOT invent evidence for a gap — record the gap.
+
+  - id: MARKETING-MEETING-001-EVIDENCE-GATE
+    title: Evidence sign-off before the artifact is regenerated
+    kind: human_gate
+    autonomy: MANUAL
+    resource_claim: res-marketing-evidence-gate
+    access: READ
+    hold: AWAITING-EVIDENCE-SIGNOFF
+    depends_on: [MARKETING-MEETING-001-REVIEW]
+    objective: >-
+      A human reads review.md and decides whether the evidence supports regenerating the client
+      artifact. APPROVE releases the hold and the artifact stage starts automatically; REJECT
+      records the refusal and nothing downstream runs.
+
+  - id: MARKETING-MEETING-001-ARTIFACT
+    title: Regenerate the meeting artifact
+    kind: deterministic
+    autonomy: GUARDED
+    resource_claim: res-client-review-artifact
+    access: WRITE
+    model: claude-opus-5
+    effort: max
+    depends_on: [MARKETING-MEETING-001-EVIDENCE-GATE]
+    objective: >-
+      Run exactly: python scripts/meeting_ready.py --root .worktrees/mission
+      It compiles canonical state, renders docs/artifacts/client-review-navira.html, runs the
+      meeting gate and validates the built page in a real browser. Exit 0 with SAFE TO OPEN is
+      the only success. Do not edit the renderer to obtain a pass. If it refuses, record the
+      refusal verbatim in docs/evidence/deadline-2026-09-02/artifact.md and stop — the
+      known-good fallback is preserved at docs/evidence/deadline-2026-09-02/fallback/.
+
+  - id: MARKETING-MEETING-001-VERIFY
+    title: Validate the artifact, its evidence references and its limits
+    kind: deterministic
+    autonomy: GUARDED
+    resource_claim: res-client-review-verify
+    access: READ
+    model: claude-opus-5
+    effort: max
+    depends_on: [MARKETING-MEETING-001-ARTIFACT]
+    objective: >-
+      Confirm at the consumer's layer, not the data layer. Check the rendered artifact's
+      sha256 against docs/evidence/deadline-2026-09-02/fallback/SHA256SUMS.txt and report
+      whether it changed and why. Confirm the render check reports 0 problems, 0 dangling
+      links, 0 offsite requests. Write docs/evidence/deadline-2026-09-02/verify.md carrying:
+      artifact path + bytes + sha256, gate verdict, render verdict, every cited evidence ref,
+      run/session provenance, and an explicit LIMITS / UNMEASURED section. A verify that cannot
+      name what it did not measure is not a verification.
+
+  - id: MARKETING-MEETING-001-READY
+    title: Meeting-ready approval
+    kind: human_gate
+    autonomy: MANUAL
+    resource_claim: res-marketing-delivery
+    access: READ
+    hold: AWAITING-MEETING-SIGNOFF
+    requires_approval: MEETING_READY_SIGNOFF
+    depends_on: [MARKETING-MEETING-001-VERIFY]
+    objective: >-
+      The delivery decision, and it is a human's. Read verify.md, open the artifact, and choose
+      which fallback rung is being delivered (A fresh end-to-end / B mostly fresh, deterministic
+      finish / C platform demo + validated artifact / D validated artifact alone). Never hide
+      which rung was used.

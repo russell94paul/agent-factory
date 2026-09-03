@@ -377,24 +377,144 @@ def test_pause_outranks_the_policy_at_all_times(store):
     assert allowed is False and any("PAUSED" in r for r in why)
 
 
-def test_p1_ships_no_autonomous_executor(store):
-    """⛔ The brief forbids uncontrolled recursive autonomous execution.
+def test_the_autonomous_executor_is_bounded(store):
+    """⛔ The brief forbids UNCONTROLLED recursive autonomous execution. It now ships a controlled one.
 
-    `guarded_start` DECIDES; nothing calls it on a timer. This asserts the absence, because an
-    absence is exactly the kind of property that quietly stops being true.
+    ⚠ **This test used to be `test_p1_ships_no_autonomous_executor` and asserted the opposite.**
+    It is amended, not deleted, and the amendment is a decision Paul made explicitly on
+    2026-09-02 when approving the autonomy pump — the same way the P1 mission's "create both,
+    start neither" stop condition was lifted and recorded in
+    `test_p1_5_has_still_not_been_started` below. A test that keeps enforcing a withdrawn
+    instruction is not a guard; it is a stale rule that gets deleted in a hurry by whoever meets
+    it next.
+
+    ⛔ **The old assertions had already stopped protecting anything, and that is the real lesson
+    here.** They scanned for the literal strings `threading.Timer`, `sched.scheduler` and
+    `while True:\\n        start_synced`. `factory/autonomy.py` plus `local_tracker.pump` use none
+    of them — so the day the executor shipped, the test asserting its absence went on passing.
+    Its own docstring warned that "an absence is exactly the kind of property that quietly stops
+    being true", and then it did exactly that, undetected. A string scan is not a structural
+    guard; what replaces it below asserts on real behaviour against a real store, plus an AST
+    check that a comment cannot satisfy.
+
+    What still matters, and is asserted here:
+
+      1. the planner never authorises what `guarded_start` refuses — no run mode is a bypass;
+      2. MANUAL work never auto-starts;
+      3. an operator PAUSE stops new starts;
+      4. concurrency is bounded;
+      5. an autonomous start is RECORDED as AUTO_START, never silent;
+      6. nothing starts on a timer, a thread or an unbounded loop;
+      7. `start_synced` still does not consult the policy — an operator's explicit tap must not
+         become refusable by a policy that exists to permit, not to forbid.
     """
+    import ast
+    import inspect
+
+    from factory import autonomy as A
+    from scripts import local_tracker as lt
+
+    # ---- 1, 2, 3, 4: behaviour, against a real store -----------------------------------
+    store.create(title="mission", tid="GM", actor="t", contract={"kind": "mission"})
+
+    def _mk(wid, **kw):
+        c = {"resource_claim": f"res-{wid.lower()}", "access": "READ"}
+        c.update(kw.pop("contract", {}))
+        store.create(title=wid, tid=wid, actor="t", parent="GM", repo="agent-factory",
+                     visibility=kw.pop("visibility", T.PRIVATE), contract=c)
+        if (a := kw.pop("autonomy", T.GUARDED)) != T.DEFAULT_AUTONOMY:
+            store.set_autonomy(wid, a, actor="t")
+        return wid
+
+    _mk("OK")
+    _mk("MAN", autonomy=T.MANUAL)
+    _mk("PUB", autonomy=T.AUTO, visibility=T.PUBLIC)
+    _mk("APR", autonomy=T.AUTO, contract={"requires_approval": "SIGNOFF"})
+    rows = {w.id: w for w in W.project(store=store)}
+    m = A.Mandate(run_id="guard", mission="GM", mode=T.AUTO, max_parallel=9)
+
+    starts = set(A.plan(m, rows).starts)
+    assert "OK" in starts, "the positive control failed — every refusal below would be vacuous"
+    assert "MAN" not in starts, "MANUAL work was auto-started"
+    for wid in ("PUB", "APR"):
+        allowed, why = W.guarded_start(rows[wid])
+        assert not allowed, f"{wid} is not actually refused by guarded_start; test is vacuous"
+        assert wid not in starts, (
+            f"AUTO run mode started {wid}, which guarded_start refuses ({why[0]}) — a run mode "
+            f"has become a safety bypass")
+
+    m.paused = True
+    assert A.plan(m, rows).starts == [], "a paused run started work"
+    m.paused = False
+    assert len(A.plan(A.Mandate(run_id="guard", mission="GM", mode=T.AUTO, max_parallel=1),
+                      rows).starts) == 1, "concurrency was not bounded"
+
+    # ---- 5: an autonomous start is recorded ---------------------------------------------
+    store.record_start("OK", T.AUTO_START, actor="switchboard")
+    assert {x.id: x for x in W.project(store=store)}["OK"].start_mode == T.AUTO_START
+    pump_src = inspect.getsource(lt.pump)
+    assert "AUTO_START" in pump_src, (
+        "the pump does not pass AUTO_START — an autonomous start indistinguishable from an "
+        "operator's tap makes autonomy performance unmeasurable, and invents a decision nobody "
+        "made")
+
+    # ---- 6: no timer, no thread, no unbounded loop, in the code rather than the prose ----
+    tree = ast.parse(inspect.getsource(A))
+    names = {n.attr for n in ast.walk(tree) if isinstance(n, ast.Attribute)} | {
+        n.id for n in ast.walk(tree) if isinstance(n, ast.Name)}
+    assert not ({"Timer", "scheduler", "Thread", "threading", "sched"} & names), (
+        f"an autonomous execution mechanism appeared in the planner: "
+        f"{sorted({'Timer', 'scheduler', 'Thread', 'threading', 'sched'} & names)}")
+    for n in ast.walk(ast.parse(pump_src)):
+        assert not (isinstance(n, ast.While)
+                    and isinstance(n.test, ast.Constant) and n.test.value is True), (
+            "the pump contains a `while True` — it must drain one plan and return")
+
+    # ---- 7: the mechanism still does not consult the policy -----------------------------
+    assert "guarded_start" not in inspect.getsource(lt.start_synced), (
+        "start_synced consults the autonomy policy. It must not: the policy exists to decide "
+        "what may start WITHOUT a human, and an operator pressing START SYNCED is a human. "
+        "Consulting it here would let a policy refuse an explicit tap.")
+    assert "def guarded_start" in inspect.getsource(W), "the decision function is gone"
+    assert "record_start" in inspect.getsource(lt), "the start mode is not recorded at all"
+
+
+def test_the_pump_starts_only_what_the_planner_authorised(store):
+    """⛔ The pump may not have its own opinion about what is safe to start.
+
+    A second safety model is the failure this estate keeps meeting from other directions: a check
+    that passes at one layer while the real condition lives at another. So the pump's starts must
+    be a SUBSET of `plan().starts` — it re-reads and may start fewer, never more, and never
+    something the planner did not name.
+    """
+    import ast
     import inspect
 
     from scripts import local_tracker as lt
-    src = inspect.getsource(lt) + inspect.getsource(W)
-    for banned in ("threading.Timer", "sched.scheduler", "while True:\n        start_synced"):
-        assert banned not in src, f"an autonomous execution loop appeared: {banned}"
-    # `guarded_start` must exist and be reachable, but nothing may CALL it to spawn.
-    assert "record_start" in inspect.getsource(lt), "the start mode is not recorded at all"
-    assert "def guarded_start" in inspect.getsource(W), "the decision function is gone"
-    assert "guarded_start" not in inspect.getsource(lt.start_synced), (
-        "start_synced consults the autonomy policy — that is the trigger this must not have; "
-        "a guarded item still requires an operator to press START SYNCED")
+
+    tree = ast.parse(inspect.getsource(lt.pump))
+    calls = [n for n in ast.walk(tree)
+             if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)
+             and n.func.id == "start_synced"]
+    assert calls, "the pump never calls the existing start mechanism"
+    assert len(calls) == 1, (
+        f"{len(calls)} start_synced call sites in the pump — one is auditable, several are a "
+        f"path that can diverge")
+
+    kw = {k.arg for k in calls[0].keywords}
+    assert "require_ready" in kw, (
+        "the pump does not pass require_ready — readiness must keep the final word even if the "
+        "plan it is executing has gone stale")
+    assert "start_mode" in kw, "the pump does not declare how the start was decided"
+
+    # The loop the single call site sits in must iterate the PLAN, not the store.
+    src = inspect.getsource(lt.pump)
+    assert "plan.starts" in src, (
+        "the pump does not iterate the planner's START decisions — whatever it iterates instead "
+        "is a second opinion about eligibility")
+    assert "fresh.starts" in src, (
+        "the pump does not re-check eligibility between starts; a batch decided once and "
+        "executed blindly exceeds the concurrency cap by the size of the batch")
 
 
 def test_the_start_mode_is_recorded(store):

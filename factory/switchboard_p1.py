@@ -572,6 +572,79 @@ def _repo_health(st: dict) -> str:
 # ------------------------------------------------------------------------ CREATE WORK
 
 
+def mission_form(st: dict) -> str:
+    """Create a mission run from a preset — the operator's four choices and nothing else.
+
+    ⭐ **The operator does not author a mission.** They pick a preset, a policy, a selection and
+    a concurrency cap. Everything the mission IS — its stages, their objectives, their resource
+    claims, the dependency edges, which stages are human gates — is in the preset file, under
+    version control, reviewable in a diff. That is the difference between a preset and a graph
+    editor, and it is why there is no graph editor here.
+
+    ⚠ **Execution preset / team is bound, not chosen.** The pack asked for a team selector. There
+    is no team registry in this repo to populate one from: what exists is a per-stage `model` and
+    `effort` recorded on the preset's contract and threaded into the spawned session's banner. So
+    the form SHOWS the binding the preset declares and does not offer a choice that nothing
+    downstream would honour. A dropdown whose value is discarded is worse than no dropdown.
+    """
+    from . import autonomy as _auto
+    from . import missions as _miss
+
+    names = _miss.available()
+    if not names:
+        return ('<p class="empty">No mission presets on disk. They live in '
+                '<code>missions/presets/*.yaml</code>.</p>')
+
+    o = ['<form method="POST" action="/switchboard/mission">']
+    o.append('<div class="field"><label for="mp">Mission preset</label>'
+             '<select id="mp" name="preset" required>')
+    for n in names:
+        try:
+            p = _miss.load(n)
+            gates = sum(1 for s in p.stages if s.kind == _miss.HUMAN_GATE)
+            lbl = (f"{p.title} — {len(p.stages)} stage(s), {gates} human gate(s)")
+        except _miss.PresetRefused:
+            # ⛔ Shown, and shown as refused. A preset that cannot compile must not be silently
+            # absent from the menu: "it isn't in the list" reads as "it doesn't exist".
+            lbl = f"{n} — ⛔ will not compile"
+        o.append(f'<option value="{_e(n)}">{_e(lbl)}</option>')
+    o.append('</select></div>')
+
+    o.append('<div class="field"><label for="mm">Autonomy</label>'
+             '<select id="mm" name="mode">')
+    for a, hint in (("GUARDED", "GUARDED — start only what the guarded policy allows"),
+                    ("MANUAL", "MANUAL — plan only; start nothing automatically"),
+                    ("AUTO", "AUTO — keep going without a tap (same stops apply)")):
+        o.append(f'<option value="{a}"{" selected" if a == "GUARDED" else ""}>{_e(hint)}'
+                 f'</option>')
+    o.append('</select></div>')
+
+    o.append('<div class="field"><label for="mr">Selection</label>'
+             '<select id="mr" name="run_mode">'
+             f'<option value="{_auto.DAG}">RUN DAG — everything eligible in the run</option>'
+             f'<option value="{_auto.CRITICAL_PATH}">RUN CRITICAL PATH — only ancestors of the '
+             f'target</option>'
+             '</select></div>')
+
+    o.append('<details class="adv"><summary>Advanced ▸</summary>')
+    o.append(f'<div class="field"><label for="mc">Max parallel (1–8)</label>'
+             f'<input type="number" id="mc" name="max_parallel" min="1" max="8" '
+             f'value="{_auto.DEFAULT_MAX_PARALLEL}"></div>')
+    o.append('<div class="field"><label for="md">Deadline (ISO 8601, optional)</label>'
+             '<input type="text" id="md" name="deadline" maxlength="40" '
+             'placeholder="2026-09-02T12:00:00-07:00"></div>')
+    o.append('</details>')
+    o.append('<button class="btn pri wide" name="go" value="1">CREATE MISSION RUN</button>')
+    o.append('<p class="empty" style="margin-top:9px">Creating compiles the preset into this '
+             'same task store and opens a run over it. <strong>Nothing starts.</strong> Every '
+             'stage is DRAFT or BLOCKED until its checks can be measured, and the first start '
+             'is a press of RUN DAG.</p>')
+    o.append('<p class="empty" style="margin-top:6px">Each start opens a real terminal running a '
+             'real agent on this machine. That is what max parallel bounds.</p>')
+    o.append('</form>')
+    return "".join(o)
+
+
 def create_form(st: dict, repos: Optional[List[str]] = None) -> str:
     """The operator-facing create flow. Two required fields, everything else derived.
 
@@ -708,8 +781,16 @@ def inspector(st: dict, wid: str, view: str) -> str:
     if stops:
         o.append('<ul class="plain">'
                  + "".join(f'<li class="dim">{_e(x)}</li>' for x in stops[:8]) + "</ul>")
-    o.append('<p class="empty" style="margin-top:6px">GUARDED decides; it does not act. P1 ships '
-             'no loop that starts work on a timer — starting is still a tap.</p>')
+    # ⭐ This paragraph used to read "GUARDED decides; it does not act. P1 ships no loop that
+    # starts work on a timer — starting is still a tap." That was true when it was written and is
+    # now false: `factory.autonomy` plans and the tracker's `pump` acts. It is replaced rather
+    # than deleted because a UI that overstates its own autonomy is worse than one that
+    # understates it, and the operator needs to know the actual latency — there is no completion
+    # event, so continuation happens on a run's next wakeup, not the instant a task finishes.
+    o.append('<p class="empty" style="margin-top:6px">GUARDED decides and, while a run is '
+             'active, the run acts on it — see Runs. There is still no timer: a run wakes on '
+             'RUN, on APPROVE/REJECT, on RESUME, and once per page load. MANUAL never '
+             'auto-starts, and no run mode skips the stops listed above.</p>')
     o.append(f'<form method="POST" action="/switchboard/autonomy" style="margin-top:8px;'
              f'display:flex;gap:6px;flex-wrap:wrap">'
              f'<input type="hidden" name="work_id" value="{_e(w["id"])}">'
@@ -902,6 +983,111 @@ def p0_block(st: dict, dispatch=None, expanded: bool = False) -> str:
             f'upstream and worktrees</summary>{body}</details>')
 
 
+def _runs(st: dict) -> str:
+    """Mission runs — the operator's execution controls, and what the planner decided.
+
+    ⭐ **Every count here is derived at render time from the planner, never carried.** The panel
+    calls `autonomy.plan()` on the same projection the rest of the page is built from, so what it
+    shows as eligible is exactly what RUN would start. A run panel showing a cached "3 ready" for
+    work that a completion has since unblocked is the stale-number failure this estate keeps
+    finding, and the cheapest way not to have it is to hold no numbers at all.
+
+    ⚠ The panel states the wakeup latency in plain words. It is the one thing about this feature
+    an operator can be wrong about in a way that costs them the meeting: believing a finished
+    task instantly starts the next one, walking away, and coming back to a run that never moved
+    because nobody loaded the page.
+    """
+    from . import autonomy as _auto
+
+    runs = _auto.mandates()
+    if not runs:
+        return _sec("Runs", '<p class="empty">No mission run yet. CREATE a mission preset to '
+                            'open one — the preset compiles to canonical work in this same '
+                            'store, and the run is only the operator\'s choices about it.</p>',
+                    n="0", hint="a run is scheduler context, never a second source of truth",
+                    sid="runs")
+
+    # ⚠ One projection, shared across every run panel. `st["work"]` cannot be reused here: it
+    # holds render dicts, and the planner reads `Work` objects with derived `state`, `checks` and
+    # `conflicts_with`. Re-projecting per run would read the store four times for one page.
+    proj = {w.id: w for w in _work.project()}
+    o = []
+    for m in runs[:4]:
+        p = _auto.plan(m, proj)
+        starts = p.starts
+        gates = p.by_verdict(_auto.HUMAN_GATE)
+        blocked = p.by_verdict(_auto.BLOCKED)
+        waits = p.by_verdict(_auto.WAIT)
+        rem = m.remaining()
+        late = rem is not None and rem.total_seconds() < 0
+
+        o.append('<div class="par" style="margin-bottom:10px">')
+        o.append(f'<h3 style="margin:0 0 2px">{_e(m.run_id)}'
+                 + (' <span class="chip">⏸ PAUSED</span>' if m.paused else "")
+                 + f' <span class="chip">{_e(m.mode)}</span>'
+                 + f' <span class="chip">{_e(m.run_mode)}</span></h3>')
+        o.append('<dl class="kv">')
+        o.append(f'<dt>target</dt><dd>{_e(m.target or "— none declared")}</dd>')
+        o.append(f'<dt>eligible now</dt><dd>{len(starts)}'
+                 + (f' — {_e(", ".join(starts[:4]))}' if starts else "") + '</dd>')
+        o.append(f'<dt>at a human gate</dt><dd>{len(gates)}'
+                 + (f' — {_e(", ".join(d.work_id for d in gates[:3]))}' if gates else "")
+                 + '</dd>')
+        o.append(f'<dt>blocked / waiting</dt><dd>{len(blocked)} / {len(waits)}</dd>')
+        o.append(f'<dt>concurrency</dt><dd>{p.running} running, {p.capacity} slot(s) free '
+                 f'of {m.max_parallel}</dd>')
+        if m.deadline:
+            o.append(f'<dt>deadline</dt><dd>{_e(m.deadline)}'
+                     + (f' — {"OVERDUE by" if late else "in"} '
+                        f'{_e(str(abs(rem)).split(".")[0])}' if rem is not None
+                        else " — unparseable")
+                     + '<br><span class="dim">scheduling context only; it does not change what '
+                       'PASS means</span></dd>')
+        if m.failed:
+            o.append(f'<dt>failed starts</dt><dd>{len(m.failed)} not retried: '
+                     f'{_e(", ".join(sorted(m.failed)))}<br><span class="dim">clear one '
+                     f'deliberately: python -m factory.autonomy clear-failure --run '
+                     f'{_e(m.run_id)} --work &lt;id&gt;</span></dd>')
+        o.append("</dl>")
+
+        if p.note:
+            o.append(f'<p class="empty" style="margin:4px 0">{_e(p.note)}</p>')
+
+        # The next eligible node and WHY — the pack asks for this explicitly, and it is the one
+        # line that tells an operator whether to press RUN or go and answer something.
+        nxt = p.decisions[0] if p.decisions else None
+        first_start = next((d for d in p.decisions if d.verdict == _auto.START), None)
+        show = first_start or nxt
+        if show is not None:
+            o.append(f'<p style="margin:4px 0;font-size:12.5px">next: '
+                     f'<code>{_e(show.work_id)}</code> — <span class="dim">{_e(show.verdict)}: '
+                     f'{_e(show.reason)}</span></p>')
+
+        o.append(f'<form method="POST" action="/switchboard/run" style="margin-top:8px;'
+                 f'display:flex;gap:6px;flex-wrap:wrap">'
+                 f'<input type="hidden" name="run" value="{_e(m.run_id)}">')
+        if m.paused:
+            o.append('<button class="btn pri" name="go" value="resume">RESUME</button>')
+        else:
+            o.append('<button class="btn pri" name="go" value="dag">RUN DAG</button>')
+            o.append('<button class="btn" name="go" value="critical">RUN CRITICAL PATH</button>')
+            o.append('<button class="btn" name="go" value="pause">PAUSE</button>')
+        o.append('<button class="btn" name="go" value="plan">PLAN ONLY</button>')
+        o.append("</form>")
+        o.append('<p class="empty" style="margin-top:7px">A run wakes on RUN, on APPROVE/REJECT, '
+                 'on RESUME, and once per page load. There is no timer and no background '
+                 'poller — so after a task finishes, the next node starts on the next load of '
+                 'this page, not the instant the task ends.</p>')
+        o.append("</div>")
+
+    if len(runs) > 4:
+        o.append(f'<p class="empty">{len(runs) - 4} older run(s) not shown.</p>')
+    live = len(_auto.active())
+    return _sec("Runs", "".join(o), n=f"{live} active" if live else f"{len(runs)} idle",
+                hint="every count is computed by the planner at render time, never cached",
+                sid="runs")
+
+
 def _view_now(st: dict, view: str) -> str:
     now = st.get("now") or {}
     # ⛔ NEEDS YOU first, repo health after. Repo health sat above it and pushed the APPROVE button
@@ -921,6 +1107,12 @@ def _view_now(st: dict, view: str) -> str:
                   # the panel red teaches the operator that red means nothing.
                   alarm=bool(live_n), sid="needs-you"))
     o.append(_repo_health(st))
+    # ⛔ Runs sit ABOVE Next and below Needs you, deliberately. A live human decision still
+    # outranks everything; but once a run is active, "what is the run doing and may I press RUN"
+    # is the question the operator has, and Next is the answer to a question they no longer ask
+    # node by node. It is not first, because a run that is quietly paused must not push an
+    # unanswered blocker below the fold — the same rule that put repo health under Needs you.
+    o.append(_runs(st))
     o.append(_sec("Next", _next(st, view), n=str(now.get("next_count") or 0),
                   hint="READY is derived from the checks, never chosen", sid="next"))
     o.append(_sec("Running", _running(st, view), n=str(now.get("running_count") or 0),
@@ -1254,6 +1446,13 @@ def page(st: Optional[dict] = None, view: str = "now", inspect: str = "", q: str
     elif view == "work":
         o.append(_view_work(st, view, q))
     elif view == "create":
+        # ⭐ Mission FIRST. A mission preset is the whole reason most work gets created here, and
+        # the generic single-task form below it is the escape hatch — not the other way round.
+        # Both write to the same store through the same primitives; the preset just knows the
+        # shape of six stages, their claims and their gates, so nobody has to retype them.
+        o.append(_sec("Create mission run", mission_form(st),
+                      hint="a preset compiles to canonical work; the run holds only the "
+                           "operator's own choices"))
         o.append(_sec("Create work", create_form(st, repos),
                       hint="the system derives the manifest, id, worktree, reader and packet"))
     elif view == "inbox":
