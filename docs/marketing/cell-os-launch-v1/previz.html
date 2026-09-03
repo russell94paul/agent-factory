@@ -1,0 +1,603 @@
+<title>CELL OS Previz Bay</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* ─── The film's own look bible is this page's design system.
+       Single visual world, deliberately: an edit bay is dark, and these are the
+       film's literal palette values from shooting-script.md. Every colour is
+       painted explicitly so the page holds on any host ground. ─────────────── */
+:root{
+  --void:#05070B; --graphite:#0E131B; --edge:#1B2430; --edge-hi:#26313F;
+  --blue:#1E5FCC; --cyan:#38D2E8; --violet:#7B5CFF; --amber:#E8A33D;
+  --bone:#E6ECF2; --slate:#8A97A8; --slate-dim:#5C6875;
+  --disp:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Consolas,monospace;
+  --ease:cubic-bezier(.22,.61,.36,1);
+  --stage-h:clamp(200px,42vw,470px);
+}
+*{box-sizing:border-box}
+/* own the hidden reset rather than inheriting it from a wrapper, so the local file
+   and the published page hide the same elements */
+[hidden]{display:none!important}
+body{margin:0;background:var(--void);color:var(--bone);font:400 14px/1.6 var(--disp);
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 22px 72px}
+a{color:var(--cyan)}
+h1,h2,h3{text-wrap:balance;margin:0}
+
+/* ─── masthead ─────────────────────────────────────────────────────────────── */
+.mast{display:flex;flex-wrap:wrap;gap:18px 26px;align-items:baseline;
+  padding-bottom:16px;border-bottom:1px solid var(--edge)}
+.mast h1{font:600 25px/1.1 var(--disp);letter-spacing:-.02em}
+.mast .sub{font:400 13px/1.5 var(--disp);color:var(--slate);max-width:52ch}
+.spec{display:flex;gap:20px;flex-wrap:wrap;margin-left:auto;
+  font:400 11px/1 var(--mono);color:var(--slate-dim);letter-spacing:.04em}
+.spec b{display:block;color:var(--bone);font-weight:500;font-size:15px;margin-bottom:4px;
+  font-variant-numeric:tabular-nums}
+
+/* ─── transport ────────────────────────────────────────────────────────────── */
+.bay{margin-top:22px;border:1px solid var(--edge);background:var(--graphite);border-radius:3px;
+  overflow:hidden}
+.transport{display:flex;align-items:center;gap:16px;padding:11px 14px;
+  border-bottom:1px solid var(--edge);background:#0A0F16}
+button{font:500 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;
+  background:transparent;color:var(--bone);border:1px solid var(--edge-hi);
+  padding:9px 15px;border-radius:2px;cursor:pointer;transition:border-color .14s ease-out,color .14s ease-out}
+button:hover{border-color:var(--cyan);color:var(--cyan)}
+button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+button[aria-pressed="true"]{border-color:var(--cyan);color:var(--cyan)}
+.tc{font:500 20px/1 var(--mono);font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.tc span{color:var(--slate-dim)}
+.now{font:400 11px/1.4 var(--mono);color:var(--slate);letter-spacing:.04em;margin-left:auto;text-align:right}
+.now b{color:var(--bone);font-weight:500}
+
+/* ─── stage ────────────────────────────────────────────────────────────────── */
+.stage{position:relative;height:var(--stage-h);background:var(--void);overflow:hidden;
+  display:grid;place-items:center;border-bottom:1px solid var(--edge)}
+.stage-in{position:absolute;inset:0;display:grid;place-items:center;padding:5% 7%}
+.chip{position:absolute;left:18px;bottom:16px;font:400 10px/1 var(--mono);letter-spacing:.09em;
+  color:var(--slate);opacity:.42;display:flex;align-items:center;gap:6px}
+.chip i{width:5px;height:5px;border-radius:50%;background:var(--slate);display:block}
+.chip.d i{background:var(--slate)} .chip.i i{background:var(--blue)} .chip.v i{background:var(--cyan)}
+.chip.on{opacity:.75}
+.vo{position:absolute;right:18px;bottom:14px;left:auto;max-width:46%;text-align:right;
+  font:400 11.5px/1.5 var(--mono);color:var(--cyan);opacity:.9}
+.vo em{color:var(--slate-dim);font-style:normal;display:block;font-size:10px;letter-spacing:.08em}
+.silence{position:absolute;right:18px;bottom:14px;font:400 10px/1 var(--mono);
+  color:var(--slate-dim);letter-spacing:.12em;opacity:.55}
+.slate-id{position:absolute;left:18px;top:15px;font:400 10px/1 var(--mono);color:var(--slate-dim);
+  letter-spacing:.1em}
+
+/* stage type tiers — the film's real specs */
+.d1{font:500 clamp(20px,3.6vw,42px)/1.06 var(--disp);letter-spacing:-.015em;color:var(--bone);
+  text-transform:uppercase;text-align:center}
+.d2{font:500 clamp(15px,2.3vw,26px)/1.12 var(--disp);letter-spacing:-.01em;color:var(--bone);
+  text-transform:uppercase;text-align:center}
+.lb{font:450 clamp(8px,1.05vw,11px)/1.3 var(--disp);letter-spacing:.08em;text-transform:uppercase;
+  color:var(--slate)}
+.mo{font:400 clamp(9px,1.15vw,13px)/1.5 var(--mono);color:var(--bone)}
+.tagline{font:400 clamp(11px,1.4vw,15px)/1.5 var(--disp);color:var(--slate);text-align:center;
+  margin-top:10px}
+.stack{display:flex;flex-direction:column;gap:6px;align-items:center}
+.rowlist{display:flex;flex-direction:column;gap:5px}
+.hz{display:flex;gap:clamp(8px,2vw,26px);align-items:center;justify-content:center;flex-wrap:wrap}
+.node{width:9px;height:9px;border-radius:50%;background:var(--cyan);
+  box-shadow:0 0 18px 5px rgba(56,210,232,.28)}
+.node.dim{background:var(--edge-hi);box-shadow:none}
+.node.v{background:var(--violet);box-shadow:0 0 18px 5px rgba(123,92,255,.28)}
+.plane{border:1px solid var(--edge-hi);padding:7px 14px;min-width:clamp(120px,26vw,260px);
+  text-align:center;background:rgba(30,95,204,.05)}
+.plane.lit{border-color:var(--blue);background:rgba(30,95,204,.16)}
+.gridfig{display:grid;grid-template-columns:auto repeat(3,minmax(52px,1fr));gap:3px;
+  font:400 9.5px/1 var(--mono);letter-spacing:.05em}
+.gridfig div{padding:7px 5px;text-align:center;border:1px solid var(--edge);color:var(--slate-dim)}
+.gridfig .hd{border:0;color:var(--slate);text-align:right;padding-right:9px}
+.gridfig .ch{border:0;color:var(--slate);text-align:center}
+.gridfig .sat{border-color:var(--cyan);color:var(--cyan);background:rgba(56,210,232,.1)}
+.gridfig .ast{border-color:var(--edge-hi);color:var(--slate);background:rgba(138,151,168,.06)}
+.lat{display:flex;flex-direction:column-reverse;gap:0;align-items:center;
+  font:400 clamp(9px,1.2vw,13px)/1 var(--mono)}
+.lat span{padding:7px 12px;color:var(--slate-dim);position:relative}
+.lat span.hi{color:var(--cyan);font-weight:500}
+.lat span:not(:first-child):after{content:"";position:absolute;left:50%;top:-1px;width:1px;height:2px;
+  background:var(--edge-hi)}
+.chk{display:grid;grid-template-columns:auto auto;gap:4px 12px;
+  font:400 clamp(9px,1.15vw,12.5px)/1 var(--mono)}
+.chk b{font-weight:400;color:var(--slate)}
+.chk i{font-style:normal;color:var(--cyan)}
+.chk .no{color:var(--amber)}
+.tok{display:inline-block;border:1px solid var(--edge-hi);padding:6px 12px;
+  font:400 clamp(9px,1.15vw,13px)/1 var(--mono);color:var(--bone);background:rgba(0,0,0,.3)}
+.tok.stop{border-color:var(--slate-dim);color:var(--slate)}
+.wall{width:2px;align-self:stretch;background:linear-gradient(180deg,transparent,var(--blue),transparent);
+  min-height:70px}
+.mesh{position:absolute;inset:0;opacity:.5}
+.ring{width:clamp(26px,5vw,52px);height:clamp(26px,5vw,52px);border:2px solid var(--cyan);border-radius:50%;
+  box-shadow:0 0 26px 6px rgba(56,210,232,.2)}
+.pareto{display:flex;gap:clamp(10px,2.4vw,32px);align-items:flex-end;justify-content:center}
+.form{display:flex;flex-direction:column;gap:6px;align-items:center}
+.form .dots{display:flex;gap:3px}
+.creed{font:400 clamp(9px,1.1vw,12px)/1.75 var(--mono);color:var(--bone);letter-spacing:.04em}
+.dimmed{opacity:.2}
+.amberlight{width:clamp(40px,8vw,90px);height:3px;background:var(--amber);
+  box-shadow:0 0 30px 10px rgba(232,163,61,.4)}
+
+/* ─── timeline ─────────────────────────────────────────────────────────────── */
+.tl{padding:16px 14px 18px}
+.tl-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;
+  font:400 10px/1 var(--mono);letter-spacing:.09em;color:var(--slate-dim)}
+.lane{position:relative;height:34px;display:flex;gap:1px;cursor:pointer}
+.lane.vo{height:15px;margin-top:5px}
+.lane.beats{height:16px;margin-bottom:5px}
+.blk{position:relative;border:0;padding:0;border-radius:1px;background:var(--edge);
+  transition:opacity .14s ease-out;min-width:2px;overflow:hidden}
+.blk .id{position:absolute;inset:0;display:grid;place-items:center;
+  font:400 8px/1 var(--mono);color:rgba(5,7,11,.75)}
+.blk.d{background:var(--slate-dim)} .blk.i{background:var(--blue)} .blk.v{background:var(--cyan)}
+.blk.n{background:#33404F}
+.blk:hover{opacity:.78} .blk.cur{outline:1px solid var(--bone);outline-offset:1px;z-index:2}
+.blk:focus-visible{outline:2px solid var(--cyan);outline-offset:1px;z-index:3}
+.vblk{position:absolute;top:0;height:100%;background:rgba(56,210,232,.55);border-radius:1px}
+.vblk.cur{background:var(--cyan)}
+.bnd{position:absolute;top:0;height:100%;border-left:1px solid var(--edge-hi);
+  font:400 8px/16px var(--mono);color:var(--slate-dim);padding-left:4px;letter-spacing:.08em;
+  white-space:nowrap;overflow:hidden}
+.play-head{position:absolute;top:0;bottom:0;width:1px;background:var(--bone);pointer-events:none;
+  box-shadow:0 0 8px 1px rgba(230,236,242,.5);z-index:4}
+.ruler{position:relative;height:14px;margin-top:4px;font:400 8.5px/14px var(--mono);color:var(--slate-dim)}
+.ruler span{position:absolute;top:0;border-left:1px solid var(--edge);padding-left:3px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;
+  font:400 10px/1 var(--mono);color:var(--slate);letter-spacing:.05em;align-items:center}
+.legend i{width:16px;height:7px;border-radius:1px;display:inline-block;margin-right:5px;vertical-align:-1px}
+
+/* ─── inspector ────────────────────────────────────────────────────────────── */
+.insp{display:grid;grid-template-columns:1fr 1fr;gap:0 26px;padding:15px 14px 18px;
+  border-top:1px solid var(--edge);background:#0A0F16}
+.insp dl{margin:0;display:grid;grid-template-columns:78px 1fr;gap:7px 12px;align-content:start}
+.insp dt{font:400 9.5px/1.5 var(--mono);letter-spacing:.09em;text-transform:uppercase;color:var(--slate-dim)}
+.insp dd{margin:0;font:400 12px/1.55 var(--disp);color:var(--bone)}
+.insp dd.m{font-family:var(--mono);font-size:11px;color:var(--slate)}
+@media (max-width:720px){.insp{grid-template-columns:1fr;gap:16px}}
+
+/* ─── findings + shot table ────────────────────────────────────────────────── */
+section{margin-top:46px}
+h2{font:600 17px/1.2 var(--disp);letter-spacing:-.01em;margin-bottom:6px}
+h2+.lede{color:var(--slate);max-width:66ch;margin:0 0 18px}
+.finds{display:grid;grid-template-columns:repeat(auto-fit,minmax(258px,1fr));gap:1px;
+  background:var(--edge);border:1px solid var(--edge)}
+.find{background:var(--graphite);padding:16px 16px 18px}
+.find h3{font:400 10px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;
+  color:var(--slate-dim);margin-bottom:9px}
+.find .big{font:500 27px/1 var(--disp);letter-spacing:-.02em;font-variant-numeric:tabular-nums;
+  margin-bottom:7px;display:block}
+.find p{margin:0;font-size:12.5px;line-height:1.6;color:var(--slate)}
+.find.hero .big{color:var(--cyan)}
+.find.warn .big{color:var(--amber)}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+.tblwrap{overflow-x:auto;border:1px solid var(--edge)}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--edge);vertical-align:top}
+th{font:400 9.5px/1.4 var(--mono);letter-spacing:.09em;text-transform:uppercase;color:var(--slate-dim);
+  background:#0A0F16;position:sticky;top:0}
+td.n,td.t{font-family:var(--mono);font-size:11px;color:var(--slate);white-space:nowrap;
+  font-variant-numeric:tabular-nums}
+td.txt{font-family:var(--mono);font-size:11px;color:var(--bone)}
+tr:hover td{background:rgba(56,210,232,.035)}
+.tag{font:400 9px/1 var(--mono);letter-spacing:.07em;padding:3px 6px;border:1px solid var(--edge-hi);
+  border-radius:2px;color:var(--slate);white-space:nowrap}
+.tag.v{border-color:var(--cyan);color:var(--cyan)} .tag.i{border-color:var(--blue);color:#6f9fe8}
+footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--edge);
+  font:400 11px/1.7 var(--mono);color:var(--slate-dim)}
+
+/* ─── motion: gated behind .js so the page is complete with no script ─────── */
+.js .rv{opacity:0;transform:translateY(7px);
+  transition:opacity .5s var(--ease),transform .5s var(--ease)}
+.js .rv.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){
+  .js .rv,.js .rv.in{opacity:1!important;transform:none!important;transition:none!important}
+  *{animation-duration:.001ms!important;animation-iteration-count:1!important;
+    transition-duration:.001ms!important}
+}
+</style>
+
+<div class="wrap">
+
+<header class="mast">
+  <div>
+    <h1>CELL OS &mdash; previz bay</h1>
+    <p class="sub">The 90-second launch film, watchable before it exists. Real timings, real
+      typography, real narration. Schematic where footage goes.</p>
+  </div>
+  <div class="spec">
+    <div><b>90.0s</b>runtime</div>
+    <div><b>31</b>shots</div>
+    <div><b>156</b>vo words</div>
+    <div><b>25.0s</b>silence</div>
+    <div><b>24</b>fps</div>
+  </div>
+</header>
+
+<div class="bay">
+  <div class="transport">
+    <button id="play" aria-pressed="false">▶ Play the film</button>
+    <button id="rew">↺ 0:00</button>
+    <div class="tc" id="tc">0:17<span>.2</span></div>
+    <div class="now" id="now"><b>SHOT 8</b> &middot; title card &middot; 1.4s</div>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="slate-id" id="sid">S08 &middot; C &middot; VECTOR</div>
+    <div class="stage-in" id="sin"></div>
+    <div class="chip" id="chipEl" hidden><i></i><span id="chipTx">DESIGNED</span></div>
+    <div class="vo" id="voEl" hidden></div>
+    <div class="silence" id="silEl">— silent —</div>
+  </div>
+
+  <div class="tl">
+    <div class="tl-h"><span>TIMELINE &middot; BLOCK WIDTH = SHOT DURATION</span><span>CLICK ANY BLOCK TO CUE</span></div>
+    <div class="lane beats" id="beatLane"></div>
+    <div class="lane" id="shotLane"></div>
+    <div class="lane vo" id="voLane"></div>
+    <div class="ruler" id="ruler"></div>
+    <div class="legend">
+      <span><i style="background:#33404F"></i>no chip</span>
+      <span><i style="background:var(--slate-dim)"></i>designed</span>
+      <span><i style="background:var(--blue)"></i>implemented</span>
+      <span><i style="background:var(--cyan)"></i>validated</span>
+      <span style="color:var(--slate-dim)">lower lane = narration; gaps are the designed silence</span>
+    </div>
+  </div>
+
+  <div class="insp">
+    <dl>
+      <dt>Frame</dt><dd id="i-frame">&mdash;</dd>
+      <dt>Camera</dt><dd id="i-cam" class="m">&mdash;</dd>
+      <dt>Motion</dt><dd id="i-mot" class="m">&mdash;</dd>
+    </dl>
+    <dl>
+      <dt>Sound</dt><dd id="i-snd" class="m">&mdash;</dd>
+      <dt>Claim</dt><dd id="i-claim" class="m">&mdash;</dd>
+      <dt>Note</dt><dd id="i-note">&mdash;</dd>
+    </dl>
+  </div>
+</div>
+
+<section>
+  <h2>What the arithmetic decided</h2>
+  <p class="lede">Four numbers settled the cut before a word of script was written. Each is computed,
+    not chosen &mdash; the working is in <span class="tag">timing.md</span>.</p>
+  <div class="finds">
+    <div class="find warn rv">
+      <h3>The brief's own conflict</h3>
+      <span class="big">118s</span>
+      <p>The brief asks for 75&ndash;90 seconds and its section timecodes sum to 118. Its 234 words of
+        narration need 101.7s of speech alone, before a single pause. It cannot be shot as written
+        inside its own runtime.</p>
+    </div>
+    <div class="find rv">
+      <h3>Word budget vs delivered</h3>
+      <span class="big">156 / 163</span>
+      <p>(90.0 &minus; 16.0) &times; 2.4 w/s, less 8% for pauses, gives 163 words. Delivered 156 &mdash;
+        a 32.9% compression of the brief, with 7 words spare.</p>
+    </div>
+    <div class="find rv">
+      <h3>Silence, as a budgeted quantity</h3>
+      <span class="big">25.0s</span>
+      <p>65.0s of speech in a 90.0s film. The silence is designed and allocated shot by shot, which is
+        why the density ceiling holds where eight labels land at once.</p>
+    </div>
+    <div class="find hero rv">
+      <h3>Claims in the present indicative</h3>
+      <span class="big">2 of 20</span>
+      <p>Two narration lines speak in the indicative, and both are measured in this repository. The
+        other eighteen are modal &mdash; <em>can</em>, <em>is designed to</em>, <em>could</em>. That
+        ratio is the film's integrity.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>The anchor</h2>
+  <p class="lede">One reel in this film is built, tested, validated and standards-grounded. It is
+    shot 23, it gets the most screen time of any reel, and its content was already better than
+    anything invented for it.</p>
+  <div class="finds">
+    <div class="find rv" style="grid-column:1/-1">
+      <h3>factory/contract.py &middot; five verdicts, never collapsed</h3>
+      <p style="color:var(--bone);font:400 15px/1.6 var(--disp);max-width:62ch">
+        <code style="font-family:var(--mono);font-size:13px;color:var(--cyan)">NOT_RUN &lt; PASS &lt; UNMEASURABLE &lt; FAIL &lt; ERROR</code><br><br>
+        &ldquo;A check whose instrument could not run has not passed.&rdquo;</p>
+      <p style="margin-top:12px">Grounded in ISO/IEC 9646 and carried still by TTCN-3 (ITU-T Z.140
+        &sect;24.2). Every competitor can claim orchestration; none ships a verdict meaning
+        <em>the thing that was supposed to measure this could not see</em>. The brief's invented
+        <span class="tag">VERIFIED_SUCCESS</span> returns zero hits in the repository and was cut in
+        its favour.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>All 31 shots</h2>
+  <p class="lede">The full cut, readable without playing anything. On-screen text is verbatim and
+    cased exactly as it appears in frame.</p>
+  <div class="tblwrap">
+    <table>
+      <thead><tr><th>#</th><th>In</th><th>Dur</th><th>Beat</th><th>On screen</th><th>Narration</th><th>Chip</th><th>Build</th></tr></thead>
+      <tbody id="tbody">
+      <tr><td class="n">1</td><td class="t">0:00.0</td><td class="t">2.6s</td><td class="n">A</td><td class="txt">—</td><td><span style="color:var(--slate-dim)">silent</span></td><td>—</td><td class="n">VECTOR</td></tr>
+      <tr><td class="n">2</td><td class="t">0:02.6</td><td class="t">2.2s</td><td class="n">A</td><td class="txt">THE AI INDUSTRY BUILT AGENTS.</td><td><span class="tag">L01</span> AI gave us agents.</td><td>—</td><td class="n">VECTOR</td></tr>
+      <tr><td class="n">3</td><td class="t">0:04.8</td><td class="t">1.4s</td><td class="n">A</td><td class="txt">`AGENT` — MODEL · PROMPT · TOOLS</td><td><span style="color:var(--slate-dim)">silent</span></td><td>—</td><td class="n">VECTOR</td></tr>
+      <tr><td class="n">4</td><td class="t">0:06.2</td><td class="t">2.2s</td><td class="n">B</td><td class="txt">—</td><td><span class="tag">L02</span> But an agent is only one intelligent process.</td><td>—</td><td class="n">VECTOR</td></tr>
+      <tr><td class="n">5</td><td class="t">0:08.4</td><td class="t">2.6s</td><td class="n">C</td><td class="txt">IDENTITY · MEMORY · CAPABILITIES · PERMISSIONS · CONTEXT · TOOLS · EVIDENCE · BUDGET</td><td><span class="tag">L03</span> An Operative is an agent with identity, memory, capability and limits.</td><td>—</td><td class="n">VECTOR</td></tr>
+      <tr><td class="n">6</td><td class="t">0:11.0</td><td class="t">3.0s</td><td class="n">C</td><td class="txt">—</td><td><span style="color:var(--slate-dim)">silent</span></td><td>—</td><td class="n">VECTOR</td></tr>
+      <tr><td class="n">7</td><td class="t">0:14.0</td><td class="t">3.2s</td><td class="n">C</td><td class="txt">—</td><td><span class="tag">L04</span> A Cell is Operatives, assembled for one mission.</td><td>—</td><td class="n">VECTOR</td></tr>
+      <tr><td class="n">8</td><td class="t">0:17.2</td><td class="t">1.4s</td><td class="n">C</td><td class="txt">—</td><td><span style="color:var(--slate-dim)">silent</span></td><td>—</td><td class="n">VECTOR</td></tr>
+      <tr><td class="n">9</td><td class="t">0:18.6</td><td class="t">2.6s</td><td class="n">D</td><td class="txt">—</td><td><span class="tag">L05</span> An operating system manages processes and permissions.</td><td><span class="tag d">DESIGNED</span></td><td class="n">VECTOR</td></tr>
+      <tr><td class="n">10</td><td class="t">0:21.2</td><td class="t">3.4s</td><td class="n">D</td><td class="txt">—</td><td><span class="tag">L06</span> CELL OS is built for organizations.</td><td><span class="tag d">DESIGNED</span></td><td class="n">VECTOR</td></tr>
+      <tr><td class="n">11</td><td class="t">0:24.6</td><td class="t">2.6s</td><td class="n">E</td><td class="txt">—</td><td><span class="tag">L07</span> Describe the objective.</td><td><span class="tag d">DESIGNED</span></td><td class="n">VECTOR</td></tr>
+      <tr><td class="n">12</td><td class="t">0:27.2</td><td class="t">3.8s</td><td class="n">E</td><td class="txt">—</td><td><span style="color:var(--slate-dim)">silent</span></td><td><span class="tag d">DESIGNED</span></td><td class="n">VECTOR</td></tr>
+      <tr><td class="n">13</td><td class="t">0:31.0</td><td class="t">2.8s</td><td class="n">E</td><td class="txt">RESEARCH · STRATEGY · PRODUCT · ENGINEERING · MARKETING · REVIEW</td><td><span class="tag">L08</span> CELL OS is designed to compile intent into an organization.</td><td><span class="tag d">DESIGNED</span></td><td class="n">VECTOR</td></tr>
+      <tr><td class="n">14</td><td class="t">0:33.8</td><td class="t">3.2s</td><td class="n">F</td><td class="txt">—</td><td><span class="tag">L09</span> Teams don't have to stay static.</td><td><span class="tag d">DESIGNED</span></td><td class="n">VECTOR</td></tr>
+      <tr><td class="n">15</td><td class="t">0:37.0</td><td class="t">4.0s</td><td class="n">F</td><td class="txt">ELASTIC ORGANIZATIONS</td><td><span class="tag">L10</span> Cells can expand under uncertainty, and collapse when it changes.</td><td><span class="tag d">DESIGNED</span></td><td class="n">VECTOR</td></tr>
+      <tr><td class="n">16</td><td class="t">0:41.0</td><td class="t">3.4s</td><td class="n">G</td><td class="txt">—</td><td><span class="tag">L11</span> Context is designed to work like virtual memory.</td><td><span class="tag d">DESIGNED</span></td><td class="n">VECTOR</td></tr>
+      <tr><td class="n">17</td><td class="t">0:44.4</td><td class="t">3.8s</td><td class="n">G</td><td class="txt">RETRIEVE · AUTHORIZE · RANK · COMPRESS · MOUNT</td><td><span class="tag">L12</span> Each Operative mounts only what the objective needs.</td><td><span class="tag d">DESIGNED</span></td><td class="n">VECTOR</td></tr>
+      <tr><td class="n">18</td><td class="t">0:48.2</td><td class="t">2.6s</td><td class="n">H</td><td class="txt">—</td><td><span class="tag">L13</span> Autonomy is not authority.</td><td><span class="tag i">IMPLEMENTED</span></td><td class="n">VECTOR</td></tr>
+      <tr><td class="n">19</td><td class="t">0:50.8</td><td class="t">3.8s</td><td class="n">H</td><td class="txt">AUTHORIZATION REQUIRED</td><td><span class="tag">L14</span> Important actions can pass permissions, budget, policy, evidence, and a human.</td><td><span class="tag i">IMPLEMENTED</span></td><td class="n">VECTOR</td></tr>
+      <tr><td class="n">20</td><td class="t">0:54.6</td><td class="t">2.2s</td><td class="n">H</td><td class="txt">—</td><td><span style="color:var(--slate-dim)">silent</span></td><td><span class="tag i">IMPLEMENTED</span></td><td class="n">PLATE+VECTOR</td></tr>
+      <tr><td class="n">21</td><td class="t">0:56.8</td><td class="t">2.8s</td><td class="n">I</td><td class="txt">A CLAIM IS NOT AN OUTCOME</td><td><span class="tag">L15</span> A claim of completion is not an outcome.</td><td><span class="tag v">VALIDATED</span></td><td class="n">VECTOR</td></tr>
+      <tr><td class="n">22</td><td class="t">0:59.6</td><td class="t">3.2s</td><td class="n">I</td><td class="txt">EVIDENCE LEDGER</td><td><span style="color:var(--slate-dim)">silent</span></td><td><span class="tag v">VALIDATED</span></td><td class="n">VECTOR</td></tr>
+      <tr><td class="n">23</td><td class="t">1:02.8</td><td class="t">5.6s</td><td class="n">I</td><td class="txt">—</td><td><span class="tag">L16</span> A check whose instrument could not run has not passed.</td><td><span class="tag v">VALIDATED</span></td><td class="n">VECTOR</td></tr>
+      <tr><td class="n">24</td><td class="t">1:08.4</td><td class="t">3.6s</td><td class="n">J</td><td class="txt">—</td><td><span class="tag">L17</span> Fork a Cell. Challenge it with a shadow twin.</td><td><span class="tag d">DESIGNED</span></td><td class="n">VECTOR</td></tr>
+      <tr><td class="n">25</td><td class="t">1:12.0</td><td class="t">3.6s</td><td class="n">J</td><td class="txt">EVOLUTION CHAMBER — SOLO EXPERT · SPECIALIST PIPELINE · PARALLEL SWARM · COMMAND TREE · HYBRID CELL</td><td><span class="tag">L18</span> Team design becomes something you can measure.</td><td><span class="tag d">DESIGNED</span></td><td class="n">PLATE+VECTOR</td></tr>
+      <tr><td class="n">26</td><td class="t">1:15.6</td><td class="t">3.0s</td><td class="n">K</td><td class="txt">RESEARCH · PRODUCT · ENGINEERING · CONTENT · CUSTOMER · OPERATIONS · RELIABILITY</td><td><span class="tag">L19</span> One Cell, one mission. Many Cells, one function.</td><td><span class="tag d">DESIGNED</span></td><td class="n">PLATE+VECTOR</td></tr>
+      <tr><td class="n">27</td><td class="t">1:18.6</td><td class="t">2.0s</td><td class="n">K</td><td class="txt">—</td><td><span class="tag">L20</span> Connect them, and one operator could direct a synthetic organization.</td><td><span class="tag d">DESIGNED</span></td><td class="n">VECTOR</td></tr>
+      <tr><td class="n">28</td><td class="t">1:20.6</td><td class="t">2.0s</td><td class="n">K</td><td class="txt">—</td><td><span style="color:var(--slate-dim)">silent</span></td><td><span class="tag d">DESIGNED</span></td><td class="n">PLATE+VECTOR</td></tr>
+      <tr><td class="n">29</td><td class="t">1:22.6</td><td class="t">2.8s</td><td class="n">L</td><td class="txt">—</td><td><span style="color:var(--slate-dim)">silent</span></td><td>—</td><td class="n">VECTOR</td></tr>
+      <tr><td class="n">30</td><td class="t">1:25.4</td><td class="t">2.6s</td><td class="n">L</td><td class="txt">—</td><td><span style="color:var(--slate-dim)">silent</span></td><td>—</td><td class="n">VECTOR</td></tr>
+      <tr><td class="n">31</td><td class="t">1:28.0</td><td class="t">2.0s</td><td class="n">L</td><td class="txt">—</td><td><span style="color:var(--slate-dim)">silent</span></td><td>—</td><td class="n">VECTOR</td></tr>
+    </tbody>
+    </table>
+  </div>
+</section>
+
+<footer>
+  Previz for <b>docs/marketing/cell-os-launch-v1/</b> &middot; schematic, not final art &middot;
+  every claim status sourced from <b>claim-ledger.md</b>, itself sourced from
+  <b>docs/_index/current_vs_proposed.md</b> and the repository's own run ledgers.<br>
+  Grey plates mark shots built from generated footage. Timings authoritative to &plusmn;0.2s.
+</footer>
+</div>
+
+<script>
+document.documentElement.classList.add('js');
+const STILL = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const T = 90.0;
+
+/* ── narration: in-point, duration (words / 2.4), words, text ───────────────── */
+const VO = [
+ ['L01',2.9,1.67,4,'AI gave us agents.'],
+ ['L02',6.4,3.33,8,'But an agent is only one intelligent process.'],
+ ['L03',10.6,4.58,11,'An Operative is an agent with identity, memory, capability and limits.'],
+ ['L04',15.6,3.33,8,'A Cell is Operatives, assembled for one mission.'],
+ ['L05',19.2,2.92,7,'An operating system manages processes and permissions.'],
+ ['L06',22.6,2.50,6,'CELL OS is built for organizations.'],
+ ['L07',25.4,1.25,3,'Describe the objective.'],
+ ['L08',31.2,4.17,10,'CELL OS is designed to compile intent into an organization.'],
+ ['L09',35.6,2.50,6,"Teams don't have to stay static."],
+ ['L10',38.2,4.17,10,'Cells can expand under uncertainty, and collapse when it changes.'],
+ ['L11',42.9,3.33,8,'Context is designed to work like virtual memory.'],
+ ['L12',46.7,3.33,8,'Each Operative mounts only what the objective needs.'],
+ ['L13',50.2,1.67,4,'Autonomy is not authority.'],
+ ['L14',52.4,4.58,11,'Important actions can pass permissions, budget, policy, evidence, and a human.'],
+ ['L15',57.6,3.33,8,'A claim of completion is not an outcome.'],
+ ['L16',63.6,4.17,10,'A check whose instrument could not run has not passed.'],
+ ['L17',68.9,3.75,9,'Fork a Cell. Challenge it with a shadow twin.'],
+ ['L18',73.1,2.92,7,'Team design becomes something you can measure.'],
+ ['L19',76.5,3.33,8,'One Cell, one mission. Many Cells, one function.'],
+ ['L20',80.3,4.17,10,'Connect them, and one operator could direct a synthetic organization.']
+];
+
+/* ── beats ──────────────────────────────────────────────────────────────────── */
+const BEATS=[['A',0,6.2,'COLD OPEN'],['B',6.2,8.4,'FRACTURE'],['C',8.4,18.6,'THE NAME'],
+ ['D',18.6,24.6,'THE FRAME'],['E',24.6,33.8,'COMPILE'],['F',33.8,41.0,'ELASTIC'],
+ ['G',41.0,48.2,'CONTEXT'],['H',48.2,56.8,'KERNEL'],['I',56.8,68.4,'VERDICT'],
+ ['J',68.4,75.6,'FORK'],['K',75.6,82.6,'SCALE-OUT'],['L',82.6,90.0,'CREED']];
+
+/* ── shots. k = stage renderer kind; c = maturity chip ──────────────────────── */
+const S=[
+ {n:1,i:0,d:2.6,b:'A',k:'point',c:'',bd:'VECTOR',fr:'Pure black. A single cyan point ignites at frame centre. Nothing else.',cam:'35mm static, imperceptible 0.2u push from 1.8s',mot:'opacity 0→1, 700ms sys-out; falloff breathes ±6% at 0.4Hz',snd:'SUB.PULSE — 38–55Hz sine, 1400ms, no attack',cl:'—',nt:'Resist adding anything. The 2.6s of near-nothing is what makes shot 5 land.'},
+ {n:2,i:2.6,d:2.2,b:'A',k:'head',c:'',bd:'VECTOR',t1:'THE AI INDUSTRY BUILT AGENTS.',fr:'The point holds at 30% frame height, one display line beneath it.',cam:'static',mot:'3 words, 90ms stagger, strike, 4px rise',snd:'room tone enters −38dB',cl:'—',nt:'Past tense on screen and in the read. The premise is that this sentence is already history.'},
+ {n:3,i:4.8,d:1.4,b:'A',k:'conv',c:'',lb:['MODEL','PROMPT','TOOLS'],mo:'AGENT',fr:'Three nodes contract inward and merge into one mono label.',cam:'50mm static',mot:'travel 600ms sys-in; labels cross-dissolve 120ms at contact',snd:'AGENT.TICK ×3, dry transient 2–4kHz, 60ms',cl:'C1 definitional',nt:'AGENT is mono and small; every later unit label is display and larger. Type hierarchy carries the argument.'},
+ {n:4,i:6.2,d:2.2,b:'B',k:'latt',c:'',fr:'The frame cracks outward. AGENT is revealed as one lit node in ~400, in a vast sparse lattice.',cam:'35mm rapid pull-back 0.9u over 1.4s, expo-out — the only fast move',mot:'lattice draws radially to 55% coverage. Never more.',snd:'SUB.PULSE drops; 300ms near-silence; music enters 7.2s',cl:'—',nt:'The one shot permitted to feel abrupt.'},
+ {n:5,i:8.4,d:2.6,b:'C',k:'rings',c:'',lb:['IDENTITY','MEMORY','CAPABILITIES','PERMISSIONS','CONTEXT','TOOLS','EVIDENCE','BUDGET'],fr:'Eight labelled rings accrete around the lit node in sequence.',cam:'50mm push 0.3u, orbit 8° left',mot:'240ms stagger; each scale 1.15→1.0 settle. STACKING — all eight legible by 10.6s',snd:'UI.LABEL ×8, descending in level',cl:'C1 VISION (definitional)',nt:'Eight labels in 2.2s works only because they stack. Any label leaving early makes the shot unreadable.'},
+ {n:6,i:11.0,d:3.0,b:'C',k:'rename',c:'',fr:'The mono AGENT label dissolves; AI OPERATIVE strikes in at 2.4× the size.',cam:'50mm, orbit 5°/s',mot:'AGENT out 200ms → 180ms with NO label → tracking +14%→−1.5% over 500ms',snd:'single low harmonic swell, 90Hz, 900ms',cl:'C1',nt:'The 180ms with no label is the beat’s most important decision. The unit is renamed, not relabelled.'},
+ {n:7,i:14.0,d:3.2,b:'C',k:'form',c:'',fr:'Five more Operatives take an asymmetric working formation; a blue boundary closes around them.',cam:'35mm pull-back 0.7u, at rest by 16.4s',mot:'travel 1.1s sys-both; boundary arc 640ms then one 8% outward pulse',snd:'CELL.BOOT — harmonic expansion 80Hz→3kHz, 2200ms',cl:'C2 VISION — no mission object exists',nt:'The formation must look designed, not organic. No swarming, no flocking, no orbiting.'},
+ {n:8,i:17.2,d:1.4,b:'C',k:'title',c:'',fr:'Everything recedes to 18% and defocuses. Title card, centred.',cam:'locked. The only fully static frame between shots 1 and 29',mot:'wordmark 260ms opacity, zero travel; then 900ms of absolute stillness',snd:'CELL.BOOT resolves; music sustains one note',cl:'C3 VISION',nt:'L04’s last word "mission" lands on the cut. If wordmark and syllable are >2 frames apart, re-cut to the audio.'},
+ {n:9,i:18.6,d:2.6,b:'D',k:'stackA',c:'d',bd:'VECTOR',fr:'Four stacked planes, cold and diagrammatic — the known world.',cam:'35mm slight lateral parallax 0.25u',mot:'planes draw bottom-up, 160ms stagger; labels arrive with their plane',snd:'UI.LABEL ×4',cl:'— this is the known world',nt:'The plainest shot in the film. It must look like a textbook so shot 10 looks like a proposal.'},
+ {n:10,i:21.2,d:3.4,b:'D',k:'stackB',c:'d',fr:'Same geometry, new labels. Plane 2 thickens and lights blue — the kernel plane that persists to shot 28.',cam:'35mm parallax then 0.3u push',mot:'labels cross-fade in place 120ms; plane emission 0→100% over 900ms; 8 subsystem labels settle to 22% and HOLD for 58s',snd:'low structural settle — 60Hz thump, 400ms tail',cl:'C3 VISION — "is built for", never "manages"',nt:'The morph, not a cut, is the argument: same kind of object, one layer up.'},
+ {n:11,i:24.6,d:2.6,b:'E',k:'term',c:'d',fr:'CELL Studio. One transparent panel, one input field, nothing else.',cam:'50mm static with 0.15u drift',mot:'types at 22 chars/s, linear. Block caret blinks 1.6Hz after last char',snd:'dry key transients, 8/s, −28dB, no two identical',cl:'C4 VISION (contested)',nt:'No hand, no cursor arrow, no mouse. The operator is present only as typing.'},
+ {n:12,i:27.2,d:3.8,b:'E',k:'chain',c:'d',fr:'An eight-stage compilation chain assembles downward.',cam:'50mm downward tilt tracking the chain, 0.4u',mot:'380ms stagger, stacking. All eight legible and static from 30.1s',snd:'SYSCALL.ROUTE ×8, pitched down 40 cents per stage',cl:'C4 VISION ⚠ Org-IR is the corpus’s most contested category (CN-01)',nt:'Silent by enforcement: 8 labels plus narration in 3.8s is unreadable. The chain is the sentence.'},
+ {n:13,i:31.0,d:2.8,b:'E',k:'boot',c:'d',lb:['RESEARCH','STRATEGY','PRODUCT','ENGINEERING','MARKETING','REVIEW'],fr:'BOOT flares; the chain collapses upward into a Cell with six labelled specialists.',cam:'35mm pull-back 0.5u',mot:'collapse 420ms expo-in; boundary 500ms; operatives 110ms apart',snd:'CELL.BOOT, an octave above shot 7',cl:'C4 — "is designed to compile", never "compiles"',nt:'Six roles in 1.2s is legible because they arrive with the object rather than as a list.'},
+ {n:14,i:33.8,d:3.2,b:'F',k:'topo',c:'d',fr:'One Operative → parallel research row of four → specialist build formation of three.',cam:'35mm orbit 10°/s — the most kinetic sustained move',mot:'each change 520ms sys-both, nodes travelling visible paths. No cross-dissolves.',snd:'soft mechanical re-seat per change, 180ms',cl:'C5 VISION ⚠ the one formation this estate built was rejected on evidence',nt:'Drama comes from the travel paths, not from speed or glow.'},
+ {n:15,i:37.0,d:4.0,b:'F',k:'topo2',c:'d',t2:'ELASTIC ORGANIZATIONS',fr:'Builder + verifier pair, a violet shadow-review layer above them, then collapse to one.',cam:'35mm orbit decelerating, 0.3u push on the collapse',mot:'shadow layer at +0.4z, 30% violet; collapse 700ms sys-in',snd:'FORK.SPLIT (first, quiet use); descending harmonic on the collapse',cl:'C5 — "can expand", "can collapse"',nt:'First appearance of violet. It means counterfactual here and at 1:08. Nowhere else.'},
+ {n:16,i:41.0,d:3.4,b:'G',k:'mesh',c:'d',fr:'Inside one Operative: a small cyan context ring, and beyond it a mesh filling the whole volume.',cam:'50mm push through → 35mm as the volume opens. No cut.',mot:'three depth layers parallax at 0.7 / 0.4 / 0.15. The ring holds steady.',snd:'MESH.SWEEP — filtered noise 400Hz→8kHz, 900ms, wide',cl:'C6 VISION ⚠ the corpus’s most contested concept (CN-03)',nt:'The ring must read as ~1/400th of the mesh. If it looks big, the shot says the opposite of the line.'},
+ {n:17,i:44.4,d:3.8,b:'G',k:'pipe',c:'d',lb:['RETRIEVE','AUTHORIZE','RANK','COMPRESS','MOUNT'],fr:'A five-stage pipeline. Knowledge travels it as countable packets. The ring fills to 60% and stops.',cam:'50mm lateral track 0.4u',mot:'exactly 11 packets, linear, 80ms stagger. TWO rejected at AUTHORIZE — dim and fall.',snd:'SYSCALL.ROUTE ×5; a muted tick per rejection',cl:'C6 VISION',nt:'The ring stopping at 60% and the two rejected packets are what make this a mechanism instead of a light show.'},
+ {n:18,i:48.2,d:2.6,b:'H',k:'call',c:'i',fr:'An Operative emits a call. It travels toward a boundary that reads as thick — a wall, not a line.',cam:'50mm tracking the token, slight lead',mot:'travel 1.6s at CONSTANT velocity. No easing. Boundary +20% emission.',snd:'SYSCALL.ROUTE, then a rising 90Hz tension pad',cl:'C7 MIXED — 30 readiness gates exist; tasks.py:163 raises EvidenceRequired',nt:'Constant velocity. This is a request being processed, not a creature approaching.'},
+ {n:19,i:50.8,d:3.8,b:'H',k:'checks',c:'i',t2:'AUTHORIZATION REQUIRED',fr:'Six checks resolve. Five tick cyan. The sixth marks amber.',cam:'50mm locked. Stillness is the point — the system has stopped.',mot:'380ms stagger; each ✓ 90ms flash. The ✕ takes 520ms — slower than the passes.',snd:'EVIDENCE.LOCK ×5; KERNEL.DENY on the ✕ — no reverb tail. Music ducks 4dB and holds.',cl:'C7 ⚠ preflight.py is WARN-ONLY; it refuses nothing. The film shows the designed gate.',nt:'The refusal must feel like competence, not failure. Amber, not red.'},
+ {n:20,i:54.6,d:2.2,b:'H',k:'human',c:'i',bd:'PLATE+VECTOR',fr:'The film’s only human presence: a hand in near-darkness, lit only by amber. No face, no office.',cam:'85mm on the hand 1.2s, then 50mm on the boundary',mot:'one unhurried press. Aperture opens 340ms; token resumes at its ORIGINAL velocity.',snd:'a single warm low tone — the only warm sound in the film',cl:'C8 VISION',nt:'The brief permits stock office imagery. Don’t use it. A hand and amber light is stronger and cheaper.'},
+ {n:21,i:56.8,d:2.8,b:'I',k:'reject',c:'v',t2:'A CLAIM IS NOT AN OUTCOME',fr:'An Operative emits TASK COMPLETE. It is held. It does not pass, and it does not shatter.',cam:'50mm static',mot:'travels 900ms then stops dead — 0 frames of deceleration. Holds inert 700ms.',snd:'the travel tone ceases. 400ms of no sound — the longest silence since the cold open.',cl:'C9 MEASURED — indicative earned. tasks.py:163',nt:'Do not explode or red-flag the token. The system is unimpressed, not alarmed.'},
+ {n:22,i:59.6,d:3.2,b:'I',k:'grid',c:'v',t2:'EVIDENCE LEDGER',fr:'A 4×3 grid: four evidence classes, three states. Six labelled artefacts lock into rows.',cam:'35mm very slow push 0.2u',mot:'220ms apart, each locking with an 8% settle overshoot. ONE row resolves to ASSERTED.',snd:'EVIDENCE.LOCK ×6, ascending; the ASSERTED row’s lock is duller and lower',cl:'C9 MEASURED — vocabulary verbatim from factory/evidence.py',nt:'The one ASSERTED row is the most credible frame in the film. A launch video showing its own grid incomplete makes a claim nobody can fake.'},
+ {n:23,i:62.8,d:5.6,b:'I',k:'verdict',c:'v',fr:'Five verdicts draw as a monotone lattice. Four dim. One remains lit.',cam:'35mm static, then 0.25u push onto UNMEASURABLE',mot:'draws bottom-up 140ms per verdict; hold 1.5s; four dim to 30% as one brightens',snd:'VERDICT.RESOLVE — a perfect fifth, 1800ms. The film’s ONLY full resolution.',cl:'C10 MEASURED — contract.py:31-37, ISO/IEC 9646, TTCN-3 (ITU-T Z.140 §24.2)',nt:'The most important shot in the film. If it must lose four seconds, take them from 24, 26 and 27 — never from here. UNMEASURABLE is never spoken, only read.'},
+ {n:24,i:68.4,d:3.6,b:'J',k:'fork',c:'d',fr:'A running Cell freezes, then splits: cyan primary, violet shadow, separated in z. They diverge.',cam:'35mm static during the freeze, then lateral drift revealing the z gap',mot:'freeze is absolute — 0 motion for 320ms, camera included. Split 620ms.',snd:'FORK.SPLIT — mono collapsing to hard L/R, 700ms',cl:'C13 VISION ⚠ NOT assertions.py’s Counterfactual — the corpus forbids conflating them',nt:'The two Cells must run different strategies, not mirrored ones. Mirroring says copy; divergence says counterfactual.'},
+ {n:25,i:72.0,d:3.6,b:'J',k:'chamber',c:'d',bd:'PLATE+VECTOR',t2:'EVOLUTION CHAMBER',lb:['SOLO EXPERT','SPECIALIST PIPELINE','PARALLEL SWARM','COMMAND TREE','HYBRID CELL'],fr:'Five formations suspended in a chamber, plotted on a faint five-axis surface.',cam:'35mm pull-back 1.1u, orbit 6°/s',mot:'formations 180ms apart; wireframe surface draws 900ms; frontier edge holds',snd:'wide quiet harmonic bed; UI.LABEL ×5',cl:'C14 VISION — deliberately gated by the same unlock as the optimizer',nt:'No axis carries a number and no formation carries a score. There is no measurement, so there is no scale.'},
+ {n:26,i:75.6,d:3.0,b:'K',k:'wide',c:'d',bd:'PLATE+VECTOR',lb:['RESEARCH','PRODUCT','ENGINEERING','CONTENT','CUSTOMER','OPERATIONS','RELIABILITY'],fr:'Seven functional Cells across a wide mesh, each with a different internal density.',cam:'35mm — the largest move. 2.4u back over 3.0s, easing to rest.',mot:'cells 140ms apart; discrete countable signals on 9 routes, 3 in flight',snd:'music re-enters at full width; low swell rising with the pull-back',cl:'C15 VISION — never "operates", "runs", "coordinates"',nt:'Discrete countable signals, not glowing flows. The difference between a systems diagram and a screensaver is whether you could count the traffic.'},
+ {n:27,i:78.6,d:2.0,b:'K',k:'mont',c:'d',fr:'Six mission strings type and compile into six visibly different formations. 0.33s each.',cam:'locked per beat, six hard cuts. The cuts carry the rhythm.',mot:'text on frame 1, formation resolves 220ms, hold 110ms, cut',snd:'SYSCALL.ROUTE ×6, ascending',cl:'C16 VISION — no checkmarks, no durations, no costs. Objectives compiled, never missions completed.',nt:'Six formations must be distinguishable at 0.33s. If two look alike, cut one.'},
+ {n:28,i:80.6,d:2.0,b:'K',k:'estate',c:'d',bd:'PLATE+VECTOR',fr:'The widest frame in the film. Hundreds of Cells across four depth layers.',cam:'35mm slow pull-back, at complete rest by 82.4s',mot:'four-layer parallax at 0.8 / 0.5 / 0.25 / 0.1. Activity everywhere, nothing hurried.',snd:'full bed, widest stereo image of the film',cl:'C15 VISION — "could direct". The modal is audible.',nt:'Legibility over density. If it reads as texture rather than as an organisation, reduce the count until structure returns.'},
+ {n:29,i:82.6,d:2.8,b:'L',k:'creed1',c:'',fr:'The volume falls away to void. Two lines, centred, stacking.',cam:'locked — and it stays locked to the end of the film',mot:'line 1 strikes; line 2 at +1.0s and line 1 REMAINS',snd:'MUSIC DROPS OUT at 82.6s. Room tone only, −40dB.',cl:'—',nt:'The most reliable move in a launch film. Ninety seconds of density was built to spend here.'},
+ {n:30,i:85.4,d:2.6,b:'L',k:'creed2',c:'',fr:'A display line arrives at full weight; a seven-line mono creed accretes beside it.',cam:'locked',mot:'seven lines at 200ms intervals, each striking and STAYING. Block complete at 87.7s.',snd:'one dry mono tick per line, 14ms, −34dB, ascending',cl:'—',nt:'Seven lines in 1.4s reads as one object, not as seven readings. Do not stagger further.'},
+ {n:31,i:88.0,d:2.0,b:'L',k:'logo',c:'',fr:'Wordmark, tagline, then two closing lines in its place. Fade to black.',cam:'locked',mot:'wordmark 260ms; tagline +140ms; cross-dissolve 180ms at 89.0s; fade over final 300ms',snd:'OS.SIGNATURE — 3200ms, resolving INTO the black. The last 300ms is sound over nothing.',cl:'—',nt:'Four text elements in 2.0s is the tightest card. If it fails in previz, take 0.6s from shot 27 — never from 23.'}
+];
+const CHIPTX={d:'DESIGNED',i:'IMPLEMENTED',v:'VALIDATED'};
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const tc=t=>{const m=Math.floor(t/60),s=t-m*60;return m+':'+(s<10?'0':'')+s.toFixed(1)};
+const dots=(k,cls)=>'<span class="dots">'+Array.from({length:k},()=>'<i class="node '+(cls||'')+'" style="width:6px;height:6px;border-radius:50%;display:block"></i>').join('')+'</span>';
+
+/* ── stage renderers. Schematic, but every word of type is verbatim ─────────── */
+function render(s){
+  const L=s.lb||[], lbl=a=>a.map(x=>'<span class="lb">'+esc(x)+'</span>').join('');
+  switch(s.k){
+   case 'point': return '<div class="node" style="width:5px;height:5px"></div>';
+   case 'head': return '<div class="stack" style="gap:26px"><div class="node" style="width:5px;height:5px"></div><div class="d1">'+esc(s.t1)+'</div></div>';
+   case 'conv': return '<div class="stack" style="gap:18px"><div class="hz">'+lbl(L)+'</div><div class="mo" style="color:var(--cyan)">'+esc(s.mo)+'</div></div>';
+   case 'latt': return latt();
+   case 'rings': return '<div class="stack" style="gap:14px"><div class="ring"></div><div class="hz" style="max-width:78%;gap:5px 14px">'+lbl(L)+'</div></div>';
+   case 'rename': return '<div class="stack" style="gap:16px"><div class="ring"></div><div class="d1">AI OPERATIVE</div></div>';
+   case 'form': return '<div class="stack" style="gap:16px"><div style="border:1px solid var(--blue);border-radius:50%/38%;padding:20px 34px;background:rgba(30,95,204,.07)">'+dots(6)+'</div><div class="d2">OPERATIVE CELL</div></div>';
+   case 'title': return '<div><div class="d1" style="font-size:clamp(26px,5.2vw,58px)">CELL OS</div><div class="tagline">Operating System for Operative Cells</div></div>';
+   case 'stackA': return planes(['HARDWARE','OPERATING SYSTEM','PROCESSES','APPLICATIONS'],-1);
+   case 'stackB': return planes(['MODELS + COMPUTE','CELL OS','OPERATIVE CELLS','SYNTHETIC ORGANIZATIONS'],1)+kernelPlane();
+   case 'term': return '<div style="border:1px solid var(--edge-hi);background:rgba(14,19,27,.85);padding:16px 20px;min-width:min(74%,440px)"><div class="lb" style="margin-bottom:9px">CELL STUDIO</div><div class="mo">mission &#9656; Launch a new digital product.<span style="color:var(--cyan)">&#9608;</span></div></div>'+kernelPlane();
+   case 'chain': return '<div class="rowlist" style="gap:2px">'+['MISSION INTENT','MISSION CONTRACT','CAPABILITY REQUIREMENTS','OPERATIVE SELECTION','TEAM TOPOLOGY','ORG-IR','CELL IMAGE','BOOT'].map((x,j)=>'<div class="mo" style="border:1px solid var(--edge);padding:3px 11px;text-align:center;font-size:clamp(8px,1vw,11px);'+(j===7?'border-color:var(--cyan);color:var(--cyan)':'')+'">'+x+'</div>').join('')+'</div>'+kernelPlane();
+   case 'boot': return '<div class="stack" style="gap:14px"><div style="border:1px solid var(--cyan);border-radius:50%/34%;padding:18px 30px;background:rgba(56,210,232,.06)">'+dots(6)+'</div><div class="hz" style="gap:5px 13px">'+lbl(L)+'</div></div>'+kernelPlane();
+   case 'topo': return '<div class="hz" style="gap:clamp(14px,4vw,54px)"><div class="form">'+dots(1)+'<span class="lb">ONE</span></div><div class="form">'+dots(4)+'<span class="lb">PARALLEL RESEARCH</span></div><div class="form">'+dots(3)+'<span class="lb">SPECIALIST BUILD</span></div></div>'+kernelPlane();
+   case 'topo2': return '<div class="stack" style="gap:18px"><div class="hz" style="gap:clamp(14px,4vw,48px)"><div class="form">'+dots(2)+'<span class="lb">BUILDER + VERIFIER</span></div><div class="form">'+dots(2,'v')+'<span class="lb" style="color:var(--violet)">SHADOW REVIEW</span></div><div class="form">'+dots(1)+'<span class="lb">COLLAPSE</span></div></div><div class="d2">'+esc(s.t2)+'</div></div>'+kernelPlane();
+   case 'mesh': return meshBg()+'<div class="stack" style="gap:12px;position:relative"><div class="ring" style="width:26px;height:26px"></div><div class="lb" style="letter-spacing:.14em">ACTIVE CONTEXT</div><div class="d2" style="margin-top:8px;color:var(--blue)">HYPERMESH</div></div>';
+   case 'pipe': return meshBg()+'<div class="stack" style="gap:16px;position:relative"><div class="hz" style="gap:4px">'+L.map((x,j)=>'<span class="mo" style="border:1px solid '+(j===1?'var(--amber)':'var(--edge-hi)')+';padding:4px 8px;font-size:clamp(7px,.95vw,10px)">'+x+'</span>').join('<span style="color:var(--slate-dim)">&rarr;</span>')+'</div><div class="ring" style="width:34px;height:34px;border-color:var(--edge-hi);border-top-color:var(--cyan);border-right-color:var(--cyan)"></div><span class="lb">RING AT 60% &middot; 2 OF 11 PACKETS REJECTED</span></div>';
+   case 'call': return '<div class="hz" style="gap:clamp(16px,4vw,50px)">'+dots(1)+'<span class="tok">production.deploy()</span><div class="wall"></div><div class="stack" style="gap:6px"><span class="d2" style="font-size:clamp(11px,1.6vw,17px);color:var(--blue)">CELL KERNEL</span></div></div>'+kernelPlane();
+   case 'checks': return '<div class="stack" style="gap:15px"><div class="chk"><b>IDENTITY</b><i>&#10003;</i><b>CAPABILITY</b><i>&#10003;</i><b>BUDGET</b><i>&#10003;</i><b>POLICY</b><i>&#10003;</i><b>EVIDENCE</b><i>&#10003;</i><b class="no">HUMAN AUTHORITY</b><i class="no">&#10007;</i></div><div class="d2" style="color:var(--amber)">'+esc(s.t2)+'</div></div>';
+   case 'human': return '<div class="stack" style="gap:20px"><div class="amberlight"></div><span class="lb" style="color:var(--amber)">A PERSON DECIDES</span><span class="mo" style="font-size:10px;color:var(--slate-dim)">AUTHORIZED</span></div>';
+   case 'reject': return '<div class="stack" style="gap:17px"><span class="tok stop">TASK COMPLETE</span><div class="d2">'+esc(s.t2)+'</div></div>';
+   case 'grid': return '<div class="stack" style="gap:14px"><div class="gridfig"><div class="hd"></div><div class="ch">SATISFIED</div><div class="ch">ASSERTED</div><div class="ch">ABSENT</div>'+
+      [['TARGET',0],['CONSUMER',0],['REGRESSION',1],['ROLLBACK',0]].map(([r,st])=>'<div class="hd">'+r+'</div>'+
+        [0,1,2].map(cc=>'<div class="'+(cc===st?(st===1?'ast':'sat'):'')+'">'+(cc===st?'&#9679;':'')+'</div>').join('')).join('')+
+      '</div><div class="d2">'+esc(s.t2)+'</div></div>';
+   case 'verdict': return '<div class="stack" style="gap:16px"><div class="lat"><span>ERROR</span><span>FAIL</span><span class="hi">UNMEASURABLE</span><span>PASS</span><span>NOT_RUN</span></div><div class="d1" style="font-size:clamp(16px,2.9vw,34px);color:var(--cyan)">UNMEASURABLE</div><span class="lb" style="opacity:.5;font-size:9px">ISO/IEC 9646 &middot; TTCN-3 &middot; ITU-T Z.140 &sect;24.2</span></div>';
+   case 'fork': return '<div class="stack" style="gap:16px"><span class="mo" style="color:var(--slate)">fork()</span><div class="hz" style="gap:clamp(20px,6vw,70px)"><div class="form"><div style="border:1px solid var(--cyan);border-radius:50%/36%;padding:13px 22px">'+dots(4)+'</div><span class="lb" style="color:var(--cyan)">PRIMARY CELL</span></div><div class="form"><div style="border:1px solid var(--violet);border-radius:50%/36%;padding:13px 22px">'+dots(3,'v')+'</div><span class="lb" style="color:var(--violet)">SHADOW CELL</span></div></div></div>';
+   case 'chamber': return '<div class="stack" style="gap:15px"><div class="d2" style="color:var(--violet)">'+esc(s.t2)+'</div><div class="pareto">'+
+      [1,4,7,5,3].map((k,j)=>'<div class="form">'+dots(k,j===4?'v':'')+'<span class="lb" style="font-size:8px;max-width:66px;text-align:center">'+L[j]+'</span></div>').join('')+
+      '</div><span class="lb" style="opacity:.45;font-size:8px">SUCCESS &middot; COST &middot; TIME &middot; EVIDENCE &middot; REWORK &mdash; no axis carries a number</span></div>';
+   case 'wide': return meshBg()+'<div class="hz" style="gap:clamp(8px,2.2vw,26px);position:relative">'+
+      L.map((x,j)=>'<div class="form"><div style="border:1px solid '+(j===5?'var(--cyan)':'var(--edge-hi)')+';border-radius:50%/38%;padding:9px 13px">'+dots(2+(j%3))+'</div><span class="lb" style="font-size:8px">'+x+'</span></div>').join('')+'</div>';
+   case 'mont': return '<div class="rowlist" style="gap:4px">'+['Research a new market.','Build the application.','Operate customer support.','Create a content campaign.','Monitor production.','Investigate a failure.'].map((x,j)=>'<div class="hz" style="gap:12px;justify-content:flex-start"><span class="mo" style="font-size:clamp(8px,1vw,11px);color:'+(j===2?'var(--cyan)':'var(--slate)')+'">"'+x+'"</span>'+dots(1+(j%4))+'</div>').join('')+'</div>';
+   case 'estate': return meshBg()+'<div class="hz" style="gap:9px;max-width:86%;position:relative">'+Array.from({length:22},(_,j)=>'<div style="border:1px solid var(--edge-hi);border-radius:50%/40%;padding:5px 7px;opacity:'+(0.3+((j*7)%6)/10)+'">'+dots(1+(j%3))+'</div>').join('')+'</div>';
+   case 'creed1': return '<div class="stack" style="gap:9px"><div class="d1">THE MODEL IS NOT THE SYSTEM.</div><div class="d1">THE AGENT IS NOT THE ORGANIZATION.</div></div>';
+   case 'creed2': return '<div class="stack" style="gap:20px"><div class="d2 dimmed" style="font-size:clamp(11px,1.5vw,16px)">THE MODEL IS NOT THE SYSTEM.<br>THE AGENT IS NOT THE ORGANIZATION.</div><div class="d1" style="font-size:clamp(15px,2.6vw,30px)">THE CELL IS THE NEW UNIT<br>OF INTELLIGENT WORK.</div><div class="creed">BUILD CELLS. &nbsp;BOOT MISSIONS. &nbsp;MOUNT KNOWLEDGE. &nbsp;ALLOCATE CAPABILITIES.<br>PROVE OUTCOMES. &nbsp;FORK POSSIBILITIES. &nbsp;EVOLVE ORGANIZATIONS.</div></div>';
+   case 'logo': return '<div><div class="d1" style="font-size:clamp(24px,4.8vw,54px)">CELL OS</div><div class="tagline">Compile intelligence into organizations.</div><div class="stack" style="gap:4px;margin-top:22px"><div class="d2" style="font-size:clamp(11px,1.7vw,19px)">DON’T JUST PROMPT AN AGENT.</div><div class="d2" style="font-size:clamp(11px,1.7vw,19px)">ENGINEER THE ORGANIZATION.</div></div></div>';
+  }
+  return '';
+}
+function planes(rows,litIdx){
+  return '<div class="stack" style="gap:3px">'+rows.map((r,j)=>'<div class="plane'+(litIdx>0&&j===1?' lit':'')+'"><span class="lb">'+r+'</span></div>').join('')+'</div>';
+}
+function kernelPlane(){
+  return '<div style="position:absolute;left:0;right:0;bottom:0;padding:7px 16px;border-top:1px solid var(--edge);'+
+   'background:linear-gradient(180deg,transparent,rgba(30,95,204,.09));display:flex;gap:4px 14px;flex-wrap:wrap;justify-content:center;opacity:.22">'+
+   ['CELL KERNEL','CELL IMAGES','OPERATIVE THREADS','CONTEXT MEMORY','CAPABILITY SYSCALLS','HYPERMESH','EVIDENCE LEDGER','MISSION SCHEDULER']
+   .map(x=>'<span class="lb" style="font-size:8px">'+x+'</span>').join('')+'</div>';
+}
+function meshBg(){
+  let g='';for(let y=0;y<7;y++)for(let x=0;x<15;x++){
+    g+='<circle cx="'+(x*7+3)+'" cy="'+(y*7+3)+'" r="'+(0.6+((x+y)%3)*0.25)+'" fill="#1E5FCC" opacity="'+(0.18+((x*y)%5)*0.06)+'"/>';}
+  return '<svg class="mesh" viewBox="0 0 105 48" preserveAspectRatio="xMidYMid slice" aria-hidden="true">'+g+'</svg>';
+}
+function latt(){
+  let g='';for(let y=0;y<9;y++)for(let x=0;x<19;x++){
+    const lit=(x===9&&y===4);
+    g+='<circle cx="'+(x*6+3)+'" cy="'+(y*6+3)+'" r="'+(lit?1.7:0.7)+'" fill="'+(lit?'#38D2E8':'#1B2430')+'"/>';}
+  return '<svg class="mesh" style="opacity:1" viewBox="0 0 117 57" preserveAspectRatio="xMidYMid meet" aria-hidden="true">'+g+
+   '<circle cx="57" cy="27" r="6" fill="none" stroke="#38D2E8" stroke-width=".4" opacity=".45"/></svg>'+
+   '<div class="mo" style="position:relative;color:var(--cyan);font-size:10px">AGENT</div>';
+}
+
+/* ── build the timeline: every width computed from real durations ───────────── */
+const shotLane=document.getElementById('shotLane'), voLane=document.getElementById('voLane'),
+      beatLane=document.getElementById('beatLane'), ruler=document.getElementById('ruler');
+shotLane.innerHTML=S.map(s=>'<button class="blk '+(s.c||'n')+'" data-t="'+s.i+'" style="flex:0 0 '+
+  (s.d/T*100).toFixed(3)+'%" aria-label="Shot '+s.n+', in '+tc(s.i)+', '+s.d.toFixed(1)+' seconds">'+
+  (s.d>=2.4?'<span class="id">'+s.n+'</span>':'')+'</button>').join('');
+voLane.innerHTML=VO.map(v=>'<div class="vblk" data-vo="'+v[0]+'" style="left:'+(v[1]/T*100).toFixed(3)+
+  '%;width:'+(v[2]/T*100).toFixed(3)+'%" title="'+esc(v[0]+' · '+v[4])+'"></div>').join('');
+beatLane.innerHTML=BEATS.map(b=>'<div class="bnd" style="left:'+(b[1]/T*100).toFixed(3)+'%;width:'+
+  ((b[2]-b[1])/T*100).toFixed(3)+'%">'+b[3]+'</div>').join('');
+ruler.innerHTML=[0,10,20,30,40,50,60,70,80,90].map(t=>'<span style="left:'+(t/T*100).toFixed(2)+'%">'+
+  (t===90?'1:30':tc(t).replace('.0',''))+'</span>').join('');
+const head=document.createElement('div');head.className='play-head';shotLane.appendChild(head);
+
+/* The 31 rows are authored statically above, so the page is a complete document with
+   no script at all. JS rebuilds them from S[] - the single source of truth - and
+   render_check_previz.py asserts the two agree, so they cannot drift silently. */
+document.getElementById('tbody').innerHTML=S.map(s=>{
+  const v=VO.find(x=>x[1]>=s.i&&x[1]<s.i+s.d);
+  const screen=[s.t1,s.t2,s.mo?'`'+s.mo+'`':'',(s.lb||[]).join(' · ')].filter(Boolean).join(' — ');
+  return '<tr><td class="n">'+s.n+'</td><td class="t">'+tc(s.i)+'</td><td class="t">'+s.d.toFixed(1)+'s</td>'+
+   '<td class="n">'+s.b+'</td><td class="txt">'+esc(screen||'—')+'</td>'+
+   '<td>'+(v?'<span class="tag">'+v[0]+'</span> '+esc(v[4]):'<span style="color:var(--slate-dim)">silent</span>')+'</td>'+
+   '<td>'+(s.c?'<span class="tag '+s.c+'">'+CHIPTX[s.c]+'</span>':'—')+'</td>'+
+   '<td class="n">'+(s.bd||'VECTOR')+'</td></tr>';
+}).join('');
+
+/* ── transport ─────────────────────────────────────────────────────────────── */
+const stage=document.getElementById('sin'), tcEl=document.getElementById('tc'),
+      nowEl=document.getElementById('now'), sid=document.getElementById('sid'),
+      chipEl=document.getElementById('chipEl'), chipTx=document.getElementById('chipTx'),
+      voEl=document.getElementById('voEl'), silEl=document.getElementById('silEl'),
+      playBtn=document.getElementById('play');
+let t=17.2, playing=false, raf=null, last=0, curN=null;
+
+function paint(){
+  const s=S.filter(x=>x.i<=t+1e-6).pop()||S[0];
+  if(s.n!==curN){
+    curN=s.n; stage.innerHTML=render(s);
+    sid.textContent='S'+String(s.n).padStart(2,'0')+' · '+s.b+' · '+(s.bd||'VECTOR');
+    chipEl.hidden=!s.c; if(s.c){chipEl.className='chip on '+s.c; chipTx.textContent=CHIPTX[s.c];
+      setTimeout(()=>{if(curN===s.n)chipEl.className='chip '+s.c},600);}
+    nowEl.innerHTML='<b>SHOT '+s.n+'</b> · '+esc(s.fr.split(/[.—]/)[0].slice(0,44))+' · '+s.d.toFixed(1)+'s';
+    for(const [k,val] of [['frame',s.fr],['cam',s.cam],['mot',s.mot],['snd',s.snd],['claim',s.cl],['note',s.nt]])
+      document.getElementById('i-'+k).textContent=val;
+    [...shotLane.children].forEach(b=>b.classList.toggle('cur',b.dataset.t===String(s.i)));
+  }
+  const v=VO.find(x=>t>=x[1]&&t<x[1]+x[2]);
+  if(v){voEl.hidden=false;silEl.hidden=true;
+    voEl.innerHTML='<em>'+v[0]+' · '+v[3]+'w</em>'+esc(v[4]);}
+  else{voEl.hidden=true;silEl.hidden=false;}
+  [...voLane.children].forEach(b=>b.classList.toggle('cur',!!v&&b.dataset.vo===v[0]));
+  const m=Math.floor(t/60),sec=t-m*60;
+  tcEl.innerHTML=m+':'+(sec<10?'0':'')+Math.floor(sec)+'<span>.'+Math.floor((sec%1)*10)+'</span>';
+  head.style.left=(t/T*100).toFixed(3)+'%';
+}
+function tick(ts){
+  if(!playing)return;
+  if(last)t=Math.min(T,t+(ts-last)/1000); last=ts;
+  paint();
+  if(t>=T){stop();return}
+  raf=requestAnimationFrame(tick);
+}
+function play(){if(t>=T)t=0; playing=true;last=0;playBtn.textContent='❙❙ Pause';
+  playBtn.setAttribute('aria-pressed','true');raf=requestAnimationFrame(tick);}
+function stop(){playing=false;if(raf)cancelAnimationFrame(raf);raf=null;
+  playBtn.textContent='▶ Play the film';playBtn.setAttribute('aria-pressed','false');}
+playBtn.onclick=()=>playing?stop():play();
+document.getElementById('rew').onclick=()=>{stop();t=0;curN=null;paint()};
+function cue(e){const b=e.target.closest('.blk');if(!b)return;stop();t=+b.dataset.t;paint()}
+shotLane.addEventListener('click',cue);
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='BUTTON'&&e.key===' ')return;
+  if(e.key===' '){e.preventDefault();playing?stop():play()}
+  if(e.key==='ArrowRight'){stop();t=Math.min(T,t+1);paint()}
+  if(e.key==='ArrowLeft'){stop();t=Math.max(0,t-1);paint()}
+});
+paint();
+
+/* ── reveal: visible by default, and a non-rAF fallback so a background tab
+      never strands a section at opacity 0 ─────────────────────────────────── */
+const rv=[...document.querySelectorAll('.rv')];
+const showAll=()=>rv.forEach(el=>el.classList.add('in'));
+if(STILL){showAll()}
+else{
+  const io=new IntersectionObserver(es=>es.forEach(en=>{
+    if(en.isIntersecting){en.target.classList.add('in');io.unobserve(en.target)}
+  }),{threshold:.15,rootMargin:'0px 0px -8% 0px'});
+  rv.forEach(el=>io.observe(el));
+  const sweep=()=>rv.forEach(el=>{if(el.getBoundingClientRect().top<innerHeight)el.classList.add('in')});
+  addEventListener('scroll',sweep,{passive:true}); sweep();
+  setTimeout(showAll,2500);
+}
+</script>
