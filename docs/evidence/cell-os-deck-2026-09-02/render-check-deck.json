@@ -1,0 +1,176 @@
+{
+  "page": "docs\\marketing\\cell-os-launch-v1\\cell-os-deck.html",
+  "widths": {
+    "1400": {
+      "h_scroll": false,
+      "doc_w": 1400,
+      "win_w": 1400,
+      "tabs": 7,
+      "panels": 7,
+      "visible_panels": 1,
+      "layers": 7,
+      "tables": 6,
+      "logo_present": true,
+      "logo_loaded": true,
+      "logo_w": 880,
+      "readable_checked": 118,
+      "unreadable": 0,
+      "visible_chars": 5906,
+      "visible_id": "p-over",
+      "svgs_visible": 0,
+      "svgs_no_viewbox": 0,
+      "svgs_no_label": 0
+    },
+    "1100": {
+      "h_scroll": false,
+      "doc_w": 1100,
+      "win_w": 1100,
+      "tabs": 7,
+      "panels": 7,
+      "visible_panels": 1,
+      "layers": 7,
+      "tables": 6,
+      "logo_present": true,
+      "logo_loaded": true,
+      "logo_w": 880,
+      "readable_checked": 118,
+      "unreadable": 0,
+      "visible_chars": 5906,
+      "visible_id": "p-over",
+      "svgs_visible": 0,
+      "svgs_no_viewbox": 0,
+      "svgs_no_label": 0
+    },
+    "760": {
+      "h_scroll": false,
+      "doc_w": 760,
+      "win_w": 760,
+      "tabs": 7,
+      "panels": 7,
+      "visible_panels": 1,
+      "layers": 7,
+      "tables": 6,
+      "logo_present": true,
+      "logo_loaded": true,
+      "logo_w": 880,
+      "readable_checked": 118,
+      "unreadable": 0,
+      "visible_chars": 5906,
+      "visible_id": "p-over",
+      "svgs_visible": 0,
+      "svgs_no_viewbox": 0,
+      "svgs_no_label": 0
+    }
+  },
+  "gates": {
+    "drive": {
+      "tab_walk": [
+        {
+          "tab": "t-over",
+          "visible": 1,
+          "id": "p-over",
+          "chars": 5906
+        },
+        {
+          "tab": "t-arch",
+          "visible": 1,
+          "id": "p-arch",
+          "chars": 3523
+        },
+        {
+          "tab": "t-first",
+          "visible": 1,
+          "id": "p-first",
+          "chars": 6192
+        },
+        {
+          "tab": "t-proto",
+          "visible": 1,
+          "id": "p-proto",
+          "chars": 3538
+        },
+        {
+          "tab": "t-cases",
+          "visible": 1,
+          "id": "p-cases",
+          "chars": 9026
+        },
+        {
+          "tab": "t-guide",
+          "visible": 1,
+          "id": "p-guide",
+          "chars": 5341
+        },
+        {
+          "tab": "t-film",
+          "visible": 1,
+          "id": "p-film",
+          "chars": 1599
+        }
+      ],
+      "layer_open": [
+        {
+          "open": true,
+          "svcs": 7,
+          "io": 4
+        },
+        {
+          "open": true,
+          "svcs": 4,
+          "io": 4
+        },
+        {
+          "open": true,
+          "svcs": 8,
+          "io": 4
+        },
+        {
+          "open": true,
+          "svcs": 8,
+          "io": 4
+        },
+        {
+          "open": true,
+          "svcs": 7,
+          "io": 4
+        },
+        {
+          "open": true,
+          "svcs": 6,
+          "io": 4
+        },
+        {
+          "open": true,
+          "svcs": 7,
+          "io": 4
+        }
+      ],
+      "simultaneously_open": 1,
+      "seed_roster": 4,
+      "seed_nodes": 4,
+      "seed_score": 76,
+      "seed_vec": "90/58/69/66/85",
+      "after_add_roster": 5,
+      "after_add_nodes": 5,
+      "after_add_score": 76,
+      "after_add_vec": "90/53/61/75/85",
+      "warn_after_add": false,
+      "star_links": 4,
+      "mesh_links": 10,
+      "exec_only_warn": "\u26a0 What this configuration risks\nAn Executor with no independent Validator. This shape can act without anything checking it \u2014 the highest-risk configuration in the set.",
+      "cleared_nodes": 0,
+      "cleared_empty": true
+    },
+    "no_js": {
+      "body_chars": 7422,
+      "layers": 7,
+      "services": 47
+    },
+    "reduced_motion": {
+      "unreadable": 0,
+      "logo_animation": "none"
+    }
+  },
+  "verdict": "PASS",
+  "failures": []
+}

@@ -1,0 +1,135 @@
+version: 1
+id: deadline-2026-09-02-p0
+target: marketing-meeting-ready
+deadline: 2026-09-02T12:00:00-07:00
+max_parallel: 4
+
+nodes:
+  - id: P0-STATE
+    title: Re-measure live repository state
+    type: deterministic
+    priority: 100
+    acceptance:
+      - live_head_recorded
+      - dirty_state_recorded
+      - current_switchboard_seams_verified
+      - current_test_baseline_recorded
+
+  - id: P0-MARKETING-SAFETY
+    title: Revalidate known-good Marketing meeting artifact
+    type: deterministic
+    depends_on: [P0-STATE]
+    priority: 100
+    acceptance:
+      - artifact_launch_path_verified
+      - artifact_render_or_existing_evidence_confirmed
+
+  - id: P0-PRESET-ADAPTER
+    title: Thin mission preset to canonical work adapter
+    type: implementation
+    depends_on: [P0-STATE]
+    priority: 95
+    acceptance:
+      - no_second_task_store
+      - marketing_preset_creates_work
+      - dependency_events_preserved
+      - team_or_execution_preset_binding_recorded
+
+  - id: P0-SWITCHBOARD-LAUNCHER
+    title: Switchboard preset/team launcher
+    type: implementation
+    depends_on: [P0-PRESET-ADAPTER]
+    priority: 95
+    acceptance:
+      - marketing_preset_selectable
+      - execution_preset_selectable
+      - autonomy_selectable
+      - created_work_visible_in_existing_projection
+
+  - id: P0-AUTONOMY-PLANNER
+    title: Deterministic autonomy planner
+    type: implementation
+    depends_on: [P0-STATE]
+    priority: 92
+    acceptance:
+      - computes_eligible_ready_work
+      - respects_manual_guarded_auto
+      - respects_pause
+      - respects_conflicts_and_claims
+      - respects_max_parallel
+      - explains_why_not_started
+
+  - id: P0-RUN-DAG
+    title: Run DAG and Run Critical Path controls
+    type: implementation
+    depends_on: [P0-SWITCHBOARD-LAUNCHER, P0-AUTONOMY-PLANNER]
+    priority: 94
+    acceptance:
+      - run_dag_post_or_command_exists
+      - run_critical_path_exists
+      - no_readiness_bypass
+
+  - id: P0-AUTO-RESUME
+    title: Wake autonomy after approval and completion
+    type: implementation
+    depends_on: [P0-RUN-DAG]
+    priority: 94
+    acceptance:
+      - approval_recomputes_eligibility
+      - newly_ready_work_starts_when_policy_allows
+      - paused_run_never_advances
+
+  - id: P0-MARKETING-MISSION
+    title: Fresh Marketing mission vertical slice
+    type: mission
+    depends_on: [P0-MARKETING-SAFETY, P0-AUTO-RESUME]
+    priority: 100
+    target: true
+    acceptance:
+      - created_from_switchboard
+      - launch_recorded
+      - state_visible
+      - evidence_refs_visible
+      - meeting_artifact_available
+      - real_agent_step_attempted_if_safe
+
+  - id: P0-MARKETING-VERIFY
+    title: Validate Marketing output
+    type: deterministic
+    depends_on: [P0-MARKETING-MISSION]
+    priority: 100
+    acceptance:
+      - client_ready_artifact
+      - unsupported_claims_not_promoted
+      - limitations_visible
+
+  - id: P0-MARKETING-DELIVERY-GATE
+    title: Human delivery approval
+    type: human_gate
+    depends_on: [P0-MARKETING-VERIFY]
+    priority: 100
+
+  - id: P0-SALES-PATCH
+    title: Complete bounded Sales Model changes
+    type: mission
+    depends_on: [P0-STATE]
+    priority: 88
+    parallel: true
+    acceptance:
+      - change_scope_preserved
+      - unaffected_logic_preserved
+      - validation_report_exists
+
+  - id: P0-SALES-PRESET
+    title: Add Sales preset only if Marketing is safe
+    type: implementation
+    depends_on: [P0-SALES-PATCH, P0-MARKETING-VERIFY]
+    priority: 65
+    optional: true
+
+  - id: P1-ASSURANCE-RECEIPT
+    title: Mission Assurance Receipt projection
+    type: implementation
+    depends_on: [P0-MARKETING-VERIFY]
+    priority: 55
+    optional: true

@@ -1,0 +1,38 @@
+version: 1
+id: sales-model-bounded-change-v1
+kind: mission_preset
+mode: modify_existing
+objective: Apply only the requested Sales Model changes, preserve unaffected behavior, and produce validation evidence.
+
+constraints:
+  - preserve_unaffected_logic
+  - modify_only_requested_scope
+  - flag_unsupported_requirements
+  - keep_rollback_or_before_state_reference
+
+stages:
+  - id: sales-001-impact
+    type: agent_or_deterministic
+    title: Inspect ticket and existing model; identify exact impact
+
+  - id: sales-001-change
+    type: agent
+    title: Apply bounded changes
+    depends_on: [sales-001-impact]
+
+  - id: sales-001-verify
+    type: deterministic
+    title: Validate requested behavior and regressions
+    depends_on: [sales-001-change]
+
+  - id: sales-001-ready
+    type: human_gate
+    title: Delivery approval
+    depends_on: [sales-001-verify]
+    target: true
+
+outputs:
+  - impact_analysis
+  - changed_model_or_patch
+  - change_summary
+  - validation_report

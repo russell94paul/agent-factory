@@ -1,0 +1,58 @@
+0/4  runtime capabilities
+  ok  yaml        C:\Users\PaulRussell\AppData\Local\Programs\Python\Python313\Lib\site-packages\yaml\__init__.py
+  ok  playwright  C:\Users\PaulRussell\AppData\Local\Programs\Python\Python313\Lib\site-packages\playwright\__init__.py
+  ok  chromium    C:\Users\PaulRussell\AppData\Local\ms-playwright\chromium-1234\chrome-win64\chrome.exe
+1/4  compiling from canonical state
+       narrative  missions/client-review-v1/reviews/navira-marketing-model.yaml
+       tasks      .data/tasks.jsonl
+       mission    .data/missions/marketing-model-reconstruction-v1.json
+       root       .worktrees\mission
+       10 outcome(s), 2 evidence item(s), 2 decision(s) · freshness LAST_VERIFIED · last verified 2026-09-02 05:21 UTC
+2/4  rendering  docs/artifacts/client-review-navira.html
+       48,213 bytes, self-contained
+3/4  meeting gate
+         ok   canonical_state_readable             task store read; 116 evidence row(s)
+         ok   freshness                            LAST_VERIFIED (verified 2026-09-02 05:21 UTC)
+         ok   narrative_matches_canonical_state    no typed status contradicts the record
+         ok   completed_work_is_written_up         every completed task is written up
+         ok   no_status_rendered_without_a_basis   every plan status is DERIVED from the task store
+         ok   cited_evidence_resolves              every cited artefact resolves on disk
+         ok   no_unsubstantiated_claim             no claim degraded
+         ok   required_sections_populated          10 outcome(s), 2 evidence item(s), 2 decision(s), 6 next item(s)
+         ok   client_boundary_holds                allow-list projection and backstop scan both pass
+        warn  mission_record_integrity             8 declared vs 10 observed children — the client figure counts the declared set only
+        warn  risks_still_current                  risk(s) shown as resolved from the record: RISK-2 — confirm the wording reads as closed, not open
+4/4  rendered validation (real browser)
+       artifact  docs/artifacts/client-review-navira.html  (48,213 bytes)
+         client-review-standard-light-760.png     sections=8 blank=0 overflow=0px clipped=0 leaks=0 errors=0
+         client-review-meeting-light-760.png      sections=8 blank=0 overflow=0px clipped=0 leaks=0 errors=0
+         client-review-standard-light-1100.png    sections=8 blank=0 overflow=0px clipped=0 leaks=0 errors=0
+         client-review-meeting-light-1100.png     sections=8 blank=0 overflow=0px clipped=0 leaks=0 errors=0
+         client-review-standard-light-1440.png    sections=8 blank=0 overflow=0px clipped=0 leaks=0 errors=0
+         client-review-meeting-light-1440.png     sections=8 blank=0 overflow=0px clipped=0 leaks=0 errors=0
+         client-review-standard-dark-760.png      sections=8 blank=0 overflow=0px clipped=0 leaks=0 errors=0
+         client-review-meeting-dark-760.png       sections=8 blank=0 overflow=0px clipped=0 leaks=0 errors=0
+         client-review-standard-dark-1100.png     sections=8 blank=0 overflow=0px clipped=0 leaks=0 errors=0
+         client-review-meeting-dark-1100.png      sections=8 blank=0 overflow=0px clipped=0 leaks=0 errors=0
+         client-review-standard-dark-1440.png     sections=8 blank=0 overflow=0px clipped=0 leaks=0 errors=0
+         client-review-meeting-dark-1440.png      sections=8 blank=0 overflow=0px clipped=0 leaks=0 errors=0
+         meeting toggle click works: True
+         requests: 1 total, 0 offsite
+         no-JS: {'sections': 8, 'details': 10, 'text': 19087}
+         nav: 7 link(s), 0 dangling, 0 heading(s) occluded on click
+       
+       RENDERED_CONFIRMED: every section painted at every width, in both colour schemes,
+       in standard and Live Meeting mode; no clipped headings, no horizontal scroll,
+       no console errors, no offsite requests, no operator-only text, and the page still
+       renders with JavaScript disabled.
+
+GATE            READY_WITH_WARNINGS
+RENDER          RENDERED_CONFIRMED
+ARTIFACT        docs/artifacts/client-review-navira.html
+
+SAFE TO OPEN IN FRONT OF THE CLIENT.
+  presenter should know: mission_record_integrity — 8 declared vs 10 observed children — the client figure counts the declared set only
+  presenter should know: risks_still_current — risk(s) shown as resolved from the record: RISK-2 — confirm the wording reads as closed, not open
+EXIT=0
+
+[exited with code 0]

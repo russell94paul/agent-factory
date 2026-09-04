@@ -1,0 +1,426 @@
+# CELL OS — Global Configuration
+# Portable organizational intent plus selectable infrastructure bindings.
+# Lower scopes may override only the paths allowed by `inheritance`.
+
+apiVersion: cellos.io/v1alpha1
+kind: GlobalConfiguration
+
+metadata:
+  name: cell-os-global
+  displayName: CELL OS Global Settings
+  version: 0.1.0
+  labels:
+    system: cell-os
+    scope: global
+
+spec:
+  # ---------------------------------------------------------------------------
+  # 1. Configuration resolution
+  # ---------------------------------------------------------------------------
+  inheritance:
+    order:
+      - global
+      - environment
+      - world
+      - mesh
+      - cell
+      - operative
+      - mission
+    mergeStrategy: deep-merge
+    listStrategy: replace
+    nullBehavior: inherit
+    lockedPaths:
+      - governance.audit.enabled
+      - governance.evidence.statusVocabulary
+      - security.secrets.allowPlaintext
+    overridablePaths:
+      - models
+      - execution
+      - memory.working
+      - cellBus.delivery
+      - governance.autonomy
+      - budgets
+      - observability.alerts
+    resolution:
+      recordProvenance: true
+      emitResolvedSnapshot: true
+      rejectUnknownFields: true
+
+  # ---------------------------------------------------------------------------
+  # 2. Platform-wide organizational intent
+  # ---------------------------------------------------------------------------
+  platform:
+    organization: CELL OS
+    defaultEnvironment: development
+    defaultRegion: local
+    timezone: UTC
+    terminology:
+      worker: operative
+      workerUnit: operative-cell
+      teamTopology: cell-mesh
+      taskGraph: mission-dag
+    featureFlags:
+      nerve: true
+      worldCanvas: true
+      cellAdapt: true
+      hyperMesh: true
+      burstCells: true
+      shadowTwin: false
+
+  models:
+    routingPolicy: capability-cost-latency
+    defaultRoute: reasoning-balanced
+    routes:
+      reasoning-balanced:
+        provider: ${CELL_OS_PRIMARY_MODEL_PROVIDER}
+        model: ${CELL_OS_PRIMARY_MODEL}
+        capabilities: [reasoning, tools, structured-output]
+      fast:
+        provider: ${CELL_OS_FAST_MODEL_PROVIDER}
+        model: ${CELL_OS_FAST_MODEL}
+        capabilities: [tools, structured-output]
+      critic:
+        provider: ${CELL_OS_CRITIC_MODEL_PROVIDER}
+        model: ${CELL_OS_CRITIC_MODEL}
+        capabilities: [reasoning, verification]
+    fallbackChain: [reasoning-balanced, fast]
+    limits:
+      requestTimeout: 180s
+      maxRetries: 2
+      maxConcurrentRequests: 32
+
+  execution:
+    defaultDeploymentProfile: local-development
+    scheduler:
+      strategy: capability-aware
+      queueDiscipline: priority-fair
+      placementSignals:
+        - required-capability
+        - data-locality
+        - readiness
+        - latency
+        - cost
+        - current-load
+    concurrency:
+      globalMissionLimit: 20
+      perMissionCellLimit: 12
+      perCellOperativeLimit: 8
+    resilience:
+      taskRetries: 2
+      retryBackoff: exponential-jitter
+      checkpointInterval: 60s
+      resumeFromCheckpoint: true
+      circuitBreaker:
+        enabled: true
+        failureThreshold: 5
+        resetAfter: 60s
+
+  scaling:
+    mode: policy-driven
+    scaleToZero: true
+    idleTimeout: 10m
+    signals:
+      queueDepth:
+        enabled: true
+        targetPerReplica: 5
+      utilization:
+        enabled: true
+        targetPercent: 70
+      missionDeadlinePressure:
+        enabled: true
+      latency:
+        enabled: true
+        targetP95: 5s
+      budgetPressure:
+        enabled: true
+    limits:
+      minCellReplicas: 0
+      maxCellReplicas: 50
+      maxBurstCells: 20
+      maxClusterNodes: 25
+    burstCells:
+      enabled: true
+      lifecycle: ephemeral
+      defaultTtl: 30m
+      trigger:
+        queueDepthAbove: 25
+        sustainedFor: 30s
+      inheritMissionContext: true
+      writeBackLearning: evidence-gated
+
+  cellAdapt:
+    enabled: true
+    mode: recommend
+    objectives:
+      - name: mission-success
+        direction: maximize
+        weight: 0.40
+      - name: accepted-output-quality
+        direction: maximize
+        weight: 0.25
+      - name: cost
+        direction: minimize
+        weight: 0.15
+      - name: latency
+        direction: minimize
+        weight: 0.10
+      - name: human-interventions
+        direction: minimize
+        weight: 0.10
+    mutableDimensions:
+      - model-route
+      - prompt-version
+      - skill-set
+      - tool-set
+      - role-composition
+      - mesh-topology
+      - routing-policy
+      - memory-policy
+      - concurrency
+      - retry-policy
+    protectedDimensions:
+      - security-boundaries
+      - mandatory-human-gates
+      - hard-budget-limits
+    promotion:
+      requireEvaluation: true
+      requireEvidence: true
+      minimumSampleSize: 20
+      minimumImprovementPercent: 5
+      rollbackOnRegression: true
+
+  memory:
+    hyperMesh:
+      enabled: true
+      namespaces:
+        isolation: organization/world/mesh/cell/operative/mission
+      retrieval:
+        strategy: hybrid
+        topK: 12
+        rerank: true
+      writePolicy: evidence-aware
+      replication:
+        mode: deployment-profile
+        consistency: eventual
+    working:
+      maxItems: 100
+      ttl: 24h
+    episodic:
+      enabled: true
+      retention: 180d
+    semantic:
+      vectorStore: ${CELL_OS_VECTOR_STORE:-embedded}
+      graphStore: ${CELL_OS_GRAPH_STORE:-embedded}
+    doctrine:
+      enabled: true
+      promotionGate: reviewed-and-measured
+
+  cellBus:
+    protocol: cellbus/v1
+    transport: ${CELL_OS_BUS_TRANSPORT:-embedded}
+    addressing: hierarchical
+    delivery:
+      guarantee: at-least-once
+      ordering: per-mission
+      acknowledgementTimeout: 30s
+      maxDeliveryAttempts: 5
+      deduplication: true
+    queues:
+      priorities: [critical, high, normal, low, background]
+      deadLetter: true
+      maxMessageAge: 24h
+    federation:
+      enabled: false
+      crossClusterEncryption: true
+      allowedLinks: [c-to-c, t-to-t, c-to-os, t-to-os, os-to-os]
+
+  governance:
+    autonomy:
+      defaultLevel: supervised
+      levels: [manual, supervised, bounded-autonomous, autonomous]
+      requireHumanApprovalFor:
+        - production-write
+        - external-message
+        - irreversible-action
+        - budget-limit-change
+        - security-policy-change
+    evidence:
+      requiredForCompletion: true
+      statusVocabulary: [MEASURED, DERIVED, STATED, ASSUMED]
+      requireCheckedAt: true
+      requirePositiveGreenAssertion: true
+    audit:
+      enabled: true
+      immutableEvents: true
+      retainFor: 365d
+    changeControl:
+      configValidation: strict
+      requireDiffPreview: true
+      canaryPercent: 10
+      automaticRollback: true
+
+  security:
+    identity:
+      workloadIdentity: true
+      serviceAccountPerCell: true
+    secrets:
+      provider: ${CELL_OS_SECRET_PROVIDER:-environment}
+      allowPlaintext: false
+    network:
+      defaultPolicy: deny
+      cellToCell: explicit
+      encryptInTransit: true
+    data:
+      encryptAtRest: true
+      redactSensitiveLogs: true
+
+  budgets:
+    currency: USD
+    enforcement: hard-and-soft
+    global:
+      dailySoftLimit: 100
+      dailyHardLimit: 150
+      monthlyHardLimit: 3000
+    perMission:
+      defaultSoftLimit: 10
+      defaultHardLimit: 20
+    onSoftLimit: notify-and-optimize
+    onHardLimit: pause-and-request-approval
+
+  observability:
+    telemetry:
+      standard: opentelemetry
+      logs: true
+      metrics: true
+      traces: true
+    health:
+      readinessProbe: true
+      livenessProbe: true
+      strugglingThreshold:
+        consecutiveFailures: 3
+        evalScoreBelow: 0.70
+    metrics:
+      - mission-success-rate
+      - accepted-output-rate
+      - eval-pass-rate
+      - time-to-green
+      - cost-per-accepted-change
+      - human-gate-rejection-rate
+      - rework-rate
+      - queue-depth
+      - cell-readiness
+    alerts:
+      channels: [nerve]
+      rules:
+        - condition: mission-stalled
+          after: 10m
+          severity: high
+        - condition: budget-soft-limit
+          severity: medium
+        - condition: operative-struggling
+          severity: medium
+
+  experience:
+    nerve:
+      defaultView: today
+      spokenBriefing: false
+      needsYouAggregation: true
+    world:
+      environment: van-city-blue-hour
+      overlays: [missions, cell-health, cellbus-traffic]
+      animationDensity: balanced
+    notifications:
+      missionPassed: visual
+
+  # ---------------------------------------------------------------------------
+  # 3. Infrastructure bindings
+  # Select one profile without altering the organizational configuration above.
+  # ---------------------------------------------------------------------------
+  deploymentProfiles:
+    local-development:
+      runtime: process
+      region: local
+      replicas:
+        controlPlane: 1
+        cellWorker: 1
+      persistence:
+        metadata: sqlite
+        objectStore: filesystem
+        messageBus: embedded
+      endpoints:
+        controlPlane: http://127.0.0.1:8080
+      scaling:
+        enabled: false
+
+    local-containers:
+      runtime: docker-compose
+      region: local
+      replicas:
+        controlPlane: 1
+        cellWorker: 2
+      persistence:
+        metadata: postgres
+        objectStore: s3-compatible
+        messageBus: nats
+      scaling:
+        enabled: false
+
+    kubernetes-cloud:
+      runtime: kubernetes
+      cluster: ${CELL_OS_K8S_CLUSTER}
+      namespace: cell-os
+      regions: ["${CELL_OS_PRIMARY_REGION}"]
+      images:
+        controlPlane: ${CELL_OS_REGISTRY}/cell-os-control-plane:${CELL_OS_IMAGE_TAG}
+        cellWorker: ${CELL_OS_REGISTRY}/cell-os-worker:${CELL_OS_IMAGE_TAG}
+      workload:
+        serviceAccount: cell-os-workload
+        podSecurityStandard: restricted
+        topologySpread: zone
+      autoscaling:
+        enabled: true
+        mechanism: keda
+        minReplicas: 0
+        maxReplicas: 50
+        queueTarget: 5
+      persistence:
+        metadata: ${CELL_OS_METADATA_PROVIDER}
+        objectStore: ${CELL_OS_OBJECT_STORE_PROVIDER}
+        messageBus: ${CELL_OS_MESSAGE_BUS_PROVIDER}
+      networking:
+        ingress: private
+        serviceMesh: optional
+        networkPolicies: true
+      rollout:
+        strategy: canary
+        canaryPercent: 10
+
+  # ---------------------------------------------------------------------------
+  # 4. Environment-specific overlays
+  # ---------------------------------------------------------------------------
+  environments:
+    development:
+      deploymentProfile: local-development
+      overrides:
+        governance.autonomy.defaultLevel: supervised
+        observability.telemetry.traces: true
+        budgets.global.dailyHardLimit: 25
+
+    test:
+      deploymentProfile: local-containers
+      overrides:
+        governance.autonomy.defaultLevel: bounded-autonomous
+        cellAdapt.mode: experiment
+        budgets.global.dailyHardLimit: 75
+
+    production:
+      deploymentProfile: kubernetes-cloud
+      overrides:
+        governance.autonomy.defaultLevel: bounded-autonomous
+        cellAdapt.mode: recommend
+        cellBus.federation.enabled: true
+        security.secrets.provider: external-secret-manager
+        observability.telemetry.traces: true
+
+  # Runtime state is intentionally excluded. The control plane records resolved
+  # snapshots, active replicas, health, queues, missions, costs, and failures.

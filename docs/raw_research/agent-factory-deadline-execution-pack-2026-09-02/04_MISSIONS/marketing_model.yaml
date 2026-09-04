@@ -1,0 +1,56 @@
+version: 1
+id: marketing-model-meeting-v1
+kind: mission_preset
+objective: Regenerate/review the evidence-backed Marketing Model deliverable and produce a meeting-ready artifact without writing to client systems.
+
+execution_preset_default: marketing-reviewer-v1
+allowed_execution_presets:
+  - marketing-reviewer-v1
+  - evidence-reviewer-v1
+
+constraints:
+  - read_only_client_systems
+  - no_fabricated_missing_evidence
+  - no_client_system_writes
+  - preserve_known_unknowns
+  - do_not_treat_inference_as_confirmed_requirement
+
+stages:
+  - id: marketing-001-context
+    type: deterministic
+    title: Assemble authoritative context and existing evidence references
+
+  - id: marketing-001-review
+    type: agent
+    title: Review evidence and current recommendation
+    depends_on: [marketing-001-context]
+    requires_real_agent_if_safe: true
+
+  - id: marketing-001-artifact
+    type: deterministic_or_agent_adapter
+    title: Generate/re-generate meeting artifact
+    depends_on: [marketing-001-review]
+
+  - id: marketing-001-verify
+    type: deterministic
+    title: Validate artifact and evidence references
+    depends_on: [marketing-001-artifact]
+
+  - id: marketing-001-meeting-ready
+    type: human_gate
+    title: Meeting-ready approval
+    depends_on: [marketing-001-verify]
+    target: true
+
+outputs:
+  - meeting_artifact
+  - evidence_refs
+  - validation_report
+  - run_provenance
+  - limitations_unmeasured
+
+reference_inputs:
+  - docs/case-studies/delivery-001-marketing-model.md
+  - docs/specs/marketing-model-reconstruction-v1.md
+  - missions/client-review-v1
+  - docs/evidence/marketing-model-v1

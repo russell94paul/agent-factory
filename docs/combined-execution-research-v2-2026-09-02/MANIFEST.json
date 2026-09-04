@@ -1,0 +1,142 @@
+{
+  "name": "Agent Factory Combined Execution + Research Pack V2",
+  "date": "2026-09-02",
+  "files": [
+    {
+      "path": "00_START_HERE.md",
+      "bytes": 4511,
+      "sha256": "461268b990a2aa3413a8627d6ec598b29b6450695651cd42aa32ccc394b3f358"
+    },
+    {
+      "path": "01_DECISIONS/ARCHITECTURE_SYNTHESIS.md",
+      "bytes": 6789,
+      "sha256": "ef60cdc3de5ef1e5e29690c98aebfb4623f35f4f0373f840af8de6706ec4b620"
+    },
+    {
+      "path": "01_DECISIONS/DECISION_REGISTER.yaml",
+      "bytes": 2580,
+      "sha256": "a3a6a037d332b453d1303bfc5f5f40bcec466177dee8ed28bd25bbd67a1fec56"
+    },
+    {
+      "path": "02_DEADLINE/FALLBACKS.md",
+      "bytes": 739,
+      "sha256": "dbf1bdb24fbdab0ad7a712301077e31525274dfd0e848cfc68bce0b42a1de8a9"
+    },
+    {
+      "path": "02_DEADLINE/TONIGHT_CRITICAL_PATH.md",
+      "bytes": 4560,
+      "sha256": "30b4b30b96cf1718ff1d64bbab331ac0320964d18db85765d35fa47357c0a0c8"
+    },
+    {
+      "path": "03_EXECUTION/autonomy_policy.yaml",
+      "bytes": 1263,
+      "sha256": "0ece967fbe69a192b3eaaf32ef9e57ea22af82f75469f06fb59482ef40ee0b3e"
+    },
+    {
+      "path": "03_EXECUTION/execution_mandate.example.yaml",
+      "bytes": 382,
+      "sha256": "28543dc09b0c0a4d43eba0184930944adfb25fede1459cef3295c8a2a61b754a"
+    },
+    {
+      "path": "03_EXECUTION/tonight_dag.yaml",
+      "bytes": 3672,
+      "sha256": "1dbb7ce38aa8661624510b8142521aaad2e7a444dc2a2687f442ce586404a731"
+    },
+    {
+      "path": "04_MISSIONS/marketing_model.yaml",
+      "bytes": 1607,
+      "sha256": "f3761006e448ee89f96bd8c2cccaab675d27c2705593eefa7f2528ed00f9d300"
+    },
+    {
+      "path": "04_MISSIONS/sales_model.yaml",
+      "bytes": 972,
+      "sha256": "6cb8e49d924cdccc60bd0dad5738e368dc8bbbc5766b057e0ba1c50f97f27b48"
+    },
+    {
+      "path": "05_SWITCHBOARD/AUTONOMY_PUMP_DESIGN.md",
+      "bytes": 1956,
+      "sha256": "72e0b4af6c136c974520e2b6d17135af3601d8f111879a43923bb757a27177df"
+    },
+    {
+      "path": "05_SWITCHBOARD/P0_FUNCTIONAL_SPEC.md",
+      "bytes": 2097,
+      "sha256": "70632328adee56d4c57309c2ddaad5a5322e4f050c6c9aa3920efa578cf92d86"
+    },
+    {
+      "path": "06_EVALS/marketing_model_eval.md",
+      "bytes": 947,
+      "sha256": "a9b7a40e16abd4cbbde9fe69a32a125e0dfd2b72d4ed726d701a1a0f485bcc71"
+    },
+    {
+      "path": "06_EVALS/sales_model_eval.md",
+      "bytes": 560,
+      "sha256": "5623980133099216f4a97711a94de61c2b7a281ab5490e124151dc408db5705d"
+    },
+    {
+      "path": "07_CLAUDE/CLAUDE_PLAN_MODE_MASTER_PROMPT.md",
+      "bytes": 10245,
+      "sha256": "e79ed792f17c66ce136571d8b472f1c63cee6495455020f1d03ac20b13253f8c"
+    },
+    {
+      "path": "07_CLAUDE/PARALLEL_LANE_PROMPTS.md",
+      "bytes": 1408,
+      "sha256": "47e18d4acf2df1897622487c4d93379c67f95898257c70014f7b6da38287ece8"
+    },
+    {
+      "path": "07_CLAUDE/SLASH_COMMAND_CONTRACT.md",
+      "bytes": 1124,
+      "sha256": "8c3aefcaf2ee547c9b1b1a8d770a33d207de532e98f265cb294a4e00cdd28bf0"
+    },
+    {
+      "path": "08_RESEARCH/POST_DEADLINE_ORDER.md",
+      "bytes": 2814,
+      "sha256": "e6ce09d5cf5503535a1510d0a142ed8c281578e9f70c0f31a80cd09718eb0145"
+    },
+    {
+      "path": "08_RESEARCH/RESEARCH_DISPOSITION.yaml",
+      "bytes": 1239,
+      "sha256": "4d91494a5e9c9fd1ccad2953ade4448d0114abf1f9d4006f149f4fddf7b05f79"
+    },
+    {
+      "path": "09_TRACEABILITY/SOURCE_MAP.md",
+      "bytes": 2639,
+      "sha256": "031778bc748899106bb0ad37d85ea4b453c05486f006cbba51b23a579c8f55ce"
+    },
+    {
+      "path": "10_POST_DEADLINE/NORTH_STAR_ROADMAP.md",
+      "bytes": 2774,
+      "sha256": "8797d032925d657e584c7771e633611d71c51fa4af9d026fb83e99c45e69b897"
+    },
+    {
+      "path": "11_AGENT_PLATFORM_DELTA/CLAUDE_AGENT_PLATFORM_DELTA_PROMPT.md",
+      "bytes": 3795,
+      "sha256": "06d1223c0f54915309358e06bc22d628b0799b62bfd66fe3a44dbbd657c920f4"
+    },
+    {
+      "path": "11_AGENT_PLATFORM_DELTA/CONCEPT_CROSSWALK.yaml",
+      "bytes": 4698,
+      "sha256": "831a38d0860ab97c01a3efc761ac5107b03f3e75356cb20e4176c1f14c242a6a"
+    },
+    {
+      "path": "11_AGENT_PLATFORM_DELTA/CRUCIAL_FEATURES_DELTA.md",
+      "bytes": 6138,
+      "sha256": "870eb101054b087e2c9314919fd826da7ef9b3bddb7f918a1bf9845c34576c3f"
+    },
+    {
+      "path": "11_AGENT_PLATFORM_DELTA/PRIOR_ART_CHECK.md",
+      "bytes": 2328,
+      "sha256": "09eb03bb6bdb3c0aea406117c3cced249473e33784d4c5da5b8ccee812d2d42d"
+    },
+    {
+      "path": "11_AGENT_PLATFORM_DELTA/RESEARCH_ADDENDUM.yaml",
+      "bytes": 5458,
+      "sha256": "a1d48f1f8588b8e83fe8aa0919347fa08ec45519d88347c0f87302d19422a33b"
+    },
+    {
+      "path": "11_AGENT_PLATFORM_DELTA/SOURCE_COVERAGE_CORRECTION.md",
+      "bytes": 1815,
+      "sha256": "512855f9860a08c778bb9e497d9616139b52f1a177b32625c78e417af05a9bce"
+    }
+  ],
+  "file_count": 27
+}

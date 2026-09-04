@@ -1,0 +1,6 @@
+eb20675ae617ff094a456d19af3507f2c703865b	refs/heads/claude/agent-factory-architecture-doc-by7il6
+ec1c6c65a8461f51041fb0899f7241a6818b29dd	refs/heads/docs/agent-army-research-separation
+2adf9a28e573d37322c6d90f9377de29f9c34225	refs/heads/fix/fifth-verdict-apparatus-error
+8b73f4feea4d7a965c131158f7c103179286a80c	refs/heads/main
+b338324270a9a339f686b8607d854a57160d4977	refs/heads/reliability/recurrence-preflight
+6872aeea9f69a38bed5f500d9dbfbeb8df07e005	refs/heads/trial/wave0-rescue

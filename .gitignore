@@ -32,3 +32,25 @@ docs/research/R16-evidence-pack.md
 # the DAX result rows are the client's commercial data. Kept on disk as authoritative
 # evidence for the PBI verification, ignored so no `git add -A` can stage it.
 docs/evidence/marketing-model-v1/pbi-ad-sales-live-2026-09-01/
+
+# Generated review pack for external architecture review. 3.4 MB, and it carries the
+# client-identifying content AF-RELEASE-GATE-01 §4.1 enumerates — so it must never be staged into
+# a repository whose remote is public. `docs/release-gate/AF-RELEASE-GATE-01-2026-09-01.md` §5
+# item 6 records the same hazard for the live PBI capture and calls it "a live hazard, not a
+# hypothetical" because five sessions share this checkout. Rebuild from docs/_index/ at any time.
+agent-factory-research-review-pack.zip
+
+# Generated architecture-review supplement, 2026-09-02. Same hazard, same remedy as the review
+# pack above: it bundles docs/_index/corpus_manifest.yaml, document_catalog.md, concept_index.yaml,
+# current_vs_proposed.md, high_leverage_concepts.md, research_gap_candidates.md and
+# docs/research/backlog.yaml, and a leak sweep over exactly these 15 entries returned client
+# identifiers in all seven of them (two client/brand names and two ticket keys, ~30 occurrences)
+# original pass, not introduced by the supplement. The remote is public and five sessions share
+# this checkout, so one `git add -A` is the whole failure mode. Rebuild deterministically at any
+# time: python scripts/build_supplement_zip.py
+agent-factory-architecture-supplement.zip
+
+# Claude Design export of the CELL OS avatar system, 105.3 MB — over GitHub's hard 100 MB
+# per-file limit, so any commit containing it makes the push to the public `personal` remote
+# unpushable and only history surgery removes it. Kept on disk; re-export from Claude Design.
+docs/design/claude-design/*.zip

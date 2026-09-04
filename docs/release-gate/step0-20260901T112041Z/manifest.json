@@ -1,0 +1,2586 @@
+{
+  "captured_at_utc": "2026-09-01T11:20:41+00:00",
+  "tool": "capture_public_exposure.py",
+  "evidence_class": "LOCAL_ONLY -- must not be pushed",
+  "contents_policy": {
+    "file_contents_copied": false,
+    "credential_values_captured": false,
+    "note": "paths, blob SHAs, sizes and HTTP status codes only"
+  },
+  "repository": {
+    "slug": "russell94paul/agent-factory",
+    "local_remotes": "personal\thttps://github.com/russell94paul/agent-factory.git (fetch)\npersonal\thttps://github.com/russell94paul/agent-factory.git (push)",
+    "html_url": "https://github.com/russell94paul/agent-factory",
+    "visibility": "public",
+    "is_private": false,
+    "default_branch": "main",
+    "created_at": "2026-08-29T19:55:49Z",
+    "pushed_at": "2026-09-01T04:35:42Z"
+  },
+  "distribution": {
+    "forks_count": 0,
+    "network_count": 0,
+    "stargazers_count": 0,
+    "subscribers_count": 0,
+    "forks_listed": 0,
+    "caveat": "0 forks is WEAK negative evidence. Anonymous clones, unauthenticated fetches, crawler indexing and third-party code-search corpora are NOT-VISIBLE to the owner. This is not a claim that nobody took a copy."
+  },
+  "remote_refs": {
+    "claude/agent-factory-architecture-doc-by7il6": "eb20675ae617ff094a456d19af3507f2c703865b",
+    "docs/agent-army-research-separation": "ec1c6c65a8461f51041fb0899f7241a6818b29dd",
+    "fix/fifth-verdict-apparatus-error": "2adf9a28e573d37322c6d90f9377de29f9c34225",
+    "main": "8b73f4feea4d7a965c131158f7c103179286a80c",
+    "reliability/recurrence-preflight": "b338324270a9a339f686b8607d854a57160d4977",
+    "trial/wave0-rescue": "6872aeea9f69a38bed5f500d9dbfbeb8df07e005"
+  },
+  "per_ref": {
+    "claude/agent-factory-architecture-doc-by7il6": {
+      "sha": "eb20675ae617ff094a456d19af3507f2c703865b",
+      "ref_anonymously_reachable": true,
+      "ref_readme_http_status": 200,
+      "matching_paths": 12,
+      "entries": [
+        {
+          "path": "BRAIN-DUMP.md",
+          "ref": "refs/heads/claude/agent-factory-architecture-doc-by7il6",
+          "ref_sha": "eb20675ae617ff094a456d19af3507f2c703865b",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "6ce545dd9b3191a2cb7912686e97e42f19a63121",
+          "blob_sha": "16c4771d10a711bb9d7c60e6789cf1c1837f9550",
+          "blob_bytes": 10081,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "blueprints/windsorai_gep.yaml",
+          "ref": "refs/heads/claude/agent-factory-architecture-doc-by7il6",
+          "ref_sha": "eb20675ae617ff094a456d19af3507f2c703865b",
+          "classes": [
+            "client",
+            "jira"
+          ],
+          "introducing_commit": "6ce545dd9b3191a2cb7912686e97e42f19a63121",
+          "blob_sha": "c4acdc16257ca697039c9248484c8387dffac2d0",
+          "blob_bytes": 4538,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/artifacts/agent-factory.html",
+          "ref": "refs/heads/claude/agent-factory-architecture-doc-by7il6",
+          "ref_sha": "eb20675ae617ff094a456d19af3507f2c703865b",
+          "classes": [
+            "client",
+            "jira"
+          ],
+          "introducing_commit": "aad732fc398368ce835b86d0509d96dd80077693",
+          "blob_sha": "b5e4cd1bc44be5cc02648ff2dd8227c684bd777d",
+          "blob_bytes": 165746,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/evidence/phase-a-windsorai.md",
+          "ref": "refs/heads/claude/agent-factory-architecture-doc-by7il6",
+          "ref_sha": "eb20675ae617ff094a456d19af3507f2c703865b",
+          "classes": [
+            "client"
+          ],
+          "introducing_commit": "6ce545dd9b3191a2cb7912686e97e42f19a63121",
+          "blob_sha": "e5e921b55707ecf373d63415a130447be208f254",
+          "blob_bytes": 5471,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/research/README.md",
+          "ref": "refs/heads/claude/agent-factory-architecture-doc-by7il6",
+          "ref_sha": "eb20675ae617ff094a456d19af3507f2c703865b",
+          "classes": [
+            "client"
+          ],
+          "introducing_commit": "87de4d23d4b502ce26e52a610a80b9ae38168f50",
+          "blob_sha": "ea0d92fe6bff93acc8b9c622a5d04d74ea11a62e",
+          "blob_bytes": 6491,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/research/agent-factory-research-prompts.md",
+          "ref": "refs/heads/claude/agent-factory-architecture-doc-by7il6",
+          "ref_sha": "eb20675ae617ff094a456d19af3507f2c703865b",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "6ce545dd9b3191a2cb7912686e97e42f19a63121",
+          "blob_sha": "6561aa9877ab26a9743655cd6e5d00a8dfe842bc",
+          "blob_bytes": 25234,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/research/answers/R4-answer-agnostic-optimizer.md",
+          "ref": "refs/heads/claude/agent-factory-architecture-doc-by7il6",
+          "ref_sha": "eb20675ae617ff094a456d19af3507f2c703865b",
+          "classes": [
+            "brand"
+          ],
+          "introducing_commit": "b6e5e72fad82785dab60791f4cb423ab85d5fb99",
+          "blob_sha": "145e369ceb4b6fc49fffb428ca9ca49a818bac4f",
+          "blob_bytes": 51946,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/specs/agent-factory-technical-and-business-spec.md",
+          "ref": "refs/heads/claude/agent-factory-architecture-doc-by7il6",
+          "ref_sha": "eb20675ae617ff094a456d19af3507f2c703865b",
+          "classes": [
+            "client",
+            "credential-like-database"
+          ],
+          "introducing_commit": "fe34130d74768f5f81dfe8333d8252f53f173a57",
+          "blob_sha": "bf716704560852097efd00fef76bd7225ead8b40",
+          "blob_bytes": 39499,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true,
+          "credential_like": {
+            "classification": "IDENTIFIER-OR-SECRET-NAME (no value captured)",
+            "value_captured": false,
+            "appears_live": "UNKNOWN",
+            "rotation_status": "UNKNOWN-NOT-INDEPENDENTLY-VERIFIED"
+          }
+        },
+        {
+          "path": "docs/specs/architecture-v0.md",
+          "ref": "refs/heads/claude/agent-factory-architecture-doc-by7il6",
+          "ref_sha": "eb20675ae617ff094a456d19af3507f2c703865b",
+          "classes": [
+            "client"
+          ],
+          "introducing_commit": "1a59211ac3958060cb5192fffb5632146e8fc6e1",
+          "blob_sha": "c3b99a0ad948aa33e26da56bda2e5161d1ade27f",
+          "blob_bytes": 13086,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "factory/readiness.py",
+          "ref": "refs/heads/claude/agent-factory-architecture-doc-by7il6",
+          "ref_sha": "eb20675ae617ff094a456d19af3507f2c703865b",
+          "classes": [
+            "client"
+          ],
+          "introducing_commit": "aad732fc398368ce835b86d0509d96dd80077693",
+          "blob_sha": "f7ef13d90f88b4fb4ff1a47386d47690b898403d",
+          "blob_bytes": 51126,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "scripts/build_tracker.py",
+          "ref": "refs/heads/claude/agent-factory-architecture-doc-by7il6",
+          "ref_sha": "eb20675ae617ff094a456d19af3507f2c703865b",
+          "classes": [
+            "client"
+          ],
+          "introducing_commit": "aad732fc398368ce835b86d0509d96dd80077693",
+          "blob_sha": "7a65d800c27862bd081f2fa35580bf9099125977",
+          "blob_bytes": 7756,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "tests/test_connector_contract.py",
+          "ref": "refs/heads/claude/agent-factory-architecture-doc-by7il6",
+          "ref_sha": "eb20675ae617ff094a456d19af3507f2c703865b",
+          "classes": [
+            "client",
+            "jira"
+          ],
+          "introducing_commit": "6ce545dd9b3191a2cb7912686e97e42f19a63121",
+          "blob_sha": "ef4f992892fe4ac9160a061a99142d8682eae759",
+          "blob_bytes": 10542,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        }
+      ]
+    },
+    "docs/agent-army-research-separation": {
+      "sha": "ec1c6c65a8461f51041fb0899f7241a6818b29dd",
+      "ref_anonymously_reachable": true,
+      "ref_readme_http_status": 200,
+      "matching_paths": 14,
+      "entries": [
+        {
+          "path": "BRAIN-DUMP.md",
+          "ref": "refs/heads/docs/agent-army-research-separation",
+          "ref_sha": "ec1c6c65a8461f51041fb0899f7241a6818b29dd",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "6ce545dd9b3191a2cb7912686e97e42f19a63121",
+          "blob_sha": "aa92b0cceef8632d29587b8bc776da23295eacb8",
+          "blob_bytes": 10091,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "blueprints/windsorai_client_a.yaml",
+          "ref": "refs/heads/docs/agent-army-research-separation",
+          "ref_sha": "ec1c6c65a8461f51041fb0899f7241a6818b29dd",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "62597d84c8205cfd175c6b2f05d22b81ce43c524",
+          "blob_sha": "4e8fbcefcb6731633a3c581c60028be5366f2f08",
+          "blob_bytes": 5870,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/artifacts/agent-factory.html",
+          "ref": "refs/heads/docs/agent-army-research-separation",
+          "ref_sha": "ec1c6c65a8461f51041fb0899f7241a6818b29dd",
+          "classes": [
+            "client",
+            "jira"
+          ],
+          "introducing_commit": "aad732fc398368ce835b86d0509d96dd80077693",
+          "blob_sha": "e7410c79d8721c3fd3b920f5b102c8e62061b110",
+          "blob_bytes": 164266,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/research/R19-work-taxonomy-and-team-selection.md",
+          "ref": "refs/heads/docs/agent-army-research-separation",
+          "ref_sha": "ec1c6c65a8461f51041fb0899f7241a6818b29dd",
+          "classes": [
+            "client",
+            "credential-like-database",
+            "credential-like-vault",
+            "jira"
+          ],
+          "introducing_commit": "17a6a5ade6c1a379287c58ba5820f5bd2aead64a",
+          "blob_sha": "b032c95275f0f497b806c2a3658493e53c9f52bb",
+          "blob_bytes": 25409,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true,
+          "credential_like": {
+            "classification": "IDENTIFIER-OR-SECRET-NAME (no value captured)",
+            "value_captured": false,
+            "appears_live": "UNKNOWN",
+            "rotation_status": "UNKNOWN-NOT-INDEPENDENTLY-VERIFIED"
+          }
+        },
+        {
+          "path": "docs/research/SYNTHESIS.md",
+          "ref": "refs/heads/docs/agent-army-research-separation",
+          "ref_sha": "ec1c6c65a8461f51041fb0899f7241a6818b29dd",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "f9a5f4b037456818349b1c4e852e0117893e7366",
+          "blob_sha": "16697805594109abcef1854829dbddc040003fb2",
+          "blob_bytes": 216243,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/research/agent-factory-research-prompts.md",
+          "ref": "refs/heads/docs/agent-army-research-separation",
+          "ref_sha": "ec1c6c65a8461f51041fb0899f7241a6818b29dd",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "6ce545dd9b3191a2cb7912686e97e42f19a63121",
+          "blob_sha": "8a162a74eae2b61c5ca4daba4c28197b0f17b52d",
+          "blob_bytes": 25244,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/research/answers/R19-answer-work-taxonomy-and-team-selection.md",
+          "ref": "refs/heads/docs/agent-army-research-separation",
+          "ref_sha": "ec1c6c65a8461f51041fb0899f7241a6818b29dd",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "17a6a5ade6c1a379287c58ba5820f5bd2aead64a",
+          "blob_sha": "6f81b1c478d05ef26286e351b205b0ee6fe2843d",
+          "blob_bytes": 40190,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/research/answers/R4-answer-agnostic-optimizer.md",
+          "ref": "refs/heads/docs/agent-army-research-separation",
+          "ref_sha": "ec1c6c65a8461f51041fb0899f7241a6818b29dd",
+          "classes": [
+            "brand"
+          ],
+          "introducing_commit": "b6e5e72fad82785dab60791f4cb423ab85d5fb99",
+          "blob_sha": "145e369ceb4b6fc49fffb428ca9ca49a818bac4f",
+          "blob_bytes": 51946,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/specs/client-intake-portal.md",
+          "ref": "refs/heads/docs/agent-army-research-separation",
+          "ref_sha": "ec1c6c65a8461f51041fb0899f7241a6818b29dd",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "7e07dd1d0cee4b1fc69b6199da5f51cda0aab127",
+          "blob_sha": "1e455582820633f03d92abf789e87785f8cab9a7",
+          "blob_bytes": 11013,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/specs/golden-workflow-fit.md",
+          "ref": "refs/heads/docs/agent-army-research-separation",
+          "ref_sha": "ec1c6c65a8461f51041fb0899f7241a6818b29dd",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "dd295894a52b8c0d64885f928d87c9d65e87e926",
+          "blob_sha": "e3ff83e2bbdcca1b393be84c8452f843190f90fa",
+          "blob_bytes": 22889,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "factory/pbi_contract.py",
+          "ref": "refs/heads/docs/agent-army-research-separation",
+          "ref_sha": "ec1c6c65a8461f51041fb0899f7241a6818b29dd",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "b46d27db1fbe830062309637891905eb6254029f",
+          "blob_sha": "1cdc1eba8c66ed2c6949accba2b1ec50b75de90c",
+          "blob_bytes": 24253,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "factory/presets.py",
+          "ref": "refs/heads/docs/agent-army-research-separation",
+          "ref_sha": "ec1c6c65a8461f51041fb0899f7241a6818b29dd",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "f03e89065d6c27846bf6d8596f7b1ec062d57e12",
+          "blob_sha": "e044468a47ef82bbd72515795415c2b381c8022d",
+          "blob_bytes": 14698,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "tests/test_connector_contract.py",
+          "ref": "refs/heads/docs/agent-army-research-separation",
+          "ref_sha": "ec1c6c65a8461f51041fb0899f7241a6818b29dd",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "6ce545dd9b3191a2cb7912686e97e42f19a63121",
+          "blob_sha": "cf65b419039e0ba7daa995668e072457783b553a",
+          "blob_bytes": 10551,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "tests/test_live_probes.py",
+          "ref": "refs/heads/docs/agent-army-research-separation",
+          "ref_sha": "ec1c6c65a8461f51041fb0899f7241a6818b29dd",
+          "classes": [
+            "client",
+            "jira"
+          ],
+          "introducing_commit": "6872aeea9f69a38bed5f500d9dbfbeb8df07e005",
+          "blob_sha": "390b3c14c603161810d66ed3b9706999718c7128",
+          "blob_bytes": 13554,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        }
+      ]
+    },
+    "fix/fifth-verdict-apparatus-error": {
+      "sha": "2adf9a28e573d37322c6d90f9377de29f9c34225",
+      "ref_anonymously_reachable": true,
+      "ref_readme_http_status": 200,
+      "matching_paths": 30,
+      "entries": [
+        {
+          "path": "BRAIN-DUMP.md",
+          "ref": "refs/heads/fix/fifth-verdict-apparatus-error",
+          "ref_sha": "2adf9a28e573d37322c6d90f9377de29f9c34225",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "6ce545dd9b3191a2cb7912686e97e42f19a63121",
+          "blob_sha": "aa92b0cceef8632d29587b8bc776da23295eacb8",
+          "blob_bytes": 10091,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "blueprints/windsorai_client_a.yaml",
+          "ref": "refs/heads/fix/fifth-verdict-apparatus-error",
+          "ref_sha": "2adf9a28e573d37322c6d90f9377de29f9c34225",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "62597d84c8205cfd175c6b2f05d22b81ce43c524",
+          "blob_sha": "4e8fbcefcb6731633a3c581c60028be5366f2f08",
+          "blob_bytes": 5870,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "boot-prompts/README.md",
+          "ref": "refs/heads/fix/fifth-verdict-apparatus-error",
+          "ref_sha": "2adf9a28e573d37322c6d90f9377de29f9c34225",
+          "classes": [
+            "client"
+          ],
+          "introducing_commit": "27d37647ee231a1817729dd3e113723795c7eddc",
+          "blob_sha": "6d228e23af9ef516b16e4179621f55e1961c3b8c",
+          "blob_bytes": 14119,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "boot-prompts/workflow-library-2026-08-31.md",
+          "ref": "refs/heads/fix/fifth-verdict-apparatus-error",
+          "ref_sha": "2adf9a28e573d37322c6d90f9377de29f9c34225",
+          "classes": [
+            "client",
+            "jira"
+          ],
+          "introducing_commit": "e152d19c09eeaf5f7f755ced2065c7eb3f25ae66",
+          "blob_sha": "c01ef595de9e87420116fb98b4621bae6d48f531",
+          "blob_bytes": 17780,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/artifacts/agent-factory.html",
+          "ref": "refs/heads/fix/fifth-verdict-apparatus-error",
+          "ref_sha": "2adf9a28e573d37322c6d90f9377de29f9c34225",
+          "classes": [
+            "client",
+            "jira"
+          ],
+          "introducing_commit": "aad732fc398368ce835b86d0509d96dd80077693",
+          "blob_sha": "ebe40e5ad77c7c06d646a5b183f0715b8d020d02",
+          "blob_bytes": 164265,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/findings.d/F83-one-boolean-answering-two-questions-passed-the-tests-twice.md",
+          "ref": "refs/heads/fix/fifth-verdict-apparatus-error",
+          "ref_sha": "2adf9a28e573d37322c6d90f9377de29f9c34225",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "31f35276ad22e1d4701343a3567fd2c8174524df",
+          "blob_sha": "f751523508a31d6b514bfb90ddd14a58ad2247df",
+          "blob_bytes": 6975,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/findings.d/F85-a-plan-only-run-spent-the-cap-that-stops-a-real-one.md",
+          "ref": "refs/heads/fix/fifth-verdict-apparatus-error",
+          "ref_sha": "2adf9a28e573d37322c6d90f9377de29f9c34225",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "d364338b600d78ac42680b28522f48584880718d",
+          "blob_sha": "b2358a6138d986fce5a722acb37173c81b5da4ce",
+          "blob_bytes": 5227,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/findings.d/F87-the-one-wired-verifier-had-nothing-behind-it.md",
+          "ref": "refs/heads/fix/fifth-verdict-apparatus-error",
+          "ref_sha": "2adf9a28e573d37322c6d90f9377de29f9c34225",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "b92d3e5e99e90058b796f4d120adbb3bf0894a70",
+          "blob_sha": "1a28a9286573ef8137134b6c25d73055f8ae1ca8",
+          "blob_bytes": 6104,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/findings.d/F89-the-model-contract-certified-the-defect-the-redesign-preset-exists-to-fix.md",
+          "ref": "refs/heads/fix/fifth-verdict-apparatus-error",
+          "ref_sha": "2adf9a28e573d37322c6d90f9377de29f9c34225",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "c27320a585781a387837960d6395be98f736960f",
+          "blob_sha": "6d14303d7b4ef37937db42cdfe7a27c527280016",
+          "blob_bytes": 6959,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/research/R19-work-taxonomy-and-team-selection.md",
+          "ref": "refs/heads/fix/fifth-verdict-apparatus-error",
+          "ref_sha": "2adf9a28e573d37322c6d90f9377de29f9c34225",
+          "classes": [
+            "client",
+            "credential-like-database",
+            "credential-like-vault",
+            "jira"
+          ],
+          "introducing_commit": "17a6a5ade6c1a379287c58ba5820f5bd2aead64a",
+          "blob_sha": "b032c95275f0f497b806c2a3658493e53c9f52bb",
+          "blob_bytes": 25409,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true,
+          "credential_like": {
+            "classification": "IDENTIFIER-OR-SECRET-NAME (no value captured)",
+            "value_captured": false,
+            "appears_live": "UNKNOWN",
+            "rotation_status": "UNKNOWN-NOT-INDEPENDENTLY-VERIFIED"
+          }
+        },
+        {
+          "path": "docs/research/SYNTHESIS.md",
+          "ref": "refs/heads/fix/fifth-verdict-apparatus-error",
+          "ref_sha": "2adf9a28e573d37322c6d90f9377de29f9c34225",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "f9a5f4b037456818349b1c4e852e0117893e7366",
+          "blob_sha": "16697805594109abcef1854829dbddc040003fb2",
+          "blob_bytes": 216243,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/research/agent-factory-research-prompts.md",
+          "ref": "refs/heads/fix/fifth-verdict-apparatus-error",
+          "ref_sha": "2adf9a28e573d37322c6d90f9377de29f9c34225",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "6ce545dd9b3191a2cb7912686e97e42f19a63121",
+          "blob_sha": "8a162a74eae2b61c5ca4daba4c28197b0f17b52d",
+          "blob_bytes": 25244,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/research/answers/R19-answer-work-taxonomy-and-team-selection.md",
+          "ref": "refs/heads/fix/fifth-verdict-apparatus-error",
+          "ref_sha": "2adf9a28e573d37322c6d90f9377de29f9c34225",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "17a6a5ade6c1a379287c58ba5820f5bd2aead64a",
+          "blob_sha": "6f81b1c478d05ef26286e351b205b0ee6fe2843d",
+          "blob_bytes": 40190,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/research/answers/R4-answer-agnostic-optimizer.md",
+          "ref": "refs/heads/fix/fifth-verdict-apparatus-error",
+          "ref_sha": "2adf9a28e573d37322c6d90f9377de29f9c34225",
+          "classes": [
+            "brand"
+          ],
+          "introducing_commit": "b6e5e72fad82785dab60791f4cb423ab85d5fb99",
+          "blob_sha": "145e369ceb4b6fc49fffb428ca9ca49a818bac4f",
+          "blob_bytes": 51946,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/specs/client-intake-portal.md",
+          "ref": "refs/heads/fix/fifth-verdict-apparatus-error",
+          "ref_sha": "2adf9a28e573d37322c6d90f9377de29f9c34225",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "7e07dd1d0cee4b1fc69b6199da5f51cda0aab127",
+          "blob_sha": "1e455582820633f03d92abf789e87785f8cab9a7",
+          "blob_bytes": 11013,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/specs/golden-workflow-fit.md",
+          "ref": "refs/heads/fix/fifth-verdict-apparatus-error",
+          "ref_sha": "2adf9a28e573d37322c6d90f9377de29f9c34225",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "dd295894a52b8c0d64885f928d87c9d65e87e926",
+          "blob_sha": "fba3a033dc6cc0b3a4149e73043c5942c6ef2708",
+          "blob_bytes": 23773,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "factory/control.py",
+          "ref": "refs/heads/fix/fifth-verdict-apparatus-error",
+          "ref_sha": "2adf9a28e573d37322c6d90f9377de29f9c34225",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "31f35276ad22e1d4701343a3567fd2c8174524df",
+          "blob_sha": "33005b64a6910edce94f9b888851957f16f1057f",
+          "blob_bytes": 31818,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "factory/deploy.py",
+          "ref": "refs/heads/fix/fifth-verdict-apparatus-error",
+          "ref_sha": "2adf9a28e573d37322c6d90f9377de29f9c34225",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "1f0d7ba804e35bd721e1def087b5a69e65385cce",
+          "blob_sha": "92a08193b2fcdea06962ae0d6f3037b47a7a3fb5",
+          "blob_bytes": 14239,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "factory/pbi_contract.py",
+          "ref": "refs/heads/fix/fifth-verdict-apparatus-error",
+          "ref_sha": "2adf9a28e573d37322c6d90f9377de29f9c34225",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "b46d27db1fbe830062309637891905eb6254029f",
+          "blob_sha": "6566344f0e0a40908e275b084f0c79d74ac8f5e3",
+          "blob_bytes": 25941,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "factory/presets.py",
+          "ref": "refs/heads/fix/fifth-verdict-apparatus-error",
+          "ref_sha": "2adf9a28e573d37322c6d90f9377de29f9c34225",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "f03e89065d6c27846bf6d8596f7b1ec062d57e12",
+          "blob_sha": "9099d52a328facef986ac9c27146b86957ccd0e2",
+          "blob_bytes": 19828,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "factory/redesign_contract.py",
+          "ref": "refs/heads/fix/fifth-verdict-apparatus-error",
+          "ref_sha": "2adf9a28e573d37322c6d90f9377de29f9c34225",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "c0a5192cea5e931112720a593973f7ab773a20ee",
+          "blob_sha": "7fe2ade668eefa02ecaf0ee4f15b3c84258cdc7b",
+          "blob_bytes": 13378,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "factory/registry.py",
+          "ref": "refs/heads/fix/fifth-verdict-apparatus-error",
+          "ref_sha": "2adf9a28e573d37322c6d90f9377de29f9c34225",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "7bf4d408b8381bf2f58a321c6af5f380040299fc",
+          "blob_sha": "7bccd736af69139916fd66542f1697d490db9eff",
+          "blob_bytes": 14480,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "factory/verifiers.py",
+          "ref": "refs/heads/fix/fifth-verdict-apparatus-error",
+          "ref_sha": "2adf9a28e573d37322c6d90f9377de29f9c34225",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "b92d3e5e99e90058b796f4d120adbb3bf0894a70",
+          "blob_sha": "0379fbb6439a4f7a4bb93277a147af25f6982ed6",
+          "blob_bytes": 11163,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "scripts/local_tracker.py",
+          "ref": "refs/heads/fix/fifth-verdict-apparatus-error",
+          "ref_sha": "2adf9a28e573d37322c6d90f9377de29f9c34225",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "0a2d69c124db35b27aa72f381f6cc3f30e6c0760",
+          "blob_sha": "7262122dda2512c930fcaf5126e6e5aa8729c0a8",
+          "blob_bytes": 174713,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "tests/test_connector_contract.py",
+          "ref": "refs/heads/fix/fifth-verdict-apparatus-error",
+          "ref_sha": "2adf9a28e573d37322c6d90f9377de29f9c34225",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "6ce545dd9b3191a2cb7912686e97e42f19a63121",
+          "blob_sha": "cf65b419039e0ba7daa995668e072457783b553a",
+          "blob_bytes": 10551,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "tests/test_control_run.py",
+          "ref": "refs/heads/fix/fifth-verdict-apparatus-error",
+          "ref_sha": "2adf9a28e573d37322c6d90f9377de29f9c34225",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "31f35276ad22e1d4701343a3567fd2c8174524df",
+          "blob_sha": "6059945780ebf5e2920123c8b96a95933818d54d",
+          "blob_bytes": 23038,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "tests/test_live_probes.py",
+          "ref": "refs/heads/fix/fifth-verdict-apparatus-error",
+          "ref_sha": "2adf9a28e573d37322c6d90f9377de29f9c34225",
+          "classes": [
+            "client",
+            "jira"
+          ],
+          "introducing_commit": "6872aeea9f69a38bed5f500d9dbfbeb8df07e005",
+          "blob_sha": "390b3c14c603161810d66ed3b9706999718c7128",
+          "blob_bytes": 13554,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "tests/test_redesign_verifier.py",
+          "ref": "refs/heads/fix/fifth-verdict-apparatus-error",
+          "ref_sha": "2adf9a28e573d37322c6d90f9377de29f9c34225",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "c27320a585781a387837960d6395be98f736960f",
+          "blob_sha": "d688e455440b6d4fa7f598470e706ab023afd8e4",
+          "blob_bytes": 17427,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "tests/test_retry_context.py",
+          "ref": "refs/heads/fix/fifth-verdict-apparatus-error",
+          "ref_sha": "2adf9a28e573d37322c6d90f9377de29f9c34225",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "50d1154a3515ad03fcff74fff179615d075fead1",
+          "blob_sha": "14a234f77959b8cd78aab2a63e9f48391ec191e5",
+          "blob_bytes": 12199,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "tests/test_verifiers.py",
+          "ref": "refs/heads/fix/fifth-verdict-apparatus-error",
+          "ref_sha": "2adf9a28e573d37322c6d90f9377de29f9c34225",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "b92d3e5e99e90058b796f4d120adbb3bf0894a70",
+          "blob_sha": "28903b82af3776fefc222144e24a1f8ee3bafa4c",
+          "blob_bytes": 19824,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        }
+      ]
+    },
+    "main": {
+      "sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+      "ref_anonymously_reachable": true,
+      "ref_readme_http_status": 200,
+      "matching_paths": 44,
+      "entries": [
+        {
+          "path": "BRAIN-DUMP.md",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "6ce545dd9b3191a2cb7912686e97e42f19a63121",
+          "blob_sha": "aa92b0cceef8632d29587b8bc776da23295eacb8",
+          "blob_bytes": 10091,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "blueprints/windsorai_client_a.yaml",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "62597d84c8205cfd175c6b2f05d22b81ce43c524",
+          "blob_sha": "4e8fbcefcb6731633a3c581c60028be5366f2f08",
+          "blob_bytes": 5870,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "boot-prompts/README.md",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "client"
+          ],
+          "introducing_commit": "27d37647ee231a1817729dd3e113723795c7eddc",
+          "blob_sha": "0cd4fbe215adc7d6b050df42b0ffa8b0168d773d",
+          "blob_bytes": 17389,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "boot-prompts/bootstrap-and-instruments-2026-08-31.md",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "a5fb72ca6cc3e8df6b4928d2e7faf6415fdc026a",
+          "blob_sha": "5bd0e7dcbdaa850b561cfee72e9b98f11e815c05",
+          "blob_bytes": 7251,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "boot-prompts/mission-commander-2026-09-01.md",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "credential-like-vault",
+            "figures",
+            "jira"
+          ],
+          "introducing_commit": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "blob_sha": "25462ce84d409f77eec05e819b9db1e21ad87f6b",
+          "blob_bytes": 7269,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true,
+          "credential_like": {
+            "classification": "IDENTIFIER-OR-SECRET-NAME (no value captured)",
+            "value_captured": false,
+            "appears_live": "UNKNOWN",
+            "rotation_status": "UNKNOWN-NOT-INDEPENDENTLY-VERIFIED"
+          }
+        },
+        {
+          "path": "boot-prompts/mission-handoff-2026-09-01.md",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "client",
+            "credential-like-vault",
+            "figures",
+            "jira"
+          ],
+          "introducing_commit": "692eb5f2e2e1d99c3672faef1ec77afcca1b6615",
+          "blob_sha": "0efeafabad915310a05afc57134e3e5cc9e93b83",
+          "blob_bytes": 7288,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true,
+          "credential_like": {
+            "classification": "IDENTIFIER-OR-SECRET-NAME (no value captured)",
+            "value_captured": false,
+            "appears_live": "UNKNOWN",
+            "rotation_status": "UNKNOWN-NOT-INDEPENDENTLY-VERIFIED"
+          }
+        },
+        {
+          "path": "boot-prompts/mission-wave1-checkpoint-2026-09-01.md",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "brand",
+            "client",
+            "credential-like-account",
+            "credential-like-database",
+            "credential-like-secretname",
+            "credential-like-vault"
+          ],
+          "introducing_commit": "ddea66deda20152ba50cbea5f138dd02c7ebedd4",
+          "blob_sha": "da418555c40a723f62f87d4d46676c8ccc2313b2",
+          "blob_bytes": 7499,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true,
+          "credential_like": {
+            "classification": "IDENTIFIER-OR-SECRET-NAME (no value captured)",
+            "value_captured": false,
+            "appears_live": "UNKNOWN",
+            "rotation_status": "UNKNOWN-NOT-INDEPENDENTLY-VERIFIED"
+          }
+        },
+        {
+          "path": "boot-prompts/workflow-library-2026-08-31.md",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "client",
+            "jira"
+          ],
+          "introducing_commit": "e152d19c09eeaf5f7f755ced2065c7eb3f25ae66",
+          "blob_sha": "8a2b3b4e1f9233f978373e92db68294910b8903b",
+          "blob_bytes": 19417,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/artifacts/agent-factory.html",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "client",
+            "jira"
+          ],
+          "introducing_commit": "aad732fc398368ce835b86d0509d96dd80077693",
+          "blob_sha": "ebe40e5ad77c7c06d646a5b183f0715b8d020d02",
+          "blob_bytes": 164265,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/evidence/control-plane-2026-08-22/dashboard/after.txt",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "38ff8f04b45093eaa463713563f55a69a4dc9e6c",
+          "blob_sha": "585ec34196dac77afa2848a70df856d046636c16",
+          "blob_bytes": 2529,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/evidence/control-plane-2026-08-22/readiness-after.txt",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "9b975ae2804d63272b62a6f6f64830e12d4faed3",
+          "blob_sha": "a3d0d46ff896a97effadec81c6cf4fb958bdb4ea",
+          "blob_bytes": 12985,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/evidence/control-plane-2026-08-22/readiness-before.txt",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "be8723ea8ebbe34a3f55f4c44fc80e96bf8b31ae",
+          "blob_sha": "5646ca01d11df0927226afd39e4ea624fee7b3a4",
+          "blob_bytes": 11099,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/evidence/control-plane-2026-08-22/rollback-main/pipe_29b8edf6.json",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "369cc1e628e355d41e8cb7542eb16f3ce75cc9c4",
+          "blob_sha": "28312743c251aa49c7f644aef8677314ed4650d7",
+          "blob_bytes": 9253,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/evidence/control-plane-2026-08-22/rollback/pipe_29b8edf6.json",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "9b975ae2804d63272b62a6f6f64830e12d4faed3",
+          "blob_sha": "28312743c251aa49c7f644aef8677314ed4650d7",
+          "blob_bytes": 9253,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/findings.d/F83-one-boolean-answering-two-questions-passed-the-tests-twice.md",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "31f35276ad22e1d4701343a3567fd2c8174524df",
+          "blob_sha": "f751523508a31d6b514bfb90ddd14a58ad2247df",
+          "blob_bytes": 6975,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/findings.d/F85-a-plan-only-run-spent-the-cap-that-stops-a-real-one.md",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "d364338b600d78ac42680b28522f48584880718d",
+          "blob_sha": "b2358a6138d986fce5a722acb37173c81b5da4ce",
+          "blob_bytes": 5227,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/findings.d/F87-the-one-wired-verifier-had-nothing-behind-it.md",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "b92d3e5e99e90058b796f4d120adbb3bf0894a70",
+          "blob_sha": "1a28a9286573ef8137134b6c25d73055f8ae1ca8",
+          "blob_bytes": 6104,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/findings.d/F89-the-model-contract-certified-the-defect-the-redesign-preset-exists-to-fix.md",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "c27320a585781a387837960d6395be98f736960f",
+          "blob_sha": "6d14303d7b4ef37937db42cdfe7a27c527280016",
+          "blob_bytes": 6959,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/findings.d/F90-the-run-record-names-a-repo-the-controller-cannot-put-an-agent-in.md",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "3eff716da17cfdb396592e5da6cd1d29b5542739",
+          "blob_sha": "b5f31cc7fee5031a783c19fe50c6a1edde693539",
+          "blob_bytes": 4983,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/research/R19-work-taxonomy-and-team-selection.md",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "client",
+            "credential-like-database",
+            "credential-like-vault",
+            "jira"
+          ],
+          "introducing_commit": "17a6a5ade6c1a379287c58ba5820f5bd2aead64a",
+          "blob_sha": "b032c95275f0f497b806c2a3658493e53c9f52bb",
+          "blob_bytes": 25409,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true,
+          "credential_like": {
+            "classification": "IDENTIFIER-OR-SECRET-NAME (no value captured)",
+            "value_captured": false,
+            "appears_live": "UNKNOWN",
+            "rotation_status": "UNKNOWN-NOT-INDEPENDENTLY-VERIFIED"
+          }
+        },
+        {
+          "path": "docs/research/SYNTHESIS.md",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "f9a5f4b037456818349b1c4e852e0117893e7366",
+          "blob_sha": "92737223dacd135800c4d360deea508bd2182dac",
+          "blob_bytes": 216675,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/research/agent-factory-research-prompts.md",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "6ce545dd9b3191a2cb7912686e97e42f19a63121",
+          "blob_sha": "8a162a74eae2b61c5ca4daba4c28197b0f17b52d",
+          "blob_bytes": 25244,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/research/answers/R19-answer-work-taxonomy-and-team-selection.md",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "17a6a5ade6c1a379287c58ba5820f5bd2aead64a",
+          "blob_sha": "6f81b1c478d05ef26286e351b205b0ee6fe2843d",
+          "blob_bytes": 40190,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/research/answers/R4-answer-agnostic-optimizer.md",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "brand"
+          ],
+          "introducing_commit": "b6e5e72fad82785dab60791f4cb423ab85d5fb99",
+          "blob_sha": "145e369ceb4b6fc49fffb428ca9ca49a818bac4f",
+          "blob_bytes": 51946,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/specs/client-intake-portal.md",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "7e07dd1d0cee4b1fc69b6199da5f51cda0aab127",
+          "blob_sha": "1e455582820633f03d92abf789e87785f8cab9a7",
+          "blob_bytes": 11013,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/specs/golden-workflow-fit.md",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "dd295894a52b8c0d64885f928d87c9d65e87e926",
+          "blob_sha": "fba3a033dc6cc0b3a4149e73043c5942c6ef2708",
+          "blob_bytes": 23773,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/specs/marketing-model-reconstruction-v1.md",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "brand",
+            "client",
+            "jira"
+          ],
+          "introducing_commit": "f7118d80507f585737e6e694d600a8107d3e6c73",
+          "blob_sha": "1044218730a9ccd6c4292e349846b0aca8549747",
+          "blob_bytes": 19006,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "factory/control.py",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "31f35276ad22e1d4701343a3567fd2c8174524df",
+          "blob_sha": "ddf0936fac877cf3d2cf12475db085c1457c1148",
+          "blob_bytes": 34788,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "factory/deploy.py",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "1f0d7ba804e35bd721e1def087b5a69e65385cce",
+          "blob_sha": "92a08193b2fcdea06962ae0d6f3037b47a7a3fb5",
+          "blob_bytes": 14239,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "factory/pbi_contract.py",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "b46d27db1fbe830062309637891905eb6254029f",
+          "blob_sha": "6566344f0e0a40908e275b084f0c79d74ac8f5e3",
+          "blob_bytes": 25941,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "factory/presets.py",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "f03e89065d6c27846bf6d8596f7b1ec062d57e12",
+          "blob_sha": "9099d52a328facef986ac9c27146b86957ccd0e2",
+          "blob_bytes": 19828,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "factory/redesign_contract.py",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "c0a5192cea5e931112720a593973f7ab773a20ee",
+          "blob_sha": "0660aeb2ac32ed662b2ea67163a63b9c582378bc",
+          "blob_bytes": 14667,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "factory/registry.py",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "7bf4d408b8381bf2f58a321c6af5f380040299fc",
+          "blob_sha": "7bccd736af69139916fd66542f1697d490db9eff",
+          "blob_bytes": 14480,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "factory/verifiers.py",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "b92d3e5e99e90058b796f4d120adbb3bf0894a70",
+          "blob_sha": "0379fbb6439a4f7a4bb93277a147af25f6982ed6",
+          "blob_bytes": 11163,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "scripts/credential_use.py",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "credential-like-secretname",
+            "credential-like-vault"
+          ],
+          "introducing_commit": "ed02d7b01076e827f2b2b1d46f29ab0a19cb6d56",
+          "blob_sha": "343004186c4334ae4dd48c9e2c93ef98934f2747",
+          "blob_bytes": 4844,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true,
+          "credential_like": {
+            "classification": "IDENTIFIER-OR-SECRET-NAME (no value captured)",
+            "value_captured": false,
+            "appears_live": "UNKNOWN",
+            "rotation_status": "UNKNOWN-NOT-INDEPENDENTLY-VERIFIED"
+          }
+        },
+        {
+          "path": "scripts/dashboard_cap_override_probe.py",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "38ff8f04b45093eaa463713563f55a69a4dc9e6c",
+          "blob_sha": "41da9af1bf52bbc956460ceebe82b3999ae9e0f3",
+          "blob_bytes": 13832,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "scripts/local_tracker.py",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "0a2d69c124db35b27aa72f381f6cc3f30e6c0760",
+          "blob_sha": "7262122dda2512c930fcaf5126e6e5aa8729c0a8",
+          "blob_bytes": 174713,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "scripts/mission_marketing_model.py",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "client"
+          ],
+          "introducing_commit": "f7118d80507f585737e6e694d600a8107d3e6c73",
+          "blob_sha": "4116a443310843966b45002a24974f52f741f7d5",
+          "blob_bytes": 10895,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "tests/test_connector_contract.py",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "6ce545dd9b3191a2cb7912686e97e42f19a63121",
+          "blob_sha": "cf65b419039e0ba7daa995668e072457783b553a",
+          "blob_bytes": 10551,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "tests/test_control_run.py",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "31f35276ad22e1d4701343a3567fd2c8174524df",
+          "blob_sha": "2ff1dcc636cc1b4d8b5cc09e2d8ea9108382f25e",
+          "blob_bytes": 26338,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "tests/test_live_probes.py",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "client",
+            "jira"
+          ],
+          "introducing_commit": "6872aeea9f69a38bed5f500d9dbfbeb8df07e005",
+          "blob_sha": "390b3c14c603161810d66ed3b9706999718c7128",
+          "blob_bytes": 13554,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "tests/test_redesign_verifier.py",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "c27320a585781a387837960d6395be98f736960f",
+          "blob_sha": "d688e455440b6d4fa7f598470e706ab023afd8e4",
+          "blob_bytes": 17427,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "tests/test_retry_context.py",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "50d1154a3515ad03fcff74fff179615d075fead1",
+          "blob_sha": "14a234f77959b8cd78aab2a63e9f48391ec191e5",
+          "blob_bytes": 12199,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "tests/test_verifiers.py",
+          "ref": "refs/heads/main",
+          "ref_sha": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "b92d3e5e99e90058b796f4d120adbb3bf0894a70",
+          "blob_sha": "28903b82af3776fefc222144e24a1f8ee3bafa4c",
+          "blob_bytes": 19824,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        }
+      ]
+    },
+    "reliability/recurrence-preflight": {
+      "sha": "b338324270a9a339f686b8607d854a57160d4977",
+      "ref_anonymously_reachable": true,
+      "ref_readme_http_status": 200,
+      "matching_paths": 66,
+      "entries": [
+        {
+          "path": "BRAIN-DUMP.md",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "6ce545dd9b3191a2cb7912686e97e42f19a63121",
+          "blob_sha": "aa92b0cceef8632d29587b8bc776da23295eacb8",
+          "blob_bytes": 10091,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "blueprints/windsorai_client_a.yaml",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "62597d84c8205cfd175c6b2f05d22b81ce43c524",
+          "blob_sha": "4e8fbcefcb6731633a3c581c60028be5366f2f08",
+          "blob_bytes": 5870,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "boot-prompts/README.md",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "client"
+          ],
+          "introducing_commit": "27d37647ee231a1817729dd3e113723795c7eddc",
+          "blob_sha": "0cd4fbe215adc7d6b050df42b0ffa8b0168d773d",
+          "blob_bytes": 17389,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "boot-prompts/bootstrap-and-instruments-2026-08-31.md",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "a5fb72ca6cc3e8df6b4928d2e7faf6415fdc026a",
+          "blob_sha": "5bd0e7dcbdaa850b561cfee72e9b98f11e815c05",
+          "blob_bytes": 7251,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "boot-prompts/mission-commander-2026-09-01.md",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "credential-like-vault",
+            "figures",
+            "jira"
+          ],
+          "introducing_commit": "8b73f4feea4d7a965c131158f7c103179286a80c",
+          "blob_sha": "25462ce84d409f77eec05e819b9db1e21ad87f6b",
+          "blob_bytes": 7269,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true,
+          "credential_like": {
+            "classification": "IDENTIFIER-OR-SECRET-NAME (no value captured)",
+            "value_captured": false,
+            "appears_live": "UNKNOWN",
+            "rotation_status": "UNKNOWN-NOT-INDEPENDENTLY-VERIFIED"
+          }
+        },
+        {
+          "path": "boot-prompts/mission-handoff-2026-09-01.md",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "client",
+            "credential-like-vault",
+            "figures",
+            "jira"
+          ],
+          "introducing_commit": "692eb5f2e2e1d99c3672faef1ec77afcca1b6615",
+          "blob_sha": "0efeafabad915310a05afc57134e3e5cc9e93b83",
+          "blob_bytes": 7288,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true,
+          "credential_like": {
+            "classification": "IDENTIFIER-OR-SECRET-NAME (no value captured)",
+            "value_captured": false,
+            "appears_live": "UNKNOWN",
+            "rotation_status": "UNKNOWN-NOT-INDEPENDENTLY-VERIFIED"
+          }
+        },
+        {
+          "path": "boot-prompts/mission-wave1-checkpoint-2026-09-01.md",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "brand",
+            "client",
+            "credential-like-account",
+            "credential-like-database",
+            "credential-like-secretname",
+            "credential-like-vault"
+          ],
+          "introducing_commit": "ddea66deda20152ba50cbea5f138dd02c7ebedd4",
+          "blob_sha": "da418555c40a723f62f87d4d46676c8ccc2313b2",
+          "blob_bytes": 7499,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true,
+          "credential_like": {
+            "classification": "IDENTIFIER-OR-SECRET-NAME (no value captured)",
+            "value_captured": false,
+            "appears_live": "UNKNOWN",
+            "rotation_status": "UNKNOWN-NOT-INDEPENDENTLY-VERIFIED"
+          }
+        },
+        {
+          "path": "boot-prompts/workflow-library-2026-08-31.md",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "client",
+            "jira"
+          ],
+          "introducing_commit": "e152d19c09eeaf5f7f755ced2065c7eb3f25ae66",
+          "blob_sha": "8a2b3b4e1f9233f978373e92db68294910b8903b",
+          "blob_bytes": 19417,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/artifacts/agent-factory.html",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "client",
+            "jira"
+          ],
+          "introducing_commit": "aad732fc398368ce835b86d0509d96dd80077693",
+          "blob_sha": "ebe40e5ad77c7c06d646a5b183f0715b8d020d02",
+          "blob_bytes": 164265,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/artifacts/client-review-navira.html",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "brand",
+            "client"
+          ],
+          "introducing_commit": "b28c334059f89359435436fbb5521e3965a4552e",
+          "blob_sha": "c24753b2bd60300f12f0250991d97ded8c1ac144",
+          "blob_bytes": 34930,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/evidence/control-plane-2026-08-22/dashboard/after.txt",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "38ff8f04b45093eaa463713563f55a69a4dc9e6c",
+          "blob_sha": "585ec34196dac77afa2848a70df856d046636c16",
+          "blob_bytes": 2529,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/evidence/control-plane-2026-08-22/readiness-after.txt",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "9b975ae2804d63272b62a6f6f64830e12d4faed3",
+          "blob_sha": "a3d0d46ff896a97effadec81c6cf4fb958bdb4ea",
+          "blob_bytes": 12985,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/evidence/control-plane-2026-08-22/readiness-before.txt",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "be8723ea8ebbe34a3f55f4c44fc80e96bf8b31ae",
+          "blob_sha": "5646ca01d11df0927226afd39e4ea624fee7b3a4",
+          "blob_bytes": 11099,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/evidence/control-plane-2026-08-22/rollback-main/pipe_29b8edf6.json",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "369cc1e628e355d41e8cb7542eb16f3ce75cc9c4",
+          "blob_sha": "28312743c251aa49c7f644aef8677314ed4650d7",
+          "blob_bytes": 9253,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/evidence/control-plane-2026-08-22/rollback/pipe_29b8edf6.json",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "9b975ae2804d63272b62a6f6f64830e12d4faed3",
+          "blob_sha": "28312743c251aa49c7f644aef8677314ed4650d7",
+          "blob_bytes": 9253,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/evidence/marketing-model-v1/R1-stakeholder-evidence.md",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "brand",
+            "client",
+            "figures",
+            "jira"
+          ],
+          "introducing_commit": "ab9ee86d40cad685cf1f34f02fe5bc2f9cf49698",
+          "blob_sha": "ec90ab7f2b75827d2502c6bd8221c55e2fe36507",
+          "blob_bytes": 43110,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/evidence/marketing-model-v1/R2-repo-wiki-diff.md",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "brand",
+            "client",
+            "credential-like-database",
+            "figures",
+            "jira"
+          ],
+          "introducing_commit": "ab9ee86d40cad685cf1f34f02fe5bc2f9cf49698",
+          "blob_sha": "51ab3cbb7591a16152d34f52747bcb06f49467d6",
+          "blob_bytes": 43901,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true,
+          "credential_like": {
+            "classification": "IDENTIFIER-OR-SECRET-NAME (no value captured)",
+            "value_captured": false,
+            "appears_live": "UNKNOWN",
+            "rotation_status": "UNKNOWN-NOT-INDEPENDENTLY-VERIFIED"
+          }
+        },
+        {
+          "path": "docs/evidence/recurrence-preflight-2026-08-31/README.md",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "b338324270a9a339f686b8607d854a57160d4977",
+          "blob_sha": "94744dedca37027bbf58e85e54d2a17acd7573c5",
+          "blob_bytes": 3925,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/evidence/recurrence-preflight-2026-08-31/replay-shadow-mode.txt",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "b338324270a9a339f686b8607d854a57160d4977",
+          "blob_sha": "be93e11c45c01ddbd6dcc75ca3b8d0b45fa55539",
+          "blob_bytes": 9000,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/findings.d/F83-one-boolean-answering-two-questions-passed-the-tests-twice.md",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "31f35276ad22e1d4701343a3567fd2c8174524df",
+          "blob_sha": "f751523508a31d6b514bfb90ddd14a58ad2247df",
+          "blob_bytes": 6975,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/findings.d/F85-a-plan-only-run-spent-the-cap-that-stops-a-real-one.md",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "d364338b600d78ac42680b28522f48584880718d",
+          "blob_sha": "b2358a6138d986fce5a722acb37173c81b5da4ce",
+          "blob_bytes": 5227,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/findings.d/F87-the-one-wired-verifier-had-nothing-behind-it.md",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "b92d3e5e99e90058b796f4d120adbb3bf0894a70",
+          "blob_sha": "1a28a9286573ef8137134b6c25d73055f8ae1ca8",
+          "blob_bytes": 6104,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/findings.d/F89-the-model-contract-certified-the-defect-the-redesign-preset-exists-to-fix.md",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "c27320a585781a387837960d6395be98f736960f",
+          "blob_sha": "6d14303d7b4ef37937db42cdfe7a27c527280016",
+          "blob_bytes": 6959,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/findings.d/F90-the-run-record-names-a-repo-the-controller-cannot-put-an-agent-in.md",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "3eff716da17cfdb396592e5da6cd1d29b5542739",
+          "blob_sha": "b5f31cc7fee5031a783c19fe50c6a1edde693539",
+          "blob_bytes": 4983,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/findings.d/F97-the-document-that-locks-mer-defines-it-as-the-reciprocal-of-what-three-code-layers-compute.md",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "client"
+          ],
+          "introducing_commit": "b28c334059f89359435436fbb5521e3965a4552e",
+          "blob_sha": "883fe6748962ad238c96bdc9adc37dca44c0db4d",
+          "blob_bytes": 4987,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/protocol/CLIENT_WOW_FEATURES.md",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "b338324270a9a339f686b8607d854a57160d4977",
+          "blob_sha": "f75eaf1c7e65322ca471f069731cd5d96055f6fb",
+          "blob_bytes": 3549,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/protocol/FAILURE_TAXONOMY.yaml",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "b338324270a9a339f686b8607d854a57160d4977",
+          "blob_sha": "906775101f22f001aeea96fcab2ac2e83f96af87",
+          "blob_bytes": 10592,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/protocol/KNOWN_FAILURE_PREFLIGHT.md",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "b338324270a9a339f686b8607d854a57160d4977",
+          "blob_sha": "10fd2a2be3c31d68f5071df96269846445d75326",
+          "blob_bytes": 8377,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/protocol/METRICS.md",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "b338324270a9a339f686b8607d854a57160d4977",
+          "blob_sha": "9a0291ee97486489b5a02ac4c61fe87f91a7043e",
+          "blob_bytes": 6865,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/protocol/README.md",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "b338324270a9a339f686b8607d854a57160d4977",
+          "blob_sha": "f34bcbe4e559bc3628735177314d9ecb3a0bc6bb",
+          "blob_bytes": 4984,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/protocol/ROLLOUT.md",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "b338324270a9a339f686b8607d854a57160d4977",
+          "blob_sha": "cdcce00cde11cda2b7463830d9bb0b0894359bc8",
+          "blob_bytes": 6244,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/protocol/TEST_HARNESS.md",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "b338324270a9a339f686b8607d854a57160d4977",
+          "blob_sha": "e472d2d9e94242a0766ee9c93a2c936179a93fde",
+          "blob_bytes": 4515,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/protocol/prompts/contradiction-auditor.md",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "b338324270a9a339f686b8607d854a57160d4977",
+          "blob_sha": "826e68c210c328092c123c4c529032fa48a02bf1",
+          "blob_bytes": 1096,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/research/R19-work-taxonomy-and-team-selection.md",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "client",
+            "credential-like-database",
+            "credential-like-vault",
+            "jira"
+          ],
+          "introducing_commit": "17a6a5ade6c1a379287c58ba5820f5bd2aead64a",
+          "blob_sha": "b032c95275f0f497b806c2a3658493e53c9f52bb",
+          "blob_bytes": 25409,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true,
+          "credential_like": {
+            "classification": "IDENTIFIER-OR-SECRET-NAME (no value captured)",
+            "value_captured": false,
+            "appears_live": "UNKNOWN",
+            "rotation_status": "UNKNOWN-NOT-INDEPENDENTLY-VERIFIED"
+          }
+        },
+        {
+          "path": "docs/research/SYNTHESIS.md",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "f9a5f4b037456818349b1c4e852e0117893e7366",
+          "blob_sha": "92737223dacd135800c4d360deea508bd2182dac",
+          "blob_bytes": 216675,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/research/agent-factory-research-prompts.md",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "6ce545dd9b3191a2cb7912686e97e42f19a63121",
+          "blob_sha": "8a162a74eae2b61c5ca4daba4c28197b0f17b52d",
+          "blob_bytes": 25244,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/research/answers/R19-answer-work-taxonomy-and-team-selection.md",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "17a6a5ade6c1a379287c58ba5820f5bd2aead64a",
+          "blob_sha": "6f81b1c478d05ef26286e351b205b0ee6fe2843d",
+          "blob_bytes": 40190,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/research/answers/R4-answer-agnostic-optimizer.md",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "brand"
+          ],
+          "introducing_commit": "b6e5e72fad82785dab60791f4cb423ab85d5fb99",
+          "blob_sha": "145e369ceb4b6fc49fffb428ca9ca49a818bac4f",
+          "blob_bytes": 51946,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/specs/client-intake-portal.md",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "7e07dd1d0cee4b1fc69b6199da5f51cda0aab127",
+          "blob_sha": "1e455582820633f03d92abf789e87785f8cab9a7",
+          "blob_bytes": 11013,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/specs/golden-workflow-fit.md",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "dd295894a52b8c0d64885f928d87c9d65e87e926",
+          "blob_sha": "fba3a033dc6cc0b3a4149e73043c5942c6ef2708",
+          "blob_bytes": 23773,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/specs/marketing-model-reconstruction-v1.md",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "brand",
+            "client",
+            "jira"
+          ],
+          "introducing_commit": "f7118d80507f585737e6e694d600a8107d3e6c73",
+          "blob_sha": "1044218730a9ccd6c4292e349846b0aca8549747",
+          "blob_bytes": 19006,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "factory/control.py",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "31f35276ad22e1d4701343a3567fd2c8174524df",
+          "blob_sha": "f69ed8b8c01e643561fc0b3cea795e0a8131c740",
+          "blob_bytes": 39722,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "factory/deploy.py",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "1f0d7ba804e35bd721e1def087b5a69e65385cce",
+          "blob_sha": "92a08193b2fcdea06962ae0d6f3037b47a7a3fb5",
+          "blob_bytes": 14239,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "factory/pbi_contract.py",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "b46d27db1fbe830062309637891905eb6254029f",
+          "blob_sha": "6566344f0e0a40908e275b084f0c79d74ac8f5e3",
+          "blob_bytes": 25941,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "factory/preflight.py",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "b338324270a9a339f686b8607d854a57160d4977",
+          "blob_sha": "3ab7210cfd7a8fa9de0a5d551314db29891f1d10",
+          "blob_bytes": 33059,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "factory/presets.py",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "f03e89065d6c27846bf6d8596f7b1ec062d57e12",
+          "blob_sha": "9099d52a328facef986ac9c27146b86957ccd0e2",
+          "blob_bytes": 19828,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "factory/redesign_contract.py",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "c0a5192cea5e931112720a593973f7ab773a20ee",
+          "blob_sha": "0660aeb2ac32ed662b2ea67163a63b9c582378bc",
+          "blob_bytes": 14667,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "factory/registry.py",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "7bf4d408b8381bf2f58a321c6af5f380040299fc",
+          "blob_sha": "7bccd736af69139916fd66542f1697d490db9eff",
+          "blob_bytes": 14480,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "factory/verifiers.py",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "b92d3e5e99e90058b796f4d120adbb3bf0894a70",
+          "blob_sha": "0379fbb6439a4f7a4bb93277a147af25f6982ed6",
+          "blob_bytes": 11163,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "missions/client-review-v1/05-CLIENT-REVIEW-DEMO-RUNBOOK.md",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "client"
+          ],
+          "introducing_commit": "b28c334059f89359435436fbb5521e3965a4552e",
+          "blob_sha": "841b1530db5072b3e38cf73eeeba716330530d68",
+          "blob_bytes": 5394,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "missions/client-review-v1/RECON.md",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "client"
+          ],
+          "introducing_commit": "b28c334059f89359435436fbb5521e3965a4552e",
+          "blob_sha": "0fe08ef18beb1ffcac6a3a1a039fb66ef6221582",
+          "blob_bytes": 13333,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "missions/client-review-v1/reviews/navira-marketing-model.yaml",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "brand",
+            "client"
+          ],
+          "introducing_commit": "b28c334059f89359435436fbb5521e3965a4552e",
+          "blob_sha": "c0c9ab1c2941d1e10b0e9c1360bac1d519643dbe",
+          "blob_bytes": 12803,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "scripts/credential_use.py",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "credential-like-secretname",
+            "credential-like-vault"
+          ],
+          "introducing_commit": "ed02d7b01076e827f2b2b1d46f29ab0a19cb6d56",
+          "blob_sha": "343004186c4334ae4dd48c9e2c93ef98934f2747",
+          "blob_bytes": 4844,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true,
+          "credential_like": {
+            "classification": "IDENTIFIER-OR-SECRET-NAME (no value captured)",
+            "value_captured": false,
+            "appears_live": "UNKNOWN",
+            "rotation_status": "UNKNOWN-NOT-INDEPENDENTLY-VERIFIED"
+          }
+        },
+        {
+          "path": "scripts/dashboard_cap_override_probe.py",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "38ff8f04b45093eaa463713563f55a69a4dc9e6c",
+          "blob_sha": "41da9af1bf52bbc956460ceebe82b3999ae9e0f3",
+          "blob_bytes": 13832,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "scripts/local_tracker.py",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "0a2d69c124db35b27aa72f381f6cc3f30e6c0760",
+          "blob_sha": "7262122dda2512c930fcaf5126e6e5aa8729c0a8",
+          "blob_bytes": 174713,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "scripts/mission_marketing_model.py",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "client"
+          ],
+          "introducing_commit": "f7118d80507f585737e6e694d600a8107d3e6c73",
+          "blob_sha": "4116a443310843966b45002a24974f52f741f7d5",
+          "blob_bytes": 10895,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "scripts/replay_recurrence.py",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "b338324270a9a339f686b8607d854a57160d4977",
+          "blob_sha": "4a79fb5539ae560df7bc9aee17652ccc49a10e82",
+          "blob_bytes": 3922,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "scripts/snowflake_bootstrap_r3.py",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "credential-like-account",
+            "credential-like-database",
+            "credential-like-secretname",
+            "credential-like-vault"
+          ],
+          "introducing_commit": "b28c334059f89359435436fbb5521e3965a4552e",
+          "blob_sha": "f23056fbf070ebb872416f0a2a7e0b1b8cdb9d39",
+          "blob_bytes": 11317,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true,
+          "credential_like": {
+            "classification": "IDENTIFIER-OR-SECRET-NAME (no value captured)",
+            "value_captured": false,
+            "appears_live": "UNKNOWN",
+            "rotation_status": "UNKNOWN-NOT-INDEPENDENTLY-VERIFIED"
+          }
+        },
+        {
+          "path": "tests/test_client_review.py",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "client"
+          ],
+          "introducing_commit": "b28c334059f89359435436fbb5521e3965a4552e",
+          "blob_sha": "fb2c27a7e83b91d32150cd01d9365459798f1444",
+          "blob_bytes": 22590,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "tests/test_connector_contract.py",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "6ce545dd9b3191a2cb7912686e97e42f19a63121",
+          "blob_sha": "cf65b419039e0ba7daa995668e072457783b553a",
+          "blob_bytes": 10551,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "tests/test_control_run.py",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "31f35276ad22e1d4701343a3567fd2c8174524df",
+          "blob_sha": "26fd279fefdcd00ceaf26ff04762570693d40263",
+          "blob_bytes": 33965,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "tests/test_live_probes.py",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "client",
+            "jira"
+          ],
+          "introducing_commit": "6872aeea9f69a38bed5f500d9dbfbeb8df07e005",
+          "blob_sha": "390b3c14c603161810d66ed3b9706999718c7128",
+          "blob_bytes": 13554,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "tests/test_recurrence_preflight.py",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "b338324270a9a339f686b8607d854a57160d4977",
+          "blob_sha": "0a850d479fef3334d72265b6880b1c5a0947741b",
+          "blob_bytes": 33450,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "tests/test_redesign_verifier.py",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "c27320a585781a387837960d6395be98f736960f",
+          "blob_sha": "d688e455440b6d4fa7f598470e706ab023afd8e4",
+          "blob_bytes": 17427,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "tests/test_retry_context.py",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "50d1154a3515ad03fcff74fff179615d075fead1",
+          "blob_sha": "14a234f77959b8cd78aab2a63e9f48391ec191e5",
+          "blob_bytes": 12199,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "tests/test_verifiers.py",
+          "ref": "refs/heads/reliability/recurrence-preflight",
+          "ref_sha": "b338324270a9a339f686b8607d854a57160d4977",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "b92d3e5e99e90058b796f4d120adbb3bf0894a70",
+          "blob_sha": "28903b82af3776fefc222144e24a1f8ee3bafa4c",
+          "blob_bytes": 19824,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        }
+      ]
+    },
+    "trial/wave0-rescue": {
+      "sha": "6872aeea9f69a38bed5f500d9dbfbeb8df07e005",
+      "ref_anonymously_reachable": true,
+      "ref_readme_http_status": 200,
+      "matching_paths": 13,
+      "entries": [
+        {
+          "path": "BRAIN-DUMP.md",
+          "ref": "refs/heads/trial/wave0-rescue",
+          "ref_sha": "6872aeea9f69a38bed5f500d9dbfbeb8df07e005",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "6ce545dd9b3191a2cb7912686e97e42f19a63121",
+          "blob_sha": "16c4771d10a711bb9d7c60e6789cf1c1837f9550",
+          "blob_bytes": 10081,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "blueprints/windsorai_gep.yaml",
+          "ref": "refs/heads/trial/wave0-rescue",
+          "ref_sha": "6872aeea9f69a38bed5f500d9dbfbeb8df07e005",
+          "classes": [
+            "client",
+            "jira"
+          ],
+          "introducing_commit": "6ce545dd9b3191a2cb7912686e97e42f19a63121",
+          "blob_sha": "c4acdc16257ca697039c9248484c8387dffac2d0",
+          "blob_bytes": 4538,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/artifacts/agent-factory.html",
+          "ref": "refs/heads/trial/wave0-rescue",
+          "ref_sha": "6872aeea9f69a38bed5f500d9dbfbeb8df07e005",
+          "classes": [
+            "client",
+            "jira"
+          ],
+          "introducing_commit": "aad732fc398368ce835b86d0509d96dd80077693",
+          "blob_sha": "59eee0f5be8c725d5b1b0d6ea1be72b0cabd5093",
+          "blob_bytes": 164231,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/evidence/phase-a-windsorai.md",
+          "ref": "refs/heads/trial/wave0-rescue",
+          "ref_sha": "6872aeea9f69a38bed5f500d9dbfbeb8df07e005",
+          "classes": [
+            "client"
+          ],
+          "introducing_commit": "6ce545dd9b3191a2cb7912686e97e42f19a63121",
+          "blob_sha": "e5e921b55707ecf373d63415a130447be208f254",
+          "blob_bytes": 5471,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/research/README.md",
+          "ref": "refs/heads/trial/wave0-rescue",
+          "ref_sha": "6872aeea9f69a38bed5f500d9dbfbeb8df07e005",
+          "classes": [
+            "client"
+          ],
+          "introducing_commit": "87de4d23d4b502ce26e52a610a80b9ae38168f50",
+          "blob_sha": "01250364e1235bcbb7967c75304abb823715394c",
+          "blob_bytes": 9695,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/research/agent-factory-research-prompts.md",
+          "ref": "refs/heads/trial/wave0-rescue",
+          "ref_sha": "6872aeea9f69a38bed5f500d9dbfbeb8df07e005",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "6ce545dd9b3191a2cb7912686e97e42f19a63121",
+          "blob_sha": "6561aa9877ab26a9743655cd6e5d00a8dfe842bc",
+          "blob_bytes": 25234,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/research/answers/R14-answer-structure-model-and-joy.md",
+          "ref": "refs/heads/trial/wave0-rescue",
+          "ref_sha": "6872aeea9f69a38bed5f500d9dbfbeb8df07e005",
+          "classes": [
+            "client"
+          ],
+          "introducing_commit": "c8ed10faa8a3f627699d1750193c3abdc4ef447b",
+          "blob_sha": "77a37add75e704880410db2faee84768cd5f22ce",
+          "blob_bytes": 86599,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/research/answers/R4-answer-agnostic-optimizer.md",
+          "ref": "refs/heads/trial/wave0-rescue",
+          "ref_sha": "6872aeea9f69a38bed5f500d9dbfbeb8df07e005",
+          "classes": [
+            "brand"
+          ],
+          "introducing_commit": "b6e5e72fad82785dab60791f4cb423ab85d5fb99",
+          "blob_sha": "145e369ceb4b6fc49fffb428ca9ca49a818bac4f",
+          "blob_bytes": 51946,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "docs/specs/architecture-v0.md",
+          "ref": "refs/heads/trial/wave0-rescue",
+          "ref_sha": "6872aeea9f69a38bed5f500d9dbfbeb8df07e005",
+          "classes": [
+            "client"
+          ],
+          "introducing_commit": "1a59211ac3958060cb5192fffb5632146e8fc6e1",
+          "blob_sha": "11c0e28186eccfb4039faef6d518f99a848ddacd",
+          "blob_bytes": 13792,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "factory/pbi_contract.py",
+          "ref": "refs/heads/trial/wave0-rescue",
+          "ref_sha": "6872aeea9f69a38bed5f500d9dbfbeb8df07e005",
+          "classes": [
+            "jira"
+          ],
+          "introducing_commit": "b46d27db1fbe830062309637891905eb6254029f",
+          "blob_sha": "bb516a22fc482226a168c55cad2f950ddff92fdd",
+          "blob_bytes": 24248,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "factory/readiness.py",
+          "ref": "refs/heads/trial/wave0-rescue",
+          "ref_sha": "6872aeea9f69a38bed5f500d9dbfbeb8df07e005",
+          "classes": [
+            "client"
+          ],
+          "introducing_commit": "aad732fc398368ce835b86d0509d96dd80077693",
+          "blob_sha": "f4f116ca459235d14d219a872afcbf8694ab9185",
+          "blob_bytes": 59813,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "tests/test_connector_contract.py",
+          "ref": "refs/heads/trial/wave0-rescue",
+          "ref_sha": "6872aeea9f69a38bed5f500d9dbfbeb8df07e005",
+          "classes": [
+            "client",
+            "jira"
+          ],
+          "introducing_commit": "6ce545dd9b3191a2cb7912686e97e42f19a63121",
+          "blob_sha": "ef4f992892fe4ac9160a061a99142d8682eae759",
+          "blob_bytes": 10542,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        },
+        {
+          "path": "tests/test_live_probes.py",
+          "ref": "refs/heads/trial/wave0-rescue",
+          "ref_sha": "6872aeea9f69a38bed5f500d9dbfbeb8df07e005",
+          "classes": [
+            "client",
+            "jira"
+          ],
+          "introducing_commit": "6872aeea9f69a38bed5f500d9dbfbeb8df07e005",
+          "blob_sha": "3eac10fae2b1e87f566d86f4b015789468a8e82e",
+          "blob_bytes": 11085,
+          "anonymous_http_status": 200,
+          "publicly_retrievable_anonymously": true
+        }
+      ]
+    }
+  },
+  "totals": {
+    "refs": 6,
+    "matching_path_ref_pairs": 179,
+    "distinct_paths": 74,
+    "anonymously_retrievable": 179,
+    "credential_like_pairs": 15
+  },
+  "instrument_selftest": {
+    "positive_control_expect_200": 200,
+    "absent_path_control_expect_404": 404,
+    "private_repo_control_expect_404": 404,
+    "unauthenticated_confirmed": true,
+    "instrument_trustworthy": true
+  }
+}

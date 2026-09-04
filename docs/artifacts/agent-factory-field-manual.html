@@ -1,0 +1,1342 @@
+<title>Agent Factory Field Manual</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,500;0,600;1,300;1,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* ─────────────────────────────────────────────────────────────────────────
+   AGENT FACTORY FIELD MANUAL — sibling of the Atlas.
+
+   Same type family and same semantic verdict hues, so the two read as one
+   product. The identity differs by VOCABULARY, not by hue: NATO echelon
+   marks (Ø · ● · I · III · XXXX) encode the hierarchy tier, and map-grid
+   texture carries the campaign sections.
+
+   ⚠ This document is a PROPOSAL. The Atlas is measurement; this is design.
+   Three states, legended on the page and never mixed:
+     BUILT        exists today — cites the primitive
+     SPEC         designed here, buildable on a named primitive
+     ILLUSTRATIVE a number chosen to show a SHAPE. Never a forecast.
+   ───────────────────────────────────────────────────────────────────────── */
+:root{
+  --display:Spectral,"Iowan Old Style",Palatino,Cambria,ui-serif,Georgia,serif;
+  --sans:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"Cascadia Mono",Consolas,Menlo,monospace;
+
+  --bg:#0A0E10; --bg2:#0D1315; --panel:#121A1C; --panel2:#16201F; --sunk:#080C0D;
+  --ink:#E6EDEB; --ink2:#A2B2AF; --muted:#5F706E;
+  --rule:#1E2A2B; --rule2:#182122; --rule3:#2A3A39;
+  --grid:#131E1F;
+
+  --accent:#4FBFAC; --accent-dim:#12312D; --accent-ink:#062723;
+
+  --built:#5FBE8A;   --built-bg:#0F2A1D;
+  --spec:#7FA6D8;    --spec-bg:#131E2C;      /* designed, not built */
+  --illus:#C6A55C;   --illus-bg:#2A2313;     /* shape only, never a forecast */
+  --research:#B08AD4;--research-bg:#22182E;
+  --risk:#E08472;    --risk-bg:#2E1A16;
+
+  --shadow:0 1px 2px rgba(0,0,0,.5), 0 6px 16px -10px rgba(0,0,0,.92);
+  --e1:cubic-bezier(.22,.61,.36,1);
+  --e2:cubic-bezier(.16,.84,.44,1);
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#F5F7F6; --bg2:#EEF2F1; --panel:#FFFFFF; --panel2:#F7FAF9; --sunk:#E7ECEA;
+    --ink:#101819; --ink2:#414E4C; --muted:#5A6764;
+    --rule:#D6DEDC; --rule2:#E4EAE8; --rule3:#C2CECB; --grid:#E3EAE8;
+    --accent:#0E6E62; --accent-dim:#DDEEEB; --accent-ink:#FFFFFF;
+    --built:#1F7A4D; --built-bg:#E4F1E9;
+    --spec:#31598E;  --spec-bg:#E4EBF5;
+    --illus:#7A5D12; --illus-bg:#F6EEDA;
+    --research:#7345A8; --research-bg:#F0E8F8;
+    --risk:#A33A2A; --risk-bg:#F7E6E2;
+    --shadow:0 1px 2px rgba(16,24,25,.07), 0 5px 15px -10px rgba(16,24,25,.32);
+  }
+}
+:root[data-theme="light"]{
+  --bg:#F5F7F6; --bg2:#EEF2F1; --panel:#FFFFFF; --panel2:#F7FAF9; --sunk:#E7ECEA;
+  --ink:#101819; --ink2:#414E4C; --muted:#5A6764;
+  --rule:#D6DEDC; --rule2:#E4EAE8; --rule3:#C2CECB; --grid:#E3EAE8;
+  --accent:#0E6E62; --accent-dim:#DDEEEB; --accent-ink:#FFFFFF;
+  --built:#1F7A4D; --built-bg:#E4F1E9;
+  --spec:#31598E;  --spec-bg:#E4EBF5;
+  --illus:#7A5D12; --illus-bg:#F6EEDA;
+  --research:#7345A8; --research-bg:#F0E8F8;
+  --risk:#A33A2A; --risk-bg:#F7E6E2;
+  --shadow:0 1px 2px rgba(16,24,25,.07), 0 5px 15px -10px rgba(16,24,25,.32);
+}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+     font-size:15px;line-height:1.58;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:var(--display);font-weight:500;text-wrap:balance;margin:0}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+code{font-family:var(--mono);font-size:.88em;background:var(--sunk);padding:1px 5px;
+  border-radius:4px;border:1px solid var(--rule2)}
+
+/* ── ribbon ──────────────────────────────────────────────────────────── */
+.ribbon{padding:22px 24px 16px;border-bottom:1px solid var(--rule);background:var(--bg2);
+  display:flex;gap:22px;flex-wrap:wrap;align-items:flex-start}
+.brand{flex:1 1 380px;min-width:280px}
+.brand .kicker{font-family:var(--mono);font-size:.79rem;
+  color:var(--accent);margin-bottom:5px}
+.brand h1{font-size:1.72rem;letter-spacing:-.014em;line-height:1.08}
+.brand p{color:var(--ink2);font-size:.92rem;margin:7px 0 0;max-width:64ch}
+.hdr-tools{display:flex;gap:6px;align-items:center;margin-left:auto;flex-wrap:wrap}
+.tbtn{border:1px solid var(--rule3);border-radius:7px;padding:6px 11px;font-size:.78rem;
+  color:var(--ink2);background:var(--panel);transition:border-color .14s ease-out,color .14s ease-out}
+.tbtn:hover{border-color:var(--accent);color:var(--ink)}
+
+/* the three-state grammar, stated up front and used everywhere */
+.grammar{display:flex;gap:16px;flex-wrap:wrap;padding:11px 24px;border-bottom:1px solid var(--rule);
+  background:var(--sunk);font-size:.76rem;color:var(--ink2);align-items:center}
+.grammar b{display:inline-flex;align-items:center;gap:6px;font-weight:400}
+.grammar i{width:9px;height:9px;border-radius:2px;display:inline-block;flex:0 0 auto}
+
+.modes{display:flex;gap:2px;padding:0 24px;border-bottom:1px solid var(--rule);
+  background:var(--bg2);overflow-x:auto;scrollbar-width:thin;position:sticky;top:0;z-index:12}
+.mode{padding:12px 15px;font-family:var(--mono);font-size:.73rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;
+  transition:color .14s ease-out,border-color .14s ease-out}
+.mode:hover{color:var(--ink2)}
+.mode[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+
+/* ── sheets ──────────────────────────────────────────────────────────── */
+.view{display:none} .view.on{display:block}
+.sheet{padding:30px 24px 72px;max-width:1200px;margin:0 auto}
+.sheet h2{font-size:1.5rem;letter-spacing:-.01em;margin:0 0 8px}
+.lede{font-size:1.04rem;color:var(--ink2);max-width:68ch;margin:0 0 6px}
+.sec{margin-top:44px}
+.sec > h3{font-family:var(--mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);margin:0 0 14px;font-weight:500;border-top:1px solid var(--rule2);padding-top:13px}
+.note{font-size:.83rem;color:var(--muted);max-width:74ch;line-height:1.6}
+p{max-width:70ch}
+
+/* map-grid texture, used only on campaign surfaces */
+.mapfield{background-image:linear-gradient(var(--grid) 1px,transparent 1px),
+  linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:34px 34px;
+  border:1px solid var(--rule);border-radius:12px}
+
+.chip{font-family:var(--mono);font-size:.63rem;letter-spacing:.08em;text-transform:uppercase;
+  padding:3px 7px;border-radius:5px;border:1px solid;white-space:nowrap;display:inline-block}
+.c-built{color:var(--built);border-color:var(--built);background:var(--built-bg)}
+.c-spec{color:var(--spec);border-color:var(--spec);background:var(--spec-bg)}
+.c-illus{color:var(--illus);border-color:var(--illus);background:var(--illus-bg)}
+.c-res{color:var(--research);border-color:var(--research);background:var(--research-bg)}
+.c-risk{color:var(--risk);border-color:var(--risk);background:var(--risk-bg)}
+
+table{border-collapse:collapse;width:100%;font-size:.84rem}
+th,td{text-align:left;padding:8px 11px;border-bottom:1px solid var(--rule2);vertical-align:top}
+th{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);font-weight:500}
+td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tblwrap{overflow-x:auto}
+
+figure{margin:0} .figwrap{overflow-x:auto;padding-bottom:4px}
+svg.fig{max-width:100%;height:auto;display:block}
+figcaption{font-size:.81rem;color:var(--muted);margin-top:10px;max-width:74ch;line-height:1.55}
+figcaption b{color:var(--ink2);font-weight:500}
+
+blockquote.doct{font-family:var(--display);font-style:italic;font-size:1.16rem;line-height:1.5;
+  color:var(--ink);border-left:2px solid var(--accent);padding:2px 0 2px 18px;margin:20px 0;max-width:52ch}
+blockquote.doct cite{display:block;font-style:normal;font-family:var(--mono);font-size:.65rem;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:9px}
+
+.rv{opacity:1;transform:none}
+.js .rv{opacity:0;transform:translateY(9px);transition:opacity .5s var(--e1),transform .5s var(--e1);
+  transition-delay:calc(var(--i,0) * 50ms)}
+.js .rv.in{opacity:1;transform:none}
+
+/* ── echelon ladder ──────────────────────────────────────────────────── */
+.ladder{display:flex;flex-direction:column;gap:0}
+.rung{display:grid;grid-template-columns:96px minmax(0,1fr);gap:18px;padding:16px 0;
+  border-bottom:1px solid var(--rule2);cursor:pointer;transition:background .16s var(--e1)}
+.rung:hover{background:var(--panel2)}
+.rung[aria-expanded="true"]{background:var(--panel2)}
+.rung .ech{display:flex;flex-direction:column;align-items:center;gap:5px;padding-top:2px}
+.rung .ech .sym{font-family:var(--mono);font-size:.95rem;letter-spacing:.16em;color:var(--accent);
+  border:1px solid var(--rule3);border-radius:4px;padding:4px 8px;min-width:74px;text-align:center;
+  background:var(--panel)}
+.rung .ech .n{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;color:var(--muted)}
+.rung h4{font-size:1.14rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.rung .army{font-family:var(--display);font-style:italic;color:var(--ink2);font-size:.95rem;margin:2px 0 0}
+.rung .is{font-size:.88rem;color:var(--ink2);margin:8px 0 0}
+.rung .more{display:none;margin-top:12px;border-top:1px dashed var(--rule3);padding-top:12px}
+.rung[aria-expanded="true"] .more{display:block}
+.rung .more dl{display:grid;grid-template-columns:110px minmax(0,1fr);gap:7px 14px;margin:0;font-size:.84rem}
+.rung .more dt{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);padding-top:3px}
+.rung .more dd{margin:0;color:var(--ink2)}
+
+/* ── THE NET — the terminal ──────────────────────────────────────────── */
+.net{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:0;
+  border:1px solid var(--rule3);border-radius:13px;overflow:hidden;background:var(--sunk);
+  box-shadow:var(--shadow)}
+.net-l{border-right:1px solid var(--rule3);display:flex;flex-direction:column;min-height:474px}
+.net-bar{display:flex;align-items:center;gap:8px;padding:9px 13px;border-bottom:1px solid var(--rule2);
+  background:var(--panel);font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;color:var(--muted)}
+.net-bar .dot{width:8px;height:8px;border-radius:50%;background:var(--built)}
+.net-bar .step{margin-left:auto;color:var(--accent)}
+.net-feed{flex:1;overflow-y:auto;padding:14px 15px;display:flex;flex-direction:column;gap:11px;
+  font-size:.87rem;max-height:330px}
+.msg{display:flex;gap:9px;align-items:flex-start}
+.msg .who{font-family:var(--mono);font-size:.58rem;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--muted);flex:0 0 42px;padding-top:3px;text-align:right}
+.msg .txt{color:var(--ink2);flex:1}
+.msg.you .txt{color:var(--ink);background:var(--accent-dim);border:1px solid var(--accent);
+  border-radius:8px;padding:5px 10px;display:inline-block}
+.msg.sys .txt{font-family:var(--mono);font-size:.76rem;color:var(--muted)}
+.msg .txt b{color:var(--ink);font-weight:500}
+.net-in{border-top:1px solid var(--rule2);padding:11px 13px;background:var(--panel)}
+.opts{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:9px}
+.opt{border:1px solid var(--rule3);border-radius:16px;padding:5px 12px;font-size:.79rem;color:var(--ink2);
+  transition:border-color .14s ease-out,color .14s ease-out,background .14s ease-out}
+.opt:hover{border-color:var(--accent);color:var(--ink);background:var(--accent-dim)}
+.opt.nr{border-style:dashed;color:var(--muted)}
+.opt.nr:hover{border-color:var(--illus);color:var(--illus);background:var(--illus-bg)}
+.net-line{display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:.83rem}
+.net-line .ps{color:var(--accent)}
+.net-line input{flex:1;background:none;border:0;color:var(--ink);font:inherit;outline:none}
+.caret{width:8px;height:15px;background:var(--accent);animation:blink 1.15s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+
+.net-r{background:var(--panel);display:flex;flex-direction:column}
+.net-r header{padding:9px 13px;border-bottom:1px solid var(--rule2);font-family:var(--mono);
+  font-size:.68rem;letter-spacing:.08em;color:var(--muted);display:flex;align-items:center;gap:8px}
+.net-r header .hash{margin-left:auto;color:var(--ink2)}
+.spec-body{padding:12px 13px;overflow-y:auto;flex:1;max-height:404px}
+.fld{border-bottom:1px dashed var(--rule2);padding:8px 0;display:grid;
+  grid-template-columns:88px minmax(0,1fr);gap:11px;align-items:start}
+.fld .k{font-family:var(--mono);font-size:.6rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.fld .v{font-size:.83rem;color:var(--muted);font-style:italic}
+.fld.set .v{color:var(--ink);font-style:normal}
+.fld.set .k{color:var(--accent)}
+.fld.nr .v{color:var(--illus);font-family:var(--mono);font-size:.72rem;font-style:normal}
+.gatebox{border-top:1px solid var(--rule2);padding:11px 13px;background:var(--panel2)}
+.gate{display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--muted);padding:3px 0}
+.gate .b{width:9px;height:9px;border-radius:2px;border:1px solid currentColor;flex:0 0 auto}
+.gate.ok{color:var(--built)} .gate.ok .b{background:currentColor}
+.gate.blocked{color:var(--risk)}
+
+/* ── UI proposal cards ───────────────────────────────────────────────── */
+.props{display:grid;grid-template-columns:repeat(auto-fit,minmax(288px,1fr));gap:16px}
+.prop{border:1px solid var(--rule);border-radius:12px;background:var(--panel);overflow:hidden;
+  display:flex;flex-direction:column}
+.prop.pick{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent-dim)}
+.prop .mock{background:var(--sunk);border-bottom:1px solid var(--rule2);padding:12px}
+.prop .body{padding:14px 15px 16px;flex:1;display:flex;flex-direction:column;gap:8px}
+.prop h4{font-size:1.06rem;display:flex;align-items:baseline;gap:9px}
+.prop h4 span{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;color:var(--muted);
+  text-transform:uppercase}
+.prop dl{display:grid;grid-template-columns:66px minmax(0,1fr);gap:5px 11px;margin:4px 0 0;font-size:.8rem}
+.prop dt{font-family:var(--mono);font-size:.57rem;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--muted);padding-top:2px}
+.prop dd{margin:0;color:var(--ink2)}
+
+/* ── topic picker + plan ─────────────────────────────────────────────── */
+.topics{display:grid;grid-template-columns:repeat(auto-fit,minmax(212px,1fr));gap:10px}
+.topic{border:1px solid var(--rule3);border-radius:11px;padding:13px 14px;text-align:left;
+  background:var(--panel);transition:border-color .16s var(--e1),transform .16s var(--e1)}
+.topic:hover{border-color:var(--accent);transform:translateY(-2px)}
+.topic[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-dim)}
+.topic .t{font-family:var(--display);font-size:1.02rem;color:var(--ink);display:block;margin-bottom:4px}
+.topic .d{font-size:.79rem;color:var(--ink2);display:block}
+.topic .who{font-family:var(--mono);font-size:.58rem;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--muted);display:block;margin-top:7px}
+
+.phases{display:flex;flex-direction:column;gap:0;margin-top:6px}
+.phase{display:grid;grid-template-columns:118px minmax(0,1fr);gap:18px;padding:15px 0;
+  border-bottom:1px solid var(--rule2)}
+.phase .mark{display:flex;flex-direction:column;gap:5px;align-items:flex-start}
+.phase .mark .sym{font-family:var(--mono);font-size:.82rem;letter-spacing:.14em;color:var(--accent);
+  border:1px solid var(--rule3);border-radius:4px;padding:3px 8px;background:var(--panel)}
+.phase .mark .ph{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted)}
+.phase h4{font-size:1.06rem;margin-bottom:5px}
+.phase .do{font-size:.86rem;color:var(--ink2);margin:0 0 8px}
+.phase .out{display:flex;flex-wrap:wrap;gap:5px}
+
+@media (max-width:900px){
+  .net{grid-template-columns:1fr}
+  .net-l{border-right:0;border-bottom:1px solid var(--rule3);min-height:0}
+  .rung{grid-template-columns:74px minmax(0,1fr);gap:12px}
+  .rung .ech .sym{min-width:64px;font-size:.82rem}
+  .phase{grid-template-columns:1fr;gap:8px}
+  .phase .mark{flex-direction:row;align-items:center;gap:9px}
+}
+@media (max-width:640px){
+  .sheet{padding:22px 15px 56px}
+  .brand h1{font-size:1.4rem}
+  .fld{grid-template-columns:1fr;gap:2px}
+  .prop dl{grid-template-columns:1fr;gap:1px 0}
+}
+@media (prefers-reduced-motion: reduce){
+  .js .rv,.js .rv.in{opacity:1 !important;transform:none !important;transition:none !important}
+  .caret{animation:none !important}
+  *{animation-duration:.001ms !important;animation-iteration-count:1 !important;
+    transition-duration:.001ms !important;scroll-behavior:auto !important}
+}
+</style>
+
+<header class="ribbon">
+  <div class="brand">
+    <div class="kicker">Agent Factory &middot; companion to the Atlas</div>
+    <h1>Field Manual</h1>
+    <p>How to build an agent, a team, an army &mdash; and the thing above an army &mdash; and how each
+    tier is supposed to earn money. Written in the vocabulary of the only organisation that has ever
+    had to solve this problem at scale under adversarial conditions.</p>
+  </div>
+  <div class="hdr-tools">
+    <button class="tbtn" id="btn-theme" aria-label="Toggle colour theme">&#9681;</button>
+  </div>
+</header>
+
+<div class="grammar">
+  <b><i style="background:var(--built)"></i>BUILT &mdash; exists today, names the primitive</b>
+  <b><i style="background:var(--spec)"></i>SPEC &mdash; designed here, buildable on a named primitive</b>
+  <b><i style="background:var(--illus)"></i>ILLUSTRATIVE &mdash; a shape, never a forecast</b>
+  <b><i style="background:var(--research)"></i>RESEARCH &mdash; unapproved</b>
+</div>
+
+<nav class="modes" id="modes" role="tablist" aria-label="Manual sections"></nav>
+
+<main>
+  <section class="view on" id="v-doctrine"></section>
+  <section class="view" id="v-ladder"></section>
+  <section class="view" id="v-net"></section>
+  <section class="view" id="v-mesh"></section>
+  <section class="view" id="v-surfaces"></section>
+  <section class="view" id="v-venture"></section>
+  <section class="view" id="v-revenue"></section>
+</main>
+
+<script>
+document.documentElement.classList.add('js');
+const $=(s,r)=>(r||document).querySelector(s), $$=(s,r)=>Array.from((r||document).querySelectorAll(s));
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const STILL=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+let theme=null; try{theme=localStorage.getItem('afa-theme')}catch(e){}
+if(theme) document.documentElement.setAttribute('data-theme',theme);
+$('#btn-theme').onclick=()=>{
+  const dark=getComputedStyle(document.documentElement).getPropertyValue('--bg').trim().toLowerCase().startsWith('#0a');
+  theme=dark?'light':'dark'; document.documentElement.setAttribute('data-theme',theme);
+  try{localStorage.setItem('afa-theme',theme)}catch(e){}
+};
+
+/* ═══════════════ 1 · DOCTRINE — the story, told in the vocabulary ═══════════════
+   Every fact cited here is measured in the Atlas. The ANALOGY is mine; the
+   numbers are not. */
+$('#v-doctrine').innerHTML=`<div class="sheet">
+  <h2>Doctrine</h2>
+  <p class="lede">Two units were raised. Both were capable. Both failed, and the failure was the same
+  failure twice &mdash; so the whole architecture is a reply to it.</p>
+
+  <div class="sec rv"><h3>The two battles that set the doctrine</h3>
+  <div class="figwrap"><svg class="fig" viewBox="0 0 820 214" role="img"
+    aria-label="Two failures: an agent producing 233 diagnoses, 234 escalations and zero fixes over 81 days; and a loop that ran 965 times at 1.6 percent success and never adjusted.">
+    <rect x="7" y="10" width="392" height="92" rx="9" fill="var(--risk-bg)" stroke="var(--risk)" stroke-width="1.2"/>
+    <text x="24" y="36" fill="var(--ink)" font-size="13.5" font-family="var(--display)">The unit that filed reports and took no ground</text>
+    <text x="24" y="60" fill="var(--risk)" font-family="var(--mono)" font-size="17">233 &#8594; 234 &#8594; 0</text>
+    <text x="24" y="79" fill="var(--ink2)" font-size="11.5">diagnoses &#183; escalations &#183; fixes, over 81 days</text>
+    <text x="24" y="95" fill="var(--muted)" font-family="var(--mono)" font-size="9.5" letter-spacing=".07em">MEASURED &#183; SEE THE ATLAS</text>
+
+    <rect x="421" y="10" width="392" height="92" rx="9" fill="var(--risk-bg)" stroke="var(--risk)" stroke-width="1.2"/>
+    <text x="438" y="36" fill="var(--ink)" font-size="13.5" font-family="var(--display)">The unit that charged the same hill 965 times</text>
+    <text x="438" y="60" fill="var(--risk)" font-family="var(--mono)" font-size="17">965 runs &#183; 1.6% &#183; no change</text>
+    <text x="438" y="79" fill="var(--ink2)" font-size="11.5">it recorded its own success rate and never adjusted the plan</text>
+    <text x="438" y="95" fill="var(--muted)" font-family="var(--mono)" font-size="9.5" letter-spacing=".07em">MEASURED &#183; SEE THE ATLAS</text>
+
+    <path d="M203,102 L203,132 L410,132 L410,150" stroke="var(--rule3)" stroke-width="1.3" fill="none"/>
+    <path d="M617,102 L617,132 L410,132" stroke="var(--rule3)" stroke-width="1.3" fill="none"/>
+    <rect x="182" y="150" width="456" height="54" rx="9" fill="var(--accent-dim)" stroke="var(--accent)" stroke-width="1.3"/>
+    <text x="410" y="174" text-anchor="middle" fill="var(--ink)" font-size="13" font-family="var(--display)">Neither unit had anyone checking whether the action helped.</text>
+    <text x="410" y="193" text-anchor="middle" fill="var(--accent)" font-family="var(--mono)" font-size="10.5" letter-spacing=".08em">SO THE CONTRACT COMES BEFORE THE SOLDIER</text>
+  </svg></div>
+  <figcaption>Activity was measured in both cases. <b>Outcome was not.</b> An army that counts patrols
+  and never counts ground is not an army, it is a payroll.</figcaption></div>
+
+  <blockquote class="doct">Amateurs talk tactics. Professionals talk logistics.
+  <cite>and in this system, logistics is the attempt cap, the spend ceiling and the reaper</cite></blockquote>
+
+  <div class="sec rv"><h3>The translation table &mdash; read this once and the architecture explains itself</h3>
+  <div class="tblwrap"><table>
+  <thead><tr><th style="width:20%">In the field</th><th style="width:34%">In this system</th><th>Why the analogy holds, exactly</th></tr></thead>
+  <tbody>
+    <tr><td><b>Orders</b></td><td>the mission brief &mdash; a task with evidence attached</td>
+      <td>An order with no attachments is a wish. <code>tasks.py</code> raises rather than accept one.</td></tr>
+    <tr><td><b>Commander&rsquo;s intent</b></td><td>the objective, plus what may be varied</td>
+      <td>Units improvise; intent is what they must not vary. In code this is the contract, not the prompt.</td></tr>
+    <tr><td><b>Rules of engagement</b></td><td>tool scopes, isolation tier, the human-only gates</td>
+      <td>ROE are about what you may touch, never about what you intend. Same for an agent&rsquo;s blast radius.</td></tr>
+    <tr><td><b>Logistics</b></td><td>attempt caps, spend ceilings, the reaper</td>
+      <td><b>948 of 1,001</b> recorded failures were one unit charging the same objective forever. Caps are the supply line that stops it.</td></tr>
+    <tr><td><b>Muster / readiness inspection</b></td><td>the 30 readiness gates</td>
+      <td>You do not deploy a unit because it feels ready. You inspect it, and you publish the roll.</td></tr>
+    <tr><td><b>Live-fire proving ground</b></td><td>the eval corpus and its negative controls</td>
+      <td>You fire the smoke alarm on purpose before you trust it. Every assertion here has been <em>watched failing</em>.</td></tr>
+    <tr><td><b>Friendly fire &amp; fog</b></td><td>the false greens &mdash; five faults every green light missed</td>
+      <td>The most expensive failures were not defeats. They were reports of victory.</td></tr>
+    <tr><td><b>Doctrine</b></td><td><code>docs/findings.d/</code> &mdash; corrected premises, one file each</td>
+      <td>Doctrine is what the last unit learned, written down so the next one does not relearn it under fire.</td></tr>
+    <tr><td><b>After-action review</b></td><td>the evidence pack and the case study</td>
+      <td>An AAR that only records wins teaches nothing. The ledger records what could <em>not</em> be told.</td></tr>
+    <tr><td><b>The general staff</b></td><td>&#8722; deliberately absent &#8722;</td>
+      <td>⛔ There is no LLM commanding other LLMs. That topology was tested and beaten. See below.</td></tr>
+  </tbody></table></div></div>
+
+  <div class="sec rv"><h3>⛔ The one analogy that breaks &mdash; and it is the most important one</h3>
+  <p>Every instinct says: build a hierarchy. A commander agent, staff agents, worker agents. <b>That was
+  tested and it lost.</b> Across 180 configurations, multi-agent architectures averaged
+  <b>&minus;3.5%</b> against a single worker, and sequential shared-state work &mdash; which is nearly all
+  real delivery work &mdash; degraded <b>39&ndash;70%</b>.</p>
+  <div class="figwrap"><svg class="fig" viewBox="0 0 820 172" role="img"
+    aria-label="Rejected: an LLM commander directing LLM specialists. Adopted: one end-to-end worker with a non-LLM verifier holding the pass bit, coordinated by deterministic code.">
+    <text x="7" y="16" fill="var(--risk)" font-family="var(--mono)" font-size="9.5" letter-spacing=".1em">REJECTED &#183; TESTED, AND BEATEN</text>
+    <g stroke-dasharray="2 4">
+      <rect x="7" y="26" width="126" height="34" rx="6" fill="var(--risk-bg)" stroke="var(--risk)" stroke-width="1.2"/>
+      <rect x="7" y="76" width="126" height="30" rx="6" fill="none" stroke="var(--risk)" stroke-width="1.1"/>
+      <rect x="7" y="116" width="126" height="30" rx="6" fill="none" stroke="var(--risk)" stroke-width="1.1"/>
+      <rect x="147" y="76" width="126" height="30" rx="6" fill="none" stroke="var(--risk)" stroke-width="1.1"/>
+      <rect x="147" y="116" width="126" height="30" rx="6" fill="none" stroke="var(--risk)" stroke-width="1.1"/>
+    </g>
+    <text x="70" y="47" text-anchor="middle" fill="var(--risk)" font-size="11.5">LLM commander</text>
+    <text x="70" y="95" text-anchor="middle" fill="var(--ink2)" font-size="10.5">architect</text>
+    <text x="70" y="135" text-anchor="middle" fill="var(--ink2)" font-size="10.5">implementer</text>
+    <text x="210" y="95" text-anchor="middle" fill="var(--ink2)" font-size="10.5">tester</text>
+    <text x="210" y="135" text-anchor="middle" fill="var(--ink2)" font-size="10.5">reviewer</text>
+    <line x1="150" y1="43" x2="360" y2="43" stroke="var(--risk)" stroke-width="1.4"/>
+    <text x="255" y="36" text-anchor="middle" fill="var(--risk)" font-family="var(--mono)" font-size="10">&minus;3.5% avg &#183; &minus;39–70% sequential</text>
+
+    <text x="420" y="16" fill="var(--built)" font-family="var(--mono)" font-size="9.5" letter-spacing=".1em">ADOPTED &#183; ONE WORKER, ONE INCORRUPTIBLE JUDGE</text>
+    <rect x="420" y="26" width="164" height="44" rx="7" fill="var(--built-bg)" stroke="var(--built)" stroke-width="1.3"/>
+    <text x="502" y="45" text-anchor="middle" fill="var(--ink)" font-size="12">end-to-end worker</text>
+    <text x="502" y="61" text-anchor="middle" fill="var(--ink2)" font-size="10.5">does the whole job</text>
+    <path d="M584,48 L626,48" stroke="var(--accent)" stroke-width="1.5" marker-end="url(#fa)"/>
+    <rect x="632" y="26" width="180" height="44" rx="7" fill="var(--panel)" stroke="var(--accent)" stroke-width="1.4"/>
+    <text x="722" y="45" text-anchor="middle" fill="var(--ink)" font-size="12">verifier &mdash; not a model</text>
+    <text x="722" y="61" text-anchor="middle" fill="var(--accent)" font-size="10.5">holds the PASS bit</text>
+    <rect x="420" y="92" width="392" height="56" rx="7" fill="var(--panel2)" stroke="var(--rule3)" stroke-width="1.1"/>
+    <text x="616" y="113" text-anchor="middle" fill="var(--ink)" font-size="11.5">Everything above the soldier is coordinated by</text>
+    <text x="616" y="132" text-anchor="middle" fill="var(--accent)" font-family="var(--mono)" font-size="11.5">deterministic code &#183; contracts &#183; humans at gates</text>
+    <defs><marker id="fa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="context-stroke"/></marker></defs>
+  </svg></div>
+  <figcaption><b>So &ldquo;army&rdquo; here does not mean agents commanding agents.</b> It means many
+  independent units working in parallel under one doctrine, one budget and one set of gates &mdash;
+  and that is a much better army, because it has no single point of hallucination.
+  <span class="chip c-built">BUILT</span> the worker + verifier pair.
+  <span class="chip c-spec">SPEC</span> everything above the regiment.</figcaption></div>
+
+  <blockquote class="doct">The scaling axis is not how many agents report to one agent.
+  It is how much independent work can run at once, how deeply the output is certified,
+  and how much of what went wrong last time is already written down.
+  <cite>the three axes every tier below adds to</cite></blockquote>
+</div>`;
+
+/* ═══════════════ 2 · THE LADDER — Ø ● I III XXXX and beyond ═══════════════ */
+const TIERS=[
+{sym:'Ø', n:'ECHELON 0', name:'AGENT', army:'The soldier',
+ is:'One worker with a model, an effort level, a tool scope, an isolation tier, and a contract that says what done means.',
+ mech:'<code>blueprints/*.yaml</code> &middot; <code>factory/deploy.py</code>',
+ state:'BUILT', sc:'c-built',
+ law:'A soldier with no orders and no ROE is a liability, not an asset. The contract is written <em>before</em> the agent runs, never after.',
+ you:'You state an objective. The Net drafts the spec. You confirm or correct &mdash; you never write a prompt from a blank page.',
+ unlock:'Nothing yet. One agent is a demo.'},
+
+{sym:'●', n:'ECHELON I', name:'FIRETEAM', army:'The soldier and the sergeant who checks the work',
+ is:'An agent paired with a <b>non-LLM verifier</b> that holds the authoritative PASS bit. The smallest unit whose output you can trust.',
+ mech:'<code>factory/contract.py</code> &middot; <code>factory/verifiers.py</code> &middot; the five verdicts',
+ state:'BUILT', sc:'c-built',
+ law:'The thing being measured must not be the thing doing the measuring. The sergeant is code, so it cannot be talked round.',
+ you:'You pick what &ldquo;working&rdquo; means from a list of assertions. Anything you cannot define, the fireteam reports as UNMEASURABLE rather than passing.',
+ unlock:'Output you can hand to someone else without reading every line.'},
+
+{sym:'I', n:'ECHELON II', name:'COMPANY', army:'A company assigned to one objective',
+ is:'A <b>TeamSpec</b>: roles, models, effort, tool scopes, isolation tier and the contract that will certify the result &mdash; versioned by hash, so a certification cannot outlive the configuration that earned it.',
+ mech:'<code>factory/presets.py</code> &middot; <code>factory/teamplan.py</code> &middot; <code>TaskStore</code>',
+ state:'PARTIAL &mdash; the spec exists; its hash covers 0 of 15 identity dimensions', sc:'c-spec',
+ law:'A company is a <em>composition</em>, not a headcount. Change the composition and you have a different company, which is why the hash matters.',
+ you:'You assemble it once, name it, and it becomes a unit you can order again tomorrow.',
+ unlock:'Repeatability. The same job done the same way by someone who was not there the first time.'},
+
+{sym:'III', n:'ECHELON III', name:'REGIMENT', army:'A regiment holding one sector',
+ is:'Many missions in one domain running <b>at once</b>, kept apart by claims and worktrees, kept honest by caps and the reaper.',
+ mech:'<code>factory/claims.py</code> &middot; <code>worktrees.py</code> &middot; the control plane, 39 negative controls',
+ state:'BUILT &mdash; and the ceiling today is three lanes, because it is a FILE ceiling', sc:'c-built',
+ law:'Two units cannot hold the same ground. Conflict is resolved by locality &mdash; who touches which file &mdash; not by a manager arbitrating.',
+ you:'You stop watching terminals. One board shows what is claimed, what is blocked, and what is waiting on you.',
+ unlock:'Throughput. This is the first tier where the work outruns one person&rsquo;s attention.'},
+
+{sym:'XXXX', n:'ECHELON IV', name:'ARMY', army:'Many regiments, across sectors, under one doctrine',
+ is:'Regiments in different domains sharing one doctrine, one treasury and one set of gates. Nothing commands them; the <b>doctrine</b> and the <b>budget</b> coordinate them.',
+ mech:'<code>docs/findings.d/</code> as doctrine &middot; budgets &middot; the human-only APPROVE plane',
+ state:'SPEC &mdash; every part has a named primitive; none of it is assembled', sc:'c-spec',
+ law:'An army is held together by what it has agreed is true, not by who is shouting. When doctrine and a commander disagree, doctrine is cheaper to fix.',
+ you:'You stop assigning work and start setting policy: what may be spent, what must be proved, where you personally sign.',
+ unlock:'Leverage. One operator directing capability far beyond what they could inspect line by line.'},
+
+{sym:'XXXXXX', n:'ECHELON V', name:'NATION', army:'The thing that <em>fields</em> armies &mdash; and sustains them',
+ is:'The economy behind the armies: <b>memory</b> (what we know), <b>doctrine</b> (what we learned), <b>treasury</b> (what we may spend), <b>law</b> (what needs a human), and <b>citizens</b> (the agents, blueprints and contracts that outlive any one mission).',
+ mech:'Zeus Memory &middot; the Quartermaster &middot; the gate law &middot; the blueprint registry',
+ state:'SPEC &mdash; and the memory half is measurably absent: 0 references in <code>factory/</code>', sc:'c-spec',
+ law:'⭐ An army fights. A nation gets <em>better at fighting</em>. That is the whole distinction, and it is why this tier is not just &ldquo;a bigger army&rdquo;.',
+ you:'You stop running campaigns and start running an institution. New campaigns get cheaper because the last one is remembered.',
+ unlock:'Compounding. The first tier where doing the work makes the next work cheaper without you.'},
+
+{sym:'&mdash;', n:'ECHELON VI', name:'WORLD', army:'An alliance &mdash; off the symbol chart',
+ is:'Federated nations exchanging <b>doctrine and capability across trust boundaries without exchanging secrets</b>. Your agents learn from another org&rsquo;s corrections without ever seeing its data.',
+ mech:'a federation protocol &mdash; research prompt R34, never run',
+ state:'RESEARCH &mdash; unapproved, no code, zero occurrences of <code>federat*</code>', sc:'c-res',
+ law:'There is no NATO symbol above an army group for a reason: at that scale, the unit of account stops being force and becomes agreement.',
+ you:'You would be trading capability, not labour.',
+ unlock:'Unknown. Every trust problem it raises is currently unsolved one tier down &mdash; the evaluator is still loopback under one uid.'}
+];
+$('#v-ladder').innerHTML=`<div class="sheet">
+  <h2>The ladder</h2>
+  <p class="lede">Seven tiers. The marks are the real NATO echelon symbols, because they already encode
+  exactly this idea &mdash; and the top tier deliberately has none, which is the honest answer to
+  &ldquo;what do we call the level above an army?&rdquo;</p>
+  <p class="note" style="margin-top:12px">Click any rung to open it. Each names the primitive it runs on
+  and the law that governs it.</p>
+  <div class="sec"><h3>Echelons</h3><div class="ladder" id="ladder"></div></div>
+
+  <div class="sec rv"><h3>Naming &mdash; the recommendation, and the alternates</h3>
+  <p>You asked what to call the tier above an army. The distinction worth naming is not size, it is
+  <b>whether the thing sustains and improves the units it fields</b>. An army is spent by fighting;
+  a nation is not.</p>
+  <div class="tblwrap"><table>
+  <thead><tr><th>Candidate</th><th>Reads as</th><th>Verdict</th></tr></thead><tbody>
+  <tr><td><b>NATION</b> &nbsp;<span class="chip c-built">RECOMMENDED</span></td>
+    <td>memory, treasury, law, citizens &mdash; the institution that outlives the campaign</td>
+    <td>Everyone already knows a nation fields armies and an army does not field nations. The hierarchy explains itself.</td></tr>
+  <tr><td>POLITY</td><td>the governed body; emphasises law and consent</td>
+    <td>Precise, and colder. Better if you want to stress governance over economy.</td></tr>
+  <tr><td>COMMONWEALTH</td><td>shared wealth &mdash; emphasises the pooled memory</td>
+    <td>Strongest if the <em>memory</em> is the product you sell. Slightly archaic.</td></tr>
+  <tr><td>DOMINION</td><td>territory held</td><td>⚠ Reads as conquest. Wrong tone for a client-facing product.</td></tr>
+  <tr><td>THEATER</td><td>the NATO term above army group</td>
+    <td>⚠ Correct militarily, but it means a <em>place</em>, not an institution &mdash; so it cannot carry the memory idea.</td></tr>
+  </tbody></table></div>
+  <p style="margin-top:14px"><b>And above it: WORLD</b> (or FEDERATION, if you want the mechanism rather
+  than the metaphor). Deliberately off the symbol chart &mdash; that absence is the point.</p></div>
+
+  <div class="sec rv"><h3>What actually grows as you climb</h3>
+  <div class="figwrap"><svg class="fig" viewBox="0 0 820 200" role="img"
+    aria-label="Three axes grow with echelon: parallel independent work, depth of certification, and persistence of doctrine. Management depth deliberately stays flat.">
+    ${(()=>{
+      const rows=[['parallel independent work','--accent',[1,1,2,6,18,40,80]],
+                  ['depth of certification','--built',[1,2,3,4,6,9,12]],
+                  ['doctrine that persists','--research',[0,0,1,2,5,14,30]],
+                  ['LAYERS OF MANAGEMENT','--risk',[0,0,0,0,0,0,0]]];
+      const x0=196,w=598,maxv=80;
+      return rows.map((r,i)=>{
+        const y=30+i*44;
+        const pts=r[2].map((v,k)=>`${x0+k*(w/6)},${y+26-(v/maxv)*24}`).join(' ');
+        return `<text x="7" y="${y+18}" fill="var(${r[1]})" font-size="11.5">${r[0]}</text>
+          <polyline points="${pts}" fill="none" stroke="var(${r[1]})" stroke-width="1.8"
+            ${r[2][6]===0?'stroke-dasharray="4 4"':''}/>
+          ${r[2].map((v,k)=>`<circle cx="${x0+k*(w/6)}" cy="${y+26-(v/maxv)*24}" r="2.6" fill="var(${r[1]})"/>`).join('')}`;
+      }).join('')+
+      TIERS.map((t,k)=>`<text x="${196+k*(598/6)}" y="192" text-anchor="middle" fill="var(--muted)"
+        font-family="var(--mono)" font-size="8.5" letter-spacing=".06em">${t.name}</text>`).join('');
+    })()}
+  </svg></div>
+  <figcaption><b>The flat dashed line is the design.</b> Management depth stays at zero at every echelon
+  &mdash; the coordination is code, contracts and human gates. The curves are
+  <span class="chip c-illus">ILLUSTRATIVE</span> shapes, not measurements: only the first two points
+  correspond to anything that has run.</figcaption></div>
+</div>`;
+$('#ladder').innerHTML=TIERS.map((t,i)=>`
+  <button class="rung" aria-expanded="${i===0?'true':'false'}" data-r="${i}">
+    <span class="ech"><span class="sym">${t.sym}</span><span class="n">${t.n}</span></span>
+    <span>
+      <h4>${t.name} <span class="chip ${t.sc}">${t.state.split(' ')[0]}</span></h4>
+      <p class="army">${t.army}</p>
+      <p class="is">${t.is}</p>
+      <div class="more"><dl>
+        <dt>Runs on</dt><dd>${t.mech}</dd>
+        <dt>State</dt><dd>${t.state}</dd>
+        <dt>The law</dt><dd>${t.law}</dd>
+        <dt>You do</dt><dd>${t.you}</dd>
+        <dt>Unlocks</dt><dd>${t.unlock}</dd>
+      </dl></div>
+    </span>
+  </button>`).join('');
+$$('.rung').forEach(b=>b.onclick=()=>{
+  const open=b.getAttribute('aria-expanded')==='true';
+  $$('.rung').forEach(o=>o.setAttribute('aria-expanded','false'));
+  b.setAttribute('aria-expanded',open?'false':'true');
+});
+/* ═══════════════ 3 · THE NET — the elicitation surface ═══════════════
+   A radio net is exactly what this is: you speak intent, and a structured
+   order forms. The novelty is that the conversation and the form are THE
+   SAME OBJECT, shown side by side as it fills. */
+const STEPS=[
+{k:'objective', field:'OBJECTIVE',
+ q:'What outcome do you want? State it as a <b>result</b>, not a task.',
+ opts:['Migrate a data connector','Rebuild a reporting model','Ship a client dashboard','Watch a source and brief me weekly'],
+ sys:'net: session opened · doctrine loaded · 0 assumptions made'},
+{k:'proof', field:'PROOF',
+ q:'⭐ Before anything gets built &mdash; <b>how will we know it worked?</b> This is asked second on purpose.',
+ opts:['Row counts match the source','Every visual paints and every slicer moves a number','Output reproduces a known-good sample'],
+ nr:'I don’t know yet',
+ sys:'contract: an objective with no proof cannot be certified — only claimed'},
+{k:'boundary', field:'BOUNDARY',
+ q:'What must this <b>never</b> touch? This sets the isolation tier and the tool scope.',
+ opts:['Production writes','Client PII','Anything outside one repo','Nothing — sandbox only'],
+ sys:'roe: blast radius is declared up front and enforced, never inferred from intent'},
+{k:'evidence', field:'EVIDENCE', multi:true,
+ q:'What must it <b>show you</b> before the work is allowed to close?',
+ opts:['Target proved','Consumer layer checked','No regression','Rollback captured'],
+ sys:'evidence: close() refuses a delivery that never proved its target'},
+{k:'budget', field:'BUDGET',
+ q:'What may it spend before it must stop and ask you?',
+ opts:['2 attempts','5 attempts','30 minutes wall clock','£5 ceiling'],
+ nr:'No limit',
+ sys:'logistics: 948 of 1,001 recorded failures were one unit retrying forever'},
+{k:'gates', field:'GATES', multi:true,
+ q:'Where must a <b>human</b> sign? These can never be automated away.',
+ opts:['Merge','Use of any secret','Promotion to production','Client-facing publication'],
+ sys:'law: the APPROVE plane is humans only, by construction'},
+{k:'doctrine', field:'DOCTRINE',
+ q:'Doctrine check. Three corrections apply to this kind of work &mdash; pre-filled, not invented.',
+ opts:['Apply all three','Review each','Skip — I accept the risk'],
+ sys:'doctrine: F85 attempt cap · F89 inert-axis check · F76 corpus breadth'},
+{k:'muster', field:null,
+ q:'<b>Muster complete.</b> The spec is hashed, the echelon is computed, and the gates are green.',
+ opts:['Dispatch the unit','Save as blueprint','Edit a field'],
+ sys:'muster: spec sealed · a certification cannot outlive this hash'}
+];
+const NET={i:0, spec:{}, done:false};
+function hash(o){ /* stable toy hash so the panel shows a real, changing value */
+  let h=2166136261; const s=JSON.stringify(o);
+  for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}
+  return (h>>>0).toString(16).padStart(8,'0');
+}
+function echelon(){
+  const n=Object.keys(NET.spec).length;
+  if(n>=7) return ['I','COMPANY'];
+  if(n>=3) return ['●','FIRETEAM'];
+  return ['Ø','AGENT'];
+}
+function netRender(){
+  const s=STEPS[NET.i];
+  const fields=STEPS.filter(x=>x.field).map(x=>{
+    const v=NET.spec[x.k];
+    const nr=v==='NOT_RECORDED';
+    return `<div class="fld ${v?'set':''} ${nr?'nr':''}">
+      <span class="k">${x.field}</span>
+      <span class="v">${v?esc(Array.isArray(v)?v.join(' · '):v):'awaiting'}</span></div>`;
+  }).join('');
+  const [sym,name]=echelon();
+  const gates=[
+    ['objective declared', !!NET.spec.objective],
+    ['proof of done stated', !!NET.spec.proof && NET.spec.proof!=='NOT_RECORDED'],
+    ['blast radius bounded', !!NET.spec.boundary],
+    ['evidence classes set', !!NET.spec.evidence],
+    ['spend bounded', !!NET.spec.budget && NET.spec.budget!=='NOT_RECORDED'],
+    ['human gates named', !!NET.spec.gates]
+  ];
+  const blocked=gates.filter(g=>!g[1]);
+  $('#net-feed').innerHTML=NET.log.map(m=>
+    `<div class="msg ${m.w}"><span class="who">${m.w==='you'?'you':m.w==='sys'?'':'net'}</span>
+     <span class="txt">${m.t}</span></div>`).join('');
+  $('#net-feed').scrollTop=$('#net-feed').scrollHeight;
+  $('#net-step').textContent=NET.done?'SEALED':`STEP ${NET.i+1}/${STEPS.length}`;
+  $('#spec-body').innerHTML=fields+
+    `<div class="fld set"><span class="k">ECHELON</span><span class="v">${sym} &nbsp;${name}</span></div>`;
+  $('#net-hash').textContent=Object.keys(NET.spec).length?('spec '+hash(NET.spec)):'spec —';
+  $('#gatebox').innerHTML=gates.map(([t,ok])=>
+    `<div class="gate ${ok?'ok':'blocked'}"><span class="b"></span>${t}</div>`).join('')+
+    `<div class="net-line" style="margin-top:9px;font-size:.76rem">
+      <span class="ps">${blocked.length?'⨯':'$'}</span>
+      <span style="color:var(--${blocked.length?'risk':'built'})">dispatch</span>
+      <span style="color:var(--muted)">${blocked.length?'blocked by: '+blocked[0][0]:'ready'}</span></div>`;
+  const opts=NET.done?[]:s.opts;
+  $('#net-opts').innerHTML=opts.map(o=>`<button class="opt" data-o="${esc(o)}">${esc(o)}</button>`).join('')+
+    (s.nr?`<button class="opt nr" data-nr="1">${esc(s.nr)} &rarr; NOT_RECORDED</button>`:'')+
+    (s.multi&&!NET.done?`<button class="opt" data-done="1">done &rarr;</button>`:'');
+  $$('#net-opts .opt').forEach(b=>b.onclick=()=>netAnswer(b.dataset.nr?'NOT_RECORDED':(b.dataset.done?'__done':b.dataset.o)));
+}
+function netAsk(){
+  const s=STEPS[NET.i];
+  if(s.sys) NET.log.push({w:'sys',t:s.sys});
+  NET.log.push({w:'net',t:s.q});
+  netRender();
+}
+function netAnswer(v){
+  const s=STEPS[NET.i];
+  if(v==='__done'){ NET.i++; if(NET.i>=STEPS.length){NET.done=true;netRender();return;} netAsk(); return; }
+  if(s.multi){
+    const cur=Array.isArray(NET.spec[s.k])?NET.spec[s.k]:[];
+    if(!cur.includes(v)) cur.push(v);
+    NET.spec[s.k]=cur;
+    NET.log.push({w:'you',t:esc(v)});
+    netRender(); return;
+  }
+  if(s.k==='muster'){ NET.done=true;
+    NET.log.push({w:'you',t:esc(v)});
+    NET.log.push({w:'sys',t:v==='Dispatch the unit'
+      ?'dispatch: claim acquired · worktree T0 · attempt 1 of 2 · verdict pending'
+      :'saved: blueprint '+hash(NET.spec)+' — orderable again tomorrow'});
+    netRender(); return; }
+  NET.spec[s.k]=v;
+  NET.log.push({w:'you',t:esc(v)});
+  if(v==='NOT_RECORDED')
+    NET.log.push({w:'sys',t:'recorded as NOT_RECORDED — not a default, not a guess. This gate stays red until you fill it.'});
+  NET.i++;
+  if(NET.i>=STEPS.length){NET.done=true;netRender();return;}
+  netAsk();
+}
+$('#v-net').innerHTML=`<div class="sheet">
+  <h2>The Net</h2>
+  <p class="lede">A radio net is exactly this: you speak intent, and a structured order forms. The trick
+  is that <b>the conversation and the form are the same object</b> &mdash; you talk on the left, and the
+  thing you are actually building assembles itself on the right.</p>
+
+  <div class="sec"><h3>Try it &mdash; this is live, not a picture</h3>
+  <div class="net">
+    <div class="net-l">
+      <div class="net-bar"><span class="dot"></span>NET · ENLISTMENT
+        <span class="step" id="net-step">STEP 1/8</span></div>
+      <div class="net-feed" id="net-feed"></div>
+      <div class="net-in">
+        <div class="opts" id="net-opts"></div>
+        <div class="net-line">
+          <span class="ps">&rsaquo;</span>
+          <input id="net-input" placeholder="…or type your own answer and press Enter"
+            autocomplete="off" spellcheck="false" aria-label="Type an answer">
+          <span class="caret" aria-hidden="true"></span>
+        </div>
+      </div>
+    </div>
+    <div class="net-r">
+      <header>ORDER · FORMING <span class="hash mono" id="net-hash">spec —</span></header>
+      <div class="spec-body" id="spec-body"></div>
+      <div class="gatebox" id="gatebox"></div>
+    </div>
+  </div>
+  <p class="note" style="margin-top:12px"><span class="chip c-spec">SPEC</span> The interaction is
+  designed here. Every field it collects maps to something that already exists:
+  <code>blueprints/*.yaml</code>, <code>factory/contract.py</code>, <code>evidence.py</code>,
+  <code>deploy.py</code>&rsquo;s attempt ledger, and the human-only APPROVE plane.</p></div>
+
+  <div class="sec rv"><h3>The four things that make this terminal different</h3>
+  <div class="tblwrap"><table><thead><tr><th style="width:24%">Mechanic</th><th style="width:38%">What it does</th><th>Why &mdash; and where it comes from</th></tr></thead><tbody>
+  <tr><td><b>Dual rail</b></td><td>Chat on the left, the typed order assembling on the right, field by field, with a live hash.</td>
+    <td>You never wonder what the assistant &ldquo;understood&rdquo;. The object is the answer. Chat surfaces that hide their state are why people distrust them.</td></tr>
+  <tr><td><b>The NOT_RECORDED key</b></td><td>A dashed chip that lets you decline a question. It writes <code>NOT_RECORDED</code> and holds the gate red.</td>
+    <td>⭐ Straight from <code>docs/specs/client-intake-portal.md</code>: <em>unanswered is NOT-RECORDED, never a default.</em> Most builders silently fill a default here, and that is where wrong systems come from.</td></tr>
+  <tr><td><b>Refusal-aware prompt</b></td><td><code>dispatch</code> shows as <code>⨯ blocked by: proof of done</code> until the gate clears &mdash; it never just fails after you press it.</td>
+    <td>The command line teaches the architecture. You learn the gates by being unable to skip them, not by reading docs.</td></tr>
+  <tr><td><b>Proof asked second</b></td><td>Question 2 of 8 is <em>how will we know it worked</em> &mdash; before scope, before tools, before budget.</td>
+    <td>The founding rule: contract first. Every other agent builder asks what it should <em>do</em>. Asking how you will know is what separates a certified unit from a confident one.</td></tr>
+  </tbody></table></div></div>
+
+  <div class="sec rv"><h3>The optimal elicitation order, and why this order</h3>
+  <div class="figwrap"><svg class="fig" viewBox="0 0 820 176" role="img"
+    aria-label="Eight elicitation steps: objective, proof, boundary, evidence, budget, gates, doctrine, muster — with proof deliberately second.">
+    ${STEPS.map((s,i)=>{
+      const x=6+i*101.5, hot=i===1;
+      return `<g><rect x="${x}" y="34" width="93" height="52" rx="7"
+        fill="${hot?'var(--accent-dim)':'var(--panel)'}" stroke="var(${hot?'--accent':'--rule3'})"
+        stroke-width="${hot?1.7:1.1}"/>
+        <text x="${x+46}" y="55" text-anchor="middle" fill="var(--muted)" font-family="var(--mono)" font-size="8.5">${i+1}</text>
+        <text x="${x+46}" y="72" text-anchor="middle" fill="var(--ink)" font-size="11">${(s.field||'MUSTER').toLowerCase()}</text>
+        ${i<7?`<path d="M${x+93},60 L${x+101},60" stroke="var(--rule3)" stroke-width="1.2"/>`:''}</g>`;
+    }).join('')}
+    <path d="M107,34 L107,20 L200,20" stroke="var(--accent)" stroke-width="1.4" fill="none"/>
+    <text x="206" y="24" fill="var(--accent)" font-family="var(--mono)" font-size="10">asked BEFORE anything is scoped, tooled or budgeted</text>
+    <text x="6" y="112" fill="var(--ink2)" font-size="11.5">1–2 define the unit &#183; 3–4 bound it &#183; 5–6 fund and govern it &#183; 7 arms it with what went wrong before &#183; 8 seals it</text>
+    <rect x="6" y="126" width="808" height="42" rx="7" fill="var(--panel2)" stroke="var(--rule3)" stroke-width="1"/>
+    <text x="18" y="144" fill="var(--ink)" font-size="11.5">Nothing is ever silently defaulted. A question you skip is stored as NOT_RECORDED and the</text>
+    <text x="18" y="160" fill="var(--ink)" font-size="11.5">unit will refuse to dispatch &mdash; because a spec with an invented answer is worse than an empty one.</text>
+  </svg></div></div>
+
+  <div class="sec rv"><h3>Two doors, one room</h3>
+  <p>The Net is for people who know what they want. The <b>Muster</b> wizard is the same eight steps as
+  cards, for people who do not &mdash; and for clients, who should never see a command line.
+  <b>They write the same object.</b> You can start in one and finish in the other; the right rail is
+  shared state, not a view.</p>
+  <p class="note">This is the Switchboard principle applied to input: <em>one projection over state that
+  already exists</em>. Two doors, never two sources of truth.</p></div>
+</div>`;
+NET.log=[];
+netAsk();
+$('#net-input').addEventListener('keydown',e=>{
+  if(e.key!=='Enter') return;
+  const v=e.target.value.trim(); if(!v) return;
+  e.target.value=''; netAnswer(v);
+});
+/* ═══════════════ 4 · SURFACES — four proposals, one state ═══════════════ */
+const MOCKS={
+theater:`<svg class="fig" viewBox="0 0 340 168" role="img" aria-label="Theater layout: a map canvas with unit markers, a right inspector and a bottom order bar.">
+  <rect x="0" y="0" width="340" height="168" rx="6" fill="var(--bg)"/>
+  <g stroke="var(--grid)" stroke-width="1">${[...Array(9)].map((_,i)=>`<line x1="${i*38}" y1="0" x2="${i*38}" y2="168"/>`).join('')}${[...Array(5)].map((_,i)=>`<line x1="0" y1="${i*34}" x2="248" y2="${i*34}"/>`).join('')}</g>
+  <rect x="0" y="0" width="340" height="17" fill="var(--panel)"/><rect x="0" y="0" width="82" height="17" fill="var(--accent-dim)"/>
+  ${[[28,44,'III','--built'],[96,72,'I','--built'],[160,40,'●','--illus'],[76,124,'I','--spec'],[190,110,'●','--built']]
+    .map(([x,y,s,c])=>`<g><rect x="${x}" y="${y}" width="34" height="20" rx="3" fill="var(--panel)" stroke="var(${c})" stroke-width="1.3"/>
+      <text x="${x+17}" y="${y+14}" text-anchor="middle" fill="var(${c})" font-family="var(--mono)" font-size="8">${s}</text></g>`).join('')}
+  <path d="M45,64 C70,80 80,72 96,80" stroke="var(--accent)" stroke-width="1.2" fill="none" stroke-dasharray="3 3"/>
+  <path d="M130,80 C150,70 160,64 177,60" stroke="var(--accent)" stroke-width="1.2" fill="none"/>
+  <rect x="252" y="17" width="88" height="151" fill="var(--panel)" stroke="var(--rule3)" stroke-width="1"/>
+  ${[...Array(6)].map((_,i)=>`<rect x="260" y="${28+i*22}" width="${i%2?54:72}" height="7" rx="2" fill="var(--rule3)"/>`).join('')}
+  <rect x="0" y="151" width="252" height="17" fill="var(--panel)"/><rect x="8" y="156" width="120" height="7" rx="3" fill="var(--accent)"/>
+</svg>`,
+line:`<svg class="fig" viewBox="0 0 340 168" role="img" aria-label="Line layout: a left-to-right pipeline of stations separated by gates, with a log beneath.">
+  <rect x="0" y="0" width="340" height="168" rx="6" fill="var(--bg)"/>
+  <rect x="0" y="0" width="340" height="17" fill="var(--panel)"/>
+  ${[0,1,2,3].map(i=>`<rect x="${12+i*82}" y="40" width="56" height="42" rx="5" fill="var(--panel)" stroke="var(--built)" stroke-width="1.2"/>
+    <rect x="${20+i*82}" y="52" width="30" height="5" rx="2" fill="var(--rule3)"/>
+    <rect x="${20+i*82}" y="63" width="40" height="5" rx="2" fill="var(--rule3)"/>`).join('')}
+  ${[0,1,2].map(i=>`<g><path d="M${68+i*82},61 L${86+i*82},61" stroke="var(--accent)" stroke-width="1.3"/>
+    <rect x="${72+i*82}" y="24" width="10" height="10" rx="2" fill="var(--illus-bg)" stroke="var(--illus)" stroke-width="1"/></g>`).join('')}
+  <text x="12" y="34" fill="var(--muted)" font-family="var(--mono)" font-size="7">RECON</text>
+  <text x="94" y="34" fill="var(--muted)" font-family="var(--mono)" font-size="7">BUILD</text>
+  <text x="176" y="34" fill="var(--muted)" font-family="var(--mono)" font-size="7">PROVE</text>
+  <text x="258" y="34" fill="var(--muted)" font-family="var(--mono)" font-size="7">SHIP</text>
+  <rect x="12" y="98" width="316" height="58" rx="5" fill="var(--sunk)" stroke="var(--rule2)" stroke-width="1"/>
+  ${[...Array(5)].map((_,i)=>`<rect x="22" y="${108+i*9}" width="${[190,120,240,90,160][i]}" height="4" rx="2"
+    fill="var(${i===2?'--risk':i===4?'--built':'--rule3'})"/>`).join('')}
+</svg>`,
+net:`<svg class="fig" viewBox="0 0 340 168" role="img" aria-label="Net layout: a conversation on the left and the typed order assembling on the right.">
+  <rect x="0" y="0" width="340" height="168" rx="6" fill="var(--bg)"/>
+  <rect x="0" y="0" width="340" height="17" fill="var(--panel)"/>
+  <rect x="0" y="17" width="192" height="151" fill="var(--sunk)"/>
+  ${[[10,30,110,'--rule3'],[10,44,86,'--rule3'],[64,60,118,'--accent'],[10,78,132,'--rule3'],[10,92,74,'--rule3'],[52,108,130,'--accent']]
+    .map(([x,y,w,c])=>`<rect x="${x}" y="${y}" width="${w}" height="8" rx="4" fill="var(${c})" opacity="${c==='--accent'?.85:.55}"/>`).join('')}
+  ${[0,1,2].map(i=>`<rect x="${10+i*58}" y="128" width="52" height="13" rx="6" fill="none" stroke="var(--rule3)" stroke-width="1"/>`).join('')}
+  <rect x="10" y="148" width="172" height="12" rx="3" fill="var(--panel)" stroke="var(--accent)" stroke-width="1"/>
+  <rect x="192" y="17" width="148" height="151" fill="var(--panel)"/>
+  ${[...Array(7)].map((_,i)=>`<g><rect x="202" y="${30+i*17}" width="34" height="6" rx="2" fill="var(--accent)" opacity="${i<4?.9:.3}"/>
+    <rect x="244" y="${30+i*17}" width="${i<4?84:52}" height="6" rx="2" fill="var(${i<4?'--rule3':'--rule2'})"/></g>`).join('')}
+  <rect x="202" y="150" width="128" height="10" rx="3" fill="var(--built-bg)" stroke="var(--built)" stroke-width="1"/>
+</svg>`,
+muster:`<svg class="fig" viewBox="0 0 340 168" role="img" aria-label="Muster layout: a stepper across the top and one large question card with option chips.">
+  <rect x="0" y="0" width="340" height="168" rx="6" fill="var(--bg)"/>
+  <rect x="0" y="0" width="340" height="17" fill="var(--panel)"/>
+  ${[...Array(8)].map((_,i)=>`<circle cx="${28+i*38}" cy="34" r="6" fill="var(${i<3?'--accent':'--rule3'})"/>
+    ${i<7?`<line x1="${34+i*38}" y1="34" x2="${60+i*38}" y2="34" stroke="var(${i<2?'--accent':'--rule3'})" stroke-width="1.4"/>`:''}`).join('')}
+  <rect x="40" y="54" width="260" height="98" rx="8" fill="var(--panel)" stroke="var(--rule3)" stroke-width="1.2"/>
+  <rect x="58" y="70" width="150" height="9" rx="4" fill="var(--ink2)" opacity=".7"/>
+  <rect x="58" y="86" width="200" height="6" rx="3" fill="var(--rule3)"/>
+  ${[[58,106,66],[132,106,52],[192,106,74]].map(([x,y,w])=>`<rect x="${x}" y="${y}" width="${w}" height="18" rx="9" fill="none" stroke="var(--accent)" stroke-width="1.1"/>`).join('')}
+  <rect x="58" y="132" width="88" height="14" rx="7" fill="none" stroke="var(--illus)" stroke-width="1" stroke-dasharray="3 3"/>
+</svg>`};
+
+const PROPS=[
+{k:'net', name:'THE NET', tag:'recommended default', pick:true,
+ idea:'Conversation on the left, the typed order assembling on the right. Talk or type; the object is always visible.',
+ who:'The operator who knows the domain and wants speed.',
+ strong:'Fastest path from intent to a sealed spec. Teaches the gates by refusing to skip them. Works one-handed on a phone.',
+ weak:'A blank prompt intimidates newcomers, and free text can wander. Mitigated by always offering chips.',
+ on:'<code>blueprints/*.yaml</code> · <code>contract.py</code> · <code>evidence.py</code>'},
+{k:'theater', name:'THE THEATER', tag:'many units at once',
+ idea:'A map. Units sit on terrain made of the work itself — repos, domains, clients. Drag a unit onto ground to assign it.',
+ who:'Whoever is running more missions than they can hold in their head.',
+ strong:'Spatial memory does the work: you remember <em>where</em> a problem is. Contention and idle capacity are visible without reading anything.',
+ weak:'⚠ Seductive, and the failure mode is severe — a beautiful map over a system with almost no telemetry is the exact trap the rewritten UI brief flagged.',
+ on:'<code>switchboard.py</code> · <code>claims.py</code> · <code>sessions.py</code>'},
+{k:'line', name:'THE LINE', tag:'one repeatable procedure',
+ idea:'Left to right. Stations with gates between them, and a log beneath. The factory metaphor, taken literally.',
+ who:'Anyone running the same procedure repeatedly — a connector migration, a model rebuild.',
+ strong:'Where a run stopped, and which gate stopped it, is unmissable. Best surface for teaching a procedure to a new person.',
+ weak:'Hostile to genuinely parallel or branching work. It will imply a sequence that does not exist.',
+ on:'<code>teamplan.py</code> · the readiness phases · the assembly line'},
+{k:'muster', name:'THE MUSTER', tag:'clients and first-timers',
+ idea:'One question at a time, big, with chips. A stepper across the top. No command line anywhere.',
+ who:'A client, or anyone on their first unit.',
+ strong:'Impossible to get lost. The only surface you would put in front of a customer. Prints cleanly as a record of what was agreed.',
+ weak:'Slow for an expert. Eight cards is four seconds in the Net.',
+ on:'the same eight steps · <code>client_review.py</code>&rsquo;s allow-list for the client-safe variant'}
+];
+$('#v-surfaces').innerHTML=`<div class="sheet">
+  <h2>Surfaces</h2>
+  <p class="lede">Four layouts, four interaction models &mdash; and the important claim:
+  <b>these are not alternatives.</b> They are four lenses on one state, exactly the way the Switchboard
+  is one projection over stores that already existed. Ship the Net first; the others are views, not rewrites.</p>
+
+  <div class="sec"><h3>The proposals</h3>
+  <div class="props">${PROPS.map((p,i)=>`
+    <div class="prop ${p.pick?'pick':''} rv" style="--i:${i}">
+      <div class="mock">${MOCKS[p.k]}</div>
+      <div class="body">
+        <h4>${p.name} <span>${p.tag}</span></h4>
+        <p style="font-size:.86rem;color:var(--ink2);margin:0">${p.idea}</p>
+        <dl>
+          <dt>For</dt><dd>${p.who}</dd>
+          <dt>Strength</dt><dd>${p.strong}</dd>
+          <dt>Weakness</dt><dd>${p.weak}</dd>
+          <dt>Runs on</dt><dd>${p.on}</dd>
+        </dl>
+      </div>
+    </div>`).join('')}</div></div>
+
+  <div class="sec rv"><h3>A fifth, held back on purpose</h3>
+  <p><b>THE SANDTABLE</b> &mdash; rehearse a mission before spending anything: run three candidate
+  compositions against a recorded scenario and compare cost, quality and how often a human had to
+  intervene. <span class="chip c-res">RESEARCH</span></p>
+  <p class="note">It is the most exciting surface here and it is two gates away, not one. It needs the
+  optimizer, which needs a corpus that can tell two configurations apart, which needs the ten dark
+  contract assertions wired. Building the sandtable first would produce a confident comparison of
+  configurations nothing can actually score &mdash; which is the 965-run loop with better graphics.</p></div>
+
+  <div class="sec rv"><h3>Every page, and what it is for</h3>
+  <div class="tblwrap"><table>
+  <thead><tr><th style="width:15%">Surface</th><th style="width:9%">Echelon</th><th style="width:36%">Answers</th><th>Built on</th></tr></thead><tbody>
+  ${[
+   ['ENLIST','Ø','How do I make a unit that does this?','the Net / the Muster','c-spec'],
+   ['ARMORY','Ø','What may it touch, and at what isolation tier?','tool scopes · isolation ladder','c-spec'],
+   ['PROVING GROUND','●','Can this contract actually fail? Show me it failing.','the mutation registry · negative controls','c-built'],
+   ['BLUEPRINTS','I','Which compositions do we have, and what did each cost?','<code>presets.py</code> · <code>runs.py</code>','c-spec'],
+   ['ORDERS','I','What is being asked, and what evidence must come back?','<code>TaskStore</code> · evidence classes','c-built'],
+   ['THEATER','III','What is running, what is blocked, what is waiting on me?','<code>switchboard.py</code>','c-built'],
+   ['QUARTERMASTER','III','What may be spent before someone must ask?','attempt ledger · spend ceiling','c-spec'],
+   ['GATES','III','What is waiting for a human signature?','the APPROVE plane','c-built'],
+   ['DOCTRINE','XXXX','What went wrong before, and did the fix reach the unit?','<code>findings.d/</code>','c-built'],
+   ['AFTER-ACTION','XXXX','What actually happened, and what could we not tell?','the case-study compiler','c-built'],
+   ['EMBASSY','XXXX','What may a client see, and who approved that?','allow-list projection · publication gate','c-built'],
+   ['TREASURY','XXXXXX','What did this earn against what it cost?','<code>runs.py</code> cost + revenue join','c-spec'],
+   ['MEMORY','XXXXXX','What do we know, across every mission and repo?','Zeus Memory','c-spec'],
+   ['FEDERATION','—','What may we exchange with another organisation?','research R34, never run','c-res']
+  ].map(([n,e,q,b,c],i)=>`<tr><td><b>${n}</b></td><td class="num" style="color:var(--accent)">${e}</td>
+    <td>${q}</td><td>${b} <span class="chip ${c}">${c==='c-built'?'BUILT':c==='c-res'?'RESEARCH':'SPEC'}</span></td></tr>`).join('')}
+  </tbody></table></div>
+  <p class="note" style="margin-top:12px">Six of the fourteen already have a working primitive underneath.
+  That is the difference between this and a wireframe deck.</p></div>
+</div>`;
+/* ═══════════════ 5 · THE MESH — knowledge that moves ═══════════════
+   Paul's question, answered properly: peer-to-peer mesh, or one vector store?
+   The honest answer is that both fail in known ways, and the failure modes
+   are opposites — which is what tells you the real design is three layers. */
+$('#v-mesh').innerHTML=`<div class="sheet">
+  <h2>The Mesh</h2>
+  <p class="lede">&ldquo;Agents share what they know, pulled dynamically as another agent needs it.&rdquo;
+  That instinct is right, the name is good, and the mechanism as usually imagined has a failure mode
+  severe enough to be worth naming before building.</p>
+
+  <div class="sec rv"><h3>The two obvious answers, and how each one breaks</h3>
+  <div class="figwrap"><svg class="fig" viewBox="0 0 820 246" role="img"
+    aria-label="Pure peer-to-peer mesh propagates rumour; a single vector store cannot refuse. The two failure modes are opposites.">
+    <text x="7" y="15" fill="var(--risk)" font-family="var(--mono)" font-size="9.5" letter-spacing=".1em">A · PURE MESH — PEER TO PEER</text>
+    ${[[70,60],[150,44],[196,104],[112,124],[42,110]].map(([x,y],i)=>
+      `<circle cx="${x}" cy="${y}" r="15" fill="var(--panel)" stroke="var(--rule3)" stroke-width="1.2"/>
+       <text x="${x}" y="${y+4}" text-anchor="middle" fill="var(--ink2)" font-family="var(--mono)" font-size="9">A${i+1}</text>`).join('')}
+    <path d="M84,56 L136,48 M162,58 L190,90 M182,116 L126,122 M98,124 L56,116 M56,96 L62,74" stroke="var(--rule3)" stroke-width="1.1" fill="none"/>
+    <circle cx="70" cy="60" r="15" fill="var(--risk-bg)" stroke="var(--risk)" stroke-width="1.6"/>
+    <text x="70" y="64" text-anchor="middle" fill="var(--risk)" font-family="var(--mono)" font-size="9">A1</text>
+    <path d="M84,56 L136,48" stroke="var(--risk)" stroke-width="1.8"/>
+    <path d="M162,58 L190,90" stroke="var(--risk)" stroke-width="1.5" opacity=".8"/>
+    <path d="M182,116 L126,122" stroke="var(--risk)" stroke-width="1.2" opacity=".6"/>
+    <text x="7" y="164" fill="var(--ink)" font-size="11.5">A1 is confidently wrong. Nothing in the fabric can say so,</text>
+    <text x="7" y="180" fill="var(--ink)" font-size="11.5">so the error is now four agents&rsquo; prior knowledge.</text>
+    <text x="7" y="204" fill="var(--risk)" font-family="var(--mono)" font-size="10">FAILS AS: a rumour network</text>
+    <text x="7" y="222" fill="var(--ink2)" font-size="10.5">The retired agent filed 233 diagnoses. On a mesh it would have</text>
+    <text x="7" y="237" fill="var(--ink2)" font-size="10.5">taught them to everyone.</text>
+
+    <line x1="404" y1="8" x2="404" y2="240" stroke="var(--rule3)" stroke-width="1" stroke-dasharray="4 4"/>
+
+    <text x="428" y="15" fill="var(--risk)" font-family="var(--mono)" font-size="9.5" letter-spacing=".1em">B · ONE VECTOR STORE</text>
+    <rect x="470" y="34" width="120" height="98" rx="8" fill="var(--panel)" stroke="var(--rule3)" stroke-width="1.2"/>
+    ${[...Array(7)].map((_,i)=>`<rect x="482" y="${46+i*12}" width="${[92,64,88,52,96,70,80][i]}" height="6" rx="3" fill="var(--rule3)" opacity=".8"/>`).join('')}
+    <text x="530" y="146" text-anchor="middle" fill="var(--muted)" font-family="var(--mono)" font-size="9">nearest neighbour</text>
+    ${[[646,54],[646,84],[646,114]].map(([x,y],i)=>`<path d="M592,${83} L${x-8},${y+5}" stroke="var(--accent)" stroke-width="1.1"/>
+      <rect x="${x}" y="${y-8}" width="90" height="26" rx="5" fill="var(--panel)" stroke="var(--rule3)" stroke-width="1"/>
+      <text x="${x+45}" y="${y+9}" text-anchor="middle" fill="var(--ink2)" font-size="10">result ${i+1}</text>`).join('')}
+    <text x="428" y="164" fill="var(--ink)" font-size="11.5">Ask it something nobody has ever done, and it returns the</text>
+    <text x="428" y="180" fill="var(--ink)" font-size="11.5">three closest things anyway. It has no way to say &ldquo;nothing&rdquo;.</text>
+    <text x="428" y="204" fill="var(--risk)" font-family="var(--mono)" font-size="10">FAILS AS: an instrument that cannot refuse</text>
+    <text x="428" y="222" fill="var(--ink2)" font-size="10.5">⭐ Which is exactly UNMEASURABLE, wearing retrieval&rsquo;s clothes &mdash;</text>
+    <text x="428" y="237" fill="var(--ink2)" font-size="10.5">the one failure this whole estate exists to stop.</text>
+  </svg></div>
+  <figcaption><b>The two failure modes are opposites, and that is the useful part.</b> A mesh has no
+  ground truth; a single store has no humility. Neither is a design &mdash; they are the two ends of the
+  axis the real design sits on.</figcaption></div>
+
+  <blockquote class="doct">Knowledge moves with its verdict attached, or it does not move.
+  <cite>the one rule — everything below is a consequence of it</cite></blockquote>
+
+  <div class="sec rv"><h3>The answer is three layers, not one choice</h3>
+  <div class="figwrap"><svg class="fig" viewBox="0 0 820 296" role="img"
+    aria-label="Three layers: an append-only evidence ledger as canonical truth, a rebuildable index over it, and a demand-paged transfer mesh that carries evidence pointers rather than conclusions.">
+    <rect x="7" y="24" width="806" height="72" rx="9" fill="var(--built-bg)" stroke="var(--built)" stroke-width="1.4"/>
+    <text x="24" y="18" fill="var(--built)" font-family="var(--mono)" font-size="9.5" letter-spacing=".1em">LAYER 1 · THE LEDGER — CANONICAL, APPEND-ONLY, CONTENT-ADDRESSED</text>
+    <text x="24" y="48" fill="var(--ink)" font-size="12.5">What actually happened. Immutable, one file per finding, every row carrying its basis and its evidence class.</text>
+    <text x="24" y="68" fill="var(--ink2)" font-size="11.5">Not a vector database — an event log plus an evidence store. This is the only layer allowed to be true.</text>
+    <text x="24" y="86" fill="var(--built)" font-family="var(--mono)" font-size="10">BUILT · TaskStore · findings.d/ · evidence classes · the hash-pinned corpus</text>
+
+    <path d="M410,96 L410,116" stroke="var(--accent)" stroke-width="1.5" marker-end="url(#ma)"/>
+    <text x="420" y="111" fill="var(--muted)" font-family="var(--mono)" font-size="9">derived from, never authoritative over</text>
+
+    <rect x="7" y="120" width="806" height="66" rx="9" fill="var(--spec-bg)" stroke="var(--spec)" stroke-width="1.4" stroke-dasharray="5 4"/>
+    <text x="24" y="114" fill="var(--spec)" font-family="var(--mono)" font-size="9.5" letter-spacing=".1em">LAYER 2 · THE INDEX — REBUILDABLE, DISPOSABLE, NEVER A SOURCE</text>
+    <text x="24" y="144" fill="var(--ink)" font-size="12.5">Hybrid retrieval over the ledger — vectors for shape, keys and filters for truth. Throw it away and rebuild it any time.</text>
+    <text x="24" y="164" fill="var(--ink2)" font-size="11.5">It inherits the ledger&rsquo;s verdicts, so it can return NOT_KNOWN instead of the nearest thing. That is the whole trick.</text>
+    <text x="24" y="180" fill="var(--spec)" font-family="var(--mono)" font-size="10">SPEC · this is where a vector store belongs — as a projection, exactly like the Switchboard</text>
+
+    <path d="M410,186 L410,206" stroke="var(--accent)" stroke-width="1.5" marker-end="url(#ma)"/>
+    <text x="420" y="201" fill="var(--muted)" font-family="var(--mono)" font-size="9">pulled on demand, per task</text>
+
+    <rect x="7" y="210" width="806" height="78" rx="9" fill="var(--research-bg)" stroke="var(--research)" stroke-width="1.4" stroke-dasharray="2 4"/>
+    <text x="24" y="204" fill="var(--research)" font-family="var(--mono)" font-size="9.5" letter-spacing=".1em">LAYER 3 · THE MESH — DEMAND-PAGED DOCTRINE</text>
+    <text x="24" y="234" fill="var(--ink)" font-size="12.5">Your idea, made safe: an agent declares what it is about to do; the mesh pages in only the doctrine that applies to that.</text>
+    <text x="24" y="254" fill="var(--ink)" font-size="12.5">⭐ It transfers an <tspan font-style="italic">evidence pointer</tspan>, never a conclusion — finding id, basis, the discriminating test, what changed.</text>
+    <text x="24" y="274" fill="var(--research)" font-family="var(--mono)" font-size="10">RESEARCH · nothing here is built · the nearest running thing is the recurrence preflight, at one repo&rsquo;s scope</text>
+    <defs><marker id="ma" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="context-stroke"/></marker></defs>
+  </svg></div>
+  <figcaption><b>&ldquo;Mesh or one vector DB&rdquo; was the wrong question because they are different
+  layers.</b> The mesh is the <em>transfer</em>; the vector store is the <em>index</em>; neither is the
+  truth. Put the truth in an append-only ledger and both of the failures above become impossible:
+  a rumour has no ledger id, and a miss returns NOT_KNOWN.</figcaption></div>
+
+  <div class="sec rv"><h3>Why &ldquo;demand-paged&rdquo; is the right word for what you described</h3>
+  <p>You said the knowledge is <em>linked and transferred dynamically as another agent needs it</em>.
+  That is lazy evaluation of doctrine, and the borrowed term is exact: virtual memory pages in only the
+  pages a process actually touches. The alternative &mdash; loading every agent with everything
+  &mdash; is how you get a 200k-token prompt that degrades the work it was meant to improve.</p>
+  <div class="tblwrap"><table><thead><tr><th style="width:26%">Property</th><th style="width:37%">Demand-paged doctrine</th><th>Load-everything</th></tr></thead><tbody>
+    <tr><td>Context cost</td><td>Only what the declared task touches</td><td>Grows with the institution until it poisons the work</td></tr>
+    <tr><td>Attribution</td><td>Every page carries a ledger id you can open</td><td>Blends into one undifferentiated brief</td></tr>
+    <tr><td>Staleness</td><td>Paged at run time, so a correction lands the moment it is filed</td><td>Frozen at whenever the bundle was built</td></tr>
+    <tr><td>The miss case</td><td>Returns NOT_KNOWN and the agent proceeds knowing it is unguided</td><td>Returns something plausible and adjacent</td></tr>
+  </tbody></table></div></div>
+
+  <div class="sec rv"><h3>Is it a breakthrough? Honestly &mdash; partly, and here is the part that is</h3>
+  <p class="note" style="margin-bottom:14px">The estate has been burned before by publishing a novelty
+  claim that was falsifiable in four minutes, so this table exists on purpose.</p>
+  <div class="tblwrap"><table><thead><tr><th style="width:24%">Component</th><th style="width:34%">Prior art it resembles</th><th>Novel here?</th></tr></thead><tbody>
+    <tr><td>Peer knowledge transfer</td><td>Gossip / epidemic protocols; blackboard architectures (Hearsay-II, 1970s)</td><td class="num" style="color:var(--muted)">NO</td></tr>
+    <tr><td>Coordination via shared environment</td><td>Stigmergy — already a named research branch here (R22)</td><td class="num" style="color:var(--muted)">NO</td></tr>
+    <tr><td>Learning without sharing data</td><td>Federated learning</td><td class="num" style="color:var(--muted)">NO</td></tr>
+    <tr><td>Retrieval routed by task</td><td>Hybrid RAG, expert routing</td><td class="num" style="color:var(--muted)">NO</td></tr>
+    <tr><td><b>Transfer of evidence pointers, never conclusions</b></td><td>Assurance cases, provenance graphs — but those are documents, not a runtime channel</td><td class="num" style="color:var(--illus)">PARTLY</td></tr>
+    <tr><td>⭐ <b>A retrieval layer that can return NOT_KNOWN as a first-class verdict</b></td>
+      <td>Almost nothing. Every mainstream RAG stack returns nearest-neighbour and lets the model decide.</td>
+      <td class="num" style="color:var(--built)">YES — and it is the same insight as UNMEASURABLE, one layer up</td></tr>
+    <tr><td>⭐ <b>Doctrine that pages in per declared task, at run time</b></td>
+      <td>Closest is dynamic context assembly, which is not verdict-carrying</td>
+      <td class="num" style="color:var(--built)">YES, in combination</td></tr>
+  </tbody></table></div>
+  <p style="margin-top:14px"><b>So: the mesh is not the breakthrough. The refusal is.</b> A knowledge
+  fabric that can say <em>nobody here has done this, proceed unguided and record what you learn</em> is
+  a different class of object from one that always answers &mdash; and it is a direct, defensible
+  extension of the one thing this estate already does that its competitors do not.</p></div>
+
+  <div class="sec rv"><h3>What it would let you actually do</h3>
+  <div class="tblwrap"><table><thead><tr><th style="width:28%">Capability</th><th style="width:36%">Why the mesh enables it</th><th>Gate</th></tr></thead><tbody>
+    <tr><td>A new unit starts with every relevant correction already in hand</td>
+      <td>Doctrine pages in by declared task, at zero marginal cost per unit</td><td>the ledger must be cross-repo</td></tr>
+    <tr><td>A correction earned once reaches every unit it applies to &mdash; and only those</td>
+      <td>⭐ This is the direct fix for the measured failure where a parser silently dropped eight findings and no lane was ever told</td><td>an index that can prove coverage</td></tr>
+    <tr><td>Specialisation <em>emerges</em> instead of being configured</td>
+      <td>Route to the composition with the best recorded verdicts in that domain — cost and outcome are already joined per lane</td><td>needs verdicts at volume</td></tr>
+    <tr><td><b>Cross-client learning with zero cross-client data</b></td>
+      <td>The procedure crosses the boundary; the data never does. The allow-list projection and publication gate that do this already exist and already ship a client artifact</td>
+      <td class="num" style="color:var(--built)">nearest to reachable</td></tr>
+    <tr><td>Doctrine becomes a sellable artifact</td>
+      <td>A verified, evidence-carrying pack for a domain is a product with no marginal cost</td><td>needs the ledger to be portable</td></tr>
+    <tr><td>An organisation that measurably gets better at its own work</td>
+      <td>The compounding loop the Atlas draws as cut is cut at exactly one step: durable memory</td><td>everything above</td></tr>
+  </tbody></table></div></div>
+
+  <div class="sec rv"><h3>The first step, and it is small</h3>
+  <p>Do not build a mesh. Build the thing that makes a mesh possible and is useful alone:
+  <b>give every finding a typed identity and a machine-readable scope</b> &mdash; what kind of work it
+  applies to, what basis it carries, what the discriminating test was. Today they are Markdown with
+  four conventional fields.</p>
+  <p>That single change turns the existing ledger into something an index can rank and a mesh can page.
+  It is worth doing even if the mesh is never built, which is the test every first step should pass.</p>
+  <p class="note"><span class="chip c-spec">SPEC</span> The nearest running proof is the recurrence
+  preflight: a run can already see the failure its own history recorded. It works. Its scope is one
+  repository and one run &mdash; and <em>widening that scope is the entire argument</em>.</p></div>
+</div>`;
+/* ═══════════════ 6 · VENTURE — pick a topic, get the campaign ═══════════════ */
+const TOPICS=[
+{k:'leads', t:'Local lead intelligence', who:'Trades & installers',
+ d:'Public planning / permit filings become qualified, timed leads.',
+ buyer:'A solar, EV-charger or heat-pump installer with 3–20 staff who currently buys leads at auction.',
+ wedge:'They pay for leads that are already stale and shared with four rivals. Filings are public and days earlier.',
+ first:'Read one council&rsquo;s planning portal for 30 days and produce a clean table of applications matching one filter.',
+ proof:'Every record reconciles to a source URL, and a hand-checked sample of 20 has zero fabricated fields.',
+ artifact:'A weekly one-page brief: new filings, contact route, why each matched.',
+ price:'A monthly retainer per installer per area, priced against what one won job is worth to them.',
+ money:'Three installers paying for the weekly brief, invoiced.',
+ risk:'⚠ Portal terms of service, and outreach law (GDPR/PECR in the UK). Check both in RECON, not after.',
+ moat:'The doctrine of which filters actually predict a won job — learned per area, and only from your own history.'},
+{k:'compliance', t:'Regulation watch', who:'Regulated SMEs',
+ d:'Rule changes, mapped to the specific firms and documents they break.',
+ buyer:'A compliance lead at a firm too small for a subscription to a big regulatory service.',
+ wedge:'Existing services tell everyone everything. The value is telling one firm the three things that affect <em>them</em>.',
+ first:'Watch one regulator&rsquo;s publication feed and detect a change to one named rule set.',
+ proof:'A diff against the prior version, with the changed clause quoted and cited — no summary without a citation.',
+ artifact:'A change notice: what changed, which of your documents it touches, what to do.',
+ price:'Per-firm monthly, tiered by how many rule sets they track.',
+ money:'Two firms on a paid pilot with a signed scope.',
+ risk:'⚠ You are adjacent to giving regulatory advice. Ship <em>evidence and diffs</em>, never advice, and say so in the contract.',
+ moat:'The document-to-rule mapping per client, which nobody else can rebuild cheaply.'},
+{k:'sheet', t:'Spreadsheet to micro-SaaS', who:'One stubborn niche',
+ d:'Find a process a whole trade does in the same ugly spreadsheet. Replace the ugly part.',
+ buyer:'The person who maintains the spreadsheet, and hates it.',
+ wedge:'They already do the work. You are not selling a new habit, only a faster version of the one they have.',
+ first:'Take one real spreadsheet and reproduce its output exactly, from the same inputs.',
+ proof:'⭐ Byte-for-byte parity with the customer&rsquo;s own last three months of output. Nothing else counts.',
+ artifact:'A page that takes their input and returns their output, plus what changed.',
+ price:'Low monthly per seat. Land on parity, expand on the things the spreadsheet cannot do.',
+ money:'The spreadsheet&rsquo;s owner pays rather than go back to it.',
+ risk:'⚠ The spreadsheet encodes undocumented rules. Parity is harder than it looks — which is exactly why the contract must be parity, not features.',
+ moat:'Every exception you discover is doctrine the next customer in that trade gets for free.'},
+{k:'content', t:'Vertical content engine', who:'Niche B2B',
+ d:'Genuinely useful content for a narrow trade, at a cadence a human cannot hold.',
+ buyer:'A B2B firm in a boring vertical whose competitors publish nothing worth reading.',
+ wedge:'The bar is low and the ceiling is trust. Content with citations and real data beats volume.',
+ first:'Produce five pieces on one topic where every claim carries a source the reader can open.',
+ proof:'A citation checker passes: every factual claim resolves to a live source that actually says it.',
+ artifact:'Published pieces plus a monthly performance read.',
+ price:'Monthly retainer, or per-piece with a floor.',
+ money:'One retainer client past their second invoice.',
+ risk:'⚠ The market is flooded with unchecked generated content. Your only defensible position is the checker &mdash; so build it first, and show it.',
+ moat:'The checker itself, and the per-vertical source list it has learned to trust.'},
+{k:'dataprod', t:'Dashboard as a service', who:'Owner-operators',
+ d:'The numbers a small business owner needs, assembled and proved weekly.',
+ buyer:'An owner with data in four systems and no analyst.',
+ wedge:'They do not want a BI tool. They want six numbers they can trust on a Monday.',
+ first:'Join two of their systems and reproduce one number they already know is right.',
+ proof:'Source equals consumer: the number on the page matches the number in the source system, checked both ways.',
+ artifact:'A weekly figure pack, with every number carrying where it came from.',
+ price:'Monthly per business, plus setup.',
+ money:'The first business that renews after month one.',
+ risk:'⚠ Support load. Every new source is a new failure mode &mdash; refuse breadth until one vertical is boring.',
+ moat:'⭐ Provenance. When a client disputes a number you can show the lineage, and that is what keeps the contract.'},
+{k:'agency', t:'Agency in a box', who:'Other agencies',
+ d:'Sell the delivery capability itself &mdash; you run the armies, they keep the client.',
+ buyer:'A small agency that keeps turning down data work because they cannot staff it.',
+ wedge:'They have the relationship and no capacity. You have capacity and no relationship.',
+ first:'Take one scoped piece of their backlog and deliver it with an evidence pack.',
+ proof:'Their client accepts it without a rework round.',
+ artifact:'The work, plus a client-safe review page they can put their own name on.',
+ price:'Fixed price per scoped unit &mdash; possible only because the procedure is repeatable and evidenced.',
+ money:'A second job from the same agency. The first is a trial; the second is a business.',
+ risk:'⚠ You are one step from being a body shop. Price the unit, never the hour, or the leverage goes to them.',
+ moat:'The evidence pack. It is why they can resell you at a premium, and why they cannot swap you out quietly.'}
+];
+const PHASES=[
+{sym:'Ø', ph:'ECHELON 0', t:'RECON &mdash; can this be done at all, and legally?',
+ body:t=>`One agent, read-only, no spend. It answers a yes/no with evidence attached, and it is allowed to
+   answer <em>no</em>. <b>${t.first}</b>`,
+ out:t=>[['A go/no-go with sources','c-built'],['The legal read','c-risk'],['Nothing built','c-spec']],
+ gate:'You sign the go/no-go. Never automate this one.'},
+{sym:'●', ph:'ECHELON I', t:'PROVE &mdash; a fireteam and a contract that can fail',
+ body:t=>`Agent plus a non-LLM verifier. Write the contract <b>before</b> the work:
+   <em>${t.proof}</em> &mdash; then deliberately break the input and watch the contract catch it.`,
+ out:t=>[['A contract watched failing','c-built'],['~20 verified records','c-built'],['Still zero revenue','c-illus']],
+ gate:'The contract must be seen refusing at least once before you trust a single green run.'},
+{sym:'I', ph:'ECHELON II', t:'FIRST MONEY &mdash; a company that produces the sellable thing',
+ body:t=>`One mission, end to end, producing <b>${t.artifact}</b> Do it by hand where the agent is weak;
+   the point is the artifact and the invoice, not the automation.`,
+ out:t=>[['The artifact, delivered','c-built'],[t.money,'c-illus'],['A named price','c-illus']],
+ gate:'⭐ The only milestone that matters. Everything before it is preparation; everything after is scale.'},
+{sym:'III', ph:'ECHELON III', t:'SCALE &mdash; a regiment running in parallel',
+ body:t=>`Now widen: more sources, more segments, same contract. Units run in parallel, kept apart by
+   claims and bounded by caps. <b>Do not add a second product here.</b>`,
+ out:t=>[['Several units in parallel','c-spec'],['Cost per delivery, measured','c-built'],['A support load you must respect','c-risk']],
+ gate:'Spend ceiling per unit, and a human on anything client-facing.'},
+{sym:'XXXX', ph:'ECHELON IV', t:'PRODUCTISE &mdash; an army under one doctrine',
+ body:t=>`A second vertical using the same contracts, the same gates and the same evidence pack. This is
+   where you find out whether you built a business or a very good freelance habit.`,
+ out:t=>[['Two verticals, one doctrine','c-spec'],['Self-serve onboarding','c-spec'],['A margin you can state','c-illus']],
+ gate:'Publication boundary: what may a customer see, and who approved it.'},
+{sym:'XXXXXX', ph:'ECHELON V', t:'INSTITUTION &mdash; the nation',
+ body:t=>`The third vertical costs a fraction of the second, because <b>${t.moat}</b> is now written down,
+   paged in on demand, and applied without you.`,
+ out:t=>[['Doctrine that pays','c-spec'],['Cost per vertical falling','c-illus'],['An asset, not a job','c-illus']],
+ gate:'Treasury: revenue joined to cost per mission, or you are guessing about your own margin.'}
+];
+function venture(k){
+  const t=TOPICS.find(x=>x.k===k);
+  $$('.topic').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===k?'true':'false'));
+  $('#plan').innerHTML=`
+    <div class="mapfield" style="padding:16px 18px;margin-bottom:22px">
+      <div style="font-family:var(--mono);font-size:.62rem;letter-spacing:.11em;color:var(--muted)">CAMPAIGN BRIEF</div>
+      <h3 style="font-family:var(--display);font-size:1.24rem;margin:5px 0 10px">${t.t}</h3>
+      <div class="tblwrap"><table><tbody>
+        <tr><th style="width:15%">Buyer</th><td>${t.buyer}</td></tr>
+        <tr><th>Wedge</th><td>${t.wedge}</td></tr>
+        <tr><th>Proof of done</th><td><b>${t.proof}</b></td></tr>
+        <tr><th>First money</th><td>${t.money}</td></tr>
+        <tr><th>Price shape</th><td>${t.price}</td></tr>
+        <tr><th>Main risk</th><td>${t.risk}</td></tr>
+      </tbody></table></div>
+    </div>
+    <div class="phases">${PHASES.map(p=>`
+      <div class="phase">
+        <div class="mark"><span class="sym">${p.sym}</span><span class="ph">${p.ph}</span></div>
+        <div>
+          <h4>${p.t}</h4>
+          <p class="do">${p.body(t)}</p>
+          <div class="out">${p.out(t).map(([o,c])=>`<span class="chip ${c}">${o}</span>`).join('')}</div>
+          <p class="note" style="margin-top:8px"><b>Gate:</b> ${p.gate}</p>
+        </div>
+      </div>`).join('')}</div>`;
+}
+$('#v-venture').innerHTML=`<div class="sheet">
+  <h2>Build a venture</h2>
+  <p class="lede">Pick something you would actually care about for two years. The campaign structure
+  below is the same for all six &mdash; only the specifics change, which is itself the argument for
+  building the doctrine once.</p>
+
+  <div class="sec"><h3>1 · Pick your ground</h3>
+  <div class="topics">${TOPICS.map(t=>`
+    <button class="topic" data-k="${t.k}" aria-pressed="${t.k==='leads'}">
+      <span class="t">${t.t}</span><span class="d">${t.d}</span><span class="who">${t.who}</span>
+    </button>`).join('')}</div></div>
+
+  <div class="sec"><h3>2 · The campaign</h3><div id="plan"></div></div>
+
+  <div class="sec rv"><h3>3 · The honesty section, which most plans skip</h3>
+  <div class="tblwrap"><table><thead><tr><th style="width:32%">Claim you will be tempted to make</th><th>What to do instead</th></tr></thead><tbody>
+    <tr><td>&ldquo;Agents will 10&times; my output&rdquo;</td>
+      <td>Measure it. Cost per delivery is recoverable from the session transcripts retroactively, so you can know rather than believe &mdash; and one observation is not a law.</td></tr>
+    <tr><td>&ldquo;It runs unattended&rdquo;</td>
+      <td>3 of 14 recorded runs in the source system finished with no human. Plan for a human in the loop and be pleasantly surprised.</td></tr>
+    <tr><td>&ldquo;The hard part is the AI&rdquo;</td>
+      <td>⭐ It is not. A proven migration was <b>21.6 minutes of work inside 8 hours 20 of wall clock</b>. The hard part is the waiting, the selling and the support.</td></tr>
+    <tr><td>&ldquo;I&rsquo;ll add a second product to de-risk&rdquo;</td>
+      <td>A second product before the first has a renewing customer is two half-businesses. Widen at ECHELON III, never before.</td></tr>
+    <tr><td>&ldquo;Revenue in month N will be £X&rdquo;</td>
+      <td>Do not write that number. Write the <em>milestone</em> instead &mdash; &ldquo;three installers invoiced&rdquo; &mdash; because a milestone can be true or false and a forecast can only be defended.</td></tr>
+  </tbody></table></div>
+  <p class="note" style="margin-top:14px"><span class="chip c-illus">ILLUSTRATIVE</span> No figure in this
+  section is a forecast, and none is derived from a measured trading history, because none exists. The
+  only numbers quoted as fact are measurements from the Agent Factory repository itself &mdash; those
+  are in the Atlas with the commands that produced them.</p></div>
+</div>`;
+$$('.topic').forEach(b=>b.onclick=()=>venture(b.dataset.k));
+venture('leads');
+/* ═══════════════ 7 · REVENUE ═══════════════ */
+$('#v-revenue').innerHTML=`<div class="sheet">
+  <h2>Revenue</h2>
+  <p class="lede">Seven ways this earns, ordered by how close each one is to being possible today.
+  The ordering is the useful part: most of the money is nearer than the impressive parts.</p>
+
+  <div class="sec rv"><h3>The models</h3>
+  <div class="tblwrap"><table>
+  <thead><tr><th style="width:19%">Model</th><th style="width:22%">What is actually sold</th><th style="width:26%">Needs</th><th>Honest gate</th></tr></thead><tbody>
+  <tr><td><b>1 · Delivery leverage</b><br><span class="chip c-built">NEAREST</span></td>
+    <td>Nothing new. The same team delivers more, at the same price.</td>
+    <td>The control plane and the evidence pack &mdash; both built.</td>
+    <td>Margin only shows up if you measure cost per delivery. That is recoverable from session transcripts, so there is no excuse not to.</td></tr>
+  <tr><td><b>2 · Certified delivery</b><br><span class="chip c-built">NEAR</span></td>
+    <td>The <em>proof</em>, not the hours. A client-safe review page showing what was verified, what was claimed, and what nobody could tell.</td>
+    <td>Client Review, the allow-list projection, the publication gate &mdash; all built and rendered.</td>
+    <td>⭐ This is the one thing already shippable that a competitor cannot copy by hiring. It is also the easiest to under-price.</td></tr>
+  <tr><td><b>3 · Fixed-price units</b><br><span class="chip c-spec">SPEC</span></td>
+    <td>A migration, a model rebuild, a dashboard &mdash; at a fixed price, because the procedure is repeatable and evidenced.</td>
+    <td>One certified team, end to end.</td>
+    <td>⛔ Do not price fixed before a team has been certified once. You would be selling a fixed price on an unmeasured procedure.</td></tr>
+  <tr><td><b>4 · Blueprints &amp; doctrine</b><br><span class="chip c-spec">SPEC</span></td>
+    <td>A composition that is known to work in a domain, with its contract and its accumulated corrections.</td>
+    <td>Blueprint registry + a portable ledger. The Mesh makes this compounding.</td>
+    <td>Zero marginal cost, which is the attraction, and zero defensibility until the doctrine is deep.</td></tr>
+  <tr><td><b>5 · The Factory itself</b><br><span class="chip c-spec">SPEC</span></td>
+    <td>Seats. The Net, the Theater, the gates &mdash; an IDE for building certified units.</td>
+    <td>All fourteen surfaces, multi-tenancy, and a support function.</td>
+    <td>⚠ The most crowded market on this page. Enter it with the verdict model as the wedge, or do not enter it.</td></tr>
+  <tr><td><b>6 · Assurance</b><br><span class="chip c-spec">THE MOAT</span></td>
+    <td>&ldquo;We can prove your automated pipeline did what it claims &mdash; or prove that nobody can tell.&rdquo;</td>
+    <td>The contract, the five verdicts, negative controls, an evaluator that is a separate principal.</td>
+    <td>⭐ The differentiator nobody else has, and it needs the ten dark assertions wired before it can be sold honestly.</td></tr>
+  <tr><td><b>7 · Own the venture</b><br><span class="chip c-illus">FURTHEST</span></td>
+    <td>Products the armies build and run for you. No client at all.</td>
+    <td>Everything above, plus a market.</td>
+    <td>Highest ceiling, longest path, and the one where <em>nothing about agents helps with distribution</em>.</td></tr>
+  </tbody></table></div></div>
+
+  <div class="sec rv"><h3>Where each model sits on the ladder</h3>
+  <div class="figwrap"><svg class="fig" viewBox="0 0 820 178" role="img"
+    aria-label="Revenue models mapped to echelon: delivery leverage and certified delivery are reachable at fireteam and company; fixed-price at regiment; blueprints, seats and assurance at army; owning ventures at nation.">
+    <line x1="60" y1="146" x2="800" y2="146" stroke="var(--rule3)" stroke-width="1.2"/>
+    ${['Ø','●','I','III','XXXX','XXXXXX'].map((s,i)=>`
+      <text x="${72+i*134}" y="164" text-anchor="middle" fill="var(--accent)" font-family="var(--mono)" font-size="9.5">${s}</text>
+      <line x1="${72+i*134}" y1="142" x2="${72+i*134}" y2="150" stroke="var(--rule3)" stroke-width="1.2"/>`).join('')}
+    ${[[1,118,'1 · delivery leverage','--built'],[2,96,'2 · certified delivery','--built'],
+       [3,74,'3 · fixed-price units','--spec'],[4,52,'4 · blueprints & doctrine','--spec'],
+       [4,30,'6 · assurance — the moat','--spec'],[5,8,'7 · own the venture','--illus']]
+      .map(([e,y,label,tok])=>`
+      <rect x="${72+e*134-62}" y="${y}" width="124" height="19" rx="5" fill="var(--panel)"
+        stroke="var(${tok})" stroke-width="1.2" ${tok!=='--built'?'stroke-dasharray="4 4"':''}/>
+      <text x="${72+e*134}" y="${y+13}" text-anchor="middle" fill="var(--ink)" font-size="10">${label}</text>
+      <line x1="${72+e*134}" y1="${y+19}" x2="${72+e*134}" y2="142" stroke="var(${tok})" stroke-width="1"
+        stroke-dasharray="2 3" opacity=".5"/>`).join('')}
+  </svg></div>
+  <figcaption><b>Two of the seven are reachable with what already exists</b> &mdash; and they are the two
+  least glamorous. Solid boxes are built on measured capability; dashed boxes name a gate they are
+  waiting on. Vertical position is editorial, not a value scale.</figcaption></div>
+
+  <div class="sec rv"><h3>The moat, stated plainly</h3>
+  <blockquote class="doct">Team composition is a commodity. Certified team composition is not.
+  <cite>the differentiator every research pass converged on independently</cite></blockquote>
+  <p>Teams, crews, workflows, guardrails and human-in-the-loop approval are first-class in nearly every
+  agent framework surveyed. What almost nobody has &mdash; and what six mature tools were measured
+  destroying at the point of aggregation &mdash; is <b>a contract that can return &ldquo;I could not
+  tell&rdquo;, and a refusal to collapse that into a pass.</b></p>
+  <p>Every commercial argument on this page reduces to that one sentence. It is why the assurance model
+  is the moat, why certified delivery can be priced above hours, and why the Mesh&rsquo;s
+  <code>NOT_KNOWN</code> is the same idea one layer up.</p></div>
+</div>`;
+
+/* ═══════════════ modes, reveal, init ═══════════════ */
+const MODES=[['doctrine','Doctrine'],['ladder','The ladder'],['net','The Net'],['mesh','The Mesh'],
+             ['surfaces','Surfaces'],['venture','Venture'],['revenue','Revenue']];
+$('#modes').innerHTML=MODES.map(([k,t],i)=>
+  `<button class="mode" role="tab" data-m="${k}" aria-selected="${i===0}">${t}</button>`).join('');
+function setMode(m){
+  $$('.mode').forEach(b=>b.setAttribute('aria-selected',b.dataset.m===m?'true':'false'));
+  MODES.forEach(([k])=>$('#v-'+k).classList.toggle('on',k===m));
+  scrollTo({top:0,behavior:STILL?'auto':'smooth'});
+  reveal();
+}
+$$('.mode').forEach(b=>b.onclick=()=>setMode(b.dataset.m));
+
+let io=null;
+function reveal(){
+  const items=$$('.rv:not(.in)');
+  if(!('IntersectionObserver' in window)){items.forEach(n=>n.classList.add('in'));return;}
+  if(!io) io=new IntersectionObserver(es=>es.forEach(e=>{
+    if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}
+  }),{threshold:.1,rootMargin:'0px 0px -5% 0px'});
+  items.forEach(n=>io.observe(n));
+  $$('.rv:not(.in)').forEach(n=>{if(n.getBoundingClientRect().top<innerHeight+40)n.classList.add('in');});
+  setTimeout(()=>$$('.rv').forEach(n=>n.classList.add('in')),1600);
+}
+addEventListener('scroll',()=>{
+  $$('.rv:not(.in)').forEach(n=>{if(n.getBoundingClientRect().top<innerHeight)n.classList.add('in');});
+},{passive:true});
+reveal();
+</script>
+
+<noscript>
+<div style="padding:26px 22px;max-width:74ch">
+<h2 style="font-family:Spectral,Georgia,serif;font-weight:500">Field Manual &mdash; without scripting</h2>
+<p><b>The ladder.</b> Ø AGENT (one worker + contract) &rarr; ● FIRETEAM (worker + a non-LLM verifier
+holding the PASS bit) &rarr; I COMPANY (a hashed TeamSpec) &rarr; III REGIMENT (parallel missions,
+bounded by claims and caps) &rarr; XXXX ARMY (many regiments under one doctrine) &rarr; XXXXXX NATION
+(memory, treasury, law &mdash; the thing that <em>sustains</em> armies) &rarr; WORLD (federation;
+deliberately off the military symbol chart).</p>
+<p><b>The one analogy that breaks:</b> there is no LLM commanding other LLMs. That topology was tested
+across 180 configurations and averaged &minus;3.5%, degrading 39&ndash;70% on sequential work.
+Coordination above the soldier is deterministic code, contracts and humans at gates.</p>
+<p><b>The Mesh.</b> A pure peer-to-peer knowledge mesh becomes a rumour network; a single vector store
+cannot say &ldquo;nothing here&rdquo;. The answer is three layers &mdash; an append-only evidence
+ledger (canonical), a rebuildable index over it (never a source), and a demand-paged transfer mesh
+that carries evidence pointers rather than conclusions. The novel part is not the mesh: it is a
+retrieval layer that can return NOT_KNOWN.</p>
+<p><b>Revenue.</b> Seven models. Two are reachable today &mdash; delivery leverage, and certified
+delivery (selling the proof rather than the hours). Fixed-price units wait on one certified team.
+Assurance is the moat and waits on the ten unwired contract assertions.</p>
+<p><b>Grammar.</b> BUILT = exists today and names its primitive. SPEC = designed here, buildable on a
+named primitive. ILLUSTRATIVE = a shape, never a forecast. RESEARCH = unapproved. Measured facts live
+in the companion Agent Factory Atlas, with the commands that produced them.</p>
+</div>
+</noscript>

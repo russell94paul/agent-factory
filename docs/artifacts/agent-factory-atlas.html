@@ -1,0 +1,2179 @@
+<title>Agent Factory Atlas</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,500;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* ─────────────────────────────────────────────────────────────────────────
+   AGENT FACTORY ATLAS — dark-first instrument surface.
+   Palette inherits the teal of docs/artifacts/client-review-navira.html so
+   this reads as the same product. Verdict hues are semantic and never
+   double as the accent. UNMEASURABLE gets its own cold hue on purpose:
+   it is neither a pass nor a failure, and the whole repo exists to stop
+   those three collapsing into one another.
+   ───────────────────────────────────────────────────────────────────────── */
+:root{
+  --display:Spectral,"Iowan Old Style",Palatino,Cambria,ui-serif,Georgia,serif;
+  --sans:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"Cascadia Mono",Consolas,Menlo,monospace;
+
+  /* dark ground — neutrals biased toward the teal accent, not pure grey */
+  --bg:#0A0E10; --bg2:#0D1315; --panel:#121A1C; --panel2:#16201F; --sunk:#080C0D;
+  --ink:#E6EDEB; --ink2:#A2B2AF; --muted:#6B7B79;
+  --rule:#1E2A2B; --rule2:#182122; --rule3:#2A3A39;
+
+  --accent:#4FBFAC; --accent-dim:#1B3A37; --accent-ink:#062723;
+
+  /* verdict + state — semantic, never the accent */
+  --built:#5FBE8A;   --built-bg:#0F2A1D;
+  --now:#D9A94E;     --now-bg:#2C2313;
+  --next:#4FBFAC;    --next-bg:#0F2A28;
+  --future:#7C8FA6;  --future-bg:#161E26;
+  --absent:#8D9CD8;  --absent-bg:#181C33;   /* UNMEASURABLE / ABSENT */
+  --frontier:#B08AD4;--frontier-bg:#22182E;
+  --risk:#E08472;    --risk-bg:#2E1A16;
+
+  --shadow:0 1px 2px rgba(0,0,0,.5), 0 6px 16px -10px rgba(0,0,0,.92);
+  --r:10px;
+  --e1:cubic-bezier(.22,.61,.36,1);
+  --e2:cubic-bezier(.16,.84,.44,1);
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#F4F7F6; --bg2:#EDF2F1; --panel:#FFFFFF; --panel2:#F7FAF9; --sunk:#E6ECEA;
+    --ink:#101819; --ink2:#44514F; --muted:#5A6764;
+    --rule:#D6DEDC; --rule2:#E4EAE8; --rule3:#C2CECB;
+    --accent:#0E6E62; --accent-dim:#DDEEEB; --accent-ink:#FFFFFF;
+    --built:#1F7A4D; --built-bg:#E4F1E9;
+    --now:#8F6410;  --now-bg:#F7EEDA;
+    --next:#0E6E62; --next-bg:#DDEEEB;
+    --future:#5A6C80;--future-bg:#E7ECF1;
+    --absent:#4B58A8;--absent-bg:#E6E8F7;
+    --frontier:#7345A8;--frontier-bg:#F0E8F8;
+    --risk:#A33A2A; --risk-bg:#F7E6E2;
+    --shadow:0 1px 2px rgba(16,24,25,.07), 0 5px 15px -10px rgba(16,24,25,.32);
+  }
+}
+:root[data-theme="light"]{
+  --bg:#F4F7F6; --bg2:#EDF2F1; --panel:#FFFFFF; --panel2:#F7FAF9; --sunk:#E6ECEA;
+  --ink:#101819; --ink2:#44514F; --muted:#5A6764;
+  --rule:#D6DEDC; --rule2:#E4EAE8; --rule3:#C2CECB;
+  --accent:#0E6E62; --accent-dim:#DDEEEB; --accent-ink:#FFFFFF;
+  --built:#1F7A4D; --built-bg:#E4F1E9;
+  --now:#8F6410;  --now-bg:#F7EEDA;
+  --next:#0E6E62; --next-bg:#DDEEEB;
+  --future:#5A6C80;--future-bg:#E7ECF1;
+  --absent:#4B58A8;--absent-bg:#E6E8F7;
+  --frontier:#7345A8;--frontier-bg:#F0E8F8;
+  --risk:#A33A2A; --risk-bg:#F7E6E2;
+  --shadow:0 1px 2px rgba(16,24,25,.07), 0 5px 15px -10px rgba(16,24,25,.32);
+}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+     font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--display);font-weight:500;text-wrap:balance;margin:0}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+a{color:var(--accent)}
+
+/* ── app shell ───────────────────────────────────────────────────────── */
+.app{display:flex;flex-direction:column;min-height:100vh;max-width:1680px;margin:0 auto}
+
+.ribbon{display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap;
+  padding:20px 22px 16px;border-bottom:1px solid var(--rule);background:var(--bg2)}
+.brand{flex:1 1 300px;min-width:260px}
+.brand h1{font-size:1.62rem;letter-spacing:-.012em;line-height:1.1}
+.brand .thesis{color:var(--ink2);font-size:.9rem;margin-top:6px;max-width:62ch}
+.brand .thesis em{color:var(--accent);font-style:normal}
+.stamp{font-family:var(--mono);font-size:.78rem;letter-spacing:.02em;
+  color:var(--muted);margin-top:8px}
+
+.vbar{display:flex;flex-direction:column;gap:6px;flex:0 0 auto;min-width:230px}
+.vbar-l{font-family:var(--mono);font-size:.77rem;letter-spacing:.02em;color:var(--muted)}
+.vbar-track{display:flex;height:11px;border-radius:3px;overflow:hidden;background:var(--sunk);
+  border:1px solid var(--rule)}
+.vbar-track i{display:block;height:100%}
+.vbar-key{display:flex;flex-wrap:wrap;gap:4px 12px;font-family:var(--mono);font-size:.66rem}
+.vbar-key span{display:inline-flex;align-items:center;gap:5px;color:var(--ink2)}
+.vbar-key b{width:7px;height:7px;border-radius:2px;display:inline-block}
+.hdr-tools{display:flex;gap:6px;align-items:center;margin-left:auto}
+.tbtn{border:1px solid var(--rule3);border-radius:7px;padding:6px 11px;font-size:.76rem;
+  color:var(--ink2);background:var(--panel);transition:border-color .14s ease-out,color .14s ease-out}
+.tbtn:hover{border-color:var(--accent);color:var(--ink)}
+.tbtn kbd{font-family:var(--mono);font-size:.68rem;opacity:.7;margin-left:5px}
+.railbtn{display:none}
+
+/* ── mode nav ────────────────────────────────────────────────────────── */
+.modes{display:flex;gap:2px;padding:0 22px;border-bottom:1px solid var(--rule);
+  background:var(--bg2);overflow-x:auto;scrollbar-width:thin}
+.mode{padding:11px 15px;font-family:var(--mono);font-size:.73rem;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--muted);border-bottom:2px solid transparent;
+  white-space:nowrap;transition:color .14s ease-out,border-color .14s ease-out}
+.mode:hover{color:var(--ink2)}
+.mode[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+
+/* ── body ────────────────────────────────────────────────────────────── */
+.body{display:grid;grid-template-columns:196px minmax(0,1fr);flex:1;min-height:0;position:relative}
+.body.norail{grid-template-columns:minmax(0,1fr)}
+.rail[hidden]{display:none}
+.rail{border-right:1px solid var(--rule);padding:16px 14px;background:var(--bg2);
+  display:flex;flex-direction:column;gap:18px;overflow-y:auto}
+.rail h3{font-family:var(--mono);font-size:.63rem;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:8px;font-weight:500}
+.rail-grp{display:flex;flex-direction:column;gap:3px}
+.chk{display:flex;align-items:center;gap:8px;padding:5px 7px;border-radius:6px;font-size:.8rem;
+  color:var(--ink2);transition:background .14s ease-out,color .14s ease-out;text-align:left;width:100%}
+.chk:hover{background:var(--panel);color:var(--ink)}
+.chk[aria-pressed="true"]{color:var(--ink);background:var(--panel)}
+.chk .dot{width:8px;height:8px;border-radius:2px;flex:0 0 auto;border:1px solid currentColor}
+.chk[aria-pressed="true"] .dot{background:currentColor}
+.chk .sw{width:24px;height:14px;border-radius:8px;border:1px solid var(--rule3);flex:0 0 auto;
+  position:relative;transition:background .16s var(--e1),border-color .16s var(--e1)}
+.chk .sw::after{content:"";position:absolute;top:1px;left:1px;width:10px;height:10px;border-radius:50%;
+  background:var(--muted);transition:transform .18s var(--e1),background .16s var(--e1)}
+.chk[aria-pressed="true"] .sw{background:var(--accent-dim);border-color:var(--accent)}
+.chk[aria-pressed="true"] .sw::after{transform:translateX(10px);background:var(--accent)}
+.rail-note{font-size:.7rem;color:var(--muted);line-height:1.5;border-top:1px solid var(--rule2);padding-top:12px}
+
+.stage{position:relative;min-height:0;display:flex;flex-direction:column}
+.view{display:none}
+.view.on{display:block}
+
+/* ── graph canvas ────────────────────────────────────────────────────── */
+.canvas-wrap{position:relative;overflow:hidden;background:
+  radial-gradient(1100px 520px at 22% -8%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 62%),
+  var(--bg);min-height:600px;height:calc(100vh - 196px)}
+.canvas-wrap.no-mix{background:var(--bg)}
+#graph{width:100%;height:100%;display:block;cursor:grab;touch-action:none}
+#graph.drag{cursor:grabbing}
+.zoom{position:absolute;left:14px;bottom:14px;display:flex;gap:5px;z-index:4}
+.zoom button{width:30px;height:30px;border:1px solid var(--rule3);border-radius:7px;background:var(--panel);
+  color:var(--ink2);font-family:var(--mono);font-size:.85rem;display:grid;place-items:center}
+.zoom button:hover{border-color:var(--accent);color:var(--ink)}
+.zoom .wide{width:auto;padding:0 10px;font-size:.7rem;letter-spacing:.06em}
+
+#legend ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
+#legend li{display:flex;align-items:center;gap:8px;font-size:.75rem;color:var(--ink2)}
+#legend svg{flex:0 0 auto}
+
+/* graph elements */
+.gnode{cursor:pointer}
+.gnode rect.card{transition:filter .16s ease-out}
+.gnode:hover rect.card{filter:brightness(1.14)}
+.gnode text{pointer-events:none}
+.gnode .ttl{font-family:var(--sans);font-size:12.4px;font-weight:500;fill:var(--ink)}
+.gnode .sub{font-family:var(--mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase}
+.gnode.dim{opacity:.16}
+.gnode.sel rect.card{stroke-width:2.1}
+.edge{fill:none;stroke-linecap:round}
+.edge.dim{opacity:.05}
+.edge.hot{stroke-width:2.1}
+.era-band text{font-family:var(--mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase;fill:var(--muted)}
+.track-lbl{font-family:var(--mono);font-size:8px;letter-spacing:.12em;text-transform:uppercase;fill:var(--muted)}
+
+/* pulse for CURRENT nodes */
+@keyframes ringpulse{0%{r:5;opacity:.85}100%{r:15;opacity:0}}
+.pulse{animation:ringpulse 2.1s var(--e2) infinite}
+
+/* ── inspector ───────────────────────────────────────────────────────── */
+.insp{position:absolute;top:0;right:0;bottom:0;width:398px;background:var(--panel);
+  border-left:1px solid var(--rule);box-shadow:var(--shadow);z-index:6;display:flex;flex-direction:column;
+  transform:translateX(100%);transition:transform .26s var(--e1);visibility:hidden}
+.insp.open{transform:none;visibility:visible}
+.insp-hd{padding:16px 18px 12px;border-bottom:1px solid var(--rule2);position:relative;flex:0 0 auto}
+.insp-hd h2{font-size:1.14rem;line-height:1.25;padding-right:30px}
+.insp-x{position:absolute;top:13px;right:13px;width:26px;height:26px;border-radius:6px;
+  color:var(--muted);display:grid;place-items:center;font-size:1rem}
+.insp-x:hover{background:var(--panel2);color:var(--ink)}
+.insp-body{overflow-y:auto;padding:14px 18px 26px;flex:1;min-height:0}
+.insp h3{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);margin:18px 0 7px;font-weight:500}
+.insp h3:first-child{margin-top:2px}
+.insp p{margin:0 0 8px;font-size:.855rem;color:var(--ink2)}
+.insp ul{margin:0;padding-left:16px;font-size:.83rem;color:var(--ink2)}
+.insp li{margin-bottom:3px}
+.insp li::marker{color:var(--muted)}
+
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}
+.chip{font-family:var(--mono);font-size:.63rem;letter-spacing:.07em;text-transform:uppercase;
+  padding:3px 7px;border-radius:5px;border:1px solid;white-space:nowrap}
+.chip.sm{font-size:.6rem;padding:2px 6px}
+.pill{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:.68rem;
+  padding:3px 8px;border-radius:20px;border:1px solid}
+
+/* value signature */
+.vsig{display:flex;flex-direction:column;gap:5px;margin-top:4px}
+.vrow{display:grid;grid-template-columns:74px 1fr;align-items:center;gap:9px;
+  padding:3px 5px;border-radius:5px;width:100%;text-align:left}
+.vrow:hover{background:var(--panel2)}
+.vrow .k{font-family:var(--mono);font-size:.63rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.vseg{display:flex;gap:3px}
+.vseg i{height:7px;flex:1;border-radius:1.5px;background:var(--rule);transition:background .3s var(--e2)}
+.vseg i.f{background:var(--accent)}
+.vwhy{font-size:.78rem;color:var(--ink2);border-left:2px solid var(--accent);padding:5px 0 5px 9px;
+  margin-top:7px;display:none}
+.vwhy.on{display:block}
+
+.evid{font-family:var(--mono);font-size:.7rem;color:var(--ink2);background:var(--sunk);
+  border:1px solid var(--rule2);border-radius:7px;padding:9px 10px;overflow-x:auto;white-space:pre-wrap;
+  word-break:break-word}
+.evid b{color:var(--ink);font-weight:500}
+.risk-box{border-left:2px solid var(--risk);padding:6px 0 6px 10px;font-size:.82rem;color:var(--ink2)}
+
+/* mini dep graph in inspector */
+.minidep{display:flex;flex-direction:column;gap:6px;font-size:.78rem}
+.minidep a{display:block;padding:5px 8px;border-radius:6px;border:1px solid var(--rule);
+  color:var(--ink2);text-decoration:none;background:var(--panel2);cursor:pointer;
+  transition:border-color .14s ease-out,color .14s ease-out}
+.minidep a:hover{border-color:var(--accent);color:var(--ink)}
+.minidep .lbl{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+
+/* ── generic panel sections (VALUE / ZEUS / SIM / FRONTIER) ──────────── */
+.sheet{padding:26px 24px 60px;max-width:1180px}
+.sheet .lede{font-size:1.02rem;color:var(--ink2);max-width:66ch;margin:0 0 4px}
+.sheet h2{font-size:1.34rem;margin:0 0 6px;letter-spacing:-.008em}
+.sec{margin-top:38px}
+.sec > h3{font-family:var(--mono);font-size:.66rem;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--muted);margin:0 0 12px;font-weight:500;border-top:1px solid var(--rule2);padding-top:12px}
+.note{font-size:.82rem;color:var(--muted);max-width:70ch}
+
+figure{margin:0}
+figcaption{font-size:.8rem;color:var(--muted);margin-top:9px;max-width:72ch;line-height:1.5}
+figcaption b{color:var(--ink2);font-weight:500}
+.figwrap{overflow-x:auto;padding-bottom:4px}
+svg.fig{max-width:100%;height:auto;display:block}
+
+table{border-collapse:collapse;width:100%;font-size:.82rem}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--rule2);vertical-align:top}
+th{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:500}
+td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* reveal */
+.rv{opacity:1;transform:none}
+.js .rv{opacity:0;transform:translateY(9px);
+  transition:opacity .5s var(--e1),transform .5s var(--e1);transition-delay:calc(var(--i,0) * 55ms)}
+.js .rv.in{opacity:1;transform:none}
+
+/* ── command palette ─────────────────────────────────────────────────── */
+.cmdk{position:fixed;inset:0;z-index:40;display:none;background:rgba(0,0,0,.5);
+  backdrop-filter:blur(3px);padding:12vh 20px 20px}
+.cmdk.on{display:block}
+.cmdk-box{max-width:560px;margin:0 auto;background:var(--panel);border:1px solid var(--rule3);
+  border-radius:12px;box-shadow:var(--shadow);overflow:hidden}
+.cmdk input{width:100%;border:0;background:none;color:var(--ink);font:inherit;font-size:.95rem;
+  padding:14px 16px;border-bottom:1px solid var(--rule2);outline:none}
+.cmdk ul{list-style:none;margin:0;padding:6px;max-height:46vh;overflow-y:auto}
+.cmdk li{padding:8px 11px;border-radius:7px;font-size:.86rem;color:var(--ink2);cursor:pointer;
+  display:flex;align-items:center;gap:9px}
+.cmdk li[aria-selected="true"]{background:var(--panel2);color:var(--ink)}
+.cmdk li .k{font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);margin-left:auto}
+
+/* ── story mode ──────────────────────────────────────────────────────── */
+.story{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:20;display:none;
+  background:color-mix(in srgb,var(--panel) 95%,transparent);border:1px solid var(--rule3);
+  border-radius:12px;box-shadow:var(--shadow);padding:13px 16px;max-width:min(660px,92vw);
+  backdrop-filter:blur(8px)}
+.story.on{display:block}
+.story .step{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.story h4{font-family:var(--display);font-size:1.06rem;font-weight:500;margin:3px 0 5px}
+.story p{margin:0;font-size:.84rem;color:var(--ink2)}
+.story-nav{display:flex;gap:7px;align-items:center;margin-top:11px}
+.story-nav .tbtn{padding:5px 11px}
+.story-prog{flex:1;height:3px;background:var(--rule);border-radius:2px;overflow:hidden}
+.story-prog i{display:block;height:100%;width:100%;background:var(--accent);
+  transform-origin:left center;transform:scaleX(0);transition:transform .35s var(--e1)}
+
+/* ── simulation ──────────────────────────────────────────────────────── */
+.simbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 16px}
+.simtabs{display:flex;gap:4px;flex-wrap:wrap}
+.simtab{padding:6px 12px;border:1px solid var(--rule3);border-radius:7px;font-size:.78rem;color:var(--ink2)}
+.simtab[aria-selected="true"]{border-color:var(--accent);color:var(--ink);background:var(--accent-dim)}
+.simctl{display:flex;gap:5px;margin-left:auto;align-items:center}
+.simstage{border:1px solid var(--rule);border-radius:12px;background:var(--bg2);padding:16px;overflow-x:auto}
+.simcap{min-height:46px;margin-top:12px;font-size:.88rem;color:var(--ink);max-width:76ch}
+.simcap .basis{font-family:var(--mono);font-size:.6rem;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--muted);display:block;margin-bottom:3px}
+.simlog{font-family:var(--mono);font-size:.71rem;line-height:1.75;background:var(--sunk);
+  border:1px solid var(--rule2);border-radius:9px;padding:11px 13px;height:154px;overflow-y:auto;margin-top:12px}
+.simlog div{display:flex;gap:9px;white-space:pre-wrap}
+.simlog .t{color:var(--muted);flex:0 0 auto}
+.simlog .ok{color:var(--built)} .simlog .no{color:var(--risk)}
+.simlog .un{color:var(--absent)} .simlog .pl{color:var(--future)}
+
+/* ── responsive ──────────────────────────────────────────────────────── */
+@media (max-width:1040px){
+  .body{grid-template-columns:1fr}
+  .rail{display:none}
+  .rail.open{display:flex !important;position:absolute;z-index:8;top:0;bottom:0;left:0;width:214px;box-shadow:var(--shadow)}
+  .railbtn{display:inline-block}
+  .insp{width:min(398px,100%)}
+}
+@media (max-width:680px){
+  .ribbon{padding:15px 15px 12px}
+  .brand h1{font-size:1.32rem}
+  .vbar{min-width:100%}
+  .hdr-tools{margin-left:0;width:100%}
+  .canvas-wrap{height:auto;min-height:470px}
+  .insp{top:auto;height:76vh;width:100%;border-left:0;border-top:1px solid var(--rule3);
+        border-radius:14px 14px 0 0;transform:translateY(100%)}
+  .insp.open{transform:none}
+  .legend{display:none}
+  .sheet{padding:20px 15px 50px}
+}
+@media (prefers-reduced-motion: reduce){
+  .js .rv,.js .rv.in{opacity:1 !important;transform:none !important;transition:none !important}
+  .pulse{animation:none !important;opacity:.4}
+  *{animation-duration:.001ms !important;animation-iteration-count:1 !important;
+    transition-duration:.001ms !important;scroll-behavior:auto !important}
+}
+</style>
+
+<div class="app">
+  <header class="ribbon">
+    <div class="brand">
+      <h1>Agent Factory Atlas</h1>
+      <p class="thesis">A factory for agent teams whose output can be <em>certified</em> rather than
+        believed. This map is drawn from the repository, not from a plan &mdash; every node carries
+        its basis, and nothing planned is drawn like something built.</p>
+      <p class="stamp" id="stamp">measured 2026-09-01 &middot; primary checkout &middot; HEAD ab13977</p>
+    </div>
+
+    <div class="vbar" id="vbar">
+      <div class="vbar-l">Readiness &mdash; 30 gates, four verdicts, never collapsed</div>
+      <div class="vbar-track" id="vtrack"></div>
+      <div class="vbar-key" id="vkey"></div>
+    </div>
+
+    <div class="hdr-tools">
+      <button class="tbtn railbtn" id="btn-rail" aria-expanded="false">Filters</button>
+      <button class="tbtn" id="btn-cmd" title="Command palette">Search<kbd>&#8984;K</kbd></button>
+      <button class="tbtn" id="btn-story">Play the story</button>
+      <button class="tbtn" id="btn-theme" title="Toggle theme" aria-label="Toggle colour theme">&#9681;</button>
+    </div>
+  </header>
+
+  <nav class="modes" id="modes" role="tablist" aria-label="Atlas modes"></nav>
+
+  <div class="body">
+    <aside class="rail" id="rail"></aside>
+    <main class="stage">
+      <section class="view on" id="v-journey">
+        <div class="canvas-wrap" id="cw">
+          <svg id="graph" role="img" aria-label="Agent Factory capability graph: completed foundations through current work, next steps, gated horizon and unapproved research frontier."></svg>
+          <div class="zoom">
+            <button id="z-in" aria-label="Zoom in">+</button>
+            <button id="z-out" aria-label="Zoom out">&minus;</button>
+            <button id="z-fit" class="wide">FIT</button>
+          </div>
+          <aside class="insp" id="insp" role="complementary" aria-label="Node inspector" aria-hidden="true"></aside>
+        </div>
+      </section>
+      <section class="view" id="v-value"></section>
+      <section class="view" id="v-zeus"></section>
+      <section class="view" id="v-sim"></section>
+      <section class="view" id="v-frontier"></section>
+    </main>
+  </div>
+</div>
+
+<div class="cmdk" id="cmdk" role="dialog" aria-modal="true" aria-label="Command palette">
+  <div class="cmdk-box">
+    <input id="cmdk-in" placeholder="Jump to a capability, mode or simulation&hellip;" autocomplete="off" spellcheck="false">
+    <ul id="cmdk-list" role="listbox"></ul>
+  </div>
+</div>
+
+<div class="story" id="story" role="region" aria-label="Guided story">
+  <div class="step" id="story-step"></div>
+  <h4 id="story-title"></h4>
+  <p id="story-body"></p>
+  <div class="story-nav">
+    <button class="tbtn" id="story-prev">&larr; Back</button>
+    <button class="tbtn" id="story-next">Next &rarr;</button>
+    <div class="story-prog"><i id="story-bar"></i></div>
+    <button class="tbtn" id="story-end">Exit</button>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   DATA MODEL. Separated from rendering on purpose: the graph is driven by
+   these arrays, so updating the atlas means editing data, not DOM.
+
+   BASIS VOCABULARY, used on every number and every node:
+     MEASURED   a command was run against repository state and its output read
+     DERIVED    computed from measured inputs; the formula is stated
+     DOCUMENTED stated in a file that was read; the file is cited (one hop)
+     AUTHORED   a human judgement; no probe can see it
+     PLANNED    decided, not built
+     PROPOSED   written down, not decided
+     REFUTED    tested and found false; kept, because a dead option is evidence
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── measured constants. Every one carries the command that produced it. ──
+   Re-measure before quoting: five sessions share this checkout and the
+   readiness board is cwd-dependent (it reads differently from a worktree
+   at the same commit). */
+const MEAS = {
+  gates:   {pass:13, fail:12, unmeasurable:4, notrun:1, total:30,
+            cmd:'python -m factory.readiness', at:'2026-09-01, primary checkout, 542.4 s'},
+  modules: {n:62,  loc:19897, cmd:'ls factory/*.py | wc -l ; cat factory/*.py | wc -l'},
+  tests:   {files:48, defs:733, cmd:'grep -rc "def test_" tests/*.py'},
+  findings:{n:34,  cmd:'ls docs/findings.d/ | wc -l'},
+  tasks:   {events:253, cmd:'wc -l .data/tasks.jsonl'},
+  runs:    {rows:10, cmd:'wc -l .data/runs.jsonl'},
+  docs:    {n:165, cmd:'find docs -name "*.md" | wc -l'},
+  conn:    {proven:1, total:49, live:7, cmd:'docs/specs/product-end-state.md §6 — established by importing every module'},
+  probes:  {wired:2, total:12, cmd:'factory/live_probes.py — A1 and A5 only; every other verb inherits Probes._refuse'},
+  corpus:  {cases:1, strata:0, need:29, cmd:'readiness gate `breadth` → "1 case(s), 0 strata"'},
+  speed:   {board:413.79, brief:801.04, switch:2.01, cmd:'timed 2026-09-01, one cold call each'},
+  manifest:{tasks:88, rendered:8, cmd:'.data/missions/<id>.json vs TaskStore'},
+  wall:    {active:21.6, total:500, cmd:'a proven migration — 21.6 min active stage time in 8 h 20 m'},
+  unatt:   {clean:3, total:14, cmd:'recorded runs finishing with no human'},
+  loop:    {runs:965, success:1.6, cmd:'the retired loop — recorded its own rate, never adjusted'},
+  diag:    {diagnoses:233, escalations:234, fixes:0, days:81, cmd:'the retired agent'},
+  restart: {loop:948, total:1001, cmd:'recorded migration failures that are the unbounded-restart loop'},
+  zchat:   {tools:44, cmd:'grep -cE \'^\\s*name: "[a-z_]+"\' src/tools/schemas.ts  (zeus-chat-exp)'},
+  zmem:    {memories:'3.6M+', cmd:'zeus-memory/README.md — DOCUMENTED, not measured by us'},
+  seam:    {refs:0, cmd:'grep -rniE "zeus|ccx|opentribe|cce_" factory/ scripts/ evaluator_service/ → nothing'},
+  army:    {prompts:26, answers:3, notrun:27, approved:0, cmd:'agent-army-research/research/ + docs/agent-army/APPROVED_CONCEPTS.md'}
+};
+MEAS.wall.pct = +(MEAS.wall.active / MEAS.wall.total * 100).toFixed(1);   /* DERIVED 4.3 */
+MEAS.speed.ratio = Math.round(MEAS.speed.board / MEAS.speed.switch);      /* DERIVED 206 */
+
+/* ── status grammar. Rule: built, planned and rejected never look alike. ── */
+const ST = {
+  built:    {k:'built',    label:'BUILT',        c:'--built',    fill:'--built-bg',    dash:null,     note:'measured in this repository'},
+  now:      {k:'now',      label:'IN PROGRESS',  c:'--now',      fill:'--now-bg',      dash:null,     note:'open work item, right now'},
+  next:     {k:'next',     label:'NEXT',         c:'--next',     fill:'--next-bg',     dash:'5 3',    note:'unlocked — precondition met'},
+  future:   {k:'future',   label:'GATED',        c:'--future',   fill:'--future-bg',   dash:'5 3',    note:'planned, waiting on a named gate'},
+  frontier: {k:'frontier', label:'RESEARCH',     c:'--frontier', fill:'--frontier-bg', dash:'2 4',    note:'not approved; no implementation'},
+  rejected: {k:'rejected', label:'REJECTED',     c:'--risk',     fill:'--risk-bg',     dash:'1 3',    note:'tested and refused — kept as evidence'}
+};
+
+const ERAS = [
+  {id:'found',  t:'Foundations',  d:'20–22 Aug'},
+  {id:'ctrl',   t:'Control',      d:'22–23 Aug'},
+  {id:'deliv',  t:'Delivery',     d:'29 Aug – 1 Sep'},
+  {id:'now',    t:'Now',          d:'1 Sep 2026'},
+  {id:'next',   t:'Next',         d:'unlocked'},
+  {id:'horizon',t:'Horizon',      d:'gated'},
+  {id:'front',  t:'Frontier',     d:'research only'}
+];
+const TRACKS = [
+  {id:'contract', t:'Contract'},
+  {id:'control',  t:'Control'},
+  {id:'exec',     t:'Execution'},
+  {id:'deliver',  t:'Delivery'},
+  {id:'know',     t:'Knowledge'},
+  {id:'org',      t:'Organisation'}
+];
+
+/* value dimensions — AUTHORED, 0–3, qualitative. Never a percentage. */
+const VDIM = [['tech','Technical'],['biz','Business'],['client','Client'],['ops','Operations'],
+              ['prod','Product'],['res','Research'],['moat','Moat']];
+
+const N = [
+/* ──────────────────────────── ERA 0 · FOUNDATIONS ──────────────────────── */
+{id:'origin', t:'Two measurable failures', era:0, tr:'org', st:'built', ev:'MEASURED',
+ cap:'Origin',
+ d:'The estate twice built mechanisms that acted with nothing measuring whether the action helped.',
+ why:'This is why the ordering is contract → can-it-fail → everything else. Both systems were capable. Neither was measurable.',
+ val:{tech:1,biz:2,client:1,ops:2,prod:1,res:3,moat:3},
+ unl:['contract'], dep:[], sys:['orchestrator','the retired triage agent'],
+ zeus:'The same failure mode is what an organisational memory must not reproduce: a store that records activity and never an outcome.',
+ ev_src:[['233 diagnoses · 234 escalations · 0 fixes over 81 days','MEASURED'],
+         ['965 runs · 1.6% self-recorded success · never adjusted','MEASURED'],
+         ['README.md — "Why this shape"','DOCUMENTED']],
+ risk:'Both numbers are historical. The audit log the loop gates measure stopped on 2026-05-28.'},
+
+{id:'contract', t:'GreenContract A1–A12', era:0, tr:'contract', st:'built', ev:'MEASURED',
+ cap:'Contract',
+ d:'Twelve executable assertions a connector migration must satisfy, parameterised per connector from YAML.',
+ why:'Everything else depends on a definition of done that can fail. Without it, a green suite means nothing.',
+ val:{tech:3,biz:2,client:2,ops:2,prod:2,res:2,moat:3},
+ dep:['origin'], unl:['verdicts','mutation','certify'], sys:['factory/contract.py','blueprints/*.yaml'],
+ zeus:'Nothing yet. The contract is the artefact Zeus Memory would eventually store verdicts against.',
+ ev_src:[['factory/contract.py','MEASURED'],['probes refuse by default — an unwired harness returns 12× UNMEASURABLE','MEASURED']],
+ risk:'The contract is parameterised by a blueprint the graded party writes. An agent that softens its own blueprint softens its own grading.'},
+
+{id:'verdicts', t:'Five verdicts, never collapsed', era:0, tr:'contract', st:'built', ev:'MEASURED',
+ cap:'Contract',
+ d:'PASS · FAIL · UNMEASURABLE · ERROR · NOT_RUN. UNMEASURABLE is not a pass and exits non-zero.',
+ why:'Collapsing "I could not look" into "I looked and it was fine" is how a measurement that never happened passes for one that did.',
+ val:{tech:3,biz:2,client:3,ops:2,prod:3,res:3,moat:3},
+ dep:['contract'], unl:['board','client-review'], sys:['factory/contract.py','factory/certify.py'],
+ zeus:'Directly transferable. Zeus Chat renders a confidence badge today; a verdict that can say "could not tell" is the same discipline one layer up.',
+ ev_src:[['ISO/IEC 9646 · TTCN-3 (ITU-T Z.140 §24.2) lattice none < pass < inconc < fail < error','DOCUMENTED'],
+         ['ERROR added 2026-08-30 in 0d4bdb1 — the fifth verdict','MEASURED'],
+         ['ERROR dominates FAIL: once the apparatus broke, the failure is not trustworthy','DOCUMENTED']],
+ risk:'The published thesis "a fourth verdict is uncommon" was REFUTED at representation level; six mature tools carry the state and all six destroy it at aggregation. The surviving claim is narrower: UNMEASURABLE must survive aggregation.'},
+
+{id:'mutation', t:'Every assertion proved able to fail', era:0, tr:'contract', st:'built', ev:'MEASURED',
+ cap:'Negative control',
+ d:'A mutation registry that fails the suite if any assertion has never been observed failing.',
+ why:'A green suite from an instrument that cannot fail is the 965-run loop again. This is the single most load-bearing test in the repository.',
+ val:{tech:3,biz:1,client:2,ops:2,prod:2,res:3,moat:3},
+ dep:['contract'], unl:['certify'], sys:['tests/test_connector_contract.py'],
+ zeus:'The pattern generalises to any retrieval or drift detector: prove it can report a miss before trusting a hit.',
+ ev_src:[['test_every_assertion_has_been_proved_able_to_fail','MEASURED'],
+         ['calibration found a hole review did not: a partial extraction PASSED because the invariant was guarded on an empty blueprint field','MEASURED']],
+ risk:'test_eval_can_fail.py is weaker than its reputation — it builds a synthetic contract over a hardcoded dict and never loads the corpus. Cite the connector contract instead. (F76.)'},
+
+{id:'corpus', t:'Hash-pinned corpus', era:0, tr:'know', st:'built', ev:'MEASURED',
+ cap:'Evidence',
+ d:'evals/corpus/*.json + MANIFEST.sha256, verified on load. Every replayed verdict carries scored_against.',
+ why:'Editing a recorded run so a FAILED reads completed is refused with both hashes printed.',
+ val:{tech:2,biz:1,client:2,ops:1,prod:1,res:2,moat:2},
+ dep:['contract'], unl:['certify','breadth'], sys:['factory/corpus.py','evals/'],
+ zeus:'A content-hashed evidence store is exactly the provenance primitive a memory layer needs to make a citation checkable rather than quotable.',
+ ev_src:[['factory/corpus.py — CorpusError raised on hash mismatch','MEASURED'],
+         ['readiness gate corpus: "tamper-evident, but separation is not enforced" — FAIL','MEASURED']],
+ risk:'Tamper-evident, not tamper-proof. Anyone with write access to both corpus and manifest can re-pin silently. The fix is credential separation, not a cleverer hash.'},
+
+{id:'evidence', t:'Evidence classes', era:0, tr:'know', st:'built', ev:'MEASURED',
+ cap:'Evidence',
+ d:'TARGET · CONSUMER · REGRESSION · ROLLBACK, each SATISFIED / ASSERTED / ABSENT. A task cannot close without them.',
+ why:'The strongest primitive in the repo. close(require=…) refuses a delivery that never proved its target or captured a rollback.',
+ val:{tech:3,biz:2,client:3,ops:3,prod:3,res:2,moat:3},
+ dep:['taskstore'], unl:['client-review','case-study'], sys:['factory/evidence.py','factory/tasks.py'],
+ zeus:'The highest-value export to Zeus Memory. A memory that stores an outcome without its evidence class is the drift Zeus exists to detect, one layer up.',
+ ev_src:[['factory/evidence.py:48 CLASSES, :68-70 states','MEASURED'],
+         ['factory/tasks.py:163,169 EvidenceRequired raised by the store','MEASURED'],
+         ['rows carry MEASURED | DERIVED | ASSUMED','MEASURED']],
+ risk:'Stated limit at evidence.py:27 — it cannot verify that ROLLBACK was captured before the mutation.'},
+
+{id:'taskstore', t:'Append-only TaskStore', era:0, tr:'control', st:'built', ev:'MEASURED',
+ cap:'State',
+ d:'.data/tasks.jsonl — every task is a fold over immutable events. '+MEAS.tasks.events+' events at last read.',
+ why:'A stored projection is what the boot prompts kept becoming: correct when written, confidently wrong an hour later.',
+ val:{tech:3,biz:1,client:2,ops:3,prod:2,res:2,moat:2},
+ dep:['origin'], unl:['evidence','board','switchboard'], sys:['factory/tasks.py','.data/tasks.jsonl'],
+ zeus:'An append-only work ledger is the substrate a cross-mission memory would read. It exists; nothing reads it into Zeus.',
+ ev_src:[[MEAS.tasks.cmd+' → '+MEAS.tasks.events,'MEASURED'],
+         ['253 events: 89 create · 110 evidence · 25 block · 17 close · 7 unblock · 5 claim','MEASURED']],
+ risk:'Task.blocked_by is NOT the dependency graph — unblock() removes the edge, so a satisfied dependency leaves no trace. Edges must be recovered from block events.'},
+
+{id:'worktrees', t:'Worktree isolation', era:0, tr:'exec', st:'built', ev:'MEASURED',
+ cap:'Isolation',
+ d:'One git worktree per lane. Tier T0 of the isolation ladder.',
+ why:'Three sessions shared one worktree on 2026-08-22 and the findings ledger lost two entries to a merge.',
+ val:{tech:2,biz:1,client:1,ops:3,prod:1,res:1,moat:1},
+ dep:[], unl:['claims','isolation'], sys:['factory/worktrees.py'],
+ zeus:'None.',
+ ev_src:[['factory/worktrees.py','MEASURED'],['three F11s and three F12s from three isolated worktrees appending to one file','MEASURED']],
+ risk:'Three tests resolve .data/ relative to __file__ and pass only in the primary checkout (F105). ~/.claude/skills/ is not worktree-isolated at all.'},
+
+/* ──────────────────────────── ERA 1 · CONTROL ──────────────────────────── */
+{id:'certify', t:'Replayed certification', era:1, tr:'contract', st:'built', ev:'MEASURED',
+ cap:'Contract',
+ d:'PASS=12 against the recorded windsorai run — labelled REPLAYED, not a live measurement.',
+ why:'Sensitivity is not coverage. One connector of 49 has been scored; the label is on the verdict itself.',
+ val:{tech:2,biz:2,client:2,ops:1,prod:2,res:2,moat:2},
+ dep:['contract','corpus','mutation'], unl:['live-probes'], sys:['factory/certify.py'],
+ zeus:'None.',
+ ev_src:[['python -m factory.certify blueprints/windsorai_client_a.yaml --calibrate → PASS (PASS=12)','MEASURED'],
+         [MEAS.conn.proven+' of '+MEAS.conn.total+' connectors proven end to end','MEASURED'],
+         ['readiness gate certified: NOT_RUN — "10 assertions have no instrument wired"','MEASURED']],
+ risk:'Read PASS=12 for exactly what it says. It is a replay against one recorded connector, and the live contract is NOT_RUN.'},
+
+{id:'readiness', t:'30 readiness gates', era:1, tr:'control', st:'built', ev:'MEASURED',
+ cap:'Measurement',
+ d:'One question in five phases: can an agent team run a connector migration unattended? Each gate measures from a file at run time and names the path.',
+ why:'It replaced a checkbox grid. A gate that cannot refuse has stopped measuring.',
+ val:{tech:3,biz:2,client:2,ops:3,prod:2,res:2,moat:2},
+ dep:['contract'], unl:['board','goals'], sys:['factory/readiness.py'],
+ zeus:'None yet. A readiness measurement is the kind of derived state Zeus Chat could answer questions about.',
+ ev_src:[[MEAS.gates.cmd+' → PASS '+MEAS.gates.pass+' · FAIL '+MEAS.gates.fail+' · UNMEASURABLE '+MEAS.gates.unmeasurable+' · NOT_RUN '+MEAS.gates.notrun,'MEASURED'],
+         ['542.4 s for one cold run','MEASURED'],
+         ['a probe once matched its own source and reported an evaluator that did not exist','MEASURED']],
+ risk:'The board reads differently from a worktree at the same commit. State the cwd with any before/after claim. Two gates (finishes, succeeds) are all-time ratios that a perfect agent still fails.'},
+
+{id:'board', t:'Derived board', era:1, tr:'control', st:'built', ev:'MEASURED',
+ cap:'Projection',
+ d:'Every non-passing gate IS a task. Derived, never hand-listed — so the list cannot drift from the status.',
+ why:'A hand-typed list whose status is computed still drifts, because the list itself is not.',
+ val:{tech:3,biz:1,client:1,ops:3,prod:2,res:1,moat:2},
+ dep:['readiness','taskstore','verdicts'], unl:['switchboard'], sys:['factory/board.py','factory/roadmap.py'],
+ zeus:'None.',
+ ev_src:[['factory/board.py — READY / BLOCKED / DEPENDS / DONE partition','MEASURED'],
+         ['board.board() '+MEAS.speed.board+' s — the reason the Switchboard could not use it','MEASURED'],
+         ['roadmap.py: 0 MEASURED, 18 AUTHORED — no gate decides any of the eighteen decisions','MEASURED']],
+ risk:'Half of roadmap.py was presented as MEASURED and was the least reliable half. _validate() proves a gate exists; nothing checks its question matches the action.'},
+
+{id:'claims', t:'Lane claiming', era:1, tr:'control', st:'built', ev:'MEASURED',
+ cap:'Control',
+ d:'O_EXCL locks verified against the process table, not against file existence.',
+ why:'The registry file outlives the process. A claim checked by file existence holds work nobody is doing.',
+ val:{tech:2,biz:1,client:1,ops:3,prod:1,res:1,moat:1},
+ dep:['worktrees'], unl:['switchboard','assembly'], sys:['factory/claims.py'],
+ zeus:'None.',
+ ev_src:[['factory/claims.py','MEASURED'],['tests/test_claim_race.py, tests/test_contention.py','MEASURED']],
+ risk:'claims.py:200-247 should be tox-dev/filelock — deletes ~48 lines whose Windows EACCES-vs-EEXIST race the author records being bitten by. Filed as BVA-02, not done.'},
+
+{id:'sessions', t:'Session inventory', era:1, tr:'exec', st:'built', ev:'MEASURED',
+ cap:'Observability',
+ d:'Reads Claude Code’s own registry × jobs × the process table. Liveness is a process check.',
+ why:'Built after three sessions shared one worktree and a peer listing showed three identical rows.',
+ val:{tech:2,biz:1,client:1,ops:3,prod:2,res:1,moat:1},
+ dep:['worktrees'], unl:['switchboard'], sys:['factory/sessions.py'],
+ zeus:'None.',
+ ev_src:[['factory/sessions.py — inventory(), blocked()','MEASURED'],
+         ['the launcher was wrong three ways and none of them failed: dead --model flag, transcript saving off, all three lanes same name','MEASURED']],
+ risk:'A blocked question outlives its process; that is deliberate, and it means the inbox can hold questions nobody will answer.'},
+
+{id:'controlplane', t:'Control plane primitives', era:1, tr:'exec', st:'built', ev:'MEASURED',
+ cap:'Control',
+ d:'cap · bounded · concurrency · reaper · from-history — with 39 negative controls proving each is load-bearing.',
+ why:'948 of 1,001 recorded migration failures are the unbounded-restart loop that cap exists to stop.',
+ val:{tech:3,biz:3,client:2,ops:3,prod:2,res:2,moat:2},
+ dep:['taskstore'], unl:['unattended','certified-team'], sys:['prefect-connectors/orchestrator'],
+ zeus:'None.',
+ ev_src:[['readiness: cap PASS "watched refusing" · concurrency PASS "bounded at 4, watched deferring" · reaper PASS · bounded PASS','MEASURED'],
+         ['ceiling FAIL — no spend ceiling enforced before dispatch','MEASURED'],
+         [MEAS.restart.loop+' of '+MEAS.restart.total+' recorded migration failures are the restart loop','MEASURED']],
+ risk:'Nothing has run. The orchestrator has not run since 2026-05-28, and no control has been watched refusing during a live migration. Cloud termination is ARMED BY DEFAULT against a production resource group with an env-var kill switch as the only brake.'},
+
+{id:'evaluator', t:'Evaluator as separate principal', era:1, tr:'contract', st:'built', ev:'MEASURED',
+ cap:'Isolation',
+ d:'The agent supplies {artifact_uri, artifact_sha256, run_id} and nothing else. The service resolves corpus, manifest and assertions from its own config.',
+ why:'The thing being measured must not be the thing doing the measuring.',
+ val:{tech:3,biz:2,client:3,ops:2,prod:2,res:3,moat:3},
+ dep:['contract','corpus'], unl:['optimizer'], sys:['factory/evaluator.py','evaluator_service/'],
+ zeus:'A grader the actor cannot impersonate is exactly the trust boundary a shared memory needs before agents write to each other’s context.',
+ ev_src:[['Submission has three fields and the service refuses a body carrying a fourth','MEASURED'],
+         ['four refusals watched, three mutants introduced, three caught','MEASURED'],
+         ['readiness gate isolated: PASS "(loopback deployment)"','MEASURED']],
+ risk:'Do not read the green gate as "the agent cannot cheat". Loopback under one uid is R3’s rank 5 — "mostly theatre". The design is rank 1; the gap is a managed identity, a deployment change not a code change.'},
+
+{id:'findings', t:'Findings ledger', era:1, tr:'know', st:'built', ev:'MEASURED',
+ cap:'Knowledge',
+ d:'docs/findings.d/ — one file per corrected premise, with KIND / CHANGES / STATUS. '+MEAS.findings.n+' entries.',
+ why:'Corrections are the durable output. A design consequence is not spent until it is built or deliberately refused.',
+ val:{tech:2,biz:1,client:1,ops:3,prod:2,res:3,moat:3},
+ dep:['worktrees'], unl:['zmem-write'], sys:['docs/findings.d/','factory/findings.py'],
+ zeus:'⭐ The clearest Zeus Memory candidate in the repo. Findings are addressable, reviewed, provenance-carrying knowledge objects — but untyped Markdown, repo-local, with no promotion path and no reuse across repositories. That gap is precisely what Zeus Memory is for.',
+ ev_src:[[MEAS.findings.cmd+' → '+MEAS.findings.n,'MEASURED'],
+         ['F86 — the parser matched only "### F<n>" and eight consecutive findings parsed to nothing','MEASURED'],
+         ['the ledger reported 19 while holding 27; a file the parser drops is ABSENT, not malformed','MEASURED']],
+ risk:'Untyped, repo-local, no confidence field, no cross-repo reuse. Both existing checks iterate load(), so both asked their question only of findings that had already parsed.'},
+
+{id:'runs', t:'Retroactive cost ledger', era:1, tr:'know', st:'built', ev:'MEASURED',
+ cap:'Observability',
+ d:'Per-lane cost recovered from Claude Code’s own transcripts — tokens, model, wall clock — including work that ran before anyone thought to instrument it.',
+ why:'No agent has to be asked to report its own spend, which also means it cannot misreport it.',
+ val:{tech:2,biz:3,client:1,ops:3,prod:2,res:2,moat:2},
+ dep:['sessions'], unl:['optimizer'], sys:['factory/runs.py'],
+ zeus:'None. Cost-per-outcome is the join a memory layer would need to answer "which configuration was worth it".',
+ ev_src:[['first measurement 2026-08-23: control-plane 1.23M output / 322M cache / 22.8 h / opus, 25 commits','MEASURED'],
+         ['artifact 227k / 19.4 h / sonnet, 5 commits · certify 236k / 1.7 h / sonnet, 4 commits','MEASURED'],
+         ['basis RECORDED / RECONSTRUCTED / NOT-RECORDED','MEASURED']],
+ risk:'The join is a directory slug where each of : \\ / . becomes one dash. Get it wrong and every lane reports NOT-RECORDED — a measurement gap that reads as a finding about the work. One observation, not a law.'},
+
+{id:'render', t:'Render pass', era:1, tr:'deliver', st:'built', ev:'MEASURED',
+ cap:'Validation',
+ d:'Drives the installed Chrome through Playwright — no extension, no pairing. Confirms what actually painted.',
+ why:'Six sessions of a refusing browser tool meant no render pass had ever run, and five defects shipped with a human finding every one.',
+ val:{tech:2,biz:1,client:3,ops:2,prod:2,res:1,moat:2},
+ dep:[], unl:['client-review'], sys:['scripts/render_pass.py'],
+ zeus:'None.',
+ ev_src:[['first run found four real defects, including a figure that declared a category it never drew','MEASURED'],
+         ['readiness gate rendered: PASS — recorded in render-pass-2026-08-22.md','MEASURED']],
+ risk:'The probe has itself been wrong twice — it measured across two stacked SVGs as one, and called a false text collision because getBoundingClientRect() unions the line boxes of a wrapped inline element.'},
+
+{id:'lanes', t:'Parallel lanes', era:1, tr:'org', st:'built', ev:'MEASURED',
+ cap:'Organisation',
+ d:'Five authored lanes grouped by file locality, not by the dependency graph. Human-launched sessions in isolated worktrees.',
+ why:'Two sessions editing the same file simply conflict. Locality is the constraint that actually binds.',
+ val:{tech:2,biz:2,client:1,ops:3,prod:1,res:2,moat:1},
+ dep:['claims','worktrees'], unl:['agent-teams'], sys:['factory/lanes.py','factory/teamplan.py'],
+ zeus:'None.',
+ ev_src:[['factory/lanes.py:125 LANES — five authored lanes','MEASURED'],
+         ['first real three-lane run 2026-08-22: the claim → work → finish loop completed for real','MEASURED']],
+ risk:'There is no agent that forms a team, no supervisor tier and no agent-to-agent protocol. teamplan.py sequences a team’s steps; it does not staff one.'},
+
+/* ──────────────────────────── ERA 2 · DELIVERY ─────────────────────────── */
+{id:'pbi-contract', t:'Power BI contract M1–M12', era:2, tr:'contract', st:'built', ev:'MEASURED',
+ cap:'Contract',
+ d:'A second contract for a second kind of work — model changes an operator can accept without reading every line.',
+ why:'It proves the contract idea generalises past connectors. It also proved that reusing a contract blind is dangerous.',
+ val:{tech:3,biz:3,client:3,ops:2,prod:3,res:2,moat:3},
+ dep:['contract','verdicts'], unl:['pbi-verify','client-review'], sys:['factory/pbi_contract.py','factory/redesign_contract.py'],
+ zeus:'Zeus Chat already reads live Power BI models for a client tenant. A contract that certifies a model change is the missing half of that surface.',
+ ev_src:[['factory/pbi_contract.py — 12 assertions, ~460 lines, had no importer for days','MEASURED'],
+         ['F89: evidence where every visual paints and one measure returns the grand total for every brand scored PASS=12','MEASURED'],
+         ['redesign_contract.py replaces M4 with R2 and adds R1, R3 (no declared axis is inert), R4','MEASURED']],
+ risk:'⭐ care is not coverage. This was the fifth blind instrument in eleven days and the first where the blind instrument was the newest, most careful file. Before reusing a contract for a second case, run that case’s own named defect through it and watch it fail.'},
+
+{id:'client-review', t:'Client Review', era:2, tr:'deliver', st:'built', ev:'MEASURED',
+ cap:'Delivery',
+ d:'Canonical state + authored narrative → typed view model → allow-list projection → self-contained themed HTML with a presentation mode.',
+ why:'It turns internal execution state into something a client can read in 30 seconds without a presenter switching tools.',
+ val:{tech:3,biz:3,client:3,ops:2,prod:3,res:1,moat:3},
+ dep:['evidence','verdicts','render','pbi-contract'], unl:['brief-compiler','zchat-explain','client-intake'],
+ sys:['factory/client_review.py','factory/client_review_render.py','docs/artifacts/client-review-navira.html'],
+ zeus:'⭐ The most credible Zeus Chat seam. The client-safe projection already exists as a typed boundary; Zeus Chat is the conversational surface that would sit on top of it and answer "why was decision X made".',
+ ev_src:[['738 lines; gate READY_WITH_WARNINGS, render RENDERED_CONFIRMED, meeting_ready exit 0','MEASURED'],
+         ['diagnostics are operator-only and structurally unprojectable','MEASURED'],
+         ['six outcome write-ups, and a risk that read open when it was closed — corrected','MEASURED']],
+ risk:'Client-safe filtering is enforced by an allow-list, which fails safe by construction — but no adversarial review of the projection has been run.'},
+
+{id:'case-study', t:'Delivery #001 case study', era:2, tr:'deliver', st:'built', ev:'MEASURED',
+ cap:'Delivery',
+ d:'A read-only forensic reconstruction of a real client delivery, carrying a six-level basis vocabulary on every claim.',
+ why:'It separates the client work from the Factory mission that measured it, and refuses to conflate the two.',
+ val:{tech:2,biz:3,client:3,ops:1,prod:3,res:2,moat:3},
+ dep:['evidence','taskstore'], unl:['artifact-compiler'], sys:['docs/case-studies/delivery-001-marketing-model.md'],
+ zeus:'A worked example of the record Zeus Memory would hold: decisions, evidence, and what was NOT recorded, kept distinct.',
+ ev_src:[['2,206 lines; basis MEASURED / DOCUMENTED / DERIVED / INFERRED / SIMULATED / NOT_RECORDED','MEASURED'],
+         ['every Agent Factory counterfactual is marked SIMULATED — never a claim about the past','MEASURED'],
+         ['estimate_minutes exists for all eight tasks; actual_minutes was never written for any','MEASURED']],
+ risk:'Everything about the client delivery reaches the document through two reconstruction artifacts — one hop. Two internally-consistent readers is corroboration, not verification.'},
+
+{id:'artifact-compiler', t:'Artifact compiler', era:2, tr:'deliver', st:'built', ev:'MEASURED',
+ cap:'Delivery',
+ d:'A second artifact type over the same five-layer pipeline. The proposal’s own verdict: do not build an artifact generator — one already exists.',
+ why:'The cheapest architecture decision in the repo was recognising the thing was already built.',
+ val:{tech:2,biz:2,client:3,ops:2,prod:3,res:1,moat:2},
+ dep:['client-review','case-study'], unl:[], sys:['factory/case_study.py','factory/case_study_render.py'],
+ zeus:'None yet.',
+ ev_src:[['docs/design/artifact-generator-proposal.md — "Do not build an Artifact Generator"','DOCUMENTED'],
+         ['the compiler caught its own fixture going stale, mid-build','MEASURED']],
+ risk:'Two tests resolve .data/ relative to __file__ and fail in any linked worktree (F105). Do not read that as a regression.'},
+
+{id:'assembly', t:'Assembly line', era:2, tr:'control', st:'built', ev:'MEASURED',
+ cap:'Execution',
+ d:'ticket → preset → TeamSpec → agent in a worktree → verdict → ledger. Found already built and entirely uncommitted.',
+ why:'⭐ Five findings came out of wiring and running it. Every one came from running something. None came from a gate.',
+ val:{tech:3,biz:2,client:1,ops:3,prod:2,res:3,moat:2},
+ dep:['claims','taskstore','presets'], unl:['certified-team'], sys:['factory/control.py','factory/deploy.py','factory/dispatch.py'],
+ zeus:'None.',
+ ev_src:[['F85 two --dry-run calls spent the whole attempt cap and made a ticket permanently unrunnable','MEASURED'],
+         ['F87 the only preset claiming a WIRED verifier had no callable behind it','MEASURED'],
+         ['F88 the tracker’s reload button never reloaded the verdict enum or the retry cap','MEASURED']],
+ risk:'Two presets now have a verifier the controller can run, of six — but zero defects have been caught in a real run. "N verifiers wired" is an activity metric wearing an outcome’s clothes.'},
+
+{id:'presets', t:'Presets & TeamSpec', era:2, tr:'exec', st:'built', ev:'MEASURED',
+ cap:'Team',
+ d:'A typed composition — roles, model, effort, tool scope, contract version — with a hash.',
+ why:'A certification must not outlive the configuration that earned it.',
+ val:{tech:2,biz:2,client:1,ops:2,prod:3,res:2,moat:3},
+ dep:['contract'], unl:['team-surface','agent-teams'], sys:['factory/presets.py','factory/teamplan.py'],
+ zeus:'None.',
+ ev_src:[['TeamSpec exists and nothing in the estate runs one','DOCUMENTED'],
+         ['the hash covers 0 of 15 identity dimensions','DOCUMENTED'],
+         ['readiness gate version: FAIL — "9 dimensions absent from the version"','MEASURED']],
+ risk:'A version hash that does not cover what makes an agent an agent cannot pin a verdict to a configuration.'},
+
+{id:'bus', t:'Typed peer bus', era:2, tr:'know', st:'built', ev:'MEASURED',
+ cap:'Communication',
+ d:'Five kinds — correction, claimed, blocked, finished, note — one file per writer, per-reader cursors.',
+ why:'Deliberately ephemeral and machine-local. It is a nudge, never evidence.',
+ val:{tech:2,biz:1,client:1,ops:2,prod:1,res:1,moat:1},
+ dep:['sessions'], unl:['switchboard'], sys:['factory/bus.py'],
+ zeus:'The explicit anti-pattern for Zeus Memory: the bus is what durable memory must NOT be. Peer traffic is a peer’s claim; durable knowledge goes to findings.d.',
+ ev_src:[['bus.py:48 KINDS, rejected at :74','MEASURED'],
+         ['gitignored, one file per writer, cursor never advanced by a reader','MEASURED']],
+ risk:'A ledger with one copy per worker is not a ledger. The bus was once rooted at a worktree-local .data, giving one event in the whole estate.'},
+
+{id:'three-agent', t:'Architect → implementer → tester', era:2, tr:'org', st:'rejected', ev:'REFUTED',
+ cap:'Organisation',
+ d:'The obvious three-agent team. Asked for directly, and refused on evidence.',
+ why:'Kept, not deleted. A rejected option with its reason is evidence; a deleted one gets re-proposed every quarter.',
+ val:{tech:0,biz:0,client:0,ops:0,prod:0,res:3,moat:2},
+ dep:['lanes'], unl:[], sys:['blueprints/orchestrator_team.yaml — marked superseded, kept'],
+ zeus:'Applies equally to Zeus: an LLM manager coordinating LLM workers is the topology that measured worst.',
+ ev_src:[['180 configurations across 5 architectures and 4 benchmarks; multi-agent averaging −3.5%','DOCUMENTED'],
+         ['sequential tasks degrading 39–70% — connector migration is sequential shared-state work','DOCUMENTED'],
+         ['R2 verdict: one end-to-end worker agent, plus a non-LLM verifier holding the authoritative PASS bit','DOCUMENTED']],
+ risk:'A UI for composing and supervising teams is not an LLM manager. If a slice starts to look like agents coordinating agents, it has crossed this line.'},
+
+{id:'buildvsadopt', t:'Build vs adopt, decided', era:2, tr:'org', st:'built', ev:'MEASURED',
+ cap:'Decision',
+ d:'Component by component: ADAPT on data contracts, orchestration transport and intake forms. BUILD on the other seven.',
+ why:'Six frameworks cover 3 of 8 requirements. Worktree isolation, lane claiming, the retry ledger, the event ledger and the verdict model are absent from all of them.',
+ val:{tech:2,biz:3,client:1,ops:2,prod:2,res:3,moat:3},
+ dep:['lanes'], unl:['dep-gate','filelock'], sys:['docs/reviews/build-vs-adopt-2026-08-29.md'],
+ zeus:'The same question is open for Zeus: which of its layers is commodity and which is the differentiator.',
+ ev_src:[['~370–510 new lines hand-rolled on top of 1,682 that already exist and work','DOCUMENTED'],
+         ['CrewAI’s core abstraction is the topology R2 rejected; LangGraph drags a hosted telemetry client as a mandatory dependency','DOCUMENTED'],
+         ['sequencing constraint that outranks every verdict: the factory has never certified a connector','MEASURED']],
+ risk:'Every migration cost in the review is priced against interfaces that have never carried traffic. No ADOPT should be actioned before the live probes close.'},
+
+/* ──────────────────────────────── ERA 3 · NOW ──────────────────────────── */
+{id:'switchboard', t:'Switchboard P0', era:3, tr:'control', st:'built', ev:'MEASURED',
+ cap:'Control surface',
+ d:'One projection over state that already existed — mission DAG, live ownership, sessions, blocked questions, worktrees. Derived and thrown away, never written to disk.',
+ why:'The operator stops visiting terminals. And a stored projection is exactly what the boot prompts kept becoming.',
+ val:{tech:3,biz:2,client:1,ops:3,prod:3,res:1,moat:2},
+ dep:['taskstore','claims','sessions','bus','board'], unl:['mission-manifests','multi-mission','zchat-control'],
+ sys:['factory/switchboard.py','factory/switchboard_render.py','scripts/local_tracker.py'],
+ zeus:'⭐ The natural place Zeus Chat plugs in. The Switchboard answers "what is ready, what is blocked, who owns what" from typed state — the same questions a chat surface would be asked in English.',
+ ev_src:[['switchboard.state() '+MEAS.speed.switch+' s vs board.board() '+MEAS.speed.board+' s — '+MEAS.speed.ratio+'× faster','MEASURED'],
+         ['session.brief() '+MEAS.speed.brief+' s — a live page paying 13 minutes per refresh is a page nobody opens','MEASURED'],
+         ['it does not schedule, dispatch, mutate a task, advance a cursor or write a claim','MEASURED']],
+ risk:'Two inherited premises died on measurement: session.brief() cannot be a data source, and Task.blocked_by is not the dependency graph.'},
+
+{id:'sb-seam', t:'The manifest seam', era:3, tr:'control', st:'now', ev:'IN_PROGRESS',
+ cap:'Gap',
+ d:'The Switchboard’s DAG, READY projection and dispatch targets are all built from mission manifests — so a real task with no manifest is invisible to the page.',
+ why:'And it does not say so. startup_packet silently falls back to a whole-mission packet attributing the work to a completed mission.',
+ val:{tech:2,biz:1,client:1,ops:3,prod:2,res:1,moat:1},
+ dep:['switchboard'], unl:['mission-manifests'], sys:['.data/missions/*.json'],
+ zeus:'None.',
+ ev_src:[[MEAS.manifest.tasks+' tasks in the store, '+MEAS.manifest.rendered+' rendered','MEASURED'],
+         ['task 52407de5 is real and in no manifest — invisible to the page','MEASURED']],
+ risk:'⭐ A control surface that silently omits work is worse than no control surface, because it is trusted. This is the exact failure the atlas you are reading must not reproduce.'},
+
+{id:'release-gate', t:'Publication boundary', era:3, tr:'deliver', st:'now', ev:'IN_PROGRESS',
+ cap:'Safety',
+ d:'Classify every local commit and file against the public remote: PUSH_SAFE · LOCAL_ONLY · NEEDS_SANITIZATION · SUPERSEDED.',
+ why:'Committed-to-main is not approved-for-publication. 19 commits reached main through lane decisions and no publication decision was taken on any of them.',
+ val:{tech:2,biz:3,client:3,ops:3,prod:2,res:1,moat:3},
+ dep:['client-review','case-study'], unl:['client-intake'], sys:['docs/release-gate/','boot-prompts/af-release-gate-01.md'],
+ zeus:'⭐ Directly reusable. Any multi-tenant memory needs exactly this: private canonical state, an allow-listed projection, a gate, then a public view.',
+ ev_src:[['task 52407de5, open, created 2026-09-01','MEASURED'],
+         ['git log --oneline over 19 commits is not a publication review — diff the content, per group','DOCUMENTED'],
+         ['one branch is 25 commits off the remote by standing decision: it names a client, its warehouse topology and its revenue','DOCUMENTED']],
+ risk:'A stale picture of the publication boundary is the dangerous kind. Every number in the brief was measured when written and will have moved.'},
+
+{id:'pbi-verify', t:'Live Power BI verification', era:3, tr:'deliver', st:'built', ev:'MEASURED',
+ cap:'Validation',
+ d:'A read-only live read of four Power BI models against a real tenant.',
+ why:'The first time this contract met anything other than a fixture.',
+ val:{tech:2,biz:3,client:3,ops:2,prod:2,res:1,moat:2},
+ dep:['pbi-contract'], unl:[], sys:['docs/evidence/marketing-model-v1/pbi-ad-sales-live-2026-09-01/'],
+ zeus:'Zeus Chat reads the same class of live model for the same client today, through a different path.',
+ ev_src:[['read-only; evidence package untracked at handoff and pending a publication decision','MEASURED']],
+ risk:'Read-only means no write path has been exercised. The evidence package names a client and is not publication-safe as it stands.'},
+
+{id:'reliability', t:'Recurrence preflight', era:3, tr:'exec', st:'built', ev:'MEASURED',
+ cap:'Reliability',
+ d:'A run can see the failure its own history already recorded. WARN mode only.',
+ why:'A retry that repeats a known failure is spend with a predictable outcome.',
+ val:{tech:2,biz:2,client:1,ops:3,prod:1,res:1,moat:1},
+ dep:['taskstore','runs'], unl:['unattended'], sys:['factory/reliability.py','factory/preflight.py'],
+ zeus:'⭐ This is cross-mission learning in miniature, scoped to one run’s own history. Widening that scope past one repository is the Zeus Memory argument in one sentence.',
+ ev_src:[['merged as RAPID-RELIABILITY-01, WARN mode only','MEASURED'],
+         ['a read-only identity, watched refusing a write','MEASURED']],
+ risk:'WARN mode only — it advises, it does not refuse. And its history is one repository’s.'},
+
+/* ──────────────────────────────── ERA 4 · NEXT ─────────────────────────── */
+{id:'live-probes', t:'Wire the ten dark assertions', era:4, tr:'contract', st:'next', ev:'PLANNED',
+ cap:'Contract',
+ d:'A1 and A5 are wired. A2, A3, A4, A6–A12 have never run against a live target.',
+ why:'⭐ The single highest-leverage item on the map. Until it closes, every certification is a replay and every adoption is priced against interfaces that have never carried traffic.',
+ val:{tech:3,biz:3,client:3,ops:2,prod:3,res:2,moat:3},
+ dep:['certify','evaluator'], unl:['certified-team','breadth','optimizer'], sys:['factory/live_probes.py'],
+ zeus:'None until it closes.',
+ ev_src:[[MEAS.probes.wired+' of '+MEAS.probes.total+' assertions wired; every other verb inherits Probes._refuse','MEASURED'],
+         ['python -m factory.launch → "certified NOT_RUN — 12 assertions have no instrument wired"','MEASURED'],
+         ['live_probes.py refuses on purpose, so UNMEASURABLE cannot become PASS just because an instrument exists','DOCUMENTED']],
+ risk:'Wiring a probe is not the same as calibrating it. Each new probe needs its own mutation before it is allowed to report PASS.'},
+
+{id:'breadth', t:'Widen the corpus', era:4, tr:'contract', st:'next', ev:'PLANNED',
+ cap:'Evidence',
+ d:'One case, zero strata. A blind spot affecting 10% of a stratum needs 29 cases for a 95% chance of being seen once.',
+ why:'Calibrating on one run graded FOLKLORE. Sensitivity is not coverage.',
+ val:{tech:3,biz:2,client:2,ops:1,prod:2,res:3,moat:3},
+ dep:['corpus','live-probes'], unl:['optimizer'], sys:['evals/corpus/'],
+ zeus:'None.',
+ ev_src:[['readiness gate breadth: FAIL — "1 case(s), 0 strata, below any calibration threshold"','MEASURED'],
+         ['10% → 29 cases · 5% → 59 · 1% → 299','DOCUMENTED'],
+         ['two distributions needed: a regression corpus of every distinct historical failure, and a challenge corpus across 15 mechanisms','DOCUMENTED']],
+ risk:'The regression corpus must NOT be frequency-weighted — the observed distribution is endogenous to a broken system.'},
+
+{id:'mission-manifests', t:'Close the manifest seam', era:4, tr:'control', st:'next', ev:'PLANNED',
+ cap:'Control surface',
+ d:'Make every real task visible to the Switchboard, or make its absence loud.',
+ why:'A surface that omits work silently is trusted while being wrong.',
+ val:{tech:2,biz:1,client:1,ops:3,prod:2,res:1,moat:1},
+ dep:['sb-seam'], unl:['multi-mission'], sys:['.data/missions/','factory/switchboard.py'],
+ zeus:'None.',
+ ev_src:[[MEAS.manifest.rendered+' of '+MEAS.manifest.tasks+' tasks rendered','MEASURED']],
+ risk:'The cheap fix — auto-generating a manifest per task — would make the DAG meaningless. The seam is a design question, not a bug.'},
+
+{id:'dep-gate', t:'Gate the dependency surface', era:4, tr:'control', st:'next', ev:'PLANNED',
+ cap:'Safety',
+ d:'One runtime dependency, no lockfile, no CI, and none of the 30 gates measures a dependency.',
+ why:'The repo gates a corpus byte changing and does not gate its grader’s dependencies changing.',
+ val:{tech:3,biz:2,client:1,ops:3,prod:1,res:1,moat:2},
+ dep:['buildvsadopt'], unl:['filelock'], sys:['pyproject.toml'],
+ zeus:'None.',
+ ev_src:[['pyproject.toml:6 dependencies = ["pyyaml>=6.0"] — the entire runtime surface','MEASURED'],
+         ['the starred adoption candidates have zero Windows CI between them — 0 of 68 workflow files','DOCUMENTED']],
+ risk:'Any ADOPT means "we are the Windows CI", as a standing cost. And every adopted tool returns a boolean, so each adoption is a new place UNMEASURABLE can silently become FAIL.'},
+
+{id:'filelock', t:'Adopt filelock', era:4, tr:'control', st:'next', ev:'PLANNED',
+ cap:'Adoption',
+ d:'The cleanest adopt in the repo, and nobody was looking for it. Deletes ~48 lines of hand-rolled locking.',
+ why:'A lock is not a judgement, so no verdict semantics change and no adapter is needed.',
+ val:{tech:2,biz:1,client:0,ops:2,prod:0,res:0,moat:0},
+ dep:['dep-gate'], unl:[], sys:['factory/claims.py:200-247'],
+ zeus:'None.',
+ ev_src:[['Unlicense, zero transitive deps','DOCUMENTED'],
+         ['grep -rn filelock returns nothing in the repo; the candidate landscape had no locking row at all','MEASURED']],
+ risk:'None material. Filed as BVA-02.'},
+
+{id:'brief-compiler', t:'Brief compiler', era:4, tr:'deliver', st:'next', ev:'PLANNED',
+ cap:'Requirements',
+ d:'Evidence attached to every task; refuse a brief missing its attachments.',
+ why:'⭐ The least exciting item on the page and the only one with three same-day failures arguing for it. Requirement quality is the dominant failure mode.',
+ val:{tech:2,biz:3,client:3,ops:3,prod:3,res:2,moat:2},
+ dep:['client-review','evidence'], unl:['client-intake','team-surface'], sys:['docs/specs/ui-future-features.md §3'],
+ zeus:'⭐ A brief pre-filled from prior context is the clearest thing Zeus Memory could do for the Factory on day one.',
+ ev_src:[['three research passes were dispatched with no statement of what the product is for','MEASURED'],
+         ['the tempting build order is the reverse — optimizer first. This unblocks nothing else because nothing blocks it','DOCUMENTED'],
+         ['BDD is TRIED-AND-FAILED prior art: it failed because the stakeholder does not fill it in','DOCUMENTED']],
+ risk:'That BDD finding is a prediction for this node. The only differentiator is pre-filling from a live probe so the client confirms rather than authors — and that belongs on the critical path.'},
+
+{id:'team-surface', t:'Team surface (read-only)', era:4, tr:'org', st:'next', ev:'PLANNED',
+ cap:'Team',
+ d:'Make the decided composition legible. Editor only once a TeamSpec has actually run.',
+ why:'Read-only first, because a config editor over a config nothing executes is a form that lies.',
+ val:{tech:2,biz:2,client:1,ops:2,prod:3,res:2,moat:2},
+ dep:['presets','switchboard'], unl:['agent-teams'], sys:['docs/specs/ui-future-features.md §1'],
+ zeus:'None.',
+ ev_src:[['TeamSpec exists and nothing in the estate runs one','DOCUMENTED']],
+ risk:'Promoting it to editable before a TeamSpec executes end to end inverts the flow this ordering protects.'},
+
+{id:'certified-team', t:'One certified team', era:4, tr:'exec', st:'next', ev:'PLANNED',
+ cap:'Milestone',
+ d:'⭐ The master gate. A team takes one connector from legacy to production and the contract certifies PASS — not UNMEASURABLE.',
+ why:'Everything downstream on this map is explicitly gated on it, by the repository’s own README.',
+ val:{tech:3,biz:3,client:3,ops:3,prod:3,res:3,moat:3},
+ dep:['live-probes','controlplane','assembly','presets'],
+ unl:['unattended','agent-teams','optimizer','multi-mission'], sys:['README.md — "What is deliberately absent"'],
+ zeus:'Nothing downstream — including every Zeus integration on this map that involves agents doing work — is honest before this closes.',
+ ev_src:[['zero connectors have been migrated by a team','DOCUMENTED'],
+         ['the factory has never certified a connector — the sequencing constraint that outranks every verdict','MEASURED']],
+ risk:'This node is the reason the frontier region of this atlas is drawn as research and not as roadmap.'},
+
+/* ────────────────────────────── ERA 5 · HORIZON ────────────────────────── */
+{id:'unattended', t:'Unattended run', era:5, tr:'exec', st:'future', ev:'PLANNED',
+ cap:'Milestone',
+ d:'A 30–45 minute unbroken run with no human except where a human is required: merge, per-secret grant, promotion to prod.',
+ why:'⭐ The number this must move is not build time. A proven migration was '+MEAS.wall.active+' minutes of active stage time inside 8 h 20 m — '+MEAS.wall.pct+'%.',
+ val:{tech:3,biz:3,client:2,ops:3,prod:3,res:2,moat:3},
+ dep:['certified-team','controlplane','reliability'], unl:['multi-mission'], sys:['docs/specs/control-room.md §6'],
+ zeus:'None directly.',
+ ev_src:[[MEAS.unatt.clean+' of '+MEAS.unatt.total+' recorded runs finished with no human','MEASURED'],
+         [MEAS.wall.active+' min active in '+MEAS.wall.total+' min wall = '+MEAS.wall.pct+'% (DERIVED)','DERIVED'],
+         ['two PRs fully green waited 6 and 9 days; four agents sat blocked on questions no surface displayed','MEASURED']],
+ risk:'⭐ The pipeline is not the bottleneck. Automating the build did not remove the wait — it made the wait visible and attributable. An architecture that renders agents more beautifully while the merge queue stays at nine days has optimised the wrong end.'},
+
+{id:'isolation', t:'Isolation ladder T1/T2', era:5, tr:'exec', st:'future', ev:'PLANNED',
+ cap:'Isolation',
+ d:'T0 worktree (built) → T1 container → T2 container plus an ephemeral warehouse clone. Chosen by what the task touches, declared up front, enforced.',
+ why:'An agent’s blast radius should be a property of its work, not of what kind of agent it is.',
+ val:{tech:3,biz:2,client:2,ops:3,prod:2,res:2,moat:2},
+ dep:['worktrees','certified-team'], unl:['multi-mission'], sys:['docs/specs/architecture-v0.md §4'],
+ zeus:'A declared, enforced blast radius is the precondition for letting any agent write to shared organisational memory.',
+ ev_src:[['T0 exists; T1 and T2 do not','MEASURED'],
+         ['there is no Azure subscription in the suite, so three cloud functions are untested by construction','DOCUMENTED']],
+ risk:'Containerising agent execution was once wired to a gate that asks about evaluator isolation. Setting one env var would have rendered it SHIPPED with zero agents in containers.'},
+
+{id:'multi-mission', t:'Multi-mission control', era:5, tr:'control', st:'future', ev:'PLANNED',
+ cap:'Control surface',
+ d:'More than one mission in flight, with conflicts, budgets and priorities visible in one place.',
+ why:'The ceiling today is three lanes on one workstation, and it is a file ceiling, not a compute one.',
+ val:{tech:2,biz:3,client:2,ops:3,prod:3,res:2,moat:2},
+ dep:['switchboard','mission-manifests','certified-team'], unl:['agent-teams','org-debugger'], sys:['docs/specs/control-room.md §4'],
+ zeus:'Zeus Chat becomes the natural query surface once there is more state than one page can show.',
+ ev_src:[['the concurrency ceiling is a file ceiling','DOCUMENTED'],
+         ['scale drops from 100 agents to ~10 in the rewritten UI brief','DOCUMENTED']],
+ risk:'⭐ The original 58-section UI brief specified a telemetry-rich command centre for a system that emits almost no telemetry, with an escape hatch permitting simulated events. That made a beautiful mock the guaranteed outcome.'},
+
+{id:'agent-teams', t:'Teams assembled, not hardcoded', era:5, tr:'org', st:'future', ev:'PLANNED',
+ cap:'Team',
+ d:'Pick a ticket, compose a team, version it, run it, certify it — with the config hash pinned to the verdict.',
+ why:'Team composition is commodity. Certified team composition is not.',
+ val:{tech:3,biz:3,client:2,ops:3,prod:3,res:3,moat:3},
+ dep:['certified-team','team-surface','presets'], unl:['optimizer','evolution'], sys:['docs/specs/control-room.md §4'],
+ zeus:'The composition, its cost and its verdict are exactly what an organisational memory should retain across missions.',
+ ev_src:[['five lanes are a literal authored list; nothing selects members, sizes a team or reshapes one at runtime','MEASURED'],
+         ['teams/crews, workflows, guardrails and human-in-the-loop are first-class in nearly every framework surveyed','DOCUMENTED']],
+ risk:'The human is the manager and the UI is the manager’s instrument. The moment this starts to look like agents coordinating agents it has crossed the line R2 drew on 180 configurations.'},
+
+{id:'optimizer', t:'Optimizer', era:5, tr:'contract', st:'future', ev:'PLANNED',
+ cap:'Evaluation',
+ d:'The fitness function IS the eval score. Deliberately absent until the corpus can tell two configurations apart.',
+ why:'Only one research pass was asked whether to build one. The other three volunteered it, and the answer was still not yet.',
+ val:{tech:2,biz:2,client:1,ops:2,prod:3,res:3,moat:3},
+ dep:['breadth','evaluator','runs','agent-teams'], unl:['evolution'], sys:['README.md — "What is deliberately absent"'],
+ zeus:'None.',
+ ev_src:[['R3: "This system should not be optimised yet. It should first be made bounded, reapable, fail-closed and independently evaluable."','DOCUMENTED'],
+         ['20 configs × 3 replicates ≈ 1,584 agent-hours; 16.5 days at four-way parallelism','DERIVED'],
+         ['offline replay scores the evaluator, not an unrun candidate configuration','DOCUMENTED']],
+ risk:'No honest dollar figure exists until failed attempts record cost — and cost is currently recorded only on success (readiness gate cost: FAIL).'},
+
+{id:'client-intake', t:'Client intake', era:5, tr:'deliver', st:'future', ev:'PLANNED',
+ cap:'Delivery',
+ d:'The form IS the connector target. Unanswered is NOT-RECORDED, never a default.',
+ why:'Propose, never interrogate: pre-fill from a live schema probe so the client confirms rather than authors.',
+ val:{tech:2,biz:3,client:3,ops:2,prod:3,res:1,moat:2},
+ dep:['brief-compiler','release-gate'], unl:[], sys:['docs/specs/client-intake-portal.md'],
+ zeus:'⭐ Zeus Chat is the obvious front door: a conversational intake that fills a typed target and hands it to the Factory.',
+ ev_src:[['most of the form work already exists upstream — an ADAPT verdict, not a BUILD','DOCUMENTED'],
+         ['the load-bearing rule: unanswered is NOT-RECORDED, never a default','DOCUMENTED']],
+ risk:'The BDD prediction applies here hardest. A form the client never fills in becomes a config file an engineer completes afterwards.'},
+
+{id:'zmem-write', t:'Missions → Zeus Memory', era:5, tr:'know', st:'future', ev:'PLANNED',
+ cap:'Zeus',
+ d:'Write mission outcomes, decisions, failures, evidence and agent cost into the organisational memory.',
+ why:'The Factory produces exactly the record Zeus Memory is built to hold — and currently keeps it in one repository’s Markdown.',
+ val:{tech:3,biz:3,client:2,ops:3,prod:3,res:3,moat:3},
+ dep:['findings','runs','evidence','certified-team'], unl:['zmem-read','org-debugger'], sys:['zeus-memory · zeus.aldc.io'],
+ zeus:'This IS the Zeus edge. Not built.',
+ ev_src:[[MEAS.seam.cmd,'MEASURED'],
+         ['Zeus Memory exists and is live: MCP Streamable HTTP, OAuth 2.0, multi-tenant, '+MEAS.zmem.memories+' memories','DOCUMENTED'],
+         ['this session has a Zeus Memory MCP client connected — the transport is real; no Factory code uses it','MEASURED']],
+ risk:'⛔ Zero references to Zeus, ccx or opentribe exist in factory/, scripts/ or evaluator_service/. The seam is credible and absent. Drawing it as built would be the exact failure this repository exists to stop.'},
+
+{id:'zmem-read', t:'Cross-mission retrieval', era:5, tr:'know', st:'future', ev:'PLANNED',
+ cap:'Zeus',
+ d:'A new mission opens with the prior art, the corrections and the failures that apply to it already in context.',
+ why:'The recurrence preflight already does this inside one run’s history. Widening the scope is the whole argument.',
+ val:{tech:3,biz:3,client:2,ops:3,prod:3,res:3,moat:3},
+ dep:['zmem-write','reliability','brief-compiler'], unl:['collective'], sys:['zeus-memory'],
+ zeus:'This IS the Zeus edge, the other direction. Not built.',
+ ev_src:[['reliability.py proves the pattern at one-repository scope','MEASURED'],
+         ['findings.d is knowledge-object-shaped but has no provenance schema, no confidence and no cross-repo reuse','MEASURED']],
+ risk:'A retrieval layer that cannot report a miss will confidently return the nearest thing. The mutation discipline has to travel with it.'},
+
+{id:'zchat-control', t:'Conversational mission control', era:5, tr:'control', st:'future', ev:'PROPOSED',
+ cap:'Zeus',
+ d:'Ask what is blocked, why a decision was made, what a run cost — in English, over typed Factory state.',
+ why:'The Switchboard already answers these questions from typed state. Chat is a second surface on the same projection, not a second source of truth.',
+ val:{tech:2,biz:3,client:2,ops:3,prod:3,res:2,moat:2},
+ dep:['switchboard','zmem-write'], unl:[], sys:['zeus-chat-exp'],
+ zeus:'Zeus Chat exists and is live, with '+MEAS.zchat.tools+' tools including memory, RBAC, skills and a CCX bridge. No Factory tool is among them.',
+ ev_src:[[MEAS.zchat.cmd+' → '+MEAS.zchat.tools,'MEASURED'],
+         ['one SSE route runs the whole agent loop: auth → data access → context assembly → tool loop','DOCUMENTED'],
+         ['no agent-factory tool exists in that schema','MEASURED']],
+ risk:'⚠ Zeus Chat renders a confidence badge that exists twice — a real component driven by a data frame, and markdown the model is told to type. The model-authored one is spoofable. Any Factory verdict surfaced through chat must come from the frame, never the prose.'},
+
+{id:'zchat-explain', t:'Client-safe explanation', era:5, tr:'deliver', st:'future', ev:'PROPOSED',
+ cap:'Zeus',
+ d:'A client asks a question about their delivery and gets an answer bounded by the same allow-list the Client Review already enforces.',
+ why:'The projection boundary exists and is typed. The chat surface exists. Neither knows about the other.',
+ val:{tech:2,biz:3,client:3,ops:2,prod:3,res:1,moat:3},
+ dep:['client-review','release-gate','zchat-control'], unl:[], sys:['zeus-chat-exp','factory/client_review.py'],
+ zeus:'The clearest commercial synergy on the map, and entirely unbuilt.',
+ ev_src:[['ClientReview.to_client_dict() applies client_safe() per section','MEASURED'],
+         ['Zeus Chat already serves an 8-tenant allowlist with org-subtree resolution','DOCUMENTED']],
+ risk:'Two allow-lists that disagree are worse than one. This needs a single projection, not a second implementation of client-safety.'},
+
+/* ───────────────────────────── ERA 6 · FRONTIER ────────────────────────────
+   ⛔ Nothing in this region is approved, and the approvals table is empty on
+   purpose. 27 of 30 research prompts are NOT_RUN. The one synthesis that
+   HAS run falsified the programme's founding premise. These are drawn as
+   research branches because that is exactly what they are. */
+{id:'aoe-refuted', t:'The novelty claim, refuted', era:6, tr:'org', st:'rejected', ev:'REFUTED',
+ cap:'Frontier',
+ d:'Wave 0 synthesis found the category name occupied twice in prior art and refuted the novelty claim on all four components.',
+ why:'⭐ A synthesis that demolishes is still a synthesis, and it has already paid for itself — one of its findings became the fifth verdict.',
+ val:{tech:0,biz:0,client:0,ops:0,prod:0,res:3,moat:2},
+ dep:[], unl:[], sys:['agent-army-research/research/synthesis/W0-foundations.md'],
+ zeus:'None.',
+ ev_src:[['"Artificial Organization Engineering" is organisation-oriented MAS; the name is taken twice (arXiv:2602.13275, arXiv:2607.25446)','DOCUMENTED'],
+         ['finding C4 became commit 0d4bdb1 — the ERROR verdict','MEASURED'],
+         ['its own instruction: do not apply these until a human accepts this synthesis','DOCUMENTED']],
+ risk:'Three answers ran as local subagents rather than an external model — weaker on independence, stronger on file-and-line claims. Weight accordingly.'},
+
+{id:'org-compiler', t:'Organisational compiler / Org-IR', era:6, tr:'org', st:'frontier', ev:'EXPERIMENTAL',
+ cap:'Frontier',
+ d:'An intermediate representation for organisational structure that can be compiled, diffed and versioned like code.',
+ why:'If a team composition is an artefact with a hash, an organisation is a program. That is the bet.',
+ val:{tech:2,biz:2,client:0,ops:2,prod:3,res:3,moat:3},
+ dep:['agent-teams'], unl:[], sys:['agent-army-research R23, R42 — prompts, NOT_RUN'],
+ zeus:'A shared organisational IR would be the schema Zeus Memory stores structure against, not just prose.',
+ ev_src:[['zero occurrences of Org-IR or organisational-compiler vocabulary in any Python module','MEASURED'],
+         ['R23 and R42 are prompts; neither has an answer','MEASURED']],
+ risk:'Prior art is dense here and the novelty claim has already been refuted once at programme level. Establish the diff against organisation-oriented MAS before designing anything.'},
+
+{id:'mission-command', t:'Intent contracts / mission command', era:6, tr:'org', st:'frontier', ev:'EXPERIMENTAL',
+ cap:'Frontier',
+ d:'Bounded authority and commander’s intent — what an agent may vary, and what it must not.',
+ why:'Easy to mistake for something built. factory/contract.py is a GreenContract; it defines done, not authority.',
+ val:{tech:2,biz:1,client:0,ops:2,prod:2,res:3,moat:2},
+ dep:['certified-team'], unl:[], sys:['agent-army-research R32 — prompt, NOT_RUN'],
+ zeus:'None.',
+ ev_src:[['launch.py passes an intent string through unvalidated — a label on a launch record','MEASURED'],
+         ['an Intent Contract as researched has no representation in code','MEASURED']],
+ risk:'The vocabulary collision with GreenContract is itself a hazard: a reader who sees "contract" will believe this is built.'},
+
+{id:'org-debugger', t:'Organisational debugger', era:6, tr:'control', st:'frontier', ev:'EXPERIMENTAL',
+ cap:'Frontier',
+ d:'Why did this mission fail? Where was context lost? Which knowledge existed but was not consumed?',
+ why:'The most answerable frontier item, because the append-only ledgers it would read already exist.',
+ val:{tech:3,biz:2,client:1,ops:3,prod:3,res:3,moat:3},
+ dep:['multi-mission','zmem-write'], unl:[], sys:['agent-army-research R26 — prompt, NOT_RUN'],
+ zeus:'⭐ Needs Zeus Memory to be interesting. Debugging one mission needs one repo’s ledger; debugging the organisation needs every mission’s.',
+ ev_src:[['no durable, replayable, cross-entity event stream exists — the bus is ephemeral, task events are per-task','MEASURED'],
+         ['replay exists only as an honesty label and as retroactive cost reconstruction','MEASURED']],
+ risk:'"Which knowledge existed but was not consumed" is unanswerable until knowledge has an addressable identity outside one repository’s Markdown.'},
+
+{id:'evolution', t:'Evolution chamber', era:6, tr:'exec', st:'frontier', ev:'EXPERIMENTAL',
+ cap:'Frontier',
+ d:'Run candidate team compositions against the same mission in a sandbox; compare cost, quality, speed, risk and human intervention.',
+ why:'It is the optimizer with a population instead of a gradient.',
+ val:{tech:2,biz:2,client:0,ops:1,prod:3,res:3,moat:3},
+ dep:['optimizer','agent-teams','isolation'], unl:[], sys:['agent-army-research R24 — prompt, NOT_RUN'],
+ zeus:'None.',
+ ev_src:[['zero occurrences of simulat* in factory/','MEASURED'],
+         ['the corpus is a hashed fixture, not a simulator','MEASURED']],
+ risk:'⛔ Two gates away, not one. It needs the optimizer, which needs the corpus, which needs the live probes, which need a certified team.'},
+
+{id:'collective', t:'Collective cognition', era:6, tr:'know', st:'frontier', ev:'EXPERIMENTAL',
+ cap:'Frontier',
+ d:'Knowledge that compounds across missions and agents rather than accumulating per repository.',
+ why:'The findings ledger is a working prototype of the idea at single-repository scale.',
+ val:{tech:2,biz:2,client:1,ops:2,prod:3,res:3,moat:3},
+ dep:['zmem-read'], unl:[], sys:['agent-army-research R21 — prompt, NOT_RUN'],
+ zeus:'⭐ This is the frontier item Zeus Memory is closest to already being.',
+ ev_src:[['knowledge objects: PARTIAL — durable and addressable, but untyped, repo-local, no promotion path','MEASURED']],
+ risk:'An earlier research pass already refused a knowledge-architecture brief on the grounds that the wiki’s leverage is procedure synthesis, not retrieval. That refusal has not been overturned.'},
+
+{id:'stigmergy', t:'Stigmergy & morphogenetic teams', era:6, tr:'exec', st:'frontier', ev:'EXPERIMENTAL',
+ cap:'Frontier',
+ d:'Coordination through a shared environment rather than through messages; teams that take shape from the work.',
+ why:'It is the opposite bet from an LLM manager, which is the topology already rejected on evidence.',
+ val:{tech:1,biz:1,client:0,ops:1,prod:2,res:3,moat:2},
+ dep:['agent-teams'], unl:[], sys:['agent-army-research R22 — prompt, NOT_RUN'],
+ zeus:'None.',
+ ev_src:[['organisational fields: zero occurrences. No stigmergic substrate, no gradient state','MEASURED'],
+         ['adaptive team formation: LANES is a literal list; teamplan takes membership as given','MEASURED']],
+ risk:'Attractive vocabulary, thin evidence. Nothing here has a named experiment yet.'},
+
+{id:'federated', t:'Federated agent armies', era:6, tr:'org', st:'frontier', ev:'EXPERIMENTAL',
+ cap:'Frontier',
+ d:'Multiple organisations of agents cooperating across trust boundaries.',
+ why:'The furthest node on the map, and the one most dependent on everything left of it.',
+ val:{tech:1,biz:2,client:0,ops:1,prod:2,res:3,moat:3},
+ dep:['org-compiler','isolation'], unl:[], sys:['agent-army-research R34 — prompt, NOT_RUN'],
+ zeus:'A federation needs a shared memory substrate with per-tenant isolation — which is what Zeus Memory already is.',
+ ev_src:[['zero occurrences of federat* anywhere in the codebase','MEASURED']],
+ risk:'Every trust-boundary problem this raises is currently unsolved one level down: the evaluator is loopback under one uid.'}
+];
+
+/* ═══ EDGES ═══ derived from each node's dep list, plus a small number of
+   cross-track "unlocks" edges that carry the value story rather than a
+   build dependency. Kind: dep | zeus | value. */
+const E = [];
+N.forEach(n => (n.dep||[]).forEach(d => E.push({from:d, to:n.id, kind:'dep'})));
+[ ['findings','zmem-write'], ['evidence','zmem-write'], ['runs','zmem-write'],
+  ['switchboard','zchat-control'], ['client-review','zchat-explain'],
+  ['zmem-read','brief-compiler'], ['reliability','zmem-read'], ['pbi-verify','zchat-explain']
+].forEach(([a,b]) => { if(!E.some(e=>e.from===a&&e.to===b)) E.push({from:a,to:b,kind:'zeus'}); });
+
+const BY = Object.fromEntries(N.map(n => [n.id, n]));
+/* the critical path: the chain the repository's own README and specs gate on */
+const CRIT = ['origin','contract','mutation','certify','live-probes','certified-team','unattended'];
+
+/* ═══ VALUE CHAINS — technical work → commercial outcome ═══
+   AUTHORED links, MEASURED anchors. Each step says which it is. */
+const CHAINS = [
+ {id:'ch-evidence', t:'Evidence → client trust', tone:'--built',
+  steps:[['Evidence classes refuse a close','MEASURED','factory/tasks.py raises EvidenceRequired'],
+         ['Provenance survives to the artifact','MEASURED','every Client Review row cites its source'],
+         ['A client reads proof, not assurance','MEASURED','render RENDERED_CONFIRMED, meeting_ready exit 0'],
+         ['Review time drops; disputes resolve on record','AUTHORED','no before/after measurement exists'],
+         ['Delivery becomes a repeatable product','AUTHORED','one delivery has used it']]},
+ {id:'ch-control', t:'Canonical state → throughput', tone:'--next',
+  steps:[['Append-only TaskStore','MEASURED',MEAS.tasks.events+' events'],
+         ['One derived projection','MEASURED','switchboard.state() '+MEAS.speed.switch+' s'],
+         ['Operator stops visiting terminals','MEASURED',MEAS.speed.ratio+'× faster than the gate board'],
+         ['Coordination overhead falls','AUTHORED','the ceiling is three lanes, and it is a file ceiling'],
+         ['More client capacity per engineer','AUTHORED','not measured; 48 connectors remain']]},
+ {id:'ch-refusal', t:'Refusal → margin', tone:'--absent',
+  steps:[['A contract that can say UNMEASURABLE','MEASURED','five verdicts, never collapsed'],
+         ['A gate that has been watched refusing','MEASURED','cap, concurrency, bounded — all PASS "watched"'],
+         ['False greens stop reaching a client','MEASURED','five faults every green light missed'],
+         ['Rework and incident cost falls','AUTHORED','the five faults are counted; their cost is not'],
+         ['Certified delivery becomes the differentiator','AUTHORED','team composition is commodity; certified composition is not']]},
+ {id:'ch-memory', t:'Missions → compounding knowledge', tone:'--frontier',
+  steps:[['Findings, runs and evidence recorded','MEASURED',MEAS.findings.n+' findings, '+MEAS.runs.rows+' run rows'],
+         ['Recurrence preflight reads one run’s history','MEASURED','WARN mode only'],
+         ['Written to Zeus Memory','PLANNED','⛔ zero references in factory/ — not built'],
+         ['Retrieved into the next mission’s brief','PLANNED','not built'],
+         ['Organisational learning outlives the person','PROPOSED','the compounding claim, unproven']]}
+];
+
+/* ═══ SIMULATIONS ═══ one controller drives all three.
+   Each step: node id, caption, log line, log class, and an optional edge to
+   animate. Every failure and recovery here is a real recorded one. */
+const SIMS = [
+{id:'sim-client', t:'Client delivery', sub:'the loop that ran, including the refusal that stopped it',
+ nodes:[['req','Client request','in'],['task','Task created','core'],['claim','Lane claimed','core'],
+        ['work','Work + evidence','core'],['gate','Evidence gate','gate'],['proj','Allow-list projection','gate'],
+        ['rend','Render check','gate'],['pub','Publication gate','gate'],['art','Client artifact','out'],
+        ['zmem','Zeus Memory','zeus'],['zchat','Zeus Chat','zeus']],
+ edges:[['req','task'],['task','claim'],['claim','work'],['work','gate'],['gate','proj'],['proj','rend'],
+        ['rend','pub'],['pub','art'],['zmem','task'],['art','zchat']],
+ steps:[
+  {n:'req', cap:'A delivery request arrives. It becomes an event, not a conversation.', log:'intake: client review v1 requested', c:''},
+  {n:'zmem', cap:'PLANNED — prior similar work would be retrieved here. Nothing in the Factory writes to or reads from Zeus Memory today.', log:'zeus-memory: NOT WIRED — 0 references in factory/', c:'pl', edge:['zmem','task']},
+  {n:'task', cap:'TaskStore appends a create event. Status is a fold over history, never a stored field.', log:'tasks.jsonl +create', c:'ok', edge:['req','task']},
+  {n:'claim', cap:'A lane claims the work under an O_EXCL lock, verified against the process table.', log:'claim acquired · worktree T0', c:'ok', edge:['task','claim']},
+  {n:'work', cap:'The work happens. Outcomes and their evidence are appended as they are produced.', log:'evidence +TARGET +CONSUMER', c:'ok', edge:['claim','work']},
+  {n:'gate', cap:'The evidence gate REFUSES: ROLLBACK was never captured. close() raises rather than recording a completion nobody can defend.', log:'EvidenceRequired: ROLLBACK ABSENT', c:'no', edge:['work','gate']},
+  {n:'work', cap:'Recovery. The rollback is captured and attached — the refusal did its job, and cost one step.', log:'evidence +ROLLBACK', c:'ok'},
+  {n:'gate', cap:'Re-presented. Four classes SATISFIED; the task may now close.', log:'evidence gate PASS (4/4)', c:'ok', edge:['work','gate']},
+  {n:'proj', cap:'The typed view model is projected through an allow-list. Operator diagnostics are structurally unprojectable — they have nowhere to go.', log:'client_safe() applied per section', c:'ok', edge:['gate','proj']},
+  {n:'rend', cap:'A real browser opens the page and reports what actually painted. A query-layer check is not a render check.', log:'render RENDERED_CONFIRMED', c:'ok', edge:['proj','rend']},
+  {n:'pub', cap:'The publication gate classifies every artefact: PUSH_SAFE, LOCAL_ONLY, NEEDS_SANITIZATION or SUPERSEDED.', log:'gate READY_WITH_WARNINGS', c:'ok', edge:['rend','pub']},
+  {n:'art', cap:'A client-safe artifact. It states what is verified, what is claimed, and what nobody looked at.', log:'artifact emitted · self-contained HTML', c:'ok', edge:['pub','art']},
+  {n:'zchat', cap:'PROPOSED — Zeus Chat would answer follow-up questions bounded by that same allow-list. No Factory tool exists in its schema today.', log:'zeus-chat: NOT WIRED — 0 factory tools of '+MEAS.zchat.tools, c:'pl', edge:['art','zchat']}
+ ]},
+
+{id:'sim-conn', t:'Connector delivery', sub:'the real current verdict, which is not a pass',
+ nodes:[['tkt','Ticket','in'],['pre','Preset','core'],['spec','TeamSpec','core'],['disp','Dispatch','core'],
+        ['cap','Attempt cap','gate'],['build','Build','core'],['probe','Live probes','gate'],
+        ['contract','GreenContract','gate'],['verdict','Verdict','out'],['ledger','Ledger','out']],
+ edges:[['tkt','pre'],['pre','spec'],['spec','disp'],['disp','cap'],['cap','build'],['build','probe'],
+        ['probe','contract'],['contract','verdict'],['verdict','ledger']],
+ steps:[
+  {n:'tkt', cap:'A ticket enters the assembly line. This path was found already built and entirely uncommitted.', log:'ticket → preset lookup', c:''},
+  {n:'pre', cap:'A preset selects the work type and the contract that will judge it.', log:'preset: connector-e2e', c:'ok', edge:['tkt','pre']},
+  {n:'spec', cap:'A TeamSpec is composed and hashed — but the hash covers 0 of 15 identity dimensions.', log:'TeamSpec hash · version FAIL (9 dims absent)', c:'no', edge:['pre','spec']},
+  {n:'disp', cap:'Dispatch into an isolated worktree. T0 of the isolation ladder; T1 and T2 do not exist.', log:'worktree T0 · agent launched', c:'ok', edge:['spec','disp']},
+  {n:'cap', cap:'The attempt cap REFUSES. Two --dry-run calls had already spent it — F85, measured live, not hypothesised.', log:'AttemptCap: 2/2 spent (both "dry run")', c:'no', edge:['disp','cap']},
+  {n:'cap', cap:'Recovery, and the fix was not the obvious one: record() moved below the dry-run branch, because note_outcome() writes to attempts[-1] and would have stamped ok onto the previous real attempt.', log:'F85 fixed · reading a cap is free, writing to one is a dispatch', c:'ok'},
+  {n:'build', cap:'The agent does the work end to end. One worker, not a team of three — that topology was rejected on 180 configurations.', log:'agent run · bounded at 5 attempts', c:'ok', edge:['cap','build']},
+  {n:'probe', cap:'The live probes run. A1 and A5 answer. The other ten refuse, on purpose, so UNMEASURABLE cannot become PASS just because an instrument exists.', log:'probes: A1 ok · A5 ok · A2,A3,A4,A6–A12 refuse', c:'un', edge:['build','probe']},
+  {n:'contract', cap:'Twelve assertions, each proved able to fail. Ten of them have no instrument to fail with.', log:'contract: 2 measured, 10 uninstrumented', c:'un', edge:['probe','contract']},
+  {n:'verdict', cap:'⭐ The verdict is NOT_RUN, not PASS. This is the true state of the system today, and the page you are reading refuses to round it up.', log:'certified NOT_RUN — 10 assertions have no instrument wired', c:'un', edge:['contract','verdict']},
+  {n:'ledger', cap:'The verdict is appended with its basis. A replay is labelled a replay; an absence is labelled an absence.', log:'ledger +verdict scored_against=windsorai-2026-08-20 (REPLAYED)', c:'ok', edge:['verdict','ledger']}
+ ]},
+
+{id:'sim-know', t:'Knowledge reuse',  sub:'where a correction failed to reach the lane that needed it',
+ nodes:[['run','Run','in'],['out','Outcome','core'],['find','Finding filed','core'],['led','Ledger','core'],
+        ['read','Next lane reads','gate'],['avoid','Repeat avoided','out'],['zmem','Zeus Memory','zeus'],
+        ['other','Another repo','zeus']],
+ edges:[['run','out'],['out','find'],['find','led'],['led','read'],['read','avoid'],['led','zmem'],['zmem','other']],
+ steps:[
+  {n:'run', cap:'A lane runs and produces an outcome — correct or not. Both are worth keeping.', log:'lane run · control-plane', c:''},
+  {n:'out', cap:'The outcome is recorded. Cost is recoverable from the session transcript retroactively, so no agent has to report its own spend.', log:'runs.jsonl +row · 22.8 h · opus', c:'ok', edge:['run','out']},
+  {n:'find', cap:'A corrected premise becomes a finding: one file, four mandatory fields, KIND / CHANGES / STATUS.', log:'findings.d/F87 filed', c:'ok', edge:['out','find']},
+  {n:'led', cap:'The ledger is read as data, so a lane is shown only the corrections that hit it.', log:'findings.load() → lane filter', c:'ok', edge:['find','led']},
+  {n:'read', cap:'F86: the parser matched only one heading level. Eight consecutive findings parsed to nothing — including the four called "the corrections that outlived every prompt".', log:'parser dropped 8 findings — silently', c:'no', edge:['led','read']},
+  {n:'read', cap:'⛔ Nothing failed. Both existing checks iterate load(), so both asked their question only of findings that had already parsed. A file the parser drops is not malformed — it is ABSENT, and absence was the one state with no assertion.', log:'ledger reported 19 while holding 27', c:'no'},
+  {n:'read', cap:'Recovery. The heading rule was fixed and the absent state got its assertion. The root cause was the format README, which specified every field and never the heading level.', log:'F86 closed · absence now asserted', c:'ok'},
+  {n:'avoid', cap:'The next lane starts with the correction in hand. This works — inside one repository.', log:'lane briefed with 3 relevant corrections', c:'ok', edge:['read','avoid']},
+  {n:'zmem', cap:'PLANNED — Zeus Memory is where this stops being repo-local. It exists, it is live, it is multi-tenant. Nothing in the Factory writes to it.', log:'zeus-memory: NOT WIRED', c:'pl', edge:['led','zmem']},
+  {n:'other', cap:'PROPOSED — and this is the compounding claim in one arrow: a correction earned in one repository reaching a mission in another. Unproven, and the honest end of the map.', log:'cross-repo reuse: no mechanism exists', c:'pl', edge:['zmem','other']}
+ ]}
+];
+
+/* ═══ STORY ═══ */
+const STORY = [
+ {m:'journey', f:'origin',        t:'It starts with two things that failed measurably',
+  b:'233 diagnoses, 234 escalations and zero fixes over 81 days. A loop that ran 965 times, recorded its own 1.6% success rate and never adjusted. Both capable. Neither measurable.'},
+ {m:'journey', f:'contract',      t:'So the contract comes first',
+  b:'Twelve assertions, five verdicts, and a test that fails the suite if any assertion has never been observed failing. A green suite from an instrument that cannot fail is the 965-run loop again.'},
+ {m:'journey', f:'controlplane',  t:'Then the loop is made bounded',
+  b:'Cap, concurrency, reaper, bounded — each with negative controls proving it is load-bearing. 948 of 1,001 recorded migration failures are the unbounded-restart loop that cap exists to stop.'},
+ {m:'journey', f:'switchboard',   t:'Then the work becomes canonical, and visible',
+  b:'One projection over state that already existed. Derived and thrown away, because a stored projection is what every boot prompt kept becoming: correct when written, confidently wrong an hour later.'},
+ {m:'journey', f:'client-review', t:'Then delivery becomes a product surface',
+  b:'Canonical state plus an authored narrative, projected through an allow-list into something a client reads in thirty seconds. Provenance survives to the page.'},
+ {m:'journey', f:'live-probes',   t:'And here is where it actually stands',
+  b:'Two of twelve assertions are wired. The live verdict is NOT_RUN, not PASS. Everything to the right of this node is gated on closing it — which is why this map has no percentage on it.'},
+ {m:'journey', f:'certified-team',t:'One certified team is the gate on everything',
+  b:'The repository gates agent armies, the optimizer and every scaling story on one thing: a team that takes a connector end to end and earns a PASS. Zero have.'},
+ {m:'value',   f:null,            t:'The number the roadmap has to move is not build time',
+  b:'A proven migration was 21.6 minutes of active stage time inside 8 hours 20 minutes. Automating the build did not remove the wait — it made the wait visible and attributable.'},
+ {m:'zeus',    f:null,            t:'Zeus is a real seam and an unbuilt one',
+  b:'Zeus Chat is live with 44 tools. Zeus Memory is live and multi-tenant. Zero references to either exist in Factory code. Every Zeus edge on this map is drawn dashed, because that is what it is.'},
+ {m:'frontier',f:null,            t:'And the frontier is research, not roadmap',
+  b:'No Agent Army concept is approved. 27 of 30 prompts are NOT_RUN. The one synthesis that ran falsified the programme’s founding premise — and paid for itself anyway, by producing the fifth verdict.'}
+];
+/* ═══════════════════════════════════════════════════════════════════════════
+   RENDERING. Nothing below invents a fact; it only lays out and draws the
+   data above. The graph geometry is computed — era index sets x, track
+   membership sets y — so adding a node moves the picture.
+   ═══════════════════════════════════════════════════════════════════════════ */
+document.documentElement.classList.add('js');
+const STILL = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $  = (s,r) => (r||document).querySelector(s);
+const $$ = (s,r) => Array.from((r||document).querySelectorAll(s));
+const SVGNS = 'http://www.w3.org/2000/svg';
+const el = (tag, attrs, txt) => { const e = document.createElementNS(SVGNS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (txt != null) e.textContent = txt; return e; };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ── theme ─────────────────────────────────────────────────────────────── */
+let theme = null;
+try { theme = localStorage.getItem('afa-theme'); } catch (e) {}
+if (theme) document.documentElement.setAttribute('data-theme', theme);
+$('#btn-theme').onclick = () => {
+  const dark = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim().toLowerCase().startsWith('#0a');
+  theme = dark ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', theme);
+  try { localStorage.setItem('afa-theme', theme); } catch (e) {}
+  paintVerdictBar(); if (SIM.built) SIM.draw();
+};
+
+/* ── the readiness bar: four segments, geometry from the real counts.
+      Halve any count and the picture changes. There is deliberately no
+      percentage: this distribution is the one thing that must not collapse
+      into a single number. ─────────────────────────────────────────────── */
+function paintVerdictBar(){
+  const g = MEAS.gates;
+  const segs = [['PASS', g.pass, '--built'], ['FAIL', g.fail, '--risk'],
+                ['UNMEASURABLE', g.unmeasurable, '--absent'], ['NOT_RUN', g.notrun, '--future']];
+  const tr = $('#vtrack'); tr.textContent = '';
+  const key = $('#vkey');  key.textContent = '';
+  segs.forEach(([label, n, tok]) => {
+    const i = document.createElement('i');
+    i.style.width = (n / g.total * 100).toFixed(3) + '%';       /* DERIVED geometry */
+    i.style.background = `var(${tok})`;
+    i.title = `${label} ${n} of ${g.total}`;
+    tr.appendChild(i);
+    const s = document.createElement('span');
+    s.innerHTML = `<b style="background:var(${tok})"></b>${label} <span class="mono">${n}</span>`;
+    key.appendChild(s);
+  });
+}
+paintVerdictBar();
+$('#stamp').textContent = `measured ${MEAS.gates.at} · HEAD ab13977 · ${MEAS.modules.n} modules · ${MEAS.tests.defs} tests · ${MEAS.findings.n} findings`;
+
+/* ── layout ────────────────────────────────────────────────────────────── */
+const NW = 150, NH = 56, COLGAP = 34, ROWGAP = 26, PADX = 106, PADY = 58, STACK = 9;
+function layout(){
+  const cell = {};
+  N.forEach(n => { const k = n.era + ':' + n.tr; (cell[k] = cell[k] || []).push(n); });
+  /* row height = the tallest stack in that track, across every era */
+  const rowH = TRACKS.map((t, ti) =>
+    Math.max(1, ...ERAS.map((_, ei) => (cell[ei + ':' + t.id] || []).length)) * (NH + STACK) - STACK);
+  const rowY = []; let y = PADY;
+  rowH.forEach(h => { rowY.push(y); y += h + ROWGAP; });
+  TRACKS.forEach((t, ti) => { t._y = rowY[ti]; t._h = rowH[ti]; });
+  ERAS.forEach((e, ei) => { e._x = PADX + ei * (NW + COLGAP); });
+  N.forEach(n => {
+    const ti = TRACKS.findIndex(t => t.id === n.tr);
+    const stack = cell[n.era + ':' + n.tr];
+    n.x = ERAS[n.era]._x;
+    n.y = rowY[ti] + stack.indexOf(n) * (NH + STACK);
+    n.w = NW; n.h = NH;
+  });
+  return { w: PADX + ERAS.length * (NW + COLGAP) + 30, h: y + 14 };
+}
+const DIM = layout();
+
+/* ── draw ──────────────────────────────────────────────────────────────── */
+const svg = $('#graph');
+const root = el('g', { id: 'vp' });
+svg.setAttribute('viewBox', `0 0 ${DIM.w} ${DIM.h}`);
+svg.appendChild(root);
+
+const gBands = el('g'), gEdges = el('g'), gNodes = el('g');
+root.appendChild(gBands); root.appendChild(gEdges); root.appendChild(gNodes);
+
+/* era bands + track labels */
+ERAS.forEach((e, i) => {
+  const b = el('g', { class: 'era-band' });
+  if (i % 2 === 0) b.appendChild(el('rect', { x: e._x - 14, y: 30, width: NW + 28, height: DIM.h - 46,
+    fill: 'var(--panel)', opacity: '.34', rx: 12 }));
+  b.appendChild(el('text', { x: e._x + NW / 2, y: 22, 'text-anchor': 'middle' }, e.t.toUpperCase()));
+  b.appendChild(el('text', { x: e._x + NW / 2, y: 22, dy: 12, 'text-anchor': 'middle', opacity: '.62' }, e.d));
+  gBands.appendChild(b);
+});
+TRACKS.forEach(t => {
+  gBands.appendChild(el('text', { class: 'track-lbl', x: 12, y: t._y + 13 }, t.t.toUpperCase()));
+  gBands.appendChild(el('line', { x1: 12, y1: t._y + t._h + ROWGAP / 2 - 4, x2: DIM.w - 20,
+    y2: t._y + t._h + ROWGAP / 2 - 4, stroke: 'var(--rule2)', 'stroke-width': 1 }));
+});
+
+/* edges — an orthogonal-ish bezier so long spans stay readable */
+function path(a, b){
+  const x1 = a.x + a.w, y1 = a.y + a.h / 2, x2 = b.x, y2 = b.y + b.h / 2;
+  if (x2 < x1) {                                    /* backward edge: route under */
+    const yy = Math.max(y1, y2) + 30;
+    return `M${x1},${y1} C${x1 + 26},${yy} ${x2 - 26},${yy} ${x2},${y2}`;
+  }
+  const dx = Math.max(26, (x2 - x1) * .48);
+  return `M${x1},${y1} C${x1 + dx},${y1} ${x2 - dx},${y2} ${x2},${y2}`;
+}
+E.forEach(e => {
+  const a = BY[e.from], b = BY[e.to]; if (!a || !b) return;
+  const target = ST[b.st], planned = b.st !== 'built' || e.kind === 'zeus';
+  const p = el('path', { class: 'edge', d: path(a, b),
+    stroke: e.kind === 'zeus' ? 'var(--frontier)' : `var(${target.c})`,
+    'stroke-width': 1.15, opacity: planned ? .40 : .62 });
+  if (planned) p.setAttribute('stroke-dasharray', e.kind === 'zeus' ? '3 4' : '4 4');
+  p.dataset.from = e.from; p.dataset.to = e.to; p.dataset.kind = e.kind;
+  gEdges.appendChild(p); e._el = p;
+});
+
+/* nodes */
+N.forEach(n => {
+  const s = ST[n.st];
+  const g = el('g', { class: 'gnode', tabindex: '0', role: 'button',
+    'aria-label': `${n.t} — ${s.label}` });
+  g.dataset.id = n.id;
+  const r = el('rect', { class: 'card', x: n.x, y: n.y, width: n.w, height: n.h, rx: 8,
+    fill: `var(${s.fill})`, stroke: `var(${s.c})`, 'stroke-width': 1.25 });
+  if (s.dash) r.setAttribute('stroke-dasharray', s.dash);
+  g.appendChild(r);
+  g.appendChild(el('rect', { x: n.x, y: n.y, width: 3, height: n.h, rx: 1.5, fill: `var(${s.c})`,
+    opacity: n.st === 'built' ? .95 : .5 }));
+
+  /* title, wrapped to two lines at ~21 chars */
+  const words = n.t.split(' '); const lines = [''];
+  words.forEach(w => { const L = lines.length - 1;
+    if ((lines[L] + ' ' + w).trim().length > 19 && lines[L]) lines.push(w); else lines[L] = (lines[L] + ' ' + w).trim(); });
+  const two = lines.slice(0, 2); if (lines.length > 2) two[1] = two[1].slice(0, 17) + '…';
+  two.forEach((ln, i) => g.appendChild(el('text', { class: 'ttl', x: n.x + 11,
+    y: n.y + (two.length === 1 ? 24 : 19) + i * 13 }, ln)));
+  /* clamp: at 9px mono the card fits ~22 characters before the label overruns */
+  let sub = s.label + (n.cap ? ' · ' + n.cap.toUpperCase() : '');
+  if (sub.length > 22) sub = sub.slice(0, 21) + '…';
+  g.appendChild(el('text', { class: 'sub', x: n.x + 11, y: n.y + n.h - 10,
+    fill: `var(${s.c})` }, sub));
+
+  if (n.st === 'now' && !STILL) {
+    g.appendChild(el('circle', { class: 'pulse', cx: n.x + n.w - 11, cy: n.y + 11, r: 5,
+      fill: 'none', stroke: `var(${s.c})`, 'stroke-width': 1.4 }));
+    g.appendChild(el('circle', { cx: n.x + n.w - 11, cy: n.y + 11, r: 3, fill: `var(${s.c})` }));
+  }
+  g.onclick = () => select(n.id);
+  g.onkeydown = ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); select(n.id); } };
+  gNodes.appendChild(g); n._el = g;
+});
+
+/* ── pan + zoom ────────────────────────────────────────────────────────── */
+let vx = 0, vy = 0, vs = 1;
+function applyVP(){ root.setAttribute('transform', `translate(${vx},${vy}) scale(${vs})`); }
+function fit(){
+  const r = $('#cw').getBoundingClientRect();
+  vs = Math.min(1.15, Math.max(.55, (r.width - 24) / DIM.w));
+  vx = Math.max(0, (r.width - DIM.w * vs) / 2);
+  vy = DIM.h * vs < r.height ? (r.height - DIM.h * vs) / 2 : 10;
+  svg.setAttribute('viewBox', `0 0 ${r.width} ${r.height}`);
+  applyVP();
+}
+function zoom(f, cx, cy){
+  const r = $('#cw').getBoundingClientRect();
+  cx = cx == null ? r.width / 2 : cx; cy = cy == null ? r.height / 2 : cy;
+  const ns = Math.min(2.4, Math.max(.22, vs * f));
+  vx = cx - (cx - vx) * (ns / vs); vy = cy - (cy - vy) * (ns / vs); vs = ns; applyVP();
+}
+$('#z-in').onclick = () => zoom(1.24); $('#z-out').onclick = () => zoom(1 / 1.24); $('#z-fit').onclick = fit;
+svg.addEventListener('wheel', e => { e.preventDefault();
+  const r = svg.getBoundingClientRect(); zoom(e.deltaY < 0 ? 1.1 : 1 / 1.1, e.clientX - r.left, e.clientY - r.top);
+}, { passive: false });
+let drag = null;
+svg.addEventListener('pointerdown', e => { if (e.target.closest('.gnode')) return;
+  drag = { x: e.clientX, y: e.clientY, vx, vy }; svg.classList.add('drag'); svg.setPointerCapture(e.pointerId); });
+svg.addEventListener('pointermove', e => { if (!drag) return;
+  vx = drag.vx + (e.clientX - drag.x); vy = drag.vy + (e.clientY - drag.y); applyVP(); });
+svg.addEventListener('pointerup', () => { drag = null; svg.classList.remove('drag'); });
+addEventListener('resize', () => { if ($('#v-journey').classList.contains('on')) fit(); });
+
+/* ── filters, toggles, focus ───────────────────────────────────────────── */
+const FILT = { built:1, now:1, next:1, future:1, frontier:1, rejected:1 };
+const TOG  = { deps:1, crit:0, zeus:1 };
+let sel = null;
+
+function neighbours(id){
+  const s = new Set([id]);
+  E.forEach(e => { if (e.from === id) s.add(e.to); if (e.to === id) s.add(e.from); });
+  return s;
+}
+function repaint(){
+  const critSet = new Set(CRIT);
+  const near = sel ? neighbours(sel) : null;
+  N.forEach(n => {
+    let on = FILT[n.st];
+    if (on && TOG.crit && !critSet.has(n.id)) on = false;
+    if (on && !TOG.zeus && (n.cap === 'Zeus')) on = false;
+    if (on && near && !near.has(n.id)) on = false;
+    n._el.classList.toggle('dim', !on);
+    n._el.classList.toggle('sel', n.id === sel);
+    n._el.setAttribute('aria-hidden', on ? 'false' : 'true');
+  });
+  E.forEach(e => {
+    const a = BY[e.from], b = BY[e.to];
+    let on = TOG.deps && !a._el.classList.contains('dim') && !b._el.classList.contains('dim');
+    if (on && e.kind === 'zeus' && !TOG.zeus) on = false;
+    if (on && TOG.crit) on = critSet.has(e.from) && critSet.has(e.to);
+    e._el.classList.toggle('dim', !on);
+    e._el.classList.toggle('hot', !!(on && sel && (e.from === sel || e.to === sel)));
+  });
+}
+/* ── inspector ─────────────────────────────────────────────────────────── */
+const insp = $('#insp');
+function vsig(n){
+  return `<div class="vsig">` + VDIM.map(([k, label]) => {
+    const v = n.val[k] || 0;
+    return `<button class="vrow" data-v="${k}" aria-expanded="false">
+      <span class="k">${label}</span>
+      <span class="vseg">${[0,1,2].map(i => `<i class="${i < v ? 'f' : ''}"></i>`).join('')}</span>
+    </button>`;
+  }).join('') + `</div>
+  <div class="vwhy" id="vwhy"></div>
+  <p class="note" style="margin-top:8px">Qualitative, 0&ndash;3, <b>AUTHORED</b> &mdash; a judgement, not a measurement.
+  No percentage is shown because none was measured.</p>`;
+}
+const VWHY = {
+  tech:'Does it make the system more correct, more bounded, or more inspectable?',
+  biz:'Does it change what the company can sell, or what it costs to deliver?',
+  client:'Does a client see, trust or act on it?',
+  ops:'Does it reduce coordination, rework or waiting?',
+  prod:'Does it become a reusable product surface rather than a one-off?',
+  res:'Does it produce a transferable finding?',
+  moat:'Is it hard for a competitor to copy — and is that because of evidence, not effort?'
+};
+function link(id){ const n = BY[id]; return n ? `<a data-goto="${id}">${esc(n.t)} <span class="lbl">${ST[n.st].label}</span></a>` : ''; }
+
+function select(id){
+  sel = (sel === id) ? null : id;
+  if (!sel) { insp.classList.remove('open'); insp.setAttribute('aria-hidden','true'); repaint(); return; }
+  const n = BY[id], s = ST[n.st];
+  insp.innerHTML = `
+    <div class="insp-hd">
+      <h2>${esc(n.t)}</h2>
+      <div class="chips">
+        <span class="chip" style="color:var(${s.c});border-color:var(${s.c});background:var(${s.fill})">${s.label}</span>
+        <span class="chip sm" style="color:var(--ink2);border-color:var(--rule3)">${esc(n.ev)}</span>
+        ${n.cap ? `<span class="chip sm" style="color:var(--ink2);border-color:var(--rule3)">${esc(n.cap)}</span>` : ''}
+        <span class="chip sm" style="color:var(--muted);border-color:var(--rule2)">${esc(ERAS[n.era].t)}</span>
+      </div>
+      <button class="insp-x" aria-label="Close inspector">&times;</button>
+    </div>
+    <div class="insp-body">
+      <h3>What it is</h3><p>${esc(n.d)}</p>
+      <h3>Why it exists</h3><p>${esc(n.why)}</p>
+      <h3>Value signature</h3>${vsig(n)}
+      <h3>Evidence</h3>
+      <div class="evid">${n.ev_src.map(([txt, basis]) =>
+        `<b>[${basis}]</b> ${esc(txt)}`).join('\n\n')}</div>
+      ${n.dep && n.dep.length ? `<h3>Depends on</h3><div class="minidep">${n.dep.map(link).join('')}</div>` : ''}
+      ${n.unl && n.unl.length ? `<h3>Unlocks</h3><div class="minidep">${n.unl.map(link).join('')}</div>` : ''}
+      <h3>Systems touched</h3>
+      <div class="chips">${(n.sys||[]).map(x =>
+        `<span class="chip sm mono" style="color:var(--ink2);border-color:var(--rule2);text-transform:none;letter-spacing:0">${esc(x)}</span>`).join('')}</div>
+      <h3>Zeus relationship</h3><p>${esc(n.zeus)}</p>
+      ${n.risk ? `<h3>Risk / open question</h3><div class="risk-box">${esc(n.risk)}</div>` : ''}
+      <h3>Basis</h3>
+      <p class="note">Status <b>${s.label}</b> &mdash; ${esc(s.note)}. Last verified 2026-09-01 against
+      HEAD <span class="mono">ab13977</span>, primary checkout. Five sessions share this checkout;
+      re-measure before quoting.</p>
+    </div>`;
+  insp.classList.add('open'); insp.setAttribute('aria-hidden','false');
+  $('.insp-x', insp).onclick = () => select(id);
+  $$('.vrow', insp).forEach(b => b.onclick = () => {
+    const w = $('#vwhy'), k = b.dataset.v, open = b.getAttribute('aria-expanded') === 'true';
+    $$('.vrow', insp).forEach(o => o.setAttribute('aria-expanded','false'));
+    if (open) { w.classList.remove('on'); return; }
+    b.setAttribute('aria-expanded','true');
+    w.innerHTML = `<b>${esc(VDIM.find(d => d[0] === k)[1])}</b> &mdash; ${esc(VWHY[k])}`;
+    w.classList.add('on');
+  });
+  $$('[data-goto]', insp).forEach(a => a.onclick = () => { sel = null; select(a.dataset.goto); centre(a.dataset.goto); });
+  repaint();
+}
+function centre(id){
+  const n = BY[id]; if (!n) return;
+  const r = $('#cw').getBoundingClientRect();
+  vx = (r.width - 398) / 2 - (n.x + n.w / 2) * vs;
+  vy = r.height / 2 - (n.y + n.h / 2) * vs;
+  applyVP();
+}
+
+/* ── rail ──────────────────────────────────────────────────────────────── */
+function buildRail(){
+  const r = $('#rail');
+  r.innerHTML = `
+    <div><h3>Status</h3><div class="rail-grp" id="f-status"></div></div>
+    <div><h3>Overlays</h3><div class="rail-grp" id="f-tog"></div></div>
+    <div><h3>Grammar</h3><div id="legend"></div></div>
+    <div class="rail-note" id="rail-note"></div>`;
+  const fs = $('#f-status');
+  Object.keys(ST).forEach(k => {
+    const s = ST[k], b = document.createElement('button');
+    b.className = 'chk'; b.setAttribute('aria-pressed','true');
+    b.innerHTML = `<span class="dot" style="color:var(${s.c})"></span>${s.label.toLowerCase()}
+      <span class="mono" style="margin-left:auto;color:var(--muted);font-size:.7rem">${N.filter(n => n.st === k).length}</span>`;
+    b.onclick = () => { FILT[k] = !FILT[k]; b.setAttribute('aria-pressed', FILT[k] ? 'true':'false'); repaint(); };
+    fs.appendChild(b);
+  });
+  const ft = $('#f-tog');
+  [['deps','Dependencies'],['crit','Critical path'],['zeus','Zeus links']].forEach(([k, label]) => {
+    const b = document.createElement('button');
+    b.className = 'chk'; b.setAttribute('aria-pressed', TOG[k] ? 'true':'false');
+    b.innerHTML = `<span class="sw"></span>${label}`;
+    b.onclick = () => { TOG[k] = !TOG[k]; b.setAttribute('aria-pressed', TOG[k] ? 'true':'false'); repaint(); };
+    ft.appendChild(b);
+  });
+  $('#rail-note').innerHTML = `Click any node to inspect it. Solid = built and measured.
+    Dashed = planned, and labelled with what it waits on. Dotted = research, not approved.
+    Struck = tested and refused, kept as evidence.`;
+}
+buildRail();
+
+/* ── legend — lives in the rail, so it cannot occlude the graph ───────── */
+$('#legend').innerHTML = `<ul>` + Object.keys(ST).map(k => {
+  const s = ST[k];
+  return `<li><svg width="26" height="10" aria-hidden="true"><line x1="1" y1="5" x2="25" y2="5"
+    stroke="var(${s.c})" stroke-width="2" ${s.dash ? `stroke-dasharray="${s.dash}"` : ''}/></svg>
+    <span>${s.label.toLowerCase()}</span></li>`;
+}).join('') + `</ul>`;
+
+/* ── modes ─────────────────────────────────────────────────────────────── */
+const MODES = [['journey','Journey'],['value','Value'],['zeus','Zeus'],['sim','Simulations'],['frontier','Frontier']];
+let mode = 'journey';
+$('#modes').innerHTML = MODES.map(([k, t]) =>
+  `<button class="mode" role="tab" data-m="${k}" aria-selected="${k === 'journey'}">${t}</button>`).join('');
+function setMode(m){
+  mode = m;
+  $$('.mode').forEach(b => b.setAttribute('aria-selected', b.dataset.m === m ? 'true':'false'));
+  MODES.forEach(([k]) => $('#v-' + k).classList.toggle('on', k === m));
+  const journey = (m === 'journey');
+  $('.body').classList.toggle('norail', !journey);
+  $('#rail').hidden = !journey;
+  if (m === 'journey') requestAnimationFrame(fit);
+  if (m === 'sim') SIM.mount();
+  reveal();
+}
+$$('.mode').forEach(b => b.onclick = () => setMode(b.dataset.m));
+
+/* below 1040px the rail is off-canvas, so its filters and grammar key need a
+   way in. Without this the controls simply do not exist on a phone. */
+$('#btn-rail').onclick = () => {
+  const r = $('#rail'), open = r.classList.toggle('open');
+  r.hidden = false;
+  $('#btn-rail').setAttribute('aria-expanded', open ? 'true' : 'false');
+};
+/* ═══ FIGURES — every coordinate below is computed from MEAS. Halve a number
+       and the picture changes; that is the test these have to pass. ═══ */
+
+/* Time-proportional strip: active stage time inside total wall clock. */
+function figWall(){
+  const W = 760, H = 92, x0 = 8, w = W - 16;
+  const active = MEAS.wall.active / MEAS.wall.total * w;          /* DERIVED */
+  return `<figure><div class="figwrap">
+  <svg class="fig" viewBox="0 0 ${W} ${H}" role="img"
+    aria-label="A proven migration: ${MEAS.wall.active} minutes of active stage time inside ${MEAS.wall.total} minutes of wall clock, which is ${MEAS.wall.pct} percent.">
+    <rect x="${x0}" y="28" width="${w}" height="30" rx="5" fill="var(--absent-bg)" stroke="var(--absent)" stroke-width="1"/>
+    <rect x="${x0}" y="28" width="${active.toFixed(2)}" height="30" rx="5" fill="var(--built)"/>
+    <text x="${x0+2}" y="20" fill="var(--muted)" font-family="var(--mono)" font-size="9.5" letter-spacing=".1em">8 H 20 M WALL CLOCK — ONE PROVEN MIGRATION</text>
+    <text x="${(x0 + active + 9).toFixed(1)}" y="48" fill="var(--ink)" font-family="var(--mono)" font-size="11">${MEAS.wall.active} min active — ${MEAS.wall.pct}%</text>
+    <text x="${W - 8}" y="76" text-anchor="end" fill="var(--absent)" font-family="var(--mono)" font-size="10">the remaining ${(100 - MEAS.wall.pct).toFixed(1)}% is waiting for a human</text>
+  </svg></div>
+  <figcaption><b>The number any roadmap has to move.</b> Automating the build did not remove the wait —
+  it made the wait visible and attributable. Basis: <b>MEASURED</b> active time,
+  <b>DERIVED</b> percentage (${MEAS.wall.active} ÷ ${MEAS.wall.total}).</figcaption></figure>`;
+}
+
+/* Proportion plate: three shares that each stop a bigger claim. */
+function figCoverage(){
+  const items = [
+    ['Connectors proven end to end', MEAS.conn.proven, MEAS.conn.total, '--built'],
+    ['Contract assertions wired to a live target', MEAS.probes.wired, MEAS.probes.total, '--now'],
+    ['Corpus cases, against the calibration floor', MEAS.corpus.cases, MEAS.corpus.need, '--absent'],
+    ['Store tasks visible on the Switchboard', MEAS.manifest.rendered, MEAS.manifest.tasks, '--risk']
+  ];
+  const W = 760, rowH = 40, H = items.length * rowH + 24, barX = 300, barW = W - barX - 74;
+  let s = `<figure><div class="figwrap"><svg class="fig" viewBox="0 0 ${W} ${H}" role="img"
+    aria-label="Coverage: 1 of 49 connectors, 2 of 12 assertions, 1 of 29 corpus cases, 8 of 88 tasks visible.">`;
+  items.forEach(([label, a, b, tok], i) => {
+    const y = 14 + i * rowH, fw = a / b * barW;                    /* DERIVED */
+    s += `<text x="7" y="${y + 15}" fill="var(--ink2)" font-size="12">${label}</text>
+      <rect x="${barX}" y="${y + 4}" width="${barW}" height="16" rx="3" fill="var(--sunk)" stroke="var(--rule)" stroke-width="1"/>
+      <rect x="${barX}" y="${y + 4}" width="${Math.max(2, fw).toFixed(2)}" height="16" rx="3" fill="var(${tok})"/>
+      <text x="${W - 68}" y="${y + 16}" fill="var(--ink)" font-family="var(--mono)" font-size="11">${a} / ${b}</text>`;
+  });
+  s += `</svg></div><figcaption><b>Sensitivity is not coverage.</b> Every bar is a real ratio, not an
+  impression. The contract has been proved able to fail; it has not been pointed at very much yet.
+  Basis: all four <b>MEASURED</b>.</figcaption></figure>`;
+  return s;
+}
+
+/* Boundary-crossing flow: the publication gate. */
+function figBoundary(){
+  const W = 760, H = 168;
+  return `<figure><div class="figwrap"><svg class="fig" viewBox="0 0 ${W} ${H}" role="img"
+   aria-label="Private canonical state passes through an allow-listed projection and a publication gate before reaching a public client view; operator diagnostics stop at the boundary.">
+   <text x="7" y="12" fill="var(--muted)" font-family="var(--mono)" font-size="9" letter-spacing=".11em">PRIVATE — CANONICAL STATE AND EVIDENCE</text>
+   <rect x="0" y="20" width="196" height="58" rx="7" fill="var(--panel)" stroke="var(--rule3)" stroke-width="1"/>
+   <text x="12" y="42" fill="var(--ink)" font-size="12">TaskStore · evidence</text>
+   <text x="12" y="60" fill="var(--ink2)" font-size="11">findings · run cost · diagnostics</text>
+
+   <rect x="248" y="20" width="182" height="58" rx="7" fill="var(--accent-dim)" stroke="var(--accent)" stroke-width="1.2"/>
+   <text x="260" y="42" fill="var(--ink)" font-size="12">Allow-list projection</text>
+   <text x="260" y="60" fill="var(--ink2)" font-size="11">client_safe() per section</text>
+
+   <rect x="482" y="20" width="126" height="58" rx="7" fill="var(--now-bg)" stroke="var(--now)" stroke-width="1.2"/>
+   <text x="494" y="42" fill="var(--ink)" font-size="12">Publication</text>
+   <text x="494" y="60" fill="var(--ink2)" font-size="11">gate · 4 verdicts</text>
+
+   <rect x="660" y="20" width="100" height="58" rx="7" fill="var(--built-bg)" stroke="var(--built)" stroke-width="1.2"/>
+   <text x="672" y="42" fill="var(--ink)" font-size="12">Client</text>
+   <text x="672" y="60" fill="var(--ink2)" font-size="11">view</text>
+
+   <path d="M196,49 L242,49" stroke="var(--accent)" stroke-width="1.4" marker-end="url(#ah)"/>
+   <path d="M430,49 L476,49" stroke="var(--accent)" stroke-width="1.4" marker-end="url(#ah)"/>
+   <path d="M608,49 L654,49" stroke="var(--built)" stroke-width="1.4" marker-end="url(#ah)"/>
+
+   <line x1="238" y1="92" x2="238" y2="162" stroke="var(--risk)" stroke-width="1.6" stroke-dasharray="5 4"/>
+   <text x="248" y="112" fill="var(--risk)" font-family="var(--mono)" font-size="9.5" letter-spacing=".08em">THE BOUNDARY</text>
+   <path d="M100,100 L100,130 L226,130" stroke="var(--risk)" stroke-width="1.4" fill="none"/>
+   <circle cx="232" cy="130" r="4.5" fill="none" stroke="var(--risk)" stroke-width="1.6"/>
+   <path d="M229,127 L235,133 M235,127 L229,133" stroke="var(--risk)" stroke-width="1.4"/>
+   <text x="7" y="152" fill="var(--ink2)" font-size="11.5">Operator diagnostics have nowhere to go — structurally unprojectable.</text>
+   <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+     <path d="M0,0 L10,5 L0,10 z" fill="context-stroke"/></marker></defs>
+  </svg></div>
+  <figcaption><b>The arrow that stops at the line is the point.</b> Client-safety is a property of the
+  projection, not of a reviewer remembering. Basis: <b>MEASURED</b> — the allow-list is enforced in
+  <span class="mono">factory/client_review.py</span>; the publication gate is <b>IN PROGRESS</b>.</figcaption></figure>`;
+}
+
+/* Value chain — animated on select. */
+function chainHTML(c){
+  return `<div class="sec" data-chain="${c.id}">
+    <h3>${esc(c.t)}</h3>
+    <div class="figwrap"><svg class="fig" viewBox="0 0 760 ${c.steps.length * 46 + 8}" role="img"
+      aria-label="${esc(c.t)}: ${c.steps.map(s => s[0]).join(', then ')}.">
+      ${c.steps.map(([label, basis, note], i) => {
+        const y = i * 46 + 6, meas = basis === 'MEASURED';
+        const tok = meas ? c.tone : (basis === 'AUTHORED' ? '--future' : '--frontier');
+        return `<g class="rv" style="--i:${i}">
+          <rect x="0" y="${y}" width="352" height="34" rx="6" fill="var(--panel)"
+            stroke="var(${tok})" stroke-width="1.1" ${meas ? '' : 'stroke-dasharray="4 4"'}/>
+          <text x="13" y="${y + 21}" fill="var(--ink)" font-size="12">${esc(label)}</text>
+          <text x="368" y="${y + 15}" fill="var(${tok})" font-family="var(--mono)" font-size="9" letter-spacing=".1em">${basis}</text>
+          <text x="368" y="${y + 28}" fill="var(--ink2)" font-size="11">${esc(note)}</text>
+          ${i < c.steps.length - 1 ? `<path d="M176,${y + 34} L176,${y + 46}" stroke="var(${tok})"
+            stroke-width="1.2" ${meas ? '' : 'stroke-dasharray="3 3"'}/>` : ''}
+        </g>`;
+      }).join('')}
+    </svg></div></div>`;
+}
+
+/* ── VALUE view ────────────────────────────────────────────────────────── */
+$('#v-value').innerHTML = `<div class="sheet">
+  <h2>Where the value actually is</h2>
+  <p class="lede">Two of these figures are the argument. The rest of the map is how you get there.</p>
+  <div class="sec rv"><h3>The bottleneck</h3>${figWall()}</div>
+  <div class="sec rv"><h3>What has been pointed at how much</h3>${figCoverage()}</div>
+  <div class="sec rv"><h3>The boundary that makes delivery sellable</h3>${figBoundary()}</div>
+  <div class="sec"><h3>Value chains — technical work to commercial outcome</h3>
+    <p class="note" style="margin-bottom:14px">Solid links are measured. Dashed links are authored
+    judgements or planned steps, and are drawn that way on purpose: the chain gets weaker as it gets
+    more commercial, and pretending otherwise is how a roadmap becomes a pitch.</p>
+    ${CHAINS.map(chainHTML).join('')}</div>
+  <div class="sec rv"><h3>What the five faults cost, and why they are the argument</h3>
+    <table><thead><tr><th>Fault every green light missed</th><th>Why it matters</th></tr></thead><tbody>
+    <tr><td>A connector ran ~24 times reporting COMPLETED with zero tables</td><td>A green run plane meant nothing. This is why the watcher is deterministic code, not an agent.</td></tr>
+    <tr><td>A migration judged on 22% of itself — one of eleven flows triggered</td><td>Every downstream signal read healthy because <em>some</em> rows landed; it nearly sent four people to rewrite working code.</td></tr>
+    <tr><td>A correct connector scored 30.2%</td><td>The check measured the wrong grain. On the business key both sides measured 4,381 exactly.</td></tr>
+    <tr><td>A false certification reproduced before it shipped</td><td>The production baseline is itself 4.86× duplicated; a pipeline writing a correct row set 16 times over would have scored PASS/100%.</td></tr>
+    <tr><td>Ten containers, one quota, three invisible hours</td><td>A list never cleared between partitions turned 30 uploads into 465. The timeout path recorded no error text at all.</td></tr>
+    </tbody></table>
+    <p class="note" style="margin-top:10px"><b>MEASURED.</b> None of these is a time saving, and that is
+    the point: the strongest evidence the product has is five faults that every green light missed.</p></div>
+</div>`;
+
+/* ── ZEUS view ─────────────────────────────────────────────────────────── */
+function figTriangle(){
+  const W = 760, H = 260;
+  return `<figure><div class="figwrap"><svg class="fig" viewBox="0 0 ${W} ${H}" role="img"
+   aria-label="Three systems: Zeus Chat as interaction layer, Zeus Memory as knowledge layer, Agent Factory as execution layer. All connecting edges are unbuilt.">
+   <rect x="288" y="8" width="184" height="62" rx="9" fill="var(--built-bg)" stroke="var(--built)" stroke-width="1.3"/>
+   <text x="380" y="30" text-anchor="middle" fill="var(--ink)" font-size="13">Zeus Chat</text>
+   <text x="380" y="46" text-anchor="middle" fill="var(--ink2)" font-size="11">interaction · ${MEAS.zchat.tools} tools</text>
+   <text x="380" y="61" text-anchor="middle" fill="var(--built)" font-family="var(--mono)" font-size="8.5" letter-spacing=".1em">EXISTS · LIVE</text>
+
+   <rect x="16" y="180" width="196" height="62" rx="9" fill="var(--built-bg)" stroke="var(--built)" stroke-width="1.3"/>
+   <text x="114" y="202" text-anchor="middle" fill="var(--ink)" font-size="13">Zeus Memory</text>
+   <text x="114" y="218" text-anchor="middle" fill="var(--ink2)" font-size="11">knowledge · ${MEAS.zmem.memories}</text>
+   <text x="114" y="233" text-anchor="middle" fill="var(--built)" font-family="var(--mono)" font-size="8.5" letter-spacing=".1em">EXISTS · LIVE</text>
+
+   <rect x="548" y="180" width="196" height="62" rx="9" fill="var(--built-bg)" stroke="var(--built)" stroke-width="1.3"/>
+   <text x="646" y="202" text-anchor="middle" fill="var(--ink)" font-size="13">Agent Factory</text>
+   <text x="646" y="218" text-anchor="middle" fill="var(--ink2)" font-size="11">execution · ${MEAS.modules.n} modules</text>
+   <text x="646" y="233" text-anchor="middle" fill="var(--built)" font-family="var(--mono)" font-size="8.5" letter-spacing=".1em">EXISTS · LOCAL</text>
+
+   <path d="M330,74 L150,176" stroke="var(--frontier)" stroke-width="1.6" stroke-dasharray="4 5" fill="none"/>
+   <path d="M430,74 L612,176" stroke="var(--frontier)" stroke-width="1.6" stroke-dasharray="4 5" fill="none"/>
+   <path d="M216,208 L544,208" stroke="var(--frontier)" stroke-width="1.6" stroke-dasharray="4 5" fill="none"/>
+
+   <text x="196" y="120" text-anchor="middle" fill="var(--frontier)" font-family="var(--mono)" font-size="9" letter-spacing=".08em">UNBUILT</text>
+   <text x="566" y="120" text-anchor="middle" fill="var(--frontier)" font-family="var(--mono)" font-size="9" letter-spacing=".08em">UNBUILT</text>
+   <text x="380" y="196" text-anchor="middle" fill="var(--frontier)" font-family="var(--mono)" font-size="9" letter-spacing=".08em">UNBUILT</text>
+   <text x="380" y="230" text-anchor="middle" fill="var(--ink2)" font-size="11">0 references in factory/</text>
+  </svg></div>
+  <figcaption><b>Three real systems and three imagined edges.</b> Each box exists and is measured.
+  Not one connecting line has any code behind it —
+  <span class="mono">${esc(MEAS.seam.cmd)}</span>. Drawing these solid would be the exact failure the
+  Factory exists to stop, so they are dashed.</figcaption></figure>`;
+}
+$('#v-zeus').innerHTML = `<div class="sheet">
+  <h2>Zeus synergy — credible, and entirely unbuilt</h2>
+  <p class="lede">The seam is real: the transport exists, the products are live, and the shapes fit.
+  What does not exist is a single line of code joining them.</p>
+  <div class="sec rv"><h3>The three-system hypothesis</h3>${figTriangle()}</div>
+
+  <div class="sec rv"><h3>What actually exists, separated from what is proposed</h3>
+  <table><thead><tr><th>Capability</th><th>State</th><th>Basis</th></tr></thead><tbody>
+    <tr><td>Zeus Chat — agentic chat, ${MEAS.zchat.tools} tools, tiered memory/internal/admin/RBAC/skill/CCX</td><td><b style="color:var(--built)">EXISTS</b></td><td class="num">MEASURED — schemas.ts</td></tr>
+    <tr><td>Zeus Chat reads live client Power BI data through a tenant data config</td><td><b style="color:var(--built)">EXISTS</b></td><td class="num">DOCUMENTED</td></tr>
+    <tr><td>Zeus Memory — multi-tenant store, MCP Streamable HTTP, OAuth 2.0, task API</td><td><b style="color:var(--built)">EXISTS</b></td><td class="num">DOCUMENTED — README</td></tr>
+    <tr><td>Zeus Memory ingestion connectors (Slack, email, Fireflies, Drive, QBO…)</td><td><b style="color:var(--built)">EXISTS</b></td><td class="num">MEASURED — ingestion/</td></tr>
+    <tr><td>An MCP client is connected to this very session</td><td><b style="color:var(--built)">EXISTS</b></td><td class="num">MEASURED — session hook</td></tr>
+    <tr><td>Agent Factory writes any mission outcome to Zeus Memory</td><td><b style="color:var(--risk)">ABSENT</b></td><td class="num">MEASURED — 0 refs</td></tr>
+    <tr><td>Agent Factory reads prior missions out of Zeus Memory</td><td><b style="color:var(--risk)">ABSENT</b></td><td class="num">MEASURED — 0 refs</td></tr>
+    <tr><td>A Factory tool exists in Zeus Chat’s tool schema</td><td><b style="color:var(--risk)">ABSENT</b></td><td class="num">MEASURED — 0 of ${MEAS.zchat.tools}</td></tr>
+    <tr><td>Conversational mission control · client-safe explanation</td><td><b style="color:var(--frontier)">PROPOSED</b></td><td class="num">this document</td></tr>
+  </tbody></table></div>
+
+  <div class="sec rv"><h3>What each system would give the others</h3>
+  <table><thead><tr><th>Direction</th><th>The exchange</th><th>Why it is credible</th></tr></thead><tbody>
+    <tr><td class="num">Factory → Memory</td><td>Findings, verdicts, evidence classes, per-lane cost, decisions and their reasons</td><td>These already exist as typed, provenance-carrying records. Today they live in one repository’s Markdown with no promotion path.</td></tr>
+    <tr><td class="num">Memory → Factory</td><td>A brief that opens with the prior art, the corrections and the failures that apply</td><td>The recurrence preflight already proves the pattern at one-repository scope. Widening it is the entire argument.</td></tr>
+    <tr><td class="num">Factory → Chat</td><td>Typed mission state to answer “what is blocked, why, what did it cost”</td><td>The Switchboard already answers these from typed state in 2 s. Chat is a second surface on the same projection.</td></tr>
+    <tr><td class="num">Chat → Factory</td><td>Conversational intake and client-safe explanation over the existing allow-list</td><td>Both halves exist and neither knows about the other.</td></tr>
+    <tr><td class="num">Factory → both</td><td>The verdict discipline itself: PASS / FAIL / UNMEASURABLE / ERROR / NOT_RUN</td><td>⭐ Zeus Chat’s confidence badge exists twice — a real data-driven component and markdown the model is told to type. The second is spoofable. A verdict that can say “could not tell” is the fix.</td></tr>
+  </tbody></table></div>
+
+  <div class="sec rv"><h3>The compounding loop, and where it is currently cut</h3>
+  <figure><div class="figwrap"><svg class="fig" viewBox="0 0 760 148" role="img"
+    aria-label="A loop from missions to evidence to memory to better briefs to better teams and back; the memory step is unbuilt, which cuts the loop.">
+    ${['more missions','more evidence','durable memory','better briefs','better teams','better outcomes'].map((t, i) => {
+      const x = i * 126 + 4, built = i < 2 || i > 4;
+      const tok = built ? '--built' : '--frontier';
+      return `<g><rect x="${x}" y="40" width="112" height="40" rx="7" fill="var(--panel)" stroke="var(${tok})"
+        stroke-width="1.2" ${built ? '' : 'stroke-dasharray="4 4"'}/>
+        <text x="${x + 56}" y="64" text-anchor="middle" fill="var(--ink)" font-size="11.5">${t}</text>
+        ${i < 5 ? `<path d="M${x + 112},60 L${x + 122},60" stroke="var(${tok})" stroke-width="1.3"
+          ${built ? '' : 'stroke-dasharray="3 3"'} marker-end="url(#ah2)"/>` : ''}</g>`;
+    }).join('')}
+    <path d="M700,80 L700,112 L60,112 L60,84" stroke="var(--built)" stroke-width="1.3" fill="none" marker-end="url(#ah2)"/>
+    <line x1="256" y1="26" x2="256" y2="122" stroke="var(--risk)" stroke-width="1.8" stroke-dasharray="4 4"/>
+    <text x="264" y="22" fill="var(--risk)" font-family="var(--mono)" font-size="9" letter-spacing=".08em">THE LOOP IS CUT HERE</text>
+    <defs><marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="context-stroke"/></marker></defs>
+  </svg></div>
+  <figcaption><b>The compounding claim depends on one unbuilt step.</b> Missions produce evidence today
+  and evidence improves outcomes today — but only within one repository, one mission at a time. The
+  dashed span is what Zeus Memory would close, and it is the difference between a good tool and a
+  system that gets better on its own. <b>PROPOSED</b>, not built.</figcaption></figure></div>
+</div>`;
+/* ── FRONTIER view ─────────────────────────────────────────────────────── */
+const FR = N.filter(n => n.st === 'frontier');
+$('#v-frontier').innerHTML = `<div class="sheet">
+  <h2>Research frontier</h2>
+  <p class="lede">Everything on this page is a hypothesis about what should exist. None of it is a
+  specification, a commitment, or evidence that anything was built.</p>
+
+  <div class="sec rv"><h3>The approvals table, and why it is empty</h3>
+  <div class="figwrap"><svg class="fig" viewBox="0 0 760 116" role="img"
+    aria-label="Research pipeline: 26 prompts, 3 answers, 1 synthesis, 0 approved concepts.">
+    ${[['prompts written', MEAS.army.prompts, '--frontier'], ['answers produced', MEAS.army.answers, '--now'],
+       ['syntheses', 1, '--now'], ['ADRs that decide a product change', 0, '--risk'],
+       ['approved concepts', MEAS.army.approved, '--risk']].map(([t, v, tok], i) => {
+      const x = i * 152 + 2;
+      return `<g><rect x="${x}" y="30" width="140" height="54" rx="7" fill="var(--panel)"
+        stroke="var(${tok})" stroke-width="1.2" stroke-dasharray="3 4"/>
+        <text x="${x + 70}" y="58" text-anchor="middle" fill="var(${tok})" font-family="var(--mono)"
+          font-size="19" font-variant-numeric="tabular-nums">${v}</text>
+        <text x="${x + 70}" y="74" text-anchor="middle" fill="var(--ink2)" font-size="10.5">${t}</text>
+        ${i < 4 ? `<path d="M${x + 140},57 L${x + 150},57" stroke="var(--rule3)" stroke-width="1.2"/>` : ''}</g>`;
+    }).join('')}
+  </svg></div>
+  <figcaption><b>The funnel narrows to zero, and that is the correct output today.</b> Approval needs a
+  research answer, an evidence audit, a wave synthesis, an updated canonical spec, an ADR that decides
+  rather than describes, and an approved handoff. Two of six exist. And a seventh condition is
+  independent of all of them: the product gate requires one certified team, and none exists.
+  Basis: <b>MEASURED</b> — ${esc(MEAS.army.notrun)} of 30 prompts are NOT_RUN.</figcaption></div>
+
+  <div class="sec rv"><h3>⛔ The founding premise was falsified by the programme’s own first synthesis</h3>
+  <div class="risk-box" style="font-size:.88rem">
+    Wave 0 found the category name occupied twice in prior art and refuted the novelty claim on all four
+    components. Its own instruction: <em>do not apply these until a human accepts this synthesis.</em>
+    It has already paid for itself regardless — one of its findings became the fifth verdict,
+    <span class="mono">ERROR</span>, in commit <span class="mono">0d4bdb1</span>.
+    <b>A synthesis that demolishes is still a synthesis.</b>
+  </div></div>
+
+  <div class="sec"><h3>The branches</h3>
+  <p class="note" style="margin-bottom:14px">Each is drawn dotted throughout this atlas. Click through
+  to the graph to see what it would depend on — in every case, several things that do not exist yet.</p>
+  <table><thead><tr><th>Branch</th><th>Idea</th><th>Gate</th><th>State in code</th></tr></thead><tbody>
+  ${FR.map(n => `<tr>
+    <td><a data-goto="${n.id}" style="cursor:pointer">${esc(n.t)}</a></td>
+    <td>${esc(n.d)}</td>
+    <td>${(n.dep || []).map(d => BY[d] ? esc(BY[d].t) : d).join(', ') || '—'}</td>
+    <td class="num" style="color:var(--risk)">NOT IMPLEMENTED</td></tr>`).join('')}
+  </tbody></table>
+  <p class="note" style="margin-top:10px">Not one Agent Army term appears in any Python module in the
+  repository. Every adjacent mechanism that does exist solves a related problem under a different name
+  — never a partial implementation of this vocabulary. Regenerate with the term sweep in
+  <span class="mono">docs/agent-army/CURRENT_STATE.md</span>.</p></div>
+
+  <div class="sec rv"><h3>Where this trajectory actually leads</h3>
+  <p style="font-family:var(--display);font-size:1.28rem;line-height:1.45;max-width:30ch;
+     border-left:2px solid var(--accent);padding-left:16px;color:var(--ink)">
+    A programmable environment for composing agent teams whose output can be certified —
+    and refused — rather than believed.</p>
+  <p class="note" style="margin-top:12px">Derived from the repository rather than asserted: the
+  differentiator every research pass and the build-vs-adopt council converged on is not orchestration.
+  Teams, crews, workflows, guardrails and human-in-the-loop approval are first-class in nearly every
+  framework surveyed. <b>What almost nobody has is a contract that can return “I could not tell”, and
+  a refusal to collapse it into a pass.</b> Team composition is commodity; certified team composition
+  is not.</p></div>
+</div>`;
+
+/* ═══ SIMULATION — one state machine drives node state, edges, log and caption.
+      No second timer exists anywhere in this section. ═══ */
+const SIM = {
+  i: 0, cur: 0, playing: false, speed: 1, t: null, built: false,
+  mount(){ if (!this.built) { this.render(); this.built = true; } this.draw(); },
+  render(){
+    $('#v-sim').innerHTML = `<div class="sheet">
+      <h2>Simulations</h2>
+      <p class="lede">Three operational walkthroughs. Every refusal in them is a real recorded one —
+      no happy path has been invented to make the system look finished.</p>
+      <div class="simbar">
+        <div class="simtabs">${SIMS.map((s, i) =>
+          `<button class="simtab" data-s="${i}" aria-selected="${i === 0}">${s.t}</button>`).join('')}</div>
+        <div class="simctl">
+          <button class="tbtn" id="s-play">&#9654; Run</button>
+          <button class="tbtn" id="s-step">Step &rarr;</button>
+          <button class="tbtn" id="s-reset">&#8635; Reset</button>
+          <button class="tbtn" id="s-speed">1&times;</button>
+        </div>
+      </div>
+      <p class="note" id="s-sub" style="margin:-6px 0 12px"></p>
+      <div class="simstage"><svg id="s-svg" class="fig" role="img"></svg></div>
+      <div class="simcap" id="s-cap"></div>
+      <div class="simlog" id="s-log"></div>
+    </div>`;
+    $$('.simtab').forEach(b => b.onclick = () => { this.i = +b.dataset.s; this.cur = 0; this.stop();
+      $$('.simtab').forEach(o => o.setAttribute('aria-selected', o === b ? 'true':'false')); this.draw(); });
+    $('#s-play').onclick  = () => this.playing ? this.stop() : this.play();
+    $('#s-step').onclick  = () => { this.stop(); this.advance(); };
+    $('#s-reset').onclick = () => { this.stop(); this.cur = 0; this.draw(); };
+    $('#s-speed').onclick = () => { this.speed = this.speed === 1 ? 2 : 1;
+      $('#s-speed').textContent = this.speed + '×'; if (this.playing) { this.stop(); this.play(); } };
+  },
+  geom(){
+    const s = SIMS[this.i], n = s.nodes.length;
+    const perRow = Math.min(6, n), rows = Math.ceil(n / perRow);
+    const W = 740, bw = Math.floor((W - 16) / perRow) - 12, bh = 52;
+    const pos = {};
+    s.nodes.forEach((nd, k) => { const r = Math.floor(k / perRow), c = k % perRow;
+      pos[nd[0]] = { x: 8 + c * (bw + 12), y: 10 + r * (bh + 44), w: bw, h: bh }; });
+    return { W, H: rows * (bh + 44) + 6, pos, bw, bh };
+  },
+  draw(){
+    const s = SIMS[this.i], g = this.geom(), svg = $('#s-svg');
+    const done = new Set(), failed = new Set(), planned = new Set();
+    s.steps.slice(0, this.cur).forEach(st => {
+      if (st.c === 'no') failed.add(st.n); else if (st.c === 'pl') planned.add(st.n);
+      else { done.add(st.n); failed.delete(st.n); }
+    });
+    const active = this.cur > 0 ? s.steps[this.cur - 1].n : null;
+    const edge = this.cur > 0 ? s.steps[this.cur - 1].edge : null;
+    const KIND = { in:'--accent', core:'--ink2', gate:'--now', out:'--built', zeus:'--frontier' };
+
+    svg.setAttribute('viewBox', `0 0 ${g.W} ${g.H}`);
+    svg.setAttribute('aria-label', s.t + ' walkthrough: ' + s.nodes.map(n => n[1]).join(' → '));
+    let h = `<defs><marker id="sa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5"
+      orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="context-stroke"/></marker></defs>`;
+    s.edges.forEach(([a, b]) => {
+      const p = g.pos[a], q = g.pos[b]; if (!p || !q) return;
+      const zeus = s.nodes.find(x => x[0] === a)[2] === 'zeus' || s.nodes.find(x => x[0] === b)[2] === 'zeus';
+      const hot = edge && edge[0] === a && edge[1] === b;
+      let d;
+      if (Math.abs(p.y - q.y) < 2 && q.x > p.x)  d = `M${p.x + p.w},${p.y + p.h / 2} L${q.x - 5},${q.y + q.h / 2}`;
+      else d = `M${p.x + p.w / 2},${p.y + p.h} C${p.x + p.w / 2},${p.y + p.h + 24} ${q.x + q.w / 2},${q.y - 24} ${q.x + q.w / 2},${q.y - 5}`;
+      h += `<path d="${d}" fill="none" stroke="var(${hot ? '--accent' : (zeus ? '--frontier' : '--rule3')})"
+        stroke-width="${hot ? 2.2 : 1.2}" ${zeus ? 'stroke-dasharray="3 4"' : ''} marker-end="url(#sa)"
+        opacity="${hot ? 1 : .6}"/>`;
+    });
+    s.nodes.forEach(([id, label, kind]) => {
+      const p = g.pos[id];
+      const isA = id === active, isF = failed.has(id), isD = done.has(id), isP = planned.has(id);
+      const tok = isF ? '--risk' : isP ? '--frontier' : isA ? '--accent' : isD ? '--built' : KIND[kind] || '--ink2';
+      const fill = isF ? 'var(--risk-bg)' : isP ? 'var(--frontier-bg)' : isA ? 'var(--accent-dim)'
+                 : isD ? 'var(--built-bg)' : 'var(--panel)';
+      h += `<g><rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="7" fill="${fill}"
+        stroke="var(${tok})" stroke-width="${isA ? 2 : 1.2}" ${kind === 'zeus' ? 'stroke-dasharray="4 4"' : ''}/>
+        <text x="${p.x + p.w / 2}" y="${p.y + 24}" text-anchor="middle" fill="var(--ink)"
+          font-size="11.5">${esc(label)}</text>
+        <text x="${p.x + p.w / 2}" y="${p.y + 40}" text-anchor="middle" fill="var(${tok})"
+          font-family="var(--mono)" font-size="8" letter-spacing=".09em">${
+            isF ? 'REFUSED' : isP ? 'NOT WIRED' : isA ? 'ACTIVE' : isD ? 'DONE' : kind.toUpperCase()}</text></g>`;
+    });
+    svg.innerHTML = h;
+
+    $('#s-sub').textContent = s.sub;
+    const step = this.cur > 0 ? s.steps[this.cur - 1] : null;
+    $('#s-cap').innerHTML = step
+      ? `<span class="basis">STEP ${this.cur} OF ${s.steps.length} — ${
+          step.c === 'no' ? 'REFUSAL' : step.c === 'pl' ? 'PLANNED, NOT BUILT'
+          : step.c === 'un' ? 'UNMEASURABLE' : 'MEASURED'}</span>${esc(step.cap)}`
+      : `<span class="basis">READY</span>Press <b>Run</b> to walk the ${s.t.toLowerCase()} path, or
+         <b>Step</b> to advance one event at a time.`;
+    const log = $('#s-log');
+    log.innerHTML = s.steps.slice(0, this.cur).map((st, k) =>
+      `<div><span class="t">${String(k + 1).padStart(2, '0')}</span><span class="${st.c}">${esc(st.log)}</span></div>`).join('');
+    log.scrollTop = log.scrollHeight;
+    $('#s-play').innerHTML = this.playing ? '&#10073;&#10073; Pause' : '&#9654; Run';
+  },
+  advance(){
+    const s = SIMS[this.i];
+    if (this.cur >= s.steps.length) { this.stop(); return false; }
+    this.cur++; this.draw(); return true;
+  },
+  play(){ if (STILL) { this.cur = SIMS[this.i].steps.length; this.draw(); return; }
+    this.playing = true; this.draw();
+    const tick = () => { if (!this.playing) return;
+      if (!this.advance()) return;
+      this.t = setTimeout(tick, 2100 / this.speed); };
+    this.t = setTimeout(tick, 300 / this.speed);
+  },
+  stop(){ this.playing = false; clearTimeout(this.t); this.draw(); }
+};
+/* ── command palette ───────────────────────────────────────────────────── */
+const CMDS = [
+  ...MODES.map(([k, t]) => ({ label: 'Go to ' + t, k: 'MODE', run: () => setMode(k) })),
+  ...SIMS.map((s, i) => ({ label: 'Simulate — ' + s.t, k: 'SIM',
+    run: () => { setMode('sim'); SIM.i = i; SIM.cur = 0;
+      $$('.simtab').forEach(o => o.setAttribute('aria-selected', +o.dataset.s === i ? 'true':'false'));
+      SIM.draw(); SIM.play(); } })),
+  { label: 'Show the critical path', k: 'VIEW', run: () => { setMode('journey'); TOG.crit = 1;
+      $$('#f-tog .chk')[1].setAttribute('aria-pressed','true'); repaint(); } },
+  { label: 'Show only what is in progress', k: 'VIEW', run: () => { setMode('journey');
+      Object.keys(FILT).forEach(k => FILT[k] = (k === 'now'));
+      $$('#f-status .chk').forEach((b, i) => b.setAttribute('aria-pressed', Object.keys(ST)[i] === 'now' ? 'true':'false'));
+      repaint(); } },
+  { label: 'Reset all filters', k: 'VIEW', run: () => { Object.keys(FILT).forEach(k => FILT[k] = 1);
+      TOG.crit = 0; sel = null; insp.classList.remove('open');
+      $$('#f-status .chk').forEach(b => b.setAttribute('aria-pressed','true'));
+      $$('#f-tog .chk')[1].setAttribute('aria-pressed','false'); repaint(); } },
+  { label: 'Play the story', k: 'STORY', run: () => story.start() },
+  ...N.map(n => ({ label: n.t, k: ST[n.st].label, run: () => { setMode('journey');
+      sel = null; select(n.id); centre(n.id); } }))
+];
+const cmdk = $('#cmdk'), cin = $('#cmdk-in'), clist = $('#cmdk-list');
+let cidx = 0, cfilt = CMDS;
+function cdraw(){
+  clist.innerHTML = cfilt.slice(0, 40).map((c, i) =>
+    `<li role="option" aria-selected="${i === cidx}" data-i="${i}">${esc(c.label)}<span class="k">${esc(c.k)}</span></li>`).join('');
+  $$('#cmdk-list li').forEach(li => { li.onclick = () => { cfilt[+li.dataset.i].run(); ckill(); }; });
+}
+function copen(){ cmdk.classList.add('on'); cin.value = ''; cfilt = CMDS; cidx = 0; cdraw(); cin.focus(); }
+function ckill(){ cmdk.classList.remove('on'); }
+$('#btn-cmd').onclick = copen;
+cmdk.onclick = e => { if (e.target === cmdk) ckill(); };
+cin.oninput = () => { const q = cin.value.toLowerCase().trim();
+  cfilt = q ? CMDS.filter(c => c.label.toLowerCase().includes(q) || c.k.toLowerCase().includes(q)) : CMDS;
+  cidx = 0; cdraw(); };
+cin.onkeydown = e => {
+  if (e.key === 'ArrowDown') { e.preventDefault(); cidx = Math.min(cfilt.length - 1, cidx + 1); cdraw(); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); cidx = Math.max(0, cidx - 1); cdraw(); }
+  else if (e.key === 'Enter') { e.preventDefault(); if (cfilt[cidx]) { cfilt[cidx].run(); ckill(); } }
+  else if (e.key === 'Escape') ckill();
+};
+addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); copen(); }
+  else if (e.key === 'Escape') { ckill(); if (story.on) story.end(); else if (sel) select(sel); }
+});
+
+/* ── story mode ────────────────────────────────────────────────────────── */
+const story = {
+  on: false, i: 0,
+  start(){ this.on = true; this.i = 0; $('#story').classList.add('on'); this.show(); },
+  end(){ this.on = false; $('#story').classList.remove('on'); },
+  show(){
+    const s = STORY[this.i];
+    $('#story-step').textContent = `CHAPTER ${this.i + 1} OF ${STORY.length}`;
+    $('#story-title').textContent = s.t;
+    $('#story-body').textContent = s.b;
+    $('#story-bar').style.transform = 'scaleX(' + ((this.i + 1) / STORY.length) + ')';
+    if (mode !== s.m) setMode(s.m);
+    if (s.f) { sel = null; select(s.f); centre(s.f); }
+    $('#story-prev').disabled = this.i === 0;
+    $('#story-next').textContent = this.i === STORY.length - 1 ? 'Finish' : 'Next →';
+  },
+  go(d){ const n = this.i + d;
+    if (n < 0) return;
+    if (n >= STORY.length) { this.end(); return; }
+    this.i = n; this.show(); }
+};
+$('#btn-story').onclick   = () => story.on ? story.end() : story.start();
+$('#story-next').onclick  = () => story.go(1);
+$('#story-prev').onclick  = () => story.go(-1);
+$('#story-end').onclick   = () => story.end();
+
+/* ── reveal. Two mechanisms, because IntersectionObserver does not run in a
+      tab that is never rendered — a background tab would otherwise show a
+      blank page. The fallback timer fires whether or not any frame does. ── */
+let io = null;
+function reveal(){
+  const items = $$('.rv:not(.in)');
+  if (!('IntersectionObserver' in window)) { items.forEach(n => n.classList.add('in')); return; }
+  if (!io) io = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+  }), { threshold: .12, rootMargin: '0px 0px -6% 0px' });
+  items.forEach(n => io.observe(n));
+  const sweep = () => $$('.rv:not(.in)').forEach(n => {
+    if (n.getBoundingClientRect().top < innerHeight + 40) n.classList.add('in'); });
+  sweep();
+  setTimeout(() => $$('.rv').forEach(n => n.classList.add('in')), 1600);
+}
+addEventListener('scroll', () => { if (!io) return;
+  $$('.rv:not(.in)').forEach(n => { if (n.getBoundingClientRect().top < innerHeight) n.classList.add('in'); });
+}, { passive: true });
+
+/* deep links out of the frontier table back into the graph */
+$$('[data-goto]').forEach(a => a.onclick = () => {
+  setMode('journey'); sel = null; select(a.dataset.goto); centre(a.dataset.goto); });
+
+/* ── init ──────────────────────────────────────────────────────────────── */
+repaint();
+requestAnimationFrame(() => { fit(); reveal(); });
+setTimeout(() => { if (!$('#vp').getAttribute('transform')) fit(); }, 800);
+</script>
+
+<noscript>
+<div style="padding:26px 22px;max-width:74ch">
+<h2 style="font-family:Spectral,Georgia,serif;font-weight:500">Agent Factory Atlas &mdash; without scripting</h2>
+<p>The interactive graph needs JavaScript. The measurements it draws do not, so here they are.</p>
+<p><b>Readiness, measured 2026-09-01 in the primary checkout (<code>python -m factory.readiness</code>, 542.4&nbsp;s):</b>
+PASS 13 &middot; FAIL 12 &middot; UNMEASURABLE 4 &middot; NOT_RUN 1, of 30 gates. There is deliberately no
+percentage &mdash; this distribution is the one thing that must not collapse into a single number.</p>
+<p><b>Built and measured:</b> the GreenContract (12 assertions, 5 verdicts, each proved able to fail),
+a hash-pinned corpus, evidence classes that refuse a close, an append-only TaskStore (253 events),
+30 readiness gates, a derived board, lane claiming, worktree isolation, session inventory, control-plane
+primitives with 39 negative controls, an evaluator that is a separate principal, a findings ledger
+(34 entries), retroactive per-lane cost, a render pass, Client Review, a case study, the artifact
+compiler, the assembly line, the Power BI contract, and Switchboard P0.</p>
+<p><b>In progress:</b> the publication boundary (AF-RELEASE-GATE-01), and the Switchboard manifest seam
+&mdash; 8 of 88 store tasks are visible on the page.</p>
+<p><b>Next, in order:</b> wire the ten dark contract assertions (2 of 12 are live), widen the corpus
+(1 case, 0 strata, against a floor of ~29), gate the dependency surface, build the brief compiler,
+and certify one team end to end. Everything further right is gated on that last item.</p>
+<p><b>Zeus:</b> Zeus Chat is live with 44 tools; Zeus Memory is live and multi-tenant. Agent Factory
+contains zero references to either &mdash;
+<code>grep -rniE "zeus|ccx|opentribe|cce_" factory/ scripts/ evaluator_service/</code> returns nothing.
+Every Zeus connection on this map is proposed, not built.</p>
+<p><b>Frontier:</b> no Agent Army concept is approved, 27 of 30 research prompts are NOT_RUN, and the
+one synthesis that ran falsified the programme&rsquo;s founding premise.</p>
+</div>
+</noscript>
+
+
+
+
+
+
+
+

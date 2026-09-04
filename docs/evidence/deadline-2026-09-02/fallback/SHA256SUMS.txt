@@ -1,0 +1,2 @@
+b6d09ee9a00c87832d15c0d4a3f24553ca8ca46b5f4ba42314c3a9a9f21bfd2c *docs/artifacts/client-review-navira.html
+b6d09ee9a00c87832d15c0d4a3f24553ca8ca46b5f4ba42314c3a9a9f21bfd2c *docs/evidence/deadline-2026-09-02/fallback/client-review-navira.html

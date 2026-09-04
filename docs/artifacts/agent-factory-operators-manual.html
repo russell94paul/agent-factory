@@ -1,0 +1,1098 @@
+<title>Agent Factory Operator’s Manual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+
+<style>
+/* ═══════════════════════════════════════════════════════════════════════════
+   AGENT FACTORY — OPERATOR’S MANUAL
+   Identity: a conformance-testing instrument panel. Cool blue-biased paper and
+   ink (never cream, never pure grey). The accent is SIGNAL AMBER because amber
+   is the UNMEASURABLE colour, and UNMEASURABLE is this system's entire thesis:
+   "I could not look" must never be recorded as "I looked and it was fine."
+   Five verdict colours exist because there are exactly five verdicts.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root{
+  /* ground + ink — blue bias, chosen not inherited */
+  --paper:#f7f8f9; --paper-2:#eef1f3; --paper-3:#e4e9ec;
+  /* Contrast-checked against --paper #f7f8f9 for SMALL text (≥4.5:1), because every one of
+     these lands on 10–13px labels, chips and table headers, never on display type:
+     ink-3 6.8:1 · ink-4 4.8:1 · signal 5.3:1 · v-notrun 5.2:1 · v-pass 5.3:1
+     v-fail 5.5:1 · v-err 6.8:1 · blueprint 6.8:1 */
+  --ink:#111a22; --ink-2:#2c3a45; --ink-3:#4a5a66; --ink-4:#5f7080;
+  --rule:#d5dde2; --rule-2:#c0ccd4; --rule-3:#a4b3bd;
+
+  /* accent = the UNMEASURABLE colour */
+  --signal:#9a5808; --signal-2:#d98218; --signal-wash:rgba(217,130,24,.10);
+
+  /* the five verdicts */
+  --v-pass:#12784c; --v-fail:#b83a26; --v-unm:#9a5808; --v-err:#6a3fae; --v-notrun:#5d6b76;
+  --v-pass-w:rgba(18,120,76,.10); --v-fail-w:rgba(184,58,38,.10);
+  --v-unm-w:rgba(185,106,12,.11); --v-err-w:rgba(106,63,174,.10); --v-notrun-w:rgba(125,139,150,.11);
+
+  --blueprint:#1d5c8a; --blueprint-w:rgba(29,92,138,.09);
+
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --cond:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+
+  --shadow:0 1px 2px rgba(17,26,34,.05), 0 8px 24px -12px rgba(17,26,34,.14);
+  --maxw:1320px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0c1319; --paper-2:#121c24; --paper-3:#18242e;
+    --ink:#e8eef2; --ink-2:#bccbd5; --ink-3:#8ea0ac; --ink-4:#7a8b97;
+    --rule:#22313c; --rule-2:#2e404d; --rule-3:#3d525f;
+    --signal:#f0a13a; --signal-2:#ffb85c; --signal-wash:rgba(240,161,58,.13);
+    --v-pass:#3fbe86; --v-fail:#f0705a; --v-unm:#f0a13a; --v-err:#a888e0; --v-notrun:#8496a1;
+    --v-pass-w:rgba(63,190,134,.13); --v-fail-w:rgba(240,112,90,.13);
+    --v-unm-w:rgba(240,161,58,.14); --v-err-w:rgba(168,136,224,.13); --v-notrun-w:rgba(132,150,161,.13);
+    --blueprint:#6fb2e0; --blueprint-w:rgba(111,178,224,.12);
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0c1319; --paper-2:#121c24; --paper-3:#18242e;
+  --ink:#e8eef2; --ink-2:#bccbd5; --ink-3:#8ea0ac; --ink-4:#7a8b97;
+  --rule:#22313c; --rule-2:#2e404d; --rule-3:#3d525f;
+  --signal:#f0a13a; --signal-2:#ffb85c; --signal-wash:rgba(240,161,58,.13);
+  --v-pass:#3fbe86; --v-fail:#f0705a; --v-unm:#f0a13a; --v-err:#a888e0; --v-notrun:#8496a1;
+  --v-pass-w:rgba(63,190,134,.13); --v-fail-w:rgba(240,112,90,.13);
+  --v-unm-w:rgba(240,161,58,.14); --v-err-w:rgba(168,136,224,.13); --v-notrun-w:rgba(132,150,161,.13);
+  --blueprint:#6fb2e0; --blueprint-w:rgba(111,178,224,.12);
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.7);
+}
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);
+  font-size:15.5px;line-height:1.62;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:var(--cond);text-wrap:balance;margin:0;letter-spacing:-.01em}
+p{margin:0 0 .85em}
+a{color:var(--blueprint)}
+code,kbd{font-family:var(--mono);font-size:.87em}
+:focus-visible{outline:2px solid var(--signal);outline-offset:2px;border-radius:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ── shell ───────────────────────────────────────────────────────────────── */
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px 96px}
+/* min-width:0 is load-bearing: a grid item defaults to min-width:auto, so the wide
+   tables and <pre> blocks inside would force the track past the viewport on mobile. */
+.cols{display:grid;grid-template-columns:minmax(0,1fr);gap:0}
+.cols>main{min-width:0}
+@media(min-width:1080px){
+  .cols{grid-template-columns:216px minmax(0,1fr);gap:52px;align-items:start}
+  .cols>main{min-width:0}
+  .rail{position:sticky;top:22px;max-height:calc(100vh - 44px);overflow-y:auto;
+    padding:20px 0 28px;border-right:1px solid var(--rule)}
+}
+.rail{display:none}
+@media(min-width:1080px){.rail{display:block}}
+.rail-h{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink-4);margin:0 0 12px}
+.rail a{display:block;font-family:var(--cond);font-weight:500;font-size:13.5px;line-height:1.32;
+  color:var(--ink-3);text-decoration:none;padding:6px 14px 6px 0;border-left:2px solid transparent;
+  padding-left:12px;margin-left:-12px}
+.rail a:hover{color:var(--ink);border-left-color:var(--signal)}
+.rail a .n{font-family:var(--mono);font-size:10.5px;color:var(--ink-4);margin-right:7px}
+
+/* ── masthead ────────────────────────────────────────────────────────────── */
+.mast{border-bottom:2px solid var(--ink);padding:38px 0 20px;margin-bottom:6px}
+.mast-top{display:flex;flex-wrap:wrap;gap:14px;align-items:baseline;
+  justify-content:space-between;margin-bottom:20px}
+.stencil{font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--signal);font-weight:600}
+.mast h1{font-size:clamp(38px,7vw,68px);font-weight:700;line-height:.96;letter-spacing:-.032em;
+  margin:0 0 14px}
+.mast .sub{font-size:17.5px;color:var(--ink-2);max-width:64ch;margin:0}
+.mast-meta{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:22px;
+  font-family:var(--mono);font-size:11.5px;color:var(--ink-3)}
+.mast-meta b{color:var(--ink);font-weight:500}
+
+/* ── the honest fact ─────────────────────────────────────────────────────── */
+.honest{border:1px solid var(--v-unm);background:var(--v-unm-w);border-left-width:4px;
+  padding:22px 24px;margin:26px 0 8px;border-radius:2px}
+.honest .lab{font-family:var(--mono);font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;
+  color:var(--v-unm);font-weight:600;margin-bottom:9px}
+.honest p{font-size:16.5px;color:var(--ink);margin:0 0 .6em}
+.honest p:last-child{margin:0}
+.honest strong{font-weight:600}
+
+/* ── sections ────────────────────────────────────────────────────────────── */
+section{padding-top:56px;scroll-margin-top:18px}
+.sec-h{display:flex;gap:16px;align-items:baseline;border-bottom:1px solid var(--rule-2);
+  padding-bottom:11px;margin-bottom:26px}
+.sec-h .num{font-family:var(--mono);font-size:12px;color:var(--signal);font-weight:600;
+  letter-spacing:.06em;flex:none;padding-top:5px}
+.sec-h h2{font-size:clamp(25px,3.4vw,34px);font-weight:700;letter-spacing:-.022em;line-height:1.08}
+.lede{font-size:17px;color:var(--ink-2);max-width:70ch;margin-bottom:26px}
+h3{font-size:19.5px;font-weight:600;margin:34px 0 12px;letter-spacing:-.012em}
+h4{font-size:15.5px;font-weight:600;margin:22px 0 7px;font-family:var(--body)}
+.prose{max-width:74ch}
+.prose p, .prose li{color:var(--ink-2)}
+.prose strong{color:var(--ink);font-weight:600}
+ul,ol{padding-left:20px;margin:0 0 .9em}
+li{margin-bottom:.34em}
+
+/* ── tracker ─────────────────────────────────────────────────────────────── */
+.tracker{border:1px solid var(--rule-2);border-radius:3px;background:var(--paper-2);
+  overflow:hidden;margin-bottom:22px}
+.tracker-bar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;
+  padding:11px 18px;border-bottom:1px solid var(--rule);background:var(--paper-3);
+  font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+.pin{display:inline-flex;align-items:center;gap:6px;color:var(--ink);font-weight:500}
+.pin .dot{width:7px;height:7px;border-radius:50%;background:var(--v-unm);flex:none}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:1px;
+  background:var(--rule)}
+.cell{background:var(--paper-2);padding:15px 17px 14px;display:flex;flex-direction:column;gap:3px}
+.cell .k{font-family:var(--mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--ink-4)}
+.cell .v{font-family:var(--cond);font-size:29px;font-weight:700;line-height:1.05;
+  font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.cell .n{font-size:11.5px;color:var(--ink-3);line-height:1.35}
+.cell.warn .v{color:var(--v-unm)} .cell.bad .v{color:var(--v-fail)}
+.cell.good .v{color:var(--v-pass)} .cell.flat .v{color:var(--ink)}
+.regen{border-top:1px solid var(--rule);background:var(--paper-3);padding:13px 18px}
+.regen summary{font-family:var(--mono);font-size:11px;color:var(--ink-3);cursor:pointer;
+  letter-spacing:.04em}
+.regen summary:hover{color:var(--ink)}
+.regen pre{margin:11px 0 0}
+
+/* ── verdict chips ───────────────────────────────────────────────────────── */
+.chip{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10.5px;
+  font-weight:600;letter-spacing:.06em;padding:2.5px 8px;border-radius:2px;
+  border:1px solid;white-space:nowrap;vertical-align:baseline}
+.c-pass{color:var(--v-pass);border-color:var(--v-pass);background:var(--v-pass-w)}
+.c-fail{color:var(--v-fail);border-color:var(--v-fail);background:var(--v-fail-w)}
+.c-unm{color:var(--v-unm);border-color:var(--v-unm);background:var(--v-unm-w)}
+.c-err{color:var(--v-err);border-color:var(--v-err);background:var(--v-err-w)}
+.c-nr{color:var(--v-notrun);border-color:var(--v-notrun);background:var(--v-notrun-w)}
+.c-bp{color:var(--blueprint);border-color:var(--blueprint);background:var(--blueprint-w)}
+
+/* ── lattice figure ──────────────────────────────────────────────────────── */
+.lattice{display:flex;flex-wrap:wrap;gap:0;align-items:stretch;border:1px solid var(--rule-2);
+  border-radius:3px;overflow:hidden;margin:20px 0}
+.lat{flex:1 1 168px;padding:15px 16px;border-right:1px solid var(--rule);background:var(--paper-2)}
+.lat:last-child{border-right:none}
+.lat .t{font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.05em;
+  margin-bottom:7px}
+.lat .d{font-size:12.5px;color:var(--ink-3);line-height:1.45}
+.lat.p .t{color:var(--v-pass)} .lat.f .t{color:var(--v-fail)} .lat.u .t{color:var(--v-unm)}
+.lat.e .t{color:var(--v-err)} .lat.n .t{color:var(--v-notrun)}
+.lat.u{background:var(--v-unm-w)}
+
+/* ── tables ──────────────────────────────────────────────────────────────── */
+.tw{overflow-x:auto;margin:18px 0;border:1px solid var(--rule-2);border-radius:3px}
+table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:520px}
+th{font-family:var(--mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--ink-4);text-align:left;padding:10px 14px;background:var(--paper-3);
+  border-bottom:1px solid var(--rule-2);font-weight:600;white-space:nowrap}
+td{padding:11px 14px;border-bottom:1px solid var(--rule);vertical-align:top;color:var(--ink-2);
+  line-height:1.5}
+tr:last-child td{border-bottom:none}
+td strong{color:var(--ink);font-weight:600}
+.num-c{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+
+/* ── code ────────────────────────────────────────────────────────────────── */
+pre{background:var(--paper-3);border:1px solid var(--rule);border-left:3px solid var(--rule-3);
+  border-radius:2px;padding:13px 16px;overflow-x:auto;margin:15px 0;
+  font-family:var(--mono);font-size:12.5px;line-height:1.62;color:var(--ink-2)}
+pre b{color:var(--ink);font-weight:600}
+pre .cm{color:var(--ink-4)}
+pre .ok{color:var(--v-pass)} pre .no{color:var(--v-fail)} pre .un{color:var(--v-unm)}
+/* Inline code only. Long identifiers (test_every_assertion_has_been_proved_able_to_fail)
+   are unbreakable tokens that push the page sideways on narrow screens. <pre> is excluded —
+   it scrolls in its own container and its line breaks carry meaning. */
+:not(pre)>code{background:var(--paper-3);border:1px solid var(--rule);border-radius:2px;
+  padding:.9px 4.5px;color:var(--ink);overflow-wrap:anywhere}
+
+/* ── callouts ────────────────────────────────────────────────────────────── */
+.note{border-left:3px solid;padding:13px 17px;margin:17px 0;border-radius:0 2px 2px 0;
+  font-size:14px}
+.note p{margin:0 0 .55em}.note p:last-child{margin:0}
+.note .h{font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;
+  font-weight:600;margin-bottom:6px;display:block}
+.n-avoid{border-color:var(--v-fail);background:var(--v-fail-w)}
+.n-avoid .h{color:var(--v-fail)}
+.n-think{border-color:var(--blueprint);background:var(--blueprint-w)}
+.n-think .h{color:var(--blueprint)}
+.n-key{border-color:var(--signal);background:var(--signal-wash)}
+.n-key .h{color:var(--signal)}
+
+/* ── step ladder (deep dive) ─────────────────────────────────────────────── */
+.step{border:1px solid var(--rule-2);border-radius:3px;margin:20px 0;overflow:hidden;
+  background:var(--paper-2)}
+.step-h{display:flex;gap:14px;align-items:baseline;padding:14px 18px;
+  border-bottom:1px solid var(--rule);background:var(--paper-3)}
+.step-h .sn{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--paper);
+  background:var(--ink);border-radius:2px;padding:3px 7px;flex:none;letter-spacing:.04em}
+.step-h h4{margin:0;font-family:var(--cond);font-size:18px;font-weight:600;letter-spacing:-.01em}
+.step-b{padding:16px 18px 18px}
+.step-b>p:last-child{margin-bottom:0}
+.step-b .note:last-child{margin-bottom:0}
+
+/* ── seven properties ────────────────────────────────────────────────────── */
+.props{display:grid;grid-template-columns:repeat(auto-fit,minmax(238px,1fr));gap:1px;
+  background:var(--rule);border:1px solid var(--rule-2);border-radius:3px;overflow:hidden;
+  margin:20px 0}
+.prop{background:var(--paper-2);padding:16px 17px}
+.prop .pn{font-family:var(--mono);font-size:10px;color:var(--signal);font-weight:600;
+  letter-spacing:.12em;margin-bottom:5px}
+.prop .pt{font-family:var(--cond);font-size:16.5px;font-weight:600;margin-bottom:6px}
+.prop .pd{font-size:13px;color:var(--ink-3);line-height:1.5}
+.prop .pd code{font-size:11.5px}
+
+/* ── account topology figure ─────────────────────────────────────────────── */
+.topo{border:1px solid var(--rule-2);border-radius:3px;padding:20px;margin:20px 0;
+  background:var(--paper-2)}
+.topo svg{display:block;width:100%;height:auto}
+
+/* ── comparison two-up ───────────────────────────────────────────────────── */
+.twoup{display:grid;grid-template-columns:1fr;gap:1px;background:var(--rule);
+  border:1px solid var(--rule-2);border-radius:3px;overflow:hidden;margin:20px 0}
+@media(min-width:720px){.twoup{grid-template-columns:1fr 1fr}}
+.tu{background:var(--paper-2);padding:17px 19px}
+.tu .th{font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+  font-weight:600;margin-bottom:10px}
+.tu.a .th{color:var(--ink-4)} .tu.b .th{color:var(--signal)}
+.tu ul{margin:0;padding-left:17px}
+.tu li{font-size:13.5px;color:var(--ink-3);margin-bottom:.42em}
+.tu li strong{color:var(--ink)}
+
+footer{margin-top:74px;padding-top:22px;border-top:2px solid var(--ink);
+  font-family:var(--mono);font-size:11.5px;color:var(--ink-3);line-height:1.7}
+footer b{color:var(--ink);font-weight:500}
+</style>
+
+<div class="wrap">
+
+<div class="mast">
+  <div class="mast-top">
+    <span class="stencil">Agent Factory · Operator’s Manual</span>
+    <span class="stencil" style="color:var(--ink-4)">Pinned @ 827f871 · main · 2026-09-03</span>
+  </div>
+  <h1>Agent Factory<br>Operator’s Manual</h1>
+  <p class="sub">How to operate a system whose product is not that an agent ran — but whether the
+  thing that measured it could have registered a failure.</p>
+  <div class="mast-meta">
+    <span><b>68</b> runtime modules</span>
+    <span><b>23,939</b> lines</span>
+    <span><b>363</b> commits</span>
+    <span><b>50</b> test files</span>
+    <span><b>30</b> readiness gates</span>
+    <span><b>1</b> runtime dependency (PyYAML)</span>
+  </div>
+</div>
+
+<div class="honest">
+  <div class="lab">Read this before anything else on the page</div>
+  <p><strong>The instruments are real. The subject has not yet been measured.</strong></p>
+  <p>The run ledger holds <strong>10 rows and 0 <span class="chip c-pass">PASS</span></strong>. All
+  <strong>7</strong> <code>agent_returned</code> events carry <code>dry_run=True</code>. No agent has
+  ever completed a real, non-dry-run run in this system.</p>
+  <p style="color:var(--ink-3);font-size:14.5px">Every claim below should be read against that fact.
+  A platform whose thesis is <em>“do not confuse a declaration with a mechanism”</em> would be a poor
+  advertisement for itself if its own manual did.</p>
+</div>
+
+<div class="cols">
+
+<nav class="rail" aria-label="Contents">
+  <p class="rail-h">Contents</p>
+  <a href="#tracker"><span class="n">01</span>Live tracker</a>
+  <a href="#guide"><span class="n">02</span>User guide</a>
+  <a href="#operative"><span class="n">03</span>Agent vs Operative</a>
+  <a href="#daily"><span class="n">04</span>Daily use</a>
+  <a href="#business"><span class="n">05</span>Business use</a>
+  <a href="#deepdive"><span class="n">06</span>Deep dive</a>
+  <a href="#fleet"><span class="n">07</span>Models across accounts</a>
+</nav>
+
+<main>
+
+<!-- ══════════════════════════════ 01 TRACKER ══════════════════════════════ -->
+<section id="tracker">
+  <div class="sec-h"><span class="num">01</span><h2>Live tracker</h2></div>
+  <p class="lede">A pinned snapshot, not a poll. Every figure carries the command that regenerates
+  it — because a hand-maintained number re-rots invisibly and still looks authoritative.</p>
+
+  <div class="tracker">
+    <div class="tracker-bar">
+      <span class="pin"><span class="dot"></span>AMBER — instruments live, subject unmeasured</span>
+      <span>HEAD <b style="color:var(--ink)">827f871</b></span>
+      <span>branch <b style="color:var(--ink)">main</b></span>
+      <span>measured <b style="color:var(--ink)">2026-09-03</b></span>
+    </div>
+    <div class="grid">
+      <div class="cell bad"><span class="k">Runs passed</span><span class="v">0</span>
+        <span class="n">of 10 recorded</span></div>
+      <div class="cell warn"><span class="k">Real runs</span><span class="v">0</span>
+        <span class="n">7 of 7 returns dry_run</span></div>
+      <div class="cell flat"><span class="k">Runtime modules</span><span class="v">68</span>
+        <span class="n">23,939 lines</span></div>
+      <div class="cell good"><span class="k">Tests passed</span><span class="v">1,016</span>
+        <span class="n">2 failed · 2 xfailed · re-run today</span></div>
+      <div class="cell warn"><span class="k">Teams certified</span><span class="v">0</span>
+        <span class="n">gates every roadmap stage</span></div>
+      <div class="cell warn"><span class="k">Eval corpus</span><span class="v">1</span>
+        <span class="n">file · 48 connectors unscored</span></div>
+      <div class="cell flat"><span class="k">Findings</span><span class="v">35</span>
+        <span class="n">was 34 mid-session</span></div>
+      <div class="cell flat"><span class="k">Task events</span><span class="v">293</span>
+        <span class="n">was 273 mid-session</span></div>
+      <div class="cell flat"><span class="k">Evidence sets</span><span class="v">18</span>
+        <span class="n">docs/evidence/</span></div>
+      <div class="cell warn"><span class="k">Corpus index gap</span><span class="v">197</span>
+        <span class="n">719 claimed · 916 on disk</span></div>
+      <div class="cell flat"><span class="k">Worktrees</span><span class="v">5</span>
+        <span class="n">18 modified tracked files</span></div>
+      <div class="cell warn"><span class="k">CELL OS in code</span><span class="v">0</span>
+        <span class="n">of 24 named concepts</span></div>
+    </div>
+    <details class="regen">
+      <summary>▸ Regeneration commands — every figure above, in order</summary>
+<pre><span class="cm"># state</span>
+git rev-parse --short HEAD
+find factory -name '*.py' | wc -l                    <span class="cm"># 68</span>
+find factory -name '*.py' -exec cat {} + | wc -l     <span class="cm"># 23,939</span>
+git rev-list --count HEAD                            <span class="cm"># 363</span>
+
+<span class="cm"># the ledgers</span>
+wc -l &lt; .data/runs.jsonl                             <span class="cm"># 10 rows, 0 PASS</span>
+wc -l &lt; .data/events.jsonl                           <span class="cm"># 61, of which 7 agent_returned</span>
+wc -l &lt; .data/tasks.jsonl                            <span class="cm"># 293</span>
+ls evals/corpus/ | wc -l                             <span class="cm"># 1</span>
+ls docs/findings.d/*.md | wc -l                      <span class="cm"># 35</span>
+ls -d docs/evidence/*/ | wc -l                       <span class="cm"># 18</span>
+
+<span class="cm"># the one that governs everything</span>
+python -c "import json;e=[json.loads(l) for l in open('.data/events.jsonl',encoding='utf-8')];\
+a=[x for x in e if x.get('kind')=='agent_returned');print(len(a),{str(x.get('dry_run')) for x in a})"
+<span class="cm"># 7 {'True'}</span>
+
+<span class="cm"># corpus index delta</span>
+find docs .agent-platform blueprints missions evals boot-prompts -type f | wc -l   <span class="cm"># 916</span>
+git worktree list | wc -l                            <span class="cm"># 5</span>
+git status --porcelain | grep -c '^ M'               <span class="cm"># 18</span></pre>
+    </details>
+  </div>
+
+  <div class="note n-key">
+    <span class="h">Why this is pinned, not live</span>
+    <p>A published page cannot read your working tree. Calling a static number “live” would be
+    exactly the failure this system exists to prevent — so it is labelled a snapshot and shipped
+    with its commands.</p>
+    <p><strong>And the snapshot rotted while it was being written.</strong> Task events moved
+    273 → 293 and findings 34 → 35 <em>during this session</em>. That is the regeneration rule
+    earning its keep in real time: run the commands, don’t trust the digits.</p>
+  </div>
+
+  <h3>The run ledger, in full</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Date</th><th>Lane</th><th>Verdict</th><th>Basis</th>
+      <th class="num-c">Models</th><th>What it recorded</th></tr></thead>
+    <tbody>
+      <tr><td class="num-c">08-23</td><td><code>artifact</code></td>
+        <td><span class="chip c-nr">FINISHED</span></td><td><code>MEASURED</code></td>
+        <td class="num-c">sonnet-5</td><td>pushed lane; announced on the bus</td></tr>
+      <tr><td class="num-c">08-23</td><td><code>certify</code></td>
+        <td><span class="chip c-nr">FINISHED</span></td><td><code>MEASURED</code></td>
+        <td class="num-c">sonnet-5</td><td>pushed lane; <strong>no claim was made</strong></td></tr>
+      <tr><td class="num-c">08-23</td><td><code>control-plane</code></td>
+        <td><span class="chip c-nr">FINISHED</span></td><td><code>MEASURED</code></td>
+        <td class="num-c">opus-5</td><td>pushed lane; released the tag</td></tr>
+      <tr><td class="num-c">08-30</td><td><code>GP-327</code></td>
+        <td><span class="chip c-fail">FAIL</span></td><td><code>NOT-RECORDED</code></td>
+        <td class="num-c">—</td><td>PASS=1, FAIL=1, UNMEASURABLE=5</td></tr>
+      <tr><td class="num-c">08-30 → 08-31</td><td><code>GP-327</code> ×5</td>
+        <td><span class="chip c-unm">UNMEASURABLE</span></td><td><code>NOT-RECORDED</code></td>
+        <td class="num-c">—</td><td>PASS=1, UNMEASURABLE=6 — each time</td></tr>
+      <tr><td class="num-c">08-31</td><td><code>GP-401</code></td>
+        <td><span class="chip c-unm">UNMEASURABLE</span></td><td><code>NOT-RECORDED</code></td>
+        <td class="num-c">—</td><td>PASS=1, UNMEASURABLE=6</td></tr>
+    </tbody>
+  </table></div>
+  <p style="font-size:13.5px;color:var(--ink-3);max-width:74ch">Read the shape, not just the tally.
+  <strong>Six consecutive <span class="chip c-unm">UNMEASURABLE</span> results with an identical
+  breakdown</strong> is not six failed attempts — it is one instrument that has never been
+  connected, reporting honestly six times. A system that collapsed that into “fail” would have sent
+  someone to debug the wrong thing five times over.</p>
+</section>
+
+<!-- ══════════════════════════════ 02 GUIDE ═══════════════════════════════ -->
+<section id="guide">
+  <div class="sec-h"><span class="num">02</span><h2>User guide</h2></div>
+  <p class="lede">Everything here is a working command against the repository at
+  <code>827f871</code>. Start to finish is about ten minutes, most of it the browser download.</p>
+
+  <h3>2.1 Standing it up</h3>
+<pre>python -m venv .venv &amp;&amp; . .venv/bin/activate   <span class="cm"># Windows: .venv\Scripts\activate</span>
+pip install -e ".[dev]"
+python -m playwright install chromium          <span class="cm"># the browser; pip cannot fetch it</span>
+pytest -q                                      <span class="cm"># all four gates must pass</span>
+python -m factory.demo                         <span class="cm"># end-to-end on a fake connector</span></pre>
+  <p><code>scripts/bootstrap.sh</code> runs all of the above.</p>
+
+  <div class="note n-avoid">
+    <span class="h">Avoid — the browser step is a real step</span>
+    <p><code>pip install</code> provides the Playwright <em>driver</em> and not a browser. Anything
+    that validates a rendered page fails without it — and <strong>no client-facing artifact is
+    certified without one</strong>. Check before you trust the environment:</p>
+    <pre style="margin:9px 0 0">python scripts/meeting_ready.py --check-env   <span class="cm"># names everything missing, in one message</span></pre>
+  </div>
+
+  <h3>2.2 The two things worth doing first</h3>
+<pre>python -m factory.certify blueprints/windsorai_client_a.yaml --calibrate
+<span class="cm"># connector-e2e/windsorai@CLIENT-A: </span><span class="ok">PASS (PASS=12)</span>
+
+python -c "from factory import registry; [print(w) for w in registry.unproven()]"
+<span class="cm"># everything that is not certified — read this before believing anything</span></pre>
+
+  <div class="note n-avoid">
+    <span class="h">Avoid — reading that PASS as more than it says</span>
+    <p>It is a <strong>replay</strong> against <strong>one</strong> recorded connector. Not a live
+    measurement, not a second subject. Every assertion has been proved able to fail
+    (<code>test_every_assertion_has_been_proved_able_to_fail</code>) — but
+    <strong>sensitivity is not coverage, and 48 connectors have never been scored.</strong></p>
+  </div>
+
+  <h3>2.3 The five verdicts — never collapsed</h3>
+  <p class="prose">Borrowed from conformance testing (ISO/IEC 9646, carried into TTCN-3 as a monotone
+  lattice) for the reason its docstring gives: <em>collapsing “I could not look” into “I looked and
+  it was fine” is how a measurement that never happened passes for one that did.</em></p>
+
+  <div class="lattice">
+    <div class="lat p"><div class="t">PASS</div><div class="d">Asserted, and the assertion held.
+      The only verdict that is a pass.</div></div>
+    <div class="lat f"><div class="t">FAIL</div><div class="d">Asserted, and the assertion did not
+      hold. A real, trusted observation.</div></div>
+    <div class="lat u"><div class="t">UNMEASURABLE</div><div class="d">The instrument declined to
+      run — it <em>knows</em> it cannot look. <strong>Not a pass.</strong> This is the important
+      one.</div></div>
+    <div class="lat e"><div class="t">ERROR</div><div class="d">The apparatus itself broke. Not a
+      measurement at all, and it <strong>dominates FAIL</strong>.</div></div>
+    <div class="lat n"><div class="t">NOT_RUN</div><div class="d">Never attempted. Distinct from
+      every kind of attempt.</div></div>
+  </div>
+  <p class="prose"><code>ERROR</code> outranks <code>FAIL</code> because once the apparatus has
+  broken, we no longer know the observed failure was real. <strong>A team holding an
+  <span class="chip c-unm">UNMEASURABLE</span> is not certified.</strong></p>
+
+  <h3>2.4 Every figure carries a basis</h3>
+  <div class="tw"><table>
+    <thead><tr><th>For figures</th><th>Means</th><th>For absences</th><th>Means</th></tr></thead>
+    <tbody>
+      <tr><td><code>MEASURED</code></td><td>Observed by a live instrument</td>
+        <td><code>ZERO</code></td><td>It did not happen — <strong>and the instrument was live and
+        could have seen it</strong></td></tr>
+      <tr><td><code>DERIVED</code></td><td>Computed from measured values</td>
+        <td><code>NOT-RECORDED</code></td><td>It may have happened; nothing wrote it down</td></tr>
+      <tr><td><code>ASSUMED</code></td><td>Taken on faith; must be stated</td>
+        <td><code>NOT-VISIBLE</code></td><td>The instrument cannot see this class of event at
+        all</td></tr>
+      <tr><td><code>PROXY</code></td><td>A stand-in for the real quantity</td>
+        <td><code>NOT-RETAINED</code></td><td>It was recorded and has since aged out</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note n-key">
+    <span class="h">The rule that generates all four absence verdicts</span>
+    <p><strong>A zero from an instrument you have not proved can still see is not a
+    measurement.</strong> Before publishing “none / never / stopped / zero”, demonstrate the
+    instrument would have registered a non-zero in that window.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ 03 OPERATIVE ══════════════════════════════ -->
+<section id="operative">
+  <div class="sec-h"><span class="num">03</span><h2>AI Agent vs AI Operative</h2></div>
+  <p class="lede">The design distinction the whole platform is built around — and the reason the
+  word “operative” was borrowed rather than invented.</p>
+
+  <div class="note n-key" style="font-size:16px">
+    <p style="margin:0"><strong>An agent is something you run. An operative is something you can
+    certify, deploy, revoke and be accountable for.</strong></p>
+  </div>
+
+  <div class="tw"><table>
+    <thead><tr><th style="width:15%"></th><th style="width:38%">AI Agent</th>
+      <th style="width:47%">AI Operative</th></tr></thead>
+    <tbody>
+      <tr><td><strong>What it is</strong></td><td>A capable process. A model, a prompt, some tools,
+        a loop</td><td>A <strong>certified, versioned, mandated unit of work</strong> with an
+        identity, an authority envelope, a measured capability record, and an expiry</td></tr>
+      <tr><td><strong>Identity</strong></td><td>A name someone chose. “The reviewer agent”</td>
+        <td>A <strong>hash of its configuration.</strong> Change model, effort, prompt, tools,
+        prohibition or target repo and it is a <em>different operative</em></td></tr>
+      <tr><td><strong>Authority</strong></td><td>Whatever its tools happen to permit</td>
+        <td>An explicit <strong>mandate</strong>: what it may touch, what it must not do, which
+        surface it may run on, what budget it holds, which decisions escalate</td></tr>
+      <tr><td><strong>Competence</strong></td><td>Asserted in a description</td>
+        <td><strong>Measured</strong>, with conditions attached — task family, evidence count,
+        success and regression history, cost, latency</td></tr>
+      <tr><td><strong>Trust</strong></td><td>Permanent until someone notices otherwise</td>
+        <td><strong>Expiring.</strong> A capability record carries <code>valid_until</code>; a
+        closed window cannot be reported as coverage</td></tr>
+      <tr><td><strong>Failure</strong></td><td>Reported as an error, or not at all</td>
+        <td>Enters the lattice. <em>“I could not look”</em> is never a pass</td></tr>
+      <tr><td><strong>Output</strong></td><td>A result</td>
+        <td>A result <strong>plus the evidence that closed it</strong>, plus what remained
+        unmeasured</td></tr>
+      <tr><td><strong>To the system</strong></td><td>A caller</td>
+        <td>A <strong>record</strong> — durable, addressable, auditable, and refusable</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>3.1 The seven properties</h3>
+  <p class="prose">An agent becomes an operative when — and only when — it carries all seven.
+  <strong>Remove any one and it is an agent again.</strong></p>
+
+  <div class="props">
+    <div class="prop"><div class="pn">01</div><div class="pt">Designation</div>
+      <div class="pd">Identity is the configuration, not the label.
+      <code>version = sha256(config)</code>, so a silent upgrade cannot inherit a guarantee nobody
+      re-checked.</div></div>
+    <div class="prop"><div class="pn">02</div><div class="pt">Remit</div>
+      <div class="pd">Deadline, budget, authority and autonomy mode live in an
+      <code>ExecutionMandate</code> — kept <em>separate</em> from the success contract.</div></div>
+    <div class="prop"><div class="pn">03</div><div class="pt">Prohibition</div>
+      <div class="pd">An explicit “must not”, inside the hash. <em>“Do not touch prod”</em> in a
+      prompt is a request; if deleting it changes the identity, it is a control.</div></div>
+    <div class="prop"><div class="pn">04</div><div class="pt">Clearance</div>
+      <div class="pd">Execution surface and isolation tier, chosen from what the work
+      <em>declares</em>, not from what is convenient.</div></div>
+    <div class="prop"><div class="pn">05</div><div class="pt">Record</div>
+      <div class="pd">Competence with its conditions attached — corpus, tenants, surface, model
+      binding — plus <code>limits_unmeasured</code>. <span class="chip c-bp">DESIGNED</span></div></div>
+    <div class="prop"><div class="pn">06</div><div class="pt">Expiry</div>
+      <div class="pd"><code>valid_until</code>. Winning placement can flip across model families, so
+      trust decays. <span class="chip c-bp">DESIGNED</span></div></div>
+    <div class="prop"><div class="pn">07</div><div class="pt">Account</div>
+      <div class="pd">It cannot close its own work on its own word. <code>factory/tasks.py</code>
+      raises <code>EvidenceRequired</code>; the grader is a separate identity.</div></div>
+  </div>
+
+  <div class="note n-avoid">
+    <span class="h">Avoid — the allow-list bug, which happened here</span>
+    <p>The team hash originally enumerated four keys <em>by hand</em>, so <code>repo</code> and the
+    team-level <code>prohibition</code> sat <strong>outside</strong> it. A team certified against one
+    repository under <em>“must not deploy to production”</em> kept the <strong>identical
+    version</strong> when repointed at another repo with the prohibition deleted.</p>
+    <p>Those are exactly the two edits that change blast radius. It is now a
+    <strong>deny-list, not an allow-list</strong>: a new field is identity by default and must be
+    argued <em>out</em>.</p>
+  </div>
+
+  <h3>3.2 Operatives, not personalities</h3>
+  <div class="twoup">
+    <div class="tu a"><div class="th">✗ A description — nothing can check it</div>
+<pre style="margin:0;background:transparent;border:none;border-left:none;padding:0">conscientiousness: high
+skepticism: medium
+curiosity: high</pre></div>
+    <div class="tu b"><div class="th">✓ Compiled behaviour — each clause observable</div>
+<pre style="margin:0;background:transparent;border:none;border-left:none;padding:0">pre_work_requirement_check: required
+max_unresolved_assumptions: 2
+post_change_validation: required
+self_review_passes: 2</pre></div>
+  </div>
+  <p class="prose">Archetype names — <em>Scout, Surgeon, Architect, Skeptic, Auditor, Firefighter,
+  Guardian, Integrator, Maintainer, Investigator</em> — survive only as presets over measurable
+  configuration deltas, and each must answer four questions before it is more than vocabulary. The
+  fourth retires most of them: <strong>does it add anything beyond prompt wording?</strong></p>
+
+  <div class="note n-key">
+    <span class="h">Honest state of this section</span>
+    <p>Properties 1–4 and 7 are <strong>BUILT</strong> or <strong>PARTIAL</strong> and cite running
+    code. Properties 5 and 6 are <span class="chip c-bp">DESIGNED</span>. With
+    <strong>0 <span class="chip c-pass">PASS</span></strong> in the ledger there is nothing certified
+    to describe. <strong>The operative model is the target the architecture is shaped toward, not a
+    claim about today.</strong></p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ 04 DAILY ══════════════════════════════════ -->
+<section id="daily">
+  <div class="sec-h"><span class="num">04</span><h2>Daily use</h2></div>
+  <p class="lede">What an operator actually does on a working day. Four loops, each ending in a
+  verdict rather than an opinion.</p>
+
+  <h3>4.1 Morning — read the board before touching anything</h3>
+<pre>python -m factory.board                    <span class="cm"># derived from gate verdicts, never hand-maintained</span>
+python -m factory.readiness --summary      <span class="cm"># 30 gates across 5 phases</span></pre>
+  <p class="prose">The board has no task list <em>by design</em>. It is derived from gate verdicts so
+  it cannot drift from what it reports. A goal with no measurable gate reports
+  <code>NOT-MEASURED</code> — not <code>0%</code>.</p>
+  <div class="note n-think">
+    <span class="h">Think about</span>
+    <p>Whether anything moved to <span class="chip c-unm">UNMEASURABLE</span> overnight. That is
+    usually an <em>instrument</em> regression — a credential expired, a browser missing — not a
+    product regression, and it is fixed somewhere completely different.</p>
+  </div>
+
+  <h3>4.2 Starting work — the ticket must name a real target</h3>
+<pre>python -m factory.certify blueprints/&lt;target&gt;.yaml --calibrate   <span class="cm"># replay first, always</span></pre>
+  <div class="note n-avoid">
+    <span class="h">Avoid — inheriting the target from the ticket</span>
+    <p>An object named by a ticket, boot prompt or handoff is a <strong>hypothesis, not a
+    finding.</strong> Walk the consumer route yourself and say which hop actually produces the
+    symptom.</p>
+    <p>This cost a wrong-layer deploy and a revert once already: two objects held identical values
+    and were still different objects. <strong>Never infer the source from matching values.</strong></p>
+  </div>
+
+  <h3>4.3 During — one command per verdict</h3>
+  <div class="note n-avoid">
+    <span class="h">Avoid — the chained check that reports on a check that never ran</span>
+<pre style="margin:9px 0 0">git rev-parse --short main personal/main &amp;&amp; git merge-base --is-ancestor $B main \
+  &amp;&amp; echo "YES: merged" || echo "<span class="no">NO: merge needed</span>"</pre>
+    <p style="margin-top:9px">The first command failed. Everything after <code>&amp;&amp;</code> was
+    skipped. The trailing <code>||</code> caught the <em>chain’s</em> exit status and printed
+    <strong>NO: merge needed</strong> — for a branch that was fully merged, from a check that never
+    executed.</p>
+    <p><strong>Any command whose output carries a verdict runs on its own line, and you read its
+    actual output.</strong> A chain’s exit status is not a measurement.</p>
+  </div>
+
+  <h3>4.4 Closing — evidence, or it does not close</h3>
+<pre>python -m factory.tasks close &lt;id&gt; --evidence docs/evidence/&lt;set&gt;/
+<span class="cm"># EvidenceRequired is raised by the store, not by a convention</span></pre>
+  <p class="prose">The refusal lives in the store. An operative cannot close its own work on its own
+  word, and the grader is a separate identity — <strong>a system that scores itself has measured
+  nothing.</strong></p>
+  <div class="note n-think">
+    <span class="h">Think about</span>
+    <p>Whether the evidence proves the fix works <em>at the layer the consumer reads</em>. A DAX query
+    can pass while every visual on the page shows an error — that has happened, and the query layer
+    said everything was fine.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ 05 BUSINESS ═══════════════════════════════ -->
+<section id="business">
+  <div class="sec-h"><span class="num">05</span><h2>Business use</h2></div>
+  <p class="lede">The commercial claim is narrow on purpose, and it is the one thing most agent
+  platforms cannot say.</p>
+
+  <div class="note n-key" style="font-size:16px">
+    <p style="margin:0"><strong>A team of agents did the work, and we can prove it — or we can prove
+    we could not tell.</strong></p>
+  </div>
+
+  <p class="prose">That second clause is the product. Most platforms can tell you an agent
+  <em>ran</em>. This one tells you whether the thing that measured it could have registered a
+  failure, and refuses the word “pass” when it could not. In regulated, client-facing or
+  reconciliation work, <strong>the refusal is worth more than the throughput</strong> — because the
+  cost of a confident wrong number is not the rerun, it is the client relationship.</p>
+
+  <h3>5.1 Where it pays</h3>
+  <div class="tw"><table>
+    <thead><tr><th style="width:23%">Setting</th><th style="width:39%">The failure it prevents</th>
+      <th style="width:38%">What the client is handed</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Client data delivery</strong></td>
+        <td>A dashboard renders <code>0.00</code> where the truth is “not reported”. Absence
+        arrives as a number and nobody can tell</td>
+        <td>Figures carrying <code>MEASURED</code> / <code>DERIVED</code>, and absences carrying
+        which of the four they are</td></tr>
+      <tr><td><strong>Usage &amp; billing audits</strong></td>
+        <td>A count from an instrument that could not see the window, published as “zero
+        usage”</td>
+        <td>A declared counting basis, an enumerated population, and a second independent
+        instrument with the reconciliation shown</td></tr>
+      <tr><td><strong>Multi-tenant reporting</strong></td>
+        <td>One client’s rows landing in another client’s table, invisibly</td>
+        <td>A tenancy assertion that fails loudly — §07</td></tr>
+      <tr><td><strong>Migration &amp; repointing</strong></td>
+        <td>Parity passes at the query layer while every visual shows an error</td>
+        <td>Before/after captures of the rendered surface, not just the query</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>5.2 What is deliberately absent, and what unlocks it</h3>
+  <p class="prose">This table is a gate, not a wish list. Each row is cheap to add <em>after</em> its
+  precondition and expensive to unwind before it.</p>
+  <div class="tw"><table>
+    <thead><tr><th style="width:44%">Not built</th><th style="width:56%">Unlocked by</th></tr></thead>
+    <tbody>
+      <tr><td>Optimizer</td><td>A working eval — the fitness function <em>is</em> the eval score</td></tr>
+      <tr><td>Agent Army / supervisor tiers</td><td><strong>One certified team</strong>, plus evidence
+        a tier helps</td></tr>
+      <tr><td>More than one comms topology</td><td>A second team that actually needs to talk to the
+        first</td></tr>
+      <tr><td>Platform UI</td><td>Numbers worth looking at</td></tr>
+      <tr><td>Organization compiler / Org-IR</td><td>A second workload proving presets cannot express
+        the needed variation</td></tr>
+      <tr><td>Evolution / config search</td><td>Multiple real runs, ≥2 model families compared, a
+        revalidation cadence, <strong>and an evaluator the actor cannot rewrite</strong></td></tr>
+      <tr><td>Commercial loop</td><td>One certified team that can repeatedly deliver</td></tr>
+    </tbody>
+  </table></div>
+  <p class="prose"><strong>Zero teams are certified. Every row above sits behind that.</strong>
+  The most valuable next action in the entire programme is not on any roadmap: fix one open finding
+  and complete <strong>one real run</strong>. That single measurement converts roughly a dozen
+  research questions into observations.</p>
+</section>
+
+<!-- ═══════════════════════════ 06 DEEP DIVE ══════════════════════════════ -->
+<section id="deepdive">
+  <div class="sec-h"><span class="num">06</span><h2>Deep dive — certify one connector</h2></div>
+  <p class="lede">The full path for <code>connector-e2e/windsorai@CLIENT-A</code>: six stages, each
+  with what to think about and what has actually gone wrong here. This is a real sequence, so it is
+  numbered.</p>
+
+  <div class="step">
+    <div class="step-h"><span class="sn">01</span><h4>Declare — write down what “green” means</h4></div>
+    <div class="step-b">
+      <p class="prose">A <code>ConnectorTarget</code> states every expectation <em>before</em> any
+      observation: landing table, primary key, required accounts, date column, non-null columns,
+      tenant column, allowed tenants.</p>
+<pre>primary_key: [account_id, campaign_id, date]
+key_column:  account_id        <span class="cm"># the column required_keys live in</span>
+tenant_column: account_id
+non_null_positive: [spend]</pre>
+      <div class="note n-think"><span class="h">Think about</span>
+        <p>Declare the <strong>requested scope</strong>, sourced from what the flow asks for — never
+        from what landed. Reading the declaration out of landed rows makes completeness
+        <em>unfalsifiable</em>: the test can then never fail.</p></div>
+      <div class="note n-avoid"><span class="h">Avoid</span>
+        <p>Guessing a class name from a naming convention. This file once declared
+        <code>WindsorAiConnection</code> inferred from convention under the comment “Not yet read
+        from source”. The real classes capitalise the initialism. The first live instrument caught it
+        within seconds — <strong>a DERIVED value dressed as a declaration.</strong></p></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-h"><span class="sn">02</span><h4>Preflight — prove the thing you are testing is the thing you shipped</h4></div>
+    <div class="step-b">
+      <p class="prose">Image digest, commit, and <code>merged_at</code>: the image must have been
+      built <em>after</em> the merge. Without this, a green run can be a green run of last week’s
+      code.</p>
+      <div class="note n-think"><span class="h">Think about</span>
+        <p>Whether the digest you compare against is the one the runtime actually pulled, or the one
+        the registry says is latest. Those diverge exactly when it matters.</p></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-h"><span class="sn">03</span><h4>Canary — one run date, checked hard</h4></div>
+    <div class="step-b">
+      <p class="prose">Rows landed, primary key honoured, no null spend, every requested account
+      present, date column in range. <code>expect_rows: false</code> exists for sources where an
+      empty extraction is legitimate — <strong>an empty result is not automatically a failure, and
+      the contract has to say which.</strong></p>
+      <div class="note n-avoid"><span class="h">Avoid — the blind-instrument zero</span>
+        <p>A probe that cannot reach the warehouse returns nothing. So does a connector that landed
+        nothing. <strong>These are different facts and must be different verdicts</strong>
+        (<span class="chip c-unm">UNMEASURABLE</span> vs <span class="chip c-fail">FAIL</span>). The
+        base <code>Probes</code> class refuses everything by default, because an unconfigured harness
+        must report <span class="chip c-unm">UNMEASURABLE</span> and never
+        <span class="chip c-pass">PASS</span>.</p></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-h"><span class="sn">04</span><h4>Tenancy — the assertion that protects the client relationship</h4></div>
+    <div class="step-b">
+      <p class="prose">Every landed row’s <code>account_id</code> must fall inside
+      <code>allowed_tenants</code>. This is the one that stops CLIENT-B’s rows sitting in CLIENT-A’s
+      table where <strong>nothing downstream can tell</strong>.</p>
+      <div class="note n-key"><span class="h">Why it exists — a measured fact</span>
+        <p>One shared vendor key returns <strong>every</strong> client’s accounts:
+        <strong>45 Google Ads accounts</strong> come back on an unfiltered pull, of which
+        <strong>6</strong> belong to CLIENT-A. An unfiltered pull lands the other 39 clients’ rows in
+        your table silently.</p></div>
+      <div class="note n-avoid"><span class="h">Avoid — a passing tenancy check that means nothing</span>
+        <p>The declared list was verified <strong>2026-05-29</strong>, twelve weeks before the
+        blueprint, and its own source file says <em>“Confirm against a live pull before
+        activation.”</em> A <span class="chip c-pass">PASS</span> here means <em>“the landing matched
+        what we declared”</em> — <strong>not</strong> <em>“what we declared is still correct.”</em>
+        Those are different claims and only one of them is tested.</p></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-h"><span class="sn">05</span><h4>Certify — replay against a pinned corpus</h4></div>
+    <div class="step-b">
+<pre>python -m factory.certify blueprints/windsorai_client_a.yaml --calibrate
+<span class="cm"># connector-e2e/windsorai@CLIENT-A: </span><span class="ok">PASS (PASS=12)</span>
+<span class="cm"># scored against corpus windsorai-2026-08-20 — REPLAYED, not a live measurement</span></pre>
+      <div class="note n-avoid"><span class="h">Avoid — treating calibration as evidence</span>
+        <p><code>certify.py</code> says it about its own flag: <code>--calibrate</code> is
+        <em>“worthless as evidence that an agent did not grade itself.”</em> It proves the
+        instrument’s sensitivity. <strong>It does not prove the subject.</strong></p></div>
+      <div class="note n-think"><span class="h">Think about — sensitivity is not coverage</span>
+        <p>Every assertion has been proved able to fail. The corpus is <strong>one file</strong> and
+        <strong>48 connectors have never been scored</strong>. The gap is breadth, not
+        sensitivity — and those are fixed by completely different work.</p></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-h"><span class="sn">06</span><h4>Promote — the gate, and the rollback</h4></div>
+    <div class="step-b">
+      <p class="prose">Before any <code>CREATE OR REPLACE</code> or deploy, four things must exist
+      together: <strong>the target proved by a discriminating test</strong>, correctness
+      <strong>at the consumer’s layer</strong>, <strong>no-regression evidence</strong>, and a
+      <strong>captured rollback</strong>.</p>
+      <div class="note n-avoid"><span class="h">Avoid — validating only at the layer you changed</span>
+        <p>A repoint once passed query-layer parity while every visual on the published report showed
+        <em>“Error loading data”</em> from a stale dataset name. <strong>The consumer’s layer is the
+        rendered surface a person sees</strong>, not the query that feeds it. Load the deployed
+        surface, toggle every filter, and record which components respond and which are inert. A
+        silent no-op is a finding, never an acceptable default.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ 07 FLEET ══════════════════════════════════ -->
+<section id="fleet">
+  <div class="sec-h"><span class="num">07</span><h2>Models across accounts</h2></div>
+  <p class="lede">Manage, deploy, monitor and optimise model bindings across a multi-account estate —
+  where the accounts belong to different clients and a single vendor key can see all of them.</p>
+
+  <div class="note n-key">
+    <span class="h">The real topology, measured — read before scaling any of this</span>
+    <p>The estate does not currently hold twenty <em>certified</em> accounts. What is measured is:
+    <strong>6 Google Ads accounts declared</strong> for CLIENT-A out of <strong>45 visible</strong>
+    on an unfiltered key, and <strong>3 Meta accounts authorised</strong> out of
+    <strong>19 visible</strong> — <em>whose literal ids were never written down</em>.</p>
+    <p>So of ~9 accounts in scope, <strong>6 are declared and testable and 3 are
+    <code>NOT-RECORDED</code></strong>. The method below is what makes any <em>N</em> safe; the
+    honest count today is 6.</p>
+  </div>
+
+  <h3>7.1 The shape of the problem</h3>
+  <div class="topo">
+    <svg viewBox="0 0 720 268" role="img"
+         aria-label="One vendor key sees 64 accounts across all clients; only 9 belong to CLIENT-A, of which 6 are declared and 3 are unrecorded.">
+      <defs>
+        <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6"
+                orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+        </marker>
+      </defs>
+      <g font-family="IBM Plex Mono, monospace" font-size="11">
+        <!-- key -->
+        <rect x="14" y="106" width="136" height="52" rx="3" fill="var(--blueprint-w)"
+              stroke="var(--blueprint)" stroke-width="1.5"/>
+        <text x="82" y="128" text-anchor="middle" fill="var(--ink)" font-weight="600"
+              font-size="12">one vendor key</text>
+        <text x="82" y="145" text-anchor="middle" fill="var(--ink-3)">ALDC Windsor</text>
+
+        <g color="var(--rule-3)" stroke="currentColor" stroke-width="1.4" fill="none">
+          <path d="M152,124 L214,74" marker-end="url(#ar)"/>
+          <path d="M152,140 L214,190" marker-end="url(#ar)"/>
+        </g>
+
+        <!-- unfiltered -->
+        <rect x="218" y="46" width="150" height="56" rx="3" fill="var(--v-fail-w)"
+              stroke="var(--v-fail)" stroke-width="1.5"/>
+        <text x="293" y="68" text-anchor="middle" fill="var(--v-fail)" font-weight="600"
+              font-size="14">64 accounts</text>
+        <text x="293" y="85" text-anchor="middle" fill="var(--ink-3)">45 Google · 19 Meta</text>
+        <text x="293" y="122" text-anchor="middle" fill="var(--ink-4)" font-size="10">
+          returned unfiltered — every client</text>
+
+        <!-- in scope -->
+        <rect x="218" y="162" width="150" height="56" rx="3" fill="var(--paper-3)"
+              stroke="var(--rule-3)" stroke-width="1.5"/>
+        <text x="293" y="184" text-anchor="middle" fill="var(--ink)" font-weight="600"
+              font-size="14">9 in scope</text>
+        <text x="293" y="201" text-anchor="middle" fill="var(--ink-3)">CLIENT-A only</text>
+        <text x="293" y="238" text-anchor="middle" fill="var(--ink-4)" font-size="10">
+          what the flow is authorised for</text>
+
+        <g color="var(--rule-3)" stroke="currentColor" stroke-width="1.4" fill="none">
+          <path d="M370,178 L432,152" marker-end="url(#ar)"/>
+          <path d="M370,202 L432,214" marker-end="url(#ar)"/>
+        </g>
+
+        <!-- declared -->
+        <rect x="436" y="122" width="164" height="56" rx="3" fill="var(--v-pass-w)"
+              stroke="var(--v-pass)" stroke-width="1.5"/>
+        <text x="518" y="144" text-anchor="middle" fill="var(--v-pass)" font-weight="600"
+              font-size="14">6 declared</text>
+        <text x="518" y="161" text-anchor="middle" fill="var(--ink-3)">allowed_tenants — testable</text>
+
+        <!-- unrecorded -->
+        <rect x="436" y="192" width="164" height="52" rx="3" fill="var(--v-unm-w)"
+              stroke="var(--v-unm)" stroke-width="1.5" stroke-dasharray="4 3"/>
+        <text x="518" y="213" text-anchor="middle" fill="var(--v-unm)" font-weight="600"
+              font-size="14">3 NOT-RECORDED</text>
+        <text x="518" y="230" text-anchor="middle" fill="var(--ink-3)">ids never written down</text>
+
+        <text x="612" y="150" fill="var(--ink-4)" font-size="10">A12 can test these</text>
+        <text x="612" y="216" fill="var(--ink-4)" font-size="10">A12 cannot see these</text>
+      </g>
+    </svg>
+  </div>
+  <p class="prose" style="font-size:13.5px;color:var(--ink-3)">The gap between <strong>64
+  visible</strong> and <strong>6 declared</strong> is the entire multi-account risk surface. Nothing
+  downstream of the landing table can tell you which of those 64 a row came from — so the check has
+  to happen at the boundary, and it has to be a declaration written in advance.</p>
+
+  <h3>7.2 Manage — the account is a tenant, and the model is a binding</h3>
+  <p class="prose">Two independent axes, and conflating them is the common mistake. An
+  <strong>account</strong> is whose data it is. A <strong>model binding</strong> is what reasons over
+  it. The same operative may run across six accounts on one binding; the same account may be served
+  by three different bindings at different stages.</p>
+
+  <div class="tw"><table>
+    <thead><tr><th style="width:24%">Field</th><th style="width:22%">Axis</th>
+      <th style="width:54%">Consequence of changing it</th></tr></thead>
+    <tbody>
+      <tr><td><code>allowed_tenants</code></td><td>Account</td>
+        <td>Widens or narrows what may legitimately land. <strong>Widening it silently is the
+        multi-tenant leak.</strong></td></tr>
+      <tr><td><code>model</code></td><td>Binding</td>
+        <td>Changes the operative’s <strong>identity hash</strong>. Prior certification does not
+        transfer</td></tr>
+      <tr><td><code>effort</code></td><td>Binding</td>
+        <td>Same — inside the hash. A silent effort bump is a new operative</td></tr>
+      <tr><td><code>budget_usd</code></td><td>Binding</td>
+        <td>Per-agent ceiling. The architect holds $5, the implementer $8, the tester $5</td></tr>
+      <tr><td><code>prohibition</code></td><td>Binding</td>
+        <td>Inside the hash by design — deleting it produces a different operative, loudly</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>7.3 Deploy — bind the model to the role, and record why</h3>
+  <p class="prose">The shipped team is three seats, each with a different binding chosen for the
+  work, not for uniformity:</p>
+  <div class="tw"><table>
+    <thead><tr><th>Seat</th><th>Model</th><th>Effort</th><th class="num-c">Budget</th>
+      <th>Must not</th></tr></thead>
+    <tbody>
+      <tr><td><strong>architect</strong></td><td><code>opus</code></td><td><code>high</code></td>
+        <td class="num-c">$5.00</td><td>write implementation code — <em>a planner that implements is
+        not planning</em></td></tr>
+      <tr><td><strong>implementer</strong></td><td><code>sonnet</code></td><td><code>medium</code></td>
+        <td class="num-c">$8.00</td><td>mark its own work green — <em>the tester holds the
+        contract</em></td></tr>
+      <tr><td><strong>tester</strong></td><td><code>sonnet</code></td><td><code>high</code></td>
+        <td class="num-c">$5.00</td><td>report PASS when an instrument could not run</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note n-think">
+    <span class="h">Think about — a preset may not name a model without saying why</span>
+    <p><code>factory/presets.py</code> enforces the shape: a preset that names a model must carry a
+    <code>model_why</code> <em>and</em> an <strong>escalation trigger</strong> naming the condition
+    under which that choice is wrong. Reasoning effort and model are properties of the
+    <em>task contract</em>, not habits of the operator.</p>
+  </div>
+
+  <h3>7.4 Monitor — what is actually recorded per run</h3>
+  <p class="prose">The three lanes with <code>MEASURED</code> basis carry full token accounting. The
+  numbers are worth looking at because they are dominated by something people rarely instrument:</p>
+  <div class="tw"><table>
+    <thead><tr><th>Lane</th><th>Model</th><th class="num-c">Sessions</th><th class="num-c">Output</th>
+      <th class="num-c">Cache write</th><th class="num-c">Cache read</th>
+      <th class="num-c">Wall clock</th></tr></thead>
+    <tbody>
+      <tr><td><code>artifact</code></td><td>sonnet-5</td><td class="num-c">2</td>
+        <td class="num-c">233,861</td><td class="num-c">1,412,297</td>
+        <td class="num-c">59,609,828</td><td class="num-c">30.1 h</td></tr>
+      <tr><td><code>certify</code></td><td>sonnet-5</td><td class="num-c">1</td>
+        <td class="num-c">235,623</td><td class="num-c">626,414</td>
+        <td class="num-c">54,917,368</td><td class="num-c">1.7 h</td></tr>
+      <tr><td><code>control-plane</code></td><td><strong>opus-5</strong></td><td class="num-c">3</td>
+        <td class="num-c">1,472,024</td><td class="num-c">12,433,665</td>
+        <td class="num-c">453,684,490</td><td class="num-c">31.5 h</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note n-key">
+    <span class="h">The optimisation nobody looks for</span>
+    <p><strong>Cache read dominates every other figure by two to three orders of magnitude.</strong>
+    The <code>control-plane</code> lane read <strong>454 million</strong> cached tokens against
+    1.47 million output. Optimising the prompt would move the small number; optimising what gets
+    <em>re-read</em> moves the large one.</p>
+    <p>Note also the wall clock: <code>artifact</code> and <code>control-plane</code> ran ~30 hours
+    each. <strong>Per-run cost is not the useful unit at this shape — per-lane cache behaviour
+    is.</strong></p>
+  </div>
+  <div class="note n-avoid">
+    <span class="h">Avoid — averaging across bases</span>
+    <p>Three runs carry <code>MEASURED</code>; seven carry <code>NOT-RECORDED</code> with zeroed
+    token fields. <strong>Averaging all ten produces a per-run cost that is 70% fabricated
+    zeroes.</strong> Filter on basis before computing anything.</p>
+  </div>
+
+  <h3>7.5 Optimise — and the gate that stops you</h3>
+  <p class="prose">The optimisation loop is designed and deliberately unbuilt. The entry condition is
+  not a preference:</p>
+  <div class="tw"><table>
+    <thead><tr><th style="width:34%">Optimisation</th><th style="width:66%">Blocked until</th></tr></thead>
+    <tbody>
+      <tr><td>Model/effort routing per task class</td>
+        <td>Observed outcome data. <strong>No routing rule may be written from intuition</strong> —
+        capability classes, not model names</td></tr>
+      <tr><td>Correlated-failure-aware team composition</td>
+        <td><strong>Repeated comparable missions</strong> across task classes, conditions and seeds.
+        One real run is a smoke test, not a covariance sample</td></tr>
+      <tr><td>Measured ablation of components</td>
+        <td>Multiple comparable runs. ⭐ The <em>protocol</em> may be designed now and exercised on
+        controlled benchmarks</td></tr>
+      <tr><td>Any per-run cost claim</td>
+        <td>More than three <code>MEASURED</code> rows</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note n-avoid">
+    <span class="h">Avoid — the failure this whole estate is organised against</span>
+    <p>A retired loop in this repository ran <strong>965 times</strong>, measured its own
+    <strong>1.6% success rate</strong>, and never acted on it. Volume is not evidence, and a
+    measurement nothing changes is indistinguishable from not measuring.</p>
+  </div>
+
+  <h3>7.6 The operating rule, in one line</h3>
+  <div class="note n-key" style="font-size:15.5px">
+    <p style="margin:0"><strong>Declare the account scope before the pull, bind the model inside the
+    identity hash, record the basis on every figure, and let the tenancy assertion fail loudly.</strong>
+    Everything else in this section is a consequence of those four.</p>
+  </div>
+</section>
+
+<footer>
+  <p><b>Agent Factory Operator’s Manual</b> · pinned to <b>827f871</b> on <b>main</b> · measured
+  <b>2026-09-03</b></p>
+  <p>Grounded in <code>README.md</code> Parts 0–X, <code>factory/blueprint.py</code>,
+  <code>contract.py</code>, <code>connector_contract.py</code>, <code>certify.py</code>,
+  <code>presets.py</code>, <code>blueprints/*.yaml</code>, <code>.data/runs.jsonl</code> and
+  <code>.data/events.jsonl</code>.</p>
+  <p style="color:var(--v-unm)">Verdict of this document on its own subject: <b>AMBER</b> — the
+  instruments are real, and the subject has not yet been measured.</p>
+</footer>
+
+</main>
+</div>
+</div>
+
+<script>
+(function(){
+  // Rail: mark the section currently in view. Progressive enhancement only —
+  // every link works, and the page reads correctly, with this script absent.
+  var links = Array.prototype.slice.call(document.querySelectorAll('.rail a'));
+  if (!links.length || !('IntersectionObserver' in window)) return;
+  var map = {};
+  links.forEach(function(a){
+    var el = document.querySelector(a.getAttribute('href'));
+    if (el) map[el.id] = a;
+  });
+  var obs = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      var a = map[e.target.id];
+      if (!a) return;
+      if (e.isIntersecting){
+        links.forEach(function(x){ x.style.color=''; x.style.borderLeftColor=''; });
+        a.style.color = 'var(--ink)';
+        a.style.borderLeftColor = 'var(--signal)';
+      }
+    });
+  }, { rootMargin: '-12% 0px -70% 0px' });
+  Object.keys(map).forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) obs.observe(el);
+  });
+})();
+</script>

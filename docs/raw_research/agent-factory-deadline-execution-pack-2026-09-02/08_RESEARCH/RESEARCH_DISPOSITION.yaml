@@ -1,0 +1,38 @@
+version: 1
+before_deadline:
+  dispatch_research: false
+  reason: Current binding constraints are integration and measurement, not missing general knowledge.
+
+after_deadline_priority:
+  - id: RB-00C
+    type: NOT_RESEARCH
+    priority: 100
+    note: One real run; may be satisfied by the Marketing vertical slice.
+  - id: RB-00D
+    type: NOT_RESEARCH
+    priority: 95
+  - id: RB-00B
+    type: NOT_RESEARCH
+    depends_on: [RB-00D]
+    priority: 94
+  - id: RB-00E
+    type: NOT_RESEARCH
+    priority: 90
+  - id: RB-00F
+    type: NOT_RESEARCH
+    priority: 88
+  - id: RB-02
+    type: RESEARCH
+    priority: 85
+  - id: RB-01
+    type: RESEARCH
+    priority: 82
+  - id: RB-17
+    type: RESEARCH
+    priority: 80
+  - id: RB-06
+    type: RESEARCH
+    priority: 76
+  - id: RB-08
+    type: RESEARCH
+    priority: 74

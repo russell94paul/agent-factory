@@ -10,7 +10,7 @@
           "docs/board/template.html"
         ],
         "createdAt": "2026-08-29T23:14:27.965Z",
-        "reason": "Claude triage 2026-08-29: all 7 uppercase rules are micro-labels, not body text \u2014 .pill 9.5px, .tk dt 10px ('acceptance'/'evidence'), .states .lbl 10px ('state'), .filters .lbl 10.5px, th 10.5px, .eyebrow 11px, all letter-spaced. The rule's own carve-out ('reserve uppercase for short labels and headings') covers every instance; no passage is set in caps."
+        "reason": "Claude triage 2026-08-29: all 7 uppercase rules are micro-labels, not body text — .pill 9.5px, .tk dt 10px ('acceptance'/'evidence'), .states .lbl 10px ('state'), .filters .lbl 10.5px, th 10.5px, .eyebrow 11px, all letter-spaced. The rule's own carve-out ('reserve uppercase for short labels and headings') covers every instance; no passage is set in caps."
       },
       {
         "rule": "overused-font",
@@ -20,6 +20,66 @@
         ],
         "createdAt": "2026-08-30T00:25:24.635Z",
         "reason": "Claude triage 2026-08-29: part of a deliberate, consistently applied three-face system on an already-published artifact - Archivo (sans), Instrument Serif (display only, .eyebrow/headings), DM Mono (mono/labels). Not a default pick. NOT user-confirmed; suppressed because changing the typeface of a board Paul is actively working from is an identity change, out of scope for functional edits, and riskier than the warning. Revisit if the board is ever restyled deliberately."
+      },
+      {
+        "rule": "low-contrast",
+        "value": "#e8eef2",
+        "createdAt": "2026-09-04T02:41:54.886Z",
+        "reason": "dark-theme token; detector pairs it with #ffffff, a ground this page never paints in dark mode (body sets background:var(--paper)=#0c1319). Verified on the real ground: ink 16.0:1, ink-2 11.3:1, ink-3 6.9:1, ink-4 5.3:1, signal 8.8:1 - all pass AA."
+      },
+      {
+        "rule": "low-contrast",
+        "value": "#bccbd5",
+        "createdAt": "2026-09-04T02:41:55.085Z",
+        "reason": "dark-theme token; detector pairs it with #ffffff, a ground this page never paints in dark mode (body sets background:var(--paper)=#0c1319). Verified on the real ground: ink 16.0:1, ink-2 11.3:1, ink-3 6.9:1, ink-4 5.3:1, signal 8.8:1 - all pass AA."
+      },
+      {
+        "rule": "low-contrast",
+        "value": "#8ea0ac",
+        "createdAt": "2026-09-04T02:41:55.310Z",
+        "reason": "dark-theme token; detector pairs it with #ffffff, a ground this page never paints in dark mode (body sets background:var(--paper)=#0c1319). Verified on the real ground: ink 16.0:1, ink-2 11.3:1, ink-3 6.9:1, ink-4 5.3:1, signal 8.8:1 - all pass AA."
+      },
+      {
+        "rule": "low-contrast",
+        "value": "#7a8b97",
+        "createdAt": "2026-09-04T02:41:55.550Z",
+        "reason": "dark-theme token; detector pairs it with #ffffff, a ground this page never paints in dark mode (body sets background:var(--paper)=#0c1319). Verified on the real ground: ink 16.0:1, ink-2 11.3:1, ink-3 6.9:1, ink-4 5.3:1, signal 8.8:1 - all pass AA."
+      },
+      {
+        "rule": "low-contrast",
+        "value": "#f0a13a",
+        "createdAt": "2026-09-04T02:41:55.747Z",
+        "reason": "dark-theme token; detector pairs it with #ffffff, a ground this page never paints in dark mode (body sets background:var(--paper)=#0c1319). Verified on the real ground: ink 16.0:1, ink-2 11.3:1, ink-3 6.9:1, ink-4 5.3:1, signal 8.8:1 - all pass AA."
+      },
+      {
+        "rule": "low-contrast",
+        "value": "#3fbe86",
+        "createdAt": "2026-09-04T02:41:55.965Z",
+        "reason": "dark-theme token; detector pairs it with #ffffff, a ground this page never paints in dark mode (body sets background:var(--paper)=#0c1319). Verified on the real ground: ink 16.0:1, ink-2 11.3:1, ink-3 6.9:1, ink-4 5.3:1, signal 8.8:1 - all pass AA."
+      },
+      {
+        "rule": "low-contrast",
+        "value": "#f0705a",
+        "createdAt": "2026-09-04T02:41:56.218Z",
+        "reason": "dark-theme token; detector pairs it with #ffffff, a ground this page never paints in dark mode (body sets background:var(--paper)=#0c1319). Verified on the real ground: ink 16.0:1, ink-2 11.3:1, ink-3 6.9:1, ink-4 5.3:1, signal 8.8:1 - all pass AA."
+      },
+      {
+        "rule": "low-contrast",
+        "value": "#a888e0",
+        "createdAt": "2026-09-04T02:41:56.482Z",
+        "reason": "dark-theme token; detector pairs it with #ffffff, a ground this page never paints in dark mode (body sets background:var(--paper)=#0c1319). Verified on the real ground: ink 16.0:1, ink-2 11.3:1, ink-3 6.9:1, ink-4 5.3:1, signal 8.8:1 - all pass AA."
+      },
+      {
+        "rule": "low-contrast",
+        "value": "#8496a1",
+        "createdAt": "2026-09-04T02:41:56.743Z",
+        "reason": "dark-theme token; detector pairs it with #ffffff, a ground this page never paints in dark mode (body sets background:var(--paper)=#0c1319). Verified on the real ground: ink 16.0:1, ink-2 11.3:1, ink-3 6.9:1, ink-4 5.3:1, signal 8.8:1 - all pass AA."
+      },
+      {
+        "rule": "low-contrast",
+        "value": "#6fb2e0",
+        "createdAt": "2026-09-04T02:41:57.001Z",
+        "reason": "dark-theme token; detector pairs it with #ffffff, a ground this page never paints in dark mode (body sets background:var(--paper)=#0c1319). Verified on the real ground: ink 16.0:1, ink-2 11.3:1, ink-3 6.9:1, ink-4 5.3:1, signal 8.8:1 - all pass AA."
       }
     ]
   }

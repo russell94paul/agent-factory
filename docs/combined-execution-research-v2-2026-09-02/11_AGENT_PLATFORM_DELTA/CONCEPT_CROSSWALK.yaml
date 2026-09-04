@@ -1,0 +1,98 @@
+version: 1
+basis: ".agent-platform.zip delta against 2026-09-02 concept_index.yaml"
+proposed_promotions:
+  - proposed_id: C-GV-07
+    name: Execution-surface routing as a scheduling constraint
+    sources:
+      - .agent-platform/bootstrap/docs/EXECUTION_SURFACE_POLICY.md
+      - .agent-platform/bootstrap/docs/WEB_REMOTE_SESSION_RUNBOOK.md
+    overlaps: [C-GV-01, C-GV-02, C-TM-03, C-TM-06]
+    disposition: PROMOTE_AS_FIRST_CLASS
+    implementation: "small extension over current DAG/scheduler; do not create new task system"
+
+  - proposed_id: C-TM-07
+    name: Mission Assembly Plan with conditional swarming and rich availability
+    sources:
+      - .agent-platform/bootstrap/docs/MISSION_ASSEMBLY_AND_SWARMING.md
+      - .agent-platform/bootstrap/schemas/mission-assembly.schema.json
+      - .agent-platform/bootstrap/skills/mission-assembler/SKILL.md
+    overlaps: [C-TM-01, C-TM-02, C-TM-03, C-TM-04, C-TM-06]
+    disposition: PROMOTE_AS_SUBCONCEPT
+    implementation: "defer generic compiler; extend mission presets after real-run evidence"
+
+  - proposed_id: C-AG-15
+    name: Evidence-backed capability record and certified agent/team registry
+    sources:
+      - .agent-platform/bootstrap/docs/PLATFORM_COMPLETION_FEATURES.md
+      - .agent-platform/bootstrap/schemas/capability-record.schema.json
+    overlaps: [C-AG-01, C-EV-01, C-OP-03]
+    disposition: PROMOTE_AS_FIRST_CLASS
+    implementation: "extend factory/registry.py rather than adding a parallel registry"
+
+  - proposed_id: C-UI-07
+    name: Synthesis Inbox and Promotion Board as canonical projections
+    sources:
+      - .agent-platform/bootstrap/docs/GAMIFIED_MISSION_CONTROL.md
+      - .agent-platform/bootstrap/docs/SESSION_UI_MVP.md
+    overlaps: [C-UI-01, C-UI-04, C-EV-04]
+    disposition: PROMOTE_AS_OPERATOR_WORKFLOW
+    implementation: "projection only; Synthesis Inbox may precede broader gamified UI"
+
+  - proposed_id: C-OR-09
+    name: Compute and integration fabric
+    sources:
+      - .agent-platform/bootstrap/docs/COMPUTE_AND_INTEGRATION_FABRIC.md
+      - .agent-platform/bootstrap/schemas/compute-node.schema.json
+    overlaps: [C-TM-06, C-GV-01]
+    disposition: PROMOTE_AS_FUTURE_RUNTIME_CONTRACT
+    implementation: "generic adapter/node contracts before provider-specific control planes"
+
+  - proposed_id: C-OR-10
+    name: Autonomous product lifecycle and Venture Compiler
+    sources:
+      - .agent-platform/bootstrap/docs/AUTONOMOUS_PRODUCT_LIFECYCLE.md
+      - .agent-platform/bootstrap/docs/PLATFORM_COMPLETION_FEATURES.md
+      - .agent-platform/bootstrap/schemas/venture-plan.schema.json
+      - .agent-platform/bootstrap/skills/venture-compiler/SKILL.md
+    overlaps: [C-OR-02, C-TM-06, C-GV-02]
+    disposition: PRESERVE_AS_VERTICAL_NOT_CORE_RUNTIME
+    implementation: "after at least one certified team"
+
+  - proposed_id: C-KN-08
+    name: Customer and market learning loop
+    sources:
+      - .agent-platform/bootstrap/docs/PLATFORM_COMPLETION_FEATURES.md
+      - .agent-platform/bootstrap/skills/customer-learning-loop/SKILL.md
+    overlaps: [C-KN-01, C-KN-07, C-EV-06]
+    disposition: PROMOTE_AS_PRODUCT_EVIDENCE_LOOP
+    implementation: "tenant/privacy boundaries and evaluator separation required"
+
+  - proposed_id: C-OP-07
+    name: Portfolio experiment and resource allocator
+    sources:
+      - .agent-platform/bootstrap/docs/PLATFORM_COMPLETION_FEATURES.md
+      - .agent-platform/bootstrap/skills/portfolio-experiment-manager/SKILL.md
+    overlaps: [C-OP-01, C-OP-03, C-OP-04]
+    disposition: PROMOTE_AS_FUTURE_OPTIMIZATION_LAYER
+    implementation: "only after trustworthy evals; use multi-objective decisions, not one reward"
+
+merge_into_existing:
+  - concept: Evidence-gated autonomy ladder
+    source: .agent-platform/bootstrap/docs/AUTONOMY_LADDER.md
+    merge_target: [C-GV-02, C-EV-04, RB-15]
+    rule: "derive rank/progression from readiness gates; never create a parallel PROGRESS source of truth"
+
+  - concept: Commercial autonomy policy
+    source: .agent-platform/bootstrap/docs/COMMERCIAL_AUTONOMY_POLICY.md
+    merge_target: [C-GV-02, C-TM-06]
+    rule: "represent as Mandate/policy constraints; revenue may not rewrite evaluator rules"
+
+  - concept: Research job state machine
+    source: .agent-platform/bootstrap/schemas/research-job.schema.json
+    merge_target: [C-RS-01, C-RS-02, C-RS-04]
+    rule: "borrow fields into the existing research estate; do not create a second queue"
+
+  - concept: Rich typed message envelope
+    source: .agent-platform/bootstrap/schemas/message-event.schema.json
+    merge_target: [C-CM-01, C-CM-03, C-CM-04]
+    rule: "adopt only missing semantics; prefer standard tracing/correlation fields over a custom wire protocol"

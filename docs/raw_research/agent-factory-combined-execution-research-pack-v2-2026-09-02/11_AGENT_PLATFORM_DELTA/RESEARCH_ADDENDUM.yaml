@@ -1,0 +1,94 @@
+version: 1
+policy:
+  before_deadline: "do not dispatch new broad research; implementation/measurement is still binding"
+  after_deadline: "merge with existing backlog; do not create a parallel research program"
+
+existing_missions_to_expand:
+  - id: RB-15
+    add_sources:
+      - .agent-platform/bootstrap/docs/AUTONOMY_LADDER.md
+      - .agent-platform/bootstrap/schemas/platform-progress.schema.json
+      - .agent-platform/bootstrap/skills/roadmap-rank-tracker/SKILL.md
+    add_question: "Can rank be a derived UI projection over independent gates without imposing a false total order or creating a second source of truth?"
+
+  - id: RB-20
+    raise_relative_priority_to: MEDIUM_AFTER_REAL_RUNS
+    add_sources:
+      - .agent-platform/bootstrap/docs/COMPUTE_AND_INTEGRATION_FABRIC.md
+      - .agent-platform/bootstrap/schemas/capability-record.schema.json
+      - .agent-platform/bootstrap/schemas/compute-node.schema.json
+    add_questions:
+      - "Map existing capability registry fields to A2A Agent Card/skill discovery semantics."
+      - "Which evidence/certification fields are intentionally outside A2A and should remain local extensions?"
+      - "What adapter contract is needed for health, cost, lifecycle, rollback and wake/subscription events?"
+
+  - id: RB-02
+    add_sources:
+      - .agent-platform/bootstrap/schemas/message-event.schema.json
+      - .agent-platform/bootstrap/docs/COMMUNICATION_PROTOCOL.md
+    add_question: "Which correlation/causation/provenance fields should map directly to OpenTelemetry trace/message semantics instead of a proprietary trajectory shape?"
+
+new_research_candidates:
+  - id: RB-21
+    title: Execution surface routing and multi-session scheduler
+    type: PRIOR_ART_PLUS_EXPERIMENT
+    priority: HIGH_AFTER_DEADLINE_IF_NOT_IMPLEMENTED
+    objective: "Validate task-to-surface routing across local Remote Control, cloud sessions and isolated worktrees, and measure whether metadata-driven routing reduces manual coordination/collisions."
+    sources:
+      - .agent-platform/bootstrap/docs/EXECUTION_SURFACE_POLICY.md
+      - .agent-platform/bootstrap/docs/WEB_REMOTE_SESSION_RUNBOOK.md
+    experiment_first: true
+    questions:
+      - "Which live tasks truly require local files/MCP/secrets vs cloud eligibility?"
+      - "Can writes/resource claims be used to derive collision-safe parallelism?"
+      - "Does routing reduce operator interventions and branch conflicts?"
+    likely_output: "execution metadata schema + one scheduler policy + measured comparison"
+
+  - id: RB-22
+    title: Evidence-backed capability record and certification boundary
+    type: PRIOR_ART_PLUS_SCHEMA
+    priority: HIGH_AFTER_TWO_REAL_WORKLOADS
+    objective: "Define the smallest capability record that supports trustworthy mission routing without inventing a marketplace or claiming transfer beyond measured conditions."
+    sources:
+      - .agent-platform/bootstrap/schemas/capability-record.schema.json
+      - .agent-platform/bootstrap/docs/PLATFORM_COMPLETION_FEATURES.md
+    questions:
+      - "Which fields are descriptive identity/discovery vs certification evidence?"
+      - "How do validity windows and model/config bindings invalidate capability claims?"
+      - "What is the minimum record Mission Assembly needs to route safely?"
+    likely_output: "registry extension ADR + schema + invalidation tests"
+
+  - id: RB-23
+    title: Venture lifecycle, customer learning and portfolio allocation
+    type: PRODUCT_SYSTEMS_RESEARCH
+    priority: DEFER_UNTIL_CERTIFIED_TEAM
+    objective: "Test whether the proposed commercial loop can be implemented as a vertical over existing mission/eval/policy primitives rather than as a second autonomous-business platform."
+    sources:
+      - .agent-platform/bootstrap/docs/AUTONOMOUS_PRODUCT_LIFECYCLE.md
+      - .agent-platform/bootstrap/docs/PLATFORM_COMPLETION_FEATURES.md
+      - .agent-platform/bootstrap/docs/REVENUE_AND_VENTURE_FLYWHEEL.md
+      - .agent-platform/bootstrap/schemas/opportunity-hypothesis.schema.json
+      - .agent-platform/bootstrap/schemas/venture-plan.schema.json
+      - .agent-platform/bootstrap/skills/customer-learning-loop/SKILL.md
+      - .agent-platform/bootstrap/skills/portfolio-experiment-manager/SKILL.md
+      - .agent-platform/bootstrap/skills/venture-compiler/SKILL.md
+    questions:
+      - "What is the minimum durable product/venture state?"
+      - "How should market/customer evidence be separated from inference?"
+      - "Which decisions must remain human/policy-gated?"
+      - "How should opportunity cost and multi-objective constraints be represented?"
+    likely_output: "one bounded venture pilot, not a platform-wide build"
+
+  - id: RB-24
+    title: Synthesis Inbox and research disposition workflow
+    type: UX_PLUS_PROCESS_EXPERIMENT
+    priority: MEDIUM
+    objective: "Measure whether a canonical inbox for completed research/review outputs reduces lost handoffs and unabsorbed conclusions in the user's parallel-session workflow."
+    sources:
+      - .agent-platform/bootstrap/docs/GAMIFIED_MISSION_CONTROL.md
+      - .agent-platform/bootstrap/docs/SESSION_UI_MVP.md
+    experiment_first: true
+    questions:
+      - "Can inbox entries be derived from existing task/artifact/research state without a new source of truth?"
+      - "What dispositions close an item: ADOPT, ADAPT, RESEARCH, REJECT, SUPERSEDED?"
+    likely_output: "small Switchboard projection + before/after operator-intervention metric"

@@ -1,0 +1,577 @@
+CELL OS -- CLAUDE DESIGN MASTER BRIEF
+
+You are the Principal Product Design & Interaction Intelligence Lead for CELL OS.
+
+Act simultaneously as a Principal Product Designer, HCI researcher, information architect, AI-native
+developer-tools designer, agentic-systems architect, interaction/motion designer, data-visualization
+designer, accessibility specialist, mobile designer, design-systems engineer and adversarial product
+reviewer.
+
+I am giving you a collection of CELL OS, Agent Factory, NERVE, Switchboard, UI/UX, design-system,
+motion, interaction, visualization, architecture, research and skill artifacts.
+
+Your job is not to make the existing UI prettier.
+
+Your job is to reconcile all of these artifacts into a coherent, category-defining product experience for:
+
+CELL OS
+
+An Operating System for Synthetic Organizations
+
+1. READ EVERYTHING FIRST
+
+Recursively inspect every supplied ZIP and every nested artifact before designing.
+
+Do not selectively read only files whose names sound relevant.
+
+Create an Artifact Reconciliation Ledger before proposing the design.
+
+Classify every meaningful source as:
+
+        · CANONICAL
+        · MERGE
+        · REFERENCE
+        · SUPERSEDED
+        · CONFLICT
+        · UNKNOWN
+For every important design concept record:
+
+source  concept  maturity  keep/adapt/reject  rationale  conflicts
+
+Do not silently merge contradictory ideas.
+
+Newest explicit product decisions override older experiments.
+
+Repository/runtime evidence determines what is actually implemented.
+
+                                                                         1
+Design documents determine intended direction, not implementation truth.
+Use these maturity labels rigorously:
+PLANNED / PROTOTYPE / IMPLEMENTED / CERTIFIED / FRONTIER
+
+2. PRODUCT MODEL
+
+CELL OS is not a graphical wrapper around agent chat.
+The user expresses an outcome, constraints and authority boundaries.
+CELL OS should:
+understand intent
+ create a Mission Contract
+ compile an Operative Cell
+ allocate context/capabilities/resources
+ execute work
+ supervise activity
+ involve the human only where appropriate
+ verify outcomes with evidence
+ preserve artifacts and decisions
+ replay execution
+ learn
+ improve future organizational configurations
+The primary executable/certifiable organizational primitive is the:
+
+CELL
+
+A Cell may contain multiple:
+
+OPERATIVES
+
+plus deterministic workers, capabilities, memory/context mounts, evaluators, policies and gates.
+
+3. CURRENT PRODUCT HIERARCHY
+
+Use this as the current working product hierarchy unless a newer explicit supplied artifact proves
+otherwise:
+
+                                                                         2
+   CELL OS
+   
+    SWITCHBOARD
+
+          
+           NERVE
+
+                 
+                  Today
+                  Inbox
+                  Missions
+                  Automations
+                  Artifacts
+                  Knowledge
+                  Intelligence
+                  Systems
+
+Switchboard is currently the sole top-level product tab.
+
+NERVE is the high-frequency supervisory/operator experience.
+
+Do not turn internal architecture modules into peer global navigation tabs.
+
+Instead use contextual workspaces launched from relevant objects:
+
+        · Mission Control
+        · Briefing Room
+        · Cell Studio
+        · Cell / Operative Inspector
+        · Evidence / Assurance
+        · Replay / Profiler
+        · Shadow Twin Compare
+        · Evolution / The Crucible
+        · deep configuration/admin
+
+4. NERVE
+
+NERVE means:
+
+Navigation, Execution, Routing, Verification & Escalation
+
+The defining NERVE experience is:
+
+          I can leave many sessions and Cells working, return later, immediately understand what
+          changed, resolve the few decisions that genuinely need me, prove the outcomes, and
+          continue without rereading hours of transcripts.
+
+NERVE must therefore be an:
+
+                                                                         3
+ATTENTION ROUTER
+
+not an activity viewer.
+
+Design around:
+
+Attention > Activity
+
+5. PRIMARY PRODUCT METRIC
+
+Optimize:
+
+HUMAN COORDINATION LOAD
+
+Increase:
+
+        · verified mission success
+        · useful parallel execution
+        · first-pass success
+        · evidence completeness
+        · knowledge reuse
+        · automation reliability
+Reduce:
+
+        · manual routing
+        · context copying
+        · repeated status checks
+        · session hunting
+        · unnecessary human questions
+        · duplicate work
+        · intervention minutes
+        · missed blockers
+        · rework
+        · context reacquisition time
+        · cost per accepted outcome
+        · time-to-green
+The UI should become simpler as the underlying organization becomes more capable.
+
+6. CORE UX DOCTRINE
+
+Non-negotiable:
+
+        · Agent narrative is not evidence.
+
+                                                                         4
+        · Done does not equal Verified Success.
+        · Work state, runtime state and assurance state remain distinct.
+        · Context travels with the mission.
+        · Evidence and artifacts are first-class objects.
+        · Human attention is a scarce resource.
+        · Autonomous events never steal keyboard focus.
+        · Preserve drafts, scroll position, selected objects and spatial memory.
+        · Important objects should not randomly reorder while the user is reading.
+        · Progressive disclosure beats telemetry walls.
+        · Critical information cannot exist only on hover.
+        · Keyboard, mouse, natural language and voice should use one underlying command system.
+        · Consequential natural-language commands show a structured action preview.
+        · Graphs are used when topology or dependency is actually the question.
+        · Mobile is designed for supervision rather than becoming a tiny remote terminal.
+
+7. VISUAL QUALITY
+
+Start from the current Pearl Slate direction, but challenge it experimentally.
+
+Desired character:
+
+machined
+calm
+precise
+intelligent
+tactile
+premium
+slightly alive
+
+Current palette:
+
+        · Pearl Base -- #E7EAED
+        · Pearl High -- #F3F5F6
+        · Pearl Low -- #D7DDE2
+        · Slate 950 -- #10161D
+        · Slate 900 -- #151D26
+        · Slate 850 -- #1B2530
+        · Slate 800 -- #222E3A
+        · Ion Blue -- #4EB8F4
+        · Verified -- #75C79B
+        · Waiting/Human -- #E9B768
+        · Risk -- #E37676
+        · Experimental -- #9D7BEE
+        · Provenance -- #77A9D8
+
+Avoid:
+
+        · generic neon cyberpunk
+
+                                                                         5
+        · excessive glassmorphism
+        · glow everywhere
+        · card soup
+        · giant empty SaaS headings
+        · moving gradients behind work content
+        · hover-scale cards
+        · excessive rounded boxes
+        · decorative semantic colors
+        · dashboard-template aesthetics
+
+Premium should come from tolerances:
+
+spacing, type hierarchy, alignment, continuity, responsiveness, transition quality and extremely well-
+designed states.
+
+Create at least two serious visual alternatives and compare them against Pearl Slate.
+
+8. REQUIRED SIGNATURE EXPERIENCES
+
+Design these as one coherent ecosystem:
+
+      1. NERVE Today / Command Deck
+      2. Unified Attention Inbox / Needs You
+      3. Since You Were Away
+      4. Multi-Session Constellation
+      5. Universal Command Composer
+      6. Command Palette
+      7. Push-to-Talk / Voice Brief
+      8. Mission-centric navigation
+      9. Run All Safe Work
+     10. DAG Auto-Advance
+     11. Decision Ledger
+     12. Mission Context Capsules
+     13. Blackbox Intake
+     14. Scoping Queue
+     15. Requirements Gap Analysis
+     16. Client Clarification Loop
+     17. WorkGraph Mission Board
+     18. Live Mission Control
+     19. Artifact Library
+     20. Evidence Lens
+     21. Consequence Sheet
+     22. Replay Spine
+     23. Automation Center
+     24. Automation Suggestions
+     25. Workflow Distillation
+     26. HyperMESH Knowledge Explorer
+     27. Cell Studio
+     28. Formation Recommender
+
+                                                                         6
+     29. Collision Detection
+     30. Smart Handoff
+     31. Summon Specialist
+     32. Parallel Strategy Fork / Best-of-N
+     33. Briefing Room
+     34. Shadow Twin Compare
+     35. The Crucible / Evolution Arena
+     36. Cognitive Pressure / PSI
+     37. Cell Health Vitals
+     38. Epistemic Coherence Alerts
+     39. Interface-generated Operating Playbooks
+     40. Mobile Evidence-Aware Approval
+     41. Email / Meeting Intake Intelligence
+     42. Professional Client Delivery Workspace
+
+Mine the older Agent Factory/Army/ZEUS artifacts for useful mechanisms including:
+
+        · semantic zoom
+        · direct manipulation
+        · macro human-swarm commands
+        · formation/topology interaction
+        · context logistics
+        · collision detection
+        · specialist deployment
+        · causal replay
+        · spatial memory
+        · uncertainty visualization
+
+But treat those as interaction research, not permission to restore superseded branding or turn CELL
+OS into a military game.
+
+9. CELL STUDIO
+
+CELL OS actually builds artificial organizations.
+
+Cell Studio must therefore become one of the product's signature experiences.
+
+It needs to make these concepts understandable:
+
+        · formation/topology
+        · Operative seats
+        · deterministic workers
+        · model/runtime selection
+        · capabilities
+        · tools
+        · memory mounts
+        · context policies
+        · communication policy
+        · resource envelopes
+
+                                                                         7
+        · authority
+        · human gates
+        · evaluators
+        · evidence contract
+        · versioning
+        · certification
+
+Compare:
+
+      1. freeform node graph
+      2. form-first editor
+      3. structured canvas + inspector
+      4. natural-language builder + generated configuration
+      5. hybrid
+
+My current hypothesis is:
+
+HYBRID
+
+natural language  generated Cell  structured canvas  inspector  machine-readable config
+ version diff  readiness  launch
+
+Do not choose a graph editor merely because graphs look agentic.
+
+10. MOTION SYSTEM
+
+Motion should communicate only:
+
+        · orientation
+        · causality
+        · status
+        · continuity
+        · feedback
+
+Suggested timing system:
+
+        · press ~90ms
+        · hover ~120ms
+        · tooltip ~130ms
+        · popover ~160ms
+        · menu/tab ~180ms
+        · inspector ~240ms
+        · consequence sheet ~260ms
+        · workspace continuity ~320ms
+        · complex deliberate visualization <500ms
+
+State transitions occur in place.
+
+Do not make Working  Waiting  Done cause cards to jump around.
+
+                                                                         8
+Pearl glisten may exist only in peripheral/empty chrome and should disappear during focused work.
+Prefer event-linked shimmer--for example, a single restrained highlight when a mission becomes
+Verified--over constant decorative movement.
+Explicitly design reduced-motion behavior.
+
+11. HOVER AND OVERLAY GRAMMAR
+
+Use:
+Tooltip  short supplemental information
+Popover  compact metadata or quick action
+Inspector  deep state, relationships, provenance, context, versions, evidence and actions
+Modal  bounded synchronous form
+Consequence Sheet  consequential/high-risk action
+Never hide a required instruction behind a tooltip.
+Hover should reveal detail without causing layout shifts, card scaling or visual noise.
+
+12. DATA VISUALIZATION
+
+Do not design an analytics dashboard full of permanent charts.
+CELL OS is an action system first.
+Use compact state and metrics by default, then progressively disclose analysis.
+Every important metric must have at least one:
+
+        · target
+        · baseline
+        · expected band
+        · comparison period
+        · annotation
+Use:
+        · line  trend
+        · horizontal bar  rank
+
+                                                                         9
+        · bullet/target band  target
+        · timeline/lane  operational time
+        · table + sparklines  many Operatives/Cells
+        · graph  dependency/topology only
+        · Pareto scatter + linked table  Evolution
+Every chart should lead back to the missions, runs and evidence producing the number.
+
+13. MOBILE
+
+Do not shrink desktop.
+Mobile priorities:
+
+      1. Needs You
+      2. blocked / failed / risky
+      3. Since You Were Away
+      4. pinned mission/session status
+      5. evidence-aware decisions
+      6. voice briefing/navigation
+Suggested bottom navigation:
+Today · Inbox · Missions · More
+Test:
+        · a session silently waiting for permission
+        · one important decision among twenty working sessions
+        · a deployment failure
+        · returning after two hours
+        · "Read me what needs me"
+        · remotely pausing/approving a safe bounded action
+
+14. IA TOURNAMENT
+
+Do not automatically accept the supplied IA.
+Compare at least:
+
+                                                                        10
+A -- Switchboard/NERVE unified shell
+
+B -- Multi-app suite
+
+C -- Mission-centric object OS
+
+D -- Command-first adaptive workspace
+
+Score each against:
+
+        · five-second comprehension
+        · learnability
+        · expert speed
+        · navigation burden
+        · discoverability
+        · spatial memory
+        · mobile
+        · Cell Studio integration
+        · implementation complexity
+        · ability to handle future capabilities
+
+Select a winner and explain the decision.
+
+15. DESIGN QUALITY GATE
+
+Score every major design 1­10 for:
+
+        · five-second comprehension
+        · attention routing
+        · task speed
+        · interruption recovery
+        · trust calibration
+        · error prevention
+        · reversibility
+        · information architecture
+        · spatial memory
+        · accessibility
+        · premium aesthetic
+        · information density
+        · mobile supervisory value
+        · technical feasibility
+        · architectural truth
+
+Automatically reject or redesign anything involving:
+
+        · focus theft
+        · hidden critical state
+        · chat as canonical product state
+        · color-only state
+        · critical hover-only information
+
+                                                                        11
+        · modal stacking
+        · Done represented as Verified
+        · dangerous side effect without preview
+        · decorative motion required for understanding
+        · an avatar/world mode maintaining separate state
+        · a freeform node graph as the only critical configuration mechanism
+
+16. REQUIRED OUTPUT
+
+Do not return a moodboard.
+
+Return a buildable:
+
+CELL OS PRODUCT DESIGN SYSTEM & EXPERIENCE
+SPECIFICATION
+
+Containing:
+
+      1. Executive design thesis
+      2. Artifact reconciliation ledger
+      3. Current UX friction audit
+      4. Implementation-truth table
+      5. Product mental model
+      6. IA tournament
+      7. Selected IA
+      8. Desktop NERVE architecture
+      9. Mobile NERVE architecture
+     10. Page-by-page specifications
+     11. Cell Studio deep specification
+     12. Component library
+     13. Command/chat/voice grammar
+     14. Motion system
+     15. Microinteraction system
+     16. Hover/tooltip/inspector/modal grammar
+     17. Design tokens
+     18. Data-viz grammar
+     19. Empty/loading/error/degraded states
+     20. Accessibility and human-factors specification
+     21. Feature ranking: P0 / P1 / P2 / Research
+     22. Backend state/events required by each major feature
+     23. UX experiments and measurable success criteria
+     24. What NOT to build
+     25. Contradictions/unresolved decisions
+     26. Final high-fidelity product storyboard
+
+The final storyboard must show:
+
+                                                                        12
+Request arrives
+ Blackbox Intake
+ context/scoping
+ Mission Contract
+ Cell compilation
+ parallel safe execution
+ Needs You
+ evidence-aware human decision
+ Verified Success
+ artifact/client delivery
+ Replay/Learning
+ automation/distillation opportunity
+The finished product should feel like an:
+
+iPhone-class operating experience for synthetic
+organizations
+
+Simple on the surface.
+Extraordinarily deep when inspected.
+Fast enough for an expert.
+Understandable enough for someone new to agentic systems.
+Calm under high activity.
+Beautiful without visual noise.
+And trustworthy enough that the user understands not only what the organization is doing, but why,
+under what authority, with what evidence, and what will happen next.
+
+                                                                        13
+

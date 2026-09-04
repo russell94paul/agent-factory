@@ -1,0 +1,54 @@
+version: 1
+policy_name: deadline_p0
+
+defaults:
+  mode: MANUAL
+  max_parallel: 3
+  fail_closed_on_unmeasured_readiness: true
+  auto_resume_after_gate: true
+  auto_resume_after_completion: true
+  mutate_success_criteria: false
+  auto_drop_scope: false
+
+modes:
+  MANUAL:
+    auto_start: false
+  GUARDED:
+    auto_start: true
+    require_guarded_start_allowed: true
+  AUTO:
+    auto_start: true
+    require_guarded_start_allowed: false
+    still_require_hard_safety_policy: true
+
+hard_stops:
+  - explicit_operator_pause
+  - unresolved_human_gate
+  - readiness_not_explicit_pass
+  - declared_conflict
+  - live_claim_collision
+  - concurrency_limit
+  - safety_or_permission_refusal
+  - destructive_or_publication_action_without_required_authority
+
+run_modes:
+  DAG:
+    selection: all_ready_in_run
+  CRITICAL_PATH:
+    selection: ready_ancestors_of_target
+
+failure_behavior:
+  default:
+    block_dependents: true
+    retry_automatically: false
+  retryable_only_when:
+    - failure_class_is_transient
+    - attempt_budget_remaining
+  permanent_or_unknown:
+    - record_failure
+    - expose_in_needs_you_or_diagnostics
+    - do_not_loop
+
+scope:
+  automatic_degradation: disabled
+  rationale: Deadline-aware scope mutation is a governance feature and is not yet designed.

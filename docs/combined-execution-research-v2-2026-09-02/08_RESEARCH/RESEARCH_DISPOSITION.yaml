@@ -1,0 +1,46 @@
+version: 1
+before_deadline:
+  dispatch_research: false
+  reason: Current binding constraints are integration and measurement, not missing general knowledge.
+
+after_deadline_priority:
+  - id: RB-00C
+    type: NOT_RESEARCH
+    priority: 100
+    note: One real run; may be satisfied by the Marketing vertical slice.
+  - id: RB-00D
+    type: NOT_RESEARCH
+    priority: 95
+  - id: RB-00B
+    type: NOT_RESEARCH
+    depends_on: [RB-00D]
+    priority: 94
+  - id: RB-00E
+    type: NOT_RESEARCH
+    priority: 90
+  - id: RB-00F
+    type: NOT_RESEARCH
+    priority: 88
+  - id: RB-02
+    type: RESEARCH
+    priority: 85
+  - id: RB-01
+    type: RESEARCH
+    priority: 82
+  - id: RB-17
+    type: RESEARCH
+    priority: 80
+  - id: RB-06
+    type: RESEARCH
+    priority: 76
+  - id: RB-08
+    type: RESEARCH
+    priority: 74
+
+agent_platform_delta:
+  immediate:
+    - execution_surface_routing: "P0/P1 small extension if live repo seam is cheap; otherwise first post-deadline"
+    - synthesis_inbox: "P1/P2 operator-productivity projection"
+  expand_existing: [RB-02, RB-15, RB-20]
+  proposed_new_after_deadline: [RB-21, RB-22, RB-23, RB-24]
+  defer_until_certified_team: [venture_compiler, customer_market_learning, portfolio_allocator, capability_market]

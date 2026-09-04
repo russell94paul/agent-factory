@@ -1,0 +1,712 @@
+# PROPOSED research registry — v3 addendum delta
+#
+# ⛔ THIS FILE DISPATCHES NOTHING. It is a registry proposal, not an index.
+#
+# Eventual destination: docs/_index/research_registry.yaml
+# Written under docs/restructure/ because docs/_index/ files carry regeneration commands and are
+# asserted current by tests. A hand-authored registry dropped in beside them would reproduce the
+# hand-maintained-count failure this corpus has already suffered twice.
+#
+# This is a DELTA on the schema proposed in docs/restructure/07_RESEARCH_STATUS_AUDIT.md §6.
+# It adds: the three external design sources, the ten CELL-DR lanes, the corrected RB identifiers,
+# the four-axis readiness model, and the PROPOSED_EXTERNAL concept register.
+#
+# Phase 1 addendum, measured 2026-09-03 against agent-factory @ 827f871 (main).
+
+schema_version: 1
+status: REGISTRY_PROPOSAL_NOTHING_DISPATCHED
+p0b_applied: 2026-09-03      # see docs/restructure/14_P0B_EXTRACTION_AND_ONTOLOGY_RECONCILIATION.md
+supersedes_nothing: true
+generated:
+  at: 2026-09-03
+  repo_head: 827f871
+  branch: main
+  generator: null                     # ⛔ does not exist yet — see 07_RESEARCH_STATUS_AUDIT.md §6
+  regenerate_with: "python scripts/build_research_registry.py   # NOT YET WRITTEN"
+
+# ---------------------------------------------------------------------------
+# Field provenance, per README.md §V.2
+#   GENERATED — measured from the filesystem. Never hand-edited.
+#   AUTHORED  — requires reading. Merged by the generator, never overwritten.
+# Every field below is AUTHORED until the generator exists.
+# ---------------------------------------------------------------------------
+
+vocabulary:
+  run_status: [NOT_RUN, IN_PROGRESS, COMPLETED, PARTIAL, SUPERSEDED,
+               MERGE_WITH_OTHER_PROMPT, STATUS_UNKNOWN]
+  absorption_status: [NOT_ABSORBED, PARTIALLY_ABSORBED, ABSORBED, REJECTED]
+  # ⛔ run_status and absorption_status MUST NOT be collapsed. 07 §2.2.
+
+  disposition:            # the v3 addendum vocabulary — required by the ingest instruction
+    [COMPLETED_REUSE, MERGED_INTO_V3, NARROW_FOLLOWUP, LOCAL_MEASUREMENT,
+     IMPLEMENTATION_TICKET, DEFERRED_EXPERIMENT, SUPERSEDED, REJECTED]
+
+  maturity:               # v3 §3.1 — supplemental architecture metadata.
+                          # ⛔ Does NOT replace the README verdict system or the basis vocabulary.
+    [PROVEN, PARTIAL, SPECIFIED, PROPOSED_EXTERNAL, EXPERIMENTAL,
+     NOT_VISIBLE, ABSENT, SUPERSEDED]
+
+  readiness_axis:         # v3 §3.2 — four INDEPENDENT axes, always reported separately
+    [RESEARCH_READINESS, EXPERIMENT_READINESS, IMPLEMENTATION_READINESS, PROMOTION_READINESS]
+  readiness_value: [READY, READY_ON_DEPENDENCY, BLOCKED_LOCAL, BLOCKED_OBSERVATION,
+                    NOT_READY, OUT_OF_SCOPE, NOT_APPLICABLE]
+
+  # ⭐ The governing rule, stated in the registry so it cannot be lost:
+  #    absent mission history blocks EMPIRICAL calibration and PROMOTION.
+  #    It does NOT block prior-art research, mathematical formulation,
+  #    architecture design or experiment design.
+
+# ---------------------------------------------------------------------------
+# External design sources — Gate P0-A
+# ---------------------------------------------------------------------------
+
+external_design_sources:
+  provenance_note: >
+    ⭐ All three originated OUTSIDE the earlier repository corpus. They were authored in project
+    conversations on 2026-09-03 and had no record in this repository at the time of the Phase 1
+    audit (verified: 0 filename hits, 0 content hits, 0 hits across 32 archive namelists).
+    Their concepts are therefore PROPOSED_EXTERNAL — approved design inputs — not IMPLEMENTED,
+    PROVEN or CANONICAL. Absence does not reject them; it means they carry no local evidence yet.
+
+  container:
+    path: docs/raw_research/CELL_OS_Research_Manifest_v3_Repo_Ingestion_Pack.zip
+    sha256: fd04c2ba90e9d260ef9985255ecf10586ff78721f565ddd7a791840d53ffad26
+    extracted_to: docs/raw_research/CELL_OS_Research_Manifest_v3_Repo_Ingestion_Pack/
+    originals_unchanged: true
+    hashes_verified_after_extraction: true
+
+  sources:
+    - id: SRC-V3
+      title: CELL OS Deep Research Manifest v3
+      path: docs/raw_research/CELL_OS_Research_Manifest_v3_Repo_Ingestion_Pack/CELL_OS_Deep_Research_Manifest_v3.md
+      sha256: bef3b644958de44cae37efff1d3fdededb77fd94e55db446fb6a679c6eb826a5
+      bytes: 26706
+      lines: 720
+      origin: EXTERNAL_PROJECT_CONVERSATION
+      date: 2026-09-03
+      role: PROPOSED_FORWARD_RESEARCH_QUEUE
+      status: CONTROLLED_DRAFT
+      accepted_as: FORWARD_QUEUE_NOT_ACTIVATED
+
+    - id: SRC-V2
+      title: CELL OS Optimized Deep Research Prompt Manifest v2
+      path: docs/raw_research/CELL_OS_Research_Manifest_v3_Repo_Ingestion_Pack/CELL_OS_Optimized_Deep_Research_Prompt_Manifest_v2.md
+      sha256: bc111d5daa85bd68e8796b8477cb763159fb57cff917a965ab26ea125b8af72c
+      bytes: 25420
+      lines: 646
+      origin: EXTERNAL_PROJECT_CONVERSATION
+      date: 2026-09-03
+      role: SUPERSEDED_FORWARD_QUEUE
+      disposition: SUPERSEDED
+      superseded_by: SRC-V3
+      retained_because: >
+        Sole source of two things v3 dropped — the SIHRE acronym expansion
+        ("Self-Improving Heterogeneous Reasoning Ensemble", Lane 05) and the FMEA plus
+        complexity-budget outputs (Lane 02). Retained as historical evidence.
+
+    - id: SRC-LEGACY20
+      title: Recommended Deep Research Report Queue — Legacy SIHRE Plan
+      path: docs/raw_research/CELL_OS_Research_Manifest_v3_Repo_Ingestion_Pack/SIHRE_Recommended_Deep_Research_Report_Queue_Legacy.md
+      sha256: 6d1425608f2d5f2806c18d93a58ce33d7b12d313a261c96d042f01872b817af7
+      bytes: 6660
+      lines: 166
+      origin: EXTERNAL_PROJECT_CONVERSATION
+      date: 2026-09-03
+      role: HISTORICAL_EVIDENCE_ONLY
+      disposition: SUPERSEDED
+      items: 20
+      do_not_dispatch_as_batch: true
+
+    - id: SRC-INGEST-INSTRUCTION
+      title: Claude Phase 1 Addendum — Ingest CELL OS Research Manifest v3
+      path: docs/raw_research/CELL_OS_Research_Manifest_v3_Repo_Ingestion_Pack/CLAUDE_PHASE1_INGEST_CELL_OS_RESEARCH_V3.md
+      sha256: 01cdac380dfce4732135bd898dfd73f20d43de5dadc575aa7c814d2d0c985701
+      bytes: 6550
+      lines: 167
+      role: INSTRUCTION_DOCUMENT
+
+# ---------------------------------------------------------------------------
+# Queues — corrected identifiers
+# ---------------------------------------------------------------------------
+
+queues:
+  - id: R
+    name: Lane programme
+    home: docs/research/
+    items: 19                        # R1..R8, R10..R19 + R06B. ⚠ R9 does not exist and never did.
+    dispatched: 18
+  - id: RB
+    name: Candidate backlog
+    home: docs/research/backlog.yaml
+    items: 26
+    dispatched: 0
+    id_scheme: "RB-00A..RB-00F, then RB-01..RB-20"
+    correction: >
+      ⛔ NOT "RB-01..RB-26". Earlier Phase 1 documents and the v3 ingest instruction cite that
+      contiguous range and reference rows BY POSITION, which shifts every citation by six.
+      Every affected citation is corrected in
+      docs/restructure/09_RESEARCH_MANIFEST_V3_RECONCILIATION.md §11.1.
+    verify_with: >
+      python -c "import yaml; d=yaml.safe_load(open('docs/research/backlog.yaml',encoding='utf-8'));
+      print([m['research_id'] for m in d['missions']])"
+  - id: DR
+    name: SIHRE queue
+    home: docs/raw_research/agent2_sihre_consolidation_pack/research_prompts/
+    items: 8
+    dispatched: 0
+  - id: IN
+    name: Inbound pack prompts
+    home: "docs/raw_research/**"
+    items: 38
+    dispatched: unknown
+    note: "⚠ contains byte-identical duplicates — DC-06, DC-09. A count of 38 distinct overcounts."
+  - id: CELL-DR
+    name: CELL OS forward queue (v3)
+    home: SRC-V3
+    items: 10
+    dispatched: 0
+    status: ACCEPTED_NOT_ACTIVATED
+
+# ---------------------------------------------------------------------------
+# The forward queue — ten lanes, four readiness axes each
+# ---------------------------------------------------------------------------
+
+cell_dr_lanes:
+
+  - id: CELL-DR-01
+    file_identifier: CELL-DR-01-CANONICAL-ARCHITECTURE-DELTA
+    title: Canonical Architecture Validation and Prior-Art Delta
+    run_status: NOT_RUN
+    absorbs: [DR01, RB-01, RB-16, "legacy 1", "legacy 2", "v2 Lane 01", "v2 Lane 02 (prior-art half)"]
+    readiness:
+      RESEARCH_READINESS: READY              # ⭐ P0-A and P0-B COMPLETE 2026-09-03
+      EXPERIMENT_READINESS: NOT_APPLICABLE
+      IMPLEMENTATION_READINESS: NOT_READY
+      PROMOTION_READINESS: NOT_READY
+    blocked_by: []
+    readiness_note: >
+      P0-C (corpus index delta) and P0-D (migration safety) remain OPEN but do not block RESEARCH
+      readiness: both concern index hygiene and file-move safety, neither of which changes the
+      questions this lane asks or the evidence it reads. v3 section 7 made CELL-DR-01
+      "research-ready after P0-A through P0-C"; that P0-C condition is assessed as NON-BINDING for
+      the research axis and is recorded here rather than silently dropped.
+    prompt_amendments_required:
+      - "Attach .agent-platform/RECONCILIATION.md §1.1 — the organizational-compiler novelty claim is
+         already refuted on primary sources (arXiv:2602.13275, arXiv:2607.25446). It is an INPUT,
+         not an open question."
+      - "Restate the blueprint collision correctly: 'Cell Blueprint' has 0 occurrences here;
+         'Cell Image' (4) is omitted by v3; and factory/blueprint.py's actual API nouns are
+         TeamSpec/AgentSpec. See 09 §6.2."
+      - "Replace the anchor factory/forecast.py — it does not exist. factory/projection.py is the
+         nearest match, unverified. (Errata E-01.)"
+      - "⛔ NEW from P0-B: 'Operative Kernel' appears in NO canonical source (0/0/0/0). The canonical
+         term is 'CELL Kernel' (4/4/1/27), and it may denote a DIFFERENT thing — a system-wide
+         deterministic control plane rather than a per-Operative kernel. (Errata E-08, TD-8.)"
+      - "⛔ NEW from P0-B: C-MESH, T-MESH and OS-MESH are defined in NO canonical source. Use the
+         ontology's Mesh Architecture / Mesh Topology / Mesh Hierarchy distinction. (E-09, TD-3.)"
+      - "Cell Mesh means TEAM TOPOLOGY in the ontology and FEDERATION in v0.1 section 5 — a direct
+         contradiction between two surfaced sources. (TD-1.)"
+    owns_decisions: [TD-1, TD-2, TD-3, TD-5, TD-7, TD-8, TD-9, TD-10]
+    decision_record: docs/restructure/14_P0B_EXTRACTION_AND_ONTOLOGY_RECONCILIATION.md
+
+  - id: CELL-DR-02
+    file_identifier: CELL-DR-02-LINK-FABRIC
+    title: Link Semantics, Link Contracts and Link Fabric
+    run_status: NOT_RUN
+    absorbs: [RB-20]
+    new_lane: true
+    new_lane_note: "⭐ Present in no repository queue, and absent as a lane from v2."
+    readiness:
+      RESEARCH_READINESS: READY                 # ⭐ on the RESCOPED spec only — see rescoped_spec
+      EXPERIMENT_READINESS: BLOCKED_LOCAL       # no two-component test harness exists
+      IMPLEMENTATION_READINESS: NOT_READY       # TD-6 (Link vs CellBus) undecided
+      PROMOTION_READINESS: NOT_READY
+    identifier_retained: true                   # no new versioned identifier required
+    rescope_required: true
+    rescope_status: COMPLETE
+    rescope_completed: 2026-09-03
+    rescoped_spec: docs/restructure/16_CELL_DR_02_RESCOPED_SPEC.md
+    rescoped_title: "Canonical Link Architecture Validation, Gap Analysis and Advancement"
+    do_not_dispatch_v3_original: true
+    rescope_note: >
+      ⛔ NOT GREENFIELD. CELL_OS_Canonical_Terminology_vNext.md — unsurfaced, inside
+      CELL_OS_Frontier_Audit_Research_Pack_2026-09-02.zip — already defines Link, Link Contract,
+      Link Type Registry, Link Fabric, Inter-Mesh Link, Cell Link and CELL OS Federation Link,
+      with 16 candidate Link fields and 18 candidate Link semantics, plus a visual
+      (05_VISUALS/Link_Fabric.mmd). Dispatching this lane as written buys back an artifact we hold —
+      the exact failure the DR08 finding identified. Dispatch as "validate, formalise and complete
+      the existing CELL OS Link ontology", with that file attached. Genuine open questions:
+      formal reliability/ordering/idempotency semantics, failure and recovery state machine,
+      compatibility and reconfiguration rules, adversarial and degraded-link tests, and the
+      CellBus boundary.
+    unresolved_collision:
+      terms: [Link Fabric, CellBus]
+      measured: {CellBus: "39 occurrences / 6 files", Link Fabric: "0 occurrences"}
+      note: "Both are defined in the ontology and the definitions overlap. Nothing separates them."
+
+  - id: CELL-DR-03
+    file_identifier: CELL-DR-03-HYPERMESH
+    title: HyperMESH Context, Memory, Evidence and Capability Substrate
+    run_status: NOT_RUN
+    absorbs: [DR04, R06B, RB-03, RB-00E, "legacy 14", "v2 Lane 04"]
+    readiness:
+      RESEARCH_READINESS: BLOCKED_LOCAL        # P0-B, P0-C
+      EXPERIMENT_READINESS: BLOCKED_OBSERVATION
+      IMPLEMENTATION_READINESS: NOT_READY
+      PROMOTION_READINESS: NOT_READY
+
+  - id: CELL-DR-04
+    file_identifier: CELL-DR-04-OPERATIVE-KERNEL
+    title: Operative Kernel, Optional Layers, Lifecycle and Genesis
+    run_status: NOT_RUN
+    absorbs: [DR05, DR06, RB-05, RB-07, RB-18, "legacy 9", "legacy 13", "v2 Lane 03"]
+    readiness:
+      RESEARCH_READINESS: READY_ON_DEPENDENCY  # after CELL-DR-01 and CELL-DR-03
+      EXPERIMENT_READINESS: BLOCKED_OBSERVATION
+      IMPLEMENTATION_READINESS: PARTIAL        # blueprint.py, contract.py, readiness.py are anchors
+      PROMOTION_READINESS: NOT_READY
+    implementation_anchors_verified: [factory/blueprint.py, factory/contract.py, factory/readiness.py]
+    maturity_note: >
+      ⚠ PARTIAL, not PROVEN. The existence and unit testing of contract.py, evals.py and
+      calibration.py prove implementation ANCHORS. They do not prove the complete end-to-end
+      evaluation architecture or operational effectiveness.
+
+  - id: CELL-DR-05
+    file_identifier: CELL-DR-05-SIHRE-COGNITION
+    title: SIHRE Adaptive Cognition and Selective Verification
+    sihre_expansion: "Self-Improving Heterogeneous Reasoning Ensemble"
+    sihre_expansion_basis: "SOURCED to SRC-V2 Lane 05. Not recorded anywhere in this repository before ingest."
+    run_status: NOT_RUN
+    absorbs: [DR02, DR03, RB-11, "legacy 6", "legacy 10", "legacy 11", "legacy 12", "v2 Lane 05"]
+    readiness:
+      RESEARCH_READINESS: READY_ON_DEPENDENCY  # literature + architecture; after DR-03 and DR-04
+      EXPERIMENT_READINESS: BLOCKED_OBSERVATION
+      PROMOTION_READINESS: NOT_READY
+      IMPLEMENTATION_READINESS: NOT_READY
+    experiment_block_note: >
+      ⭐ HARD BLOCK, and it is the strongest in the queue. A covariance estimator over correlated
+      agent failure needs REPEATED COMPARABLE MISSIONS across task classes, conditions and seeds.
+      One non-dry-run mission is a runtime smoke test, not a calibration sample.
+      Measured: 10 recorded runs, 0 PASS, all 7 agent_returned events dry_run=True.
+
+  - id: CELL-DR-06
+    file_identifier: CELL-DR-06-CELL-ADAPT
+    title: CELL ADAPT Optimization and Causal Contribution
+    run_status: NOT_RUN
+    absorbs: [DR06, RB-06, RB-09, RB-12, "legacy 4", "legacy 5", "legacy 7", "legacy 8", "v2 Lane 06"]
+    readiness:
+      RESEARCH_READINESS: READY_ON_DEPENDENCY  # method research; after DR-04 and DR-05
+      EXPERIMENT_READINESS: BLOCKED_OBSERVATION
+      IMPLEMENTATION_READINESS: PARTIAL        # evals.py, calibration.py exist with tests
+      PROMOTION_READINESS: NOT_READY
+    permitted_before_observation:
+      - "Ablation protocols may be DESIGNED before real mission history and exercised on controlled
+         benchmarks. External-validity claims remain blocked until representative observations exist."
+
+  - id: CELL-DR-07
+    file_identifier: CELL-DR-07-MESH-FOUNDRY-MESA
+    title: Cell Meshes, Recursive Control, Foundry and MESA
+    run_status: NOT_RUN
+    absorbs: [DR03, DR07, RB-04, RB-10, "legacy 15", "legacy 17", "v2 Lane 07 (partial)"]
+    readiness:
+      RESEARCH_READINESS: READY_ON_DEPENDENCY  # after DR-02, DR-05, DR-06
+      EXPERIMENT_READINESS: BLOCKED_OBSERVATION
+      IMPLEMENTATION_READINESS: NOT_READY
+      PROMOTION_READINESS: NOT_READY
+    dropped_from_v2_lane_07:
+      - {term: "Evolution Chamber", occurrences: 101, files: 58, note: "⭐ 2nd most-cited concept in the corpus"}
+      - {term: "Stigmergic Fields", occurrences: 55, files: 35}
+      - {term: "Temporal Echelons", occurrences: 39, files: 16}
+      - {term: "Global Workspace", occurrences: null, note: "named in v2 Lane 07 only"}
+
+  - id: CELL-DR-08
+    file_identifier: CELL-DR-08-DOMAIN-PLANE
+    title: Domain Plane, Domain Genome and Cross-Domain Portability
+    run_status: NOT_RUN
+    absorbs: ["v2 Lane 08"]
+    readiness:
+      RESEARCH_READINESS: BLOCKED_LOCAL
+      EXPERIMENT_READINESS: NOT_READY
+      IMPLEMENTATION_READINESS: NOT_READY
+      PROMOTION_READINESS: NOT_READY
+    blocked_by: ["local Domain design record — DOES NOT EXIST"]
+    block_note: >
+      ⛔ The only lane blocked on an absence no research can fix. Its own readiness clause requires
+      a local Domain design record; the entire Domain family measures 0 occurrences across 998 text
+      files AND 0 in the 525-line cross-reference audit of the v0.1 .docx. The design must be
+      WRITTEN before the research is bought. v3 §10 correctly inserts this as a predecessor —
+      and it is a LOCAL WRITE, not a research dispatch.
+
+  - id: CELL-DR-09
+    file_identifier: CELL-DR-09-CELL-Q-OFFLINE-RESEARCH
+    title: CELL-Q Offline Quantitative Research Organization
+    run_status: NOT_RUN
+    absorbs: ["v2 Lane 09", "legacy 18"]
+    readiness:
+      RESEARCH_READINESS: BLOCKED_LOCAL        # after CELL-DR-08
+      EXPERIMENT_READINESS: BLOCKED_LOCAL      # no historical or synthetic dataset present here
+      IMPLEMENTATION_READINESS: NOT_READY
+      PROMOTION_READINESS: OUT_OF_SCOPE
+    boundary:
+      permitted: [historical replay, synthetic environments, offline experiments, paper research,
+                  educational model evaluation]
+      excluded: [live accounts, brokerage connectivity, real-money execution, specific trades,
+                 investment recommendations, credential or account setup]
+      verified: true
+      verified_how: >
+        Three independent statements in SRC-V3 — line 13 (north star), line 174 (common contract
+        rule 16), line 533 (CELL-DR-09 scope and boundary). No counter-statement exists anywhere
+        in v3. SRC-V2 §1 and SRC-LEGACY20 report 18 carry the same restriction.
+
+  - id: CELL-DR-10
+    file_identifier: CELL-DR-10-FINAL-MESA-SYNTHESIS
+    title: Final MESA Synthesis and Build Program
+    run_status: NOT_RUN
+    absorbs: ["legacy 20", "v2 Lane 10"]
+    readiness:
+      RESEARCH_READINESS: NOT_READY
+      EXPERIMENT_READINESS: NOT_APPLICABLE
+      IMPLEMENTATION_READINESS: NOT_READY
+      PROMOTION_READINESS: NOT_READY
+    blocked_by: [all accepted prior lanes]
+
+# ---------------------------------------------------------------------------
+# Local gates — NOT research. These block dispatch.
+# ---------------------------------------------------------------------------
+
+local_gates:
+  - id: P0-A
+    name: Source intake
+    status: COMPLETE
+    evidence: >
+      Three external sources hashed inside the archive and again after extraction, byte-identical;
+      provenance recorded; queue reconciliation produced at
+      docs/restructure/09_RESEARCH_MANIFEST_V3_RECONCILIATION.md; registry and next-action records
+      proposed at docs/restructure/10_ and 12_.
+
+  - id: P0-B
+    name: Make existing canon visible
+    status: COMPLETE
+    completed: 2026-09-03
+    record: docs/restructure/14_P0B_EXTRACTION_AND_ONTOLOGY_RECONCILIATION.md
+    tasks:
+      - {task: "surface CELL_OS_Canonical_Terminology_vNext.md", done: true,
+         extracted_to: "docs/raw_research/CELL_OS_Frontier_Audit_Research_Pack/01_CANONICAL_ONTOLOGY/CELL_OS_Canonical_Terminology_vNext.md",
+         sha256: dfebc108169e16805d8b26f7fab83245277dd08e1bfc9c64d315794133222a95,
+         verification: "3-way: in-archive == on-disk == pack FILE_MANIFEST_SHA256.csv"}
+      - {task: "surface KNOWN_TERMINOLOGY_COLLISIONS.md", done: true,
+         sha256: e0a81e3cf25cb689f714d65ffd192f511d32ecb33c109ae1e550ddd00622380b,
+         verification: "3-way match"}
+      - {task: "convert CELL_OS_Product_Technical_Design_v0.1.docx", done: true,
+         output: docs/raw_research/converted/CELL_OS_Product_Technical_Design_v0.1.md,
+         coverage: "776/776 document.xml runs survive (100%); header/footer dropped (4 runs, page furniture)"}
+      - {task: "convert CELL_OS_Master_...User_Guide_v0.2.docx", done: true,
+         output: docs/raw_research/converted/CELL_OS_Master_Research_Design_Development_Operations_User_Guide_v0.2.md,
+         coverage: "1038/1038 document.xml runs survive (100%)"}
+      - {task: "inspect CELL_OS_Delivery_Backlog_v0.2.xlsx", done: true,
+         method: "stdlib zipfile + ElementTree; cells with t=\"str\", text in <x:v>",
+         result: "3288 text cells, 62323 chars, 7 sheets",
+         warning: "TWO EARLIER READERS RETURNED 0 AND WERE BLIND. sharedStrings.xml is empty; there are no <t> nodes. Only the positive control caught it."}
+      - {task: "inspect 'CELL OS Design Master Brief.pdf'", done: true,
+         method: "pdftotext -layout", output: docs/raw_research/converted/CELL_OS_Design_Master_Brief.txt,
+         result: "576 lines, 16759 chars",
+         note: "Decision D-5 ('no converter here') is REFUTED: pdftotext, fitz and pdfminer are all present."}
+      - {task: "surface NERVE/Switchboard design research (4 artifacts)", done: false,
+         status: OPEN, why: "out of the authorised scope of the P0-B execution pass"}
+    outcome:
+      not_visible_findings_revised: 24
+      all_resolved_to: "ZERO (MEASURED)"
+      instrument_validation: "every instrument proved live by positive control before its zeroes were accepted"
+      note: >
+        Not one v3 PROPOSED_EXTERNAL concept appears in any CELL OS design document at any maturity.
+        PROPOSED_EXTERNAL is confirmed at the strongest available evidence level. This does not
+        reject them; it settles that they are external inputs, not undocumented internal history.
+    residual_open:
+      - "NERVE/Switchboard surfacing (7th task)"
+      - "docs/architecture/canonical/ was NOT created: it is a Phase 2 target and its promotion rule
+         forbids admitting a research ontology (04_PROPOSED_TARGET_STRUCTURE.md section 4 rule 4)"
+
+  - id: P0-C
+    name: Corpus integrity
+    status: OPEN
+    measured:
+      files_in_scope_claimed: 719
+      files_in_scope_measured: 916      # re-measured after P0-B; was 898 before it ran
+      delta: 197
+      regenerate_with: "find docs .agent-platform blueprints missions evals boot-prompts -type f | wc -l"
+      note: >
+        ⚠ v3 section 2 cites 888; it was 898 before P0-B and is 916 after. ⭐ Surfacing canon ADDS
+        unindexed files, so P0-C's gap grows every time P0-B does its job. Do not restate by hand.
+    tasks: [run the index delta mechanism, add missing CELL OS records,
+            preserve existing indexes and provenance, identify duplicate and superseded artifacts]
+    blocks: [CELL-DR-01, CELL-DR-03]
+
+  - id: P0-D
+    name: Migration safety
+    status: OPEN
+    measured:
+      worktrees: 5
+      worktree_list:
+        - {path: ".", head: 827f871, branch: main}
+        - {path: ".worktrees/finalization", head: e7f92f3, branch: mission/marketing-model-finalization}
+        - {path: ".worktrees/mission", head: efb05cf, branch: mission/marketing-model-v1}
+        - {path: ".worktrees/reliability", head: b338324, branch: reliability/recurrence-preflight}
+        - {path: ".worktrees/switchboard", head: 1d6b3a4, branch: switchboard/p0}
+      modified_tracked_files: 18
+      note: "⚠ v3 §5 says seventeen. Re-measured 18. Regenerate with: git status --porcelain | grep -c '^ M'"
+      untracked_paths: 54
+      test_baseline: "1,016 passed / 2 failed / 2 xfailed — ⚠ INHERITED, NOT RE-MEASURED this pass"
+    tasks: [resolve the active-worktree decision, identify the authoritative checkout,
+            protect the 18 overlapping modified files, re-measure and preserve the AMBER baseline,
+            remeasure HEAD before each migration batch]
+
+  - id: P0-E
+    name: Observation generation
+    status: OPEN
+    requirement: "at least one bounded, non-dry-run, non-financial repository mission with acceptance evidence"
+    backlog_id: RB-00C          # ⛔ NOT "RB-03" — see queues.RB.correction
+    measured_today:
+      runs_recorded: 10
+      runs_passed: 0
+      agent_returned_events: 7
+      all_dry_run: true
+    gates: [local covariance estimation, empirical ablation, homeostasis threshold calibration,
+            any performance claim]
+    does_not_gate: [prior-art research, architecture design, mathematical formulation,
+                    experiment design, synthetic fault injection]
+    sequencing_correction: >
+      ⛔ v3 §10 schedules P0-E in the "Observation" row AFTER Wave G — but the lanes it unblocks
+      (CELL-DR-05, 06, 07) run at Waves D and E. The binding constraint is scheduled after the work
+      it gates. MOVE P0-E TO LOCAL 0, or run it concurrently with Wave A.
+    dependency_correction: >
+      ⛔ v3 §5 opens P0-E with "After the safe migration gates permit it". Nothing about completing
+      one agent run requires a documentation restructure first. UNBIND P0-E FROM P0-D.
+
+# ---------------------------------------------------------------------------
+# Proposed external design inputs — declared, unassigned or assigned
+# ---------------------------------------------------------------------------
+
+external_design_inputs:
+  maturity: PROPOSED_EXTERNAL
+  provenance: SRC-V3 §4.2
+  rule: >
+    Repository absence does not automatically reject an approved research question. It means the
+    concept needs provenance, specification, research and evaluation before promotion.
+
+  assigned_to_a_lane:
+    - {concept: Operative Canonical Layered Model, occurrences: 0, lane: CELL-DR-04}
+    - {concept: mandatory Operative Kernel and optional layers, occurrences: 0, lane: CELL-DR-01/04}
+    - {concept: Mission Compiler, occurrences: 3, lane: CELL-DR-04}
+    - {concept: Claims–Evidence Graph, occurrences: 0, lane: CELL-DR-03}
+    - {concept: Capability Graph, occurrences: 2, lane: CELL-DR-03}
+    - {concept: Shadow Execution Twin, occurrences: 0, lane: CELL-DR-07,
+       note: "⚠ 'Shadow Twin' measures 48/25 — v3 uses a variant name with 0 occurrences"}
+    - {concept: Earned Authority, occurrences: 1, lane: CELL-DR-04}
+    - {concept: Experience-to-Doctrine Compiler, occurrences: 0, lane: CELL-DR-03}
+    - {concept: Domain Plane, occurrences: 0, lane: CELL-DR-08}
+    - {concept: Domain Genome and Compiler, occurrences: 0, lane: CELL-DR-08}
+    - {concept: Domain Fabric, occurrences: 0, lane: CELL-DR-08}
+    - {concept: Domain Data Plane, occurrences: 0, lane: CELL-DR-08}
+    - {concept: MESA, occurrences: 0, lane: CELL-DR-07/10}
+    - {concept: Recursive Operative Genesis, occurrences: 0, lane: CELL-DR-04}
+    - {concept: CELL-Q, occurrences: 0, lane: CELL-DR-09}
+
+  declared_but_unassigned:
+    note: >
+      ⛔ v3 §4.2 declares these as approved design inputs and then assigns none of them to a lane.
+      Recommended disposition DEFERRED_EXPERIMENT — keep them registered, open no lane until
+      CELL-DR-01 rules on whether the layered model needs them.
+    concepts:
+      - {concept: Causal World Model, occurrences: 0, disposition: DEFERRED_EXPERIMENT}
+      - {concept: Temporal Executive, occurrences: 0, disposition: DEFERRED_EXPERIMENT}
+      - {concept: Operative Immune System, occurrences: 0, disposition: DEFERRED_EXPERIMENT}
+      - {concept: Cognitive Economics Engine, occurrences: 0, disposition: DEFERRED_EXPERIMENT}
+      - {concept: capability envelopes, occurrences: 0, disposition: DEFERRED_EXPERIMENT}
+
+  absent_verdict_basis: >
+    ⭐ UPGRADED 2026-09-03 BY GATE P0-B — verdict is now ZERO (MEASURED), not ABSENT (CORROBORATED).
+    All four CELL OS binaries have been read: both .docx converted at 100% body coverage, the .xlsx
+    read (3288 text cells) and the .pdf extracted (576 lines). Every concept returns 0 across all
+    four, plus the ontology and the 998-file text census. Every instrument was proved live by a
+    positive control BEFORE its zeroes were accepted — the .xlsx required three readers, the first
+    two of which returned a clean and entirely false table of zeroes.
+    Record: docs/restructure/14_P0B_EXTRACTION_AND_ONTOLOGY_RECONCILIATION.md section 5.
+
+# ---------------------------------------------------------------------------
+# Terminology decisions outstanding
+# ---------------------------------------------------------------------------
+
+terminology_decisions:
+  authoritative_record: docs/restructure/14_P0B_EXTRACTION_AND_ONTOLOGY_RECONCILIATION.md   # section 7
+  total_open_after_p0b: 10                       # ⭐ was 6; P0-B surfaced TD-8, TD-9, TD-10 and split TD-2
+  status: AWAITING_USER_APPROVAL                 # ⛔ P0-B surfaces and recommends; it does not rule
+  covered_by_existing_collision_register: 2      # of 6 named in the ingest instruction
+  register_path_in_archive: "CELL_OS_Frontier_Audit_Research_Pack/01_CANONICAL_ONTOLOGY/KNOWN_TERMINOLOGY_COLLISIONS.md"
+
+  decisions:
+
+  - id: TD-1
+    decision: "Cell Mesh — team topology or OS federation?"
+    covered_by_register: true
+    status: OPEN
+    owner: CELL-DR-01
+    surfaced_by: P0-B
+    measured: {ontology: "12 — 'a coordinated team/topology of Operatives. A Cell Mesh is not OS federation.'",
+               v0_1: "11 — section 5 heading reads 'CELL Mesh - Federation of CELL OS Nodes'"}
+    severity: "⛔ DIRECT CONTRADICTION between two surfaced canonical sources."
+    recommendation: >
+      Adopt the ontology reading. v0.2 already behaves this way — it drops Cell Mesh from its object
+      model and uses Federation — but never says it is doing so, and v0.1 remains in the corpus
+      asserting the opposite. Requires marking v0.1 section 5 superseded.
+    note: "The former TD-1 (Operative Cell versus Cell) is now TD-10; the former TD-2 (blueprint family) is now TD-7. Numbering follows document 14 section 7, the authoritative record."
+
+  - id: TD-2
+    decision: "Federation layer name"
+    covered_by_register: partial
+    status: OPEN
+    owner: CELL-DR-01
+    surfaced_by: P0-B
+    measured: {Federation: "v0.1=17, v0.2=3, ontology=7"}
+    recommendation: >
+      Keep 'Federation' — the term both design documents already use in their object models.
+      The ontology offers five alternatives (CELL Federation, CELL Fabric, InterCELL, CELL Network,
+      Inter-OS Fabric) and rules only that it must not be called Cell Mesh.
+
+  - id: TD-7
+    decision: "Blueprint / Genome / Image / TeamSpec — one family, five names"
+    covered_by_register: false
+    status: RESTATED
+    owner: CELL-DR-01
+    correction: >
+      ⛔ v3 §4.3 is mis-stated in both directions. MEASURED: "Cell Blueprint" = 0 occurrences here;
+      "Cell Genome" = 7/3; "Configuration Genome" = 1/1; and "Cell Image" = 4/3, which v3 omits.
+      The canonical ontology already carries a single heading "Cell Blueprint / Cell Genome"
+      defining them as ONE concept (the declarative versioned source spec), with "Cell Image"
+      separately defined as the resolved immutable deployment artifact — a real distinction,
+      not a collision.
+      ⭐ And the anchor is a FILENAME, not an API: factory/blueprint.py exposes TeamSpec and
+      AgentSpec, nouns that appear in no CELL OS design document and are the only names in the
+      family with running code and tests.
+    required_decision: >
+      Pick ONE name for the declarative spec (Blueprint | Genome); keep Cell Image as the resolved
+      artifact; state the mapping to TeamSpec/AgentSpec; retire Configuration Genome (1 occurrence).
+      "Do not introduce a fourth synonym" arrives when there are already five names in play.
+
+  - id: TD-3
+    decision: "C-MESH, T-MESH and OS-MESH"
+    covered_by_register: partial
+    status: FRAMED_NOT_TAKEN
+    owner: CELL-DR-01
+    measured: {OS-MESH: "17/1", T-MESH: "13/5", C-MESH: "11/4"}
+
+  - id: TD-4
+    decision: "SIHRE expansion"
+    covered_by_register: false
+    status: CLOSED
+    resolution: "Self-Improving Heterogeneous Reasoning Ensemble"
+    basis: SOURCED
+    source: "SRC-V2 Lane 05"
+    note: >
+      ⭐ Closed by ingesting v2. SIHRE measures 121 occurrences across 26 files in this repository
+      and its expansion was recorded nowhere in it. The canonical ontology never expands the acronym.
+
+  - id: TD-5
+    decision: "OPC"
+    covered_by_register: false
+    status: OPEN
+    owner: CELL-DR-01
+    measured: {occurrences: 2, files: 2, both: "product/marketing"}
+    evidence:
+      - "boot-prompts/cell-os-deck-2026-09-03.md:27 -> docs/diagrams/CELL OS - Building your first OPC.png"
+      - "docs/marketing/cell-os-launch-v1/cell-os-deck.html:1549 -> Build-Your-First-OPC"
+    hypothesis: "Most likely abbreviates 'Operative Cell'. ⚠ STATED AS A HYPOTHESIS — nothing in the repository states it."
+    severity: >
+      ⛔ Already on a customer-facing deck and a diagram, with no definition anywhere and absent
+      from the canonical ontology. Decide it or remove it from the deck.
+
+  - id: TD-6
+    decision: "Link versus CellBus semantics"
+    covered_by_register: false
+    status: OPEN
+    owner: CELL-DR-02
+    measured: {CellBus: "39/6", Link Fabric: "0", Link Contract: "0", Link Type Registry: "0"}
+    note: "Both defined in the ontology; the definitions overlap and nothing separates them."
+
+  - id: TD-8
+    decision: "Operative Kernel versus CELL Kernel"
+    covered_by_register: false
+    status: OPEN
+    owner: CELL-DR-01
+    surfaced_by: P0-B
+    measured: {Operative Kernel: "0/0/0/0 — absent from every canonical source",
+               CELL Kernel: "v0.1=4, v0.2=4, ontology=1, xlsx=27"}
+    severity: >
+      ⛔ v3 CELL-DR-04 is built around "Operative Kernel", a term no canonical source uses. And this
+      is not merely a rename: v3's Operative Kernel is PER-OPERATIVE, while the canonical CELL Kernel
+      is a SYSTEM-WIDE deterministic control plane (v0.2 section 4.1). They may be different things.
+    recommendation: "CELL Kernel is canonical. Decide the per-Operative question before CELL-DR-04."
+
+  - id: TD-9
+    decision: "Organism versus Organization"
+    covered_by_register: partial
+    status: OPEN
+    owner: CELL-DR-01
+    surfaced_by: P0-B
+    measured: {Organism: "v0.1=11, v0.2=3 — the entity in BOTH object models",
+               Organization: "ontology core hierarchy"}
+    recommendation: >
+      ⛔ A genuine tie requiring a human. Two design documents use Organism in their object models;
+      the ontology hierarchy uses Organization and flags the audit itself.
+
+  - id: TD-10
+    decision: "Operative Cell — retire or define"
+    covered_by_register: true
+    status: OPEN
+    owner: CELL-DR-01
+    surfaced_by: P0-B
+    measured: {Operative Cell: "v0.1=0, v0.2=2, ontology=2 — every occurrence is a COLLISION ENTRY asking whether it should exist"}
+    recommendation: "Retire. Nothing defines it; Cell is fully specified in three documents."
+
+# ---------------------------------------------------------------------------
+# Missing topics — owned by no v3 lane
+# ---------------------------------------------------------------------------
+
+missing_topics:
+  - {id: MT-1, topic: "Failure-mode & effects analysis + complexity budget",
+     source: ["v2 Lane 02", "legacy report 3"], disposition: NARROW_FOLLOWUP,
+     note: "⭐ v3 folds v2 Lane 02's prior-art half into CELL-DR-01 and drops the FMEA half entirely. v3 §9 never mentions v2 Lane 02."}
+  - {id: MT-2, topic: "Evolution Chamber", occurrences: 101, files: 58,
+     source: ["v2 Lane 01", "canonical ontology"], disposition: NARROW_FOLLOWUP,
+     note: "⭐ 2nd most-cited concept in the corpus. In no v3 lane scope."}
+  - {id: MT-3, topic: "Stigmergic Fields, Global Workspace, Temporal Echelons",
+     occurrences: "55/35 and 39/16", source: ["v2 Lane 07"], disposition: NARROW_FOLLOWUP}
+  - {id: MT-4, topic: "Operative Performance & Capability Lab",
+     source: ["legacy report 19"], disposition: NARROW_FOLLOWUP,
+     note: "Fragments in CELL-DR-04 readiness and CELL-DR-06 ablation; no lane owns the benchmark suite end-to-end. 'Capability Lab' = 0 occurrences."}
+  - {id: MT-5, topic: "Observability and trace standards for agent runs",
+     source: [RB-02], priority: HIGH, disposition: NARROW_FOLLOWUP}
+  - {id: MT-6, topic: "Isolation and adversarial security threat model",
+     source: [RB-08], priority: HIGH, disposition: NARROW_FOLLOWUP}
+
+# ---------------------------------------------------------------------------
+# Summary
+# ---------------------------------------------------------------------------
+
+summary:
+  by_disposition:
+    COMPLETED_REUSE: 18          # R1-R8, R10-R19
+    MERGED_INTO_V3: 38
+    NARROW_FOLLOWUP: 11
+    LOCAL_MEASUREMENT: 7
+    IMPLEMENTATION_TICKET: 4
+    DEFERRED_EXPERIMENT: 8
+    SUPERSEDED: 5
+    REJECTED: 0
+    STATUS_UNKNOWN: 38           # inbound pack prompts, deduplicated
+  note: >
+    ⚠ These totals are AUTHORED, not GENERATED, and several prompts carry a split disposition
+    (a merged research half plus a deferred empirical half) counted under both. They are a summary
+    of this document's tables, not an independent measurement. Do not quote them without the
+    generator. regenerate_with: python scripts/build_research_registry.py  # NOT YET WRITTEN
+  dispatched_this_pass: 0
+  phase_2_started: false

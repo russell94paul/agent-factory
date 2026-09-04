@@ -1,0 +1,1826 @@
+<title>CELL OS Command Deck</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* ═══ Palette sampled from the CELL//OS logo: navy wordmark, blue→violet "OS"
+       gradient, cyan/blue/violet orbital nodes. Single dark visual world,
+       deliberately — every colour painted explicitly so the page holds on any
+       host ground. ═══════════════════════════════════════════════════════ */
+:root{
+  --void:#050912; --deep:#080F1F; --surface:#0C1428; --raise:#111C36;
+  --edge:#1A2744; --edge-hi:#26375C;
+  --blue:#2B6BFF; --blue-dim:#1B4FCC; --cyan:#22D3EE; --violet:#7C3AED;
+  --magenta:#A855F7; --amber:#F0A63C; --green:#34D399;
+  --bone:#EAF0FF; --slate:#8FA0C4; --slate-dim:#5B6B8C;
+  --grad:linear-gradient(100deg,#2B6BFF 0%,#7C3AED 55%,#A855F7 100%);
+  --disp:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --ease:cubic-bezier(.22,.61,.36,1);
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--void);color:var(--bone);font:400 14.5px/1.65 var(--disp);
+  -webkit-font-smoothing:antialiased}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(1100px 620px at 50% -12%,rgba(43,107,255,.16),transparent 70%),
+             radial-gradient(760px 520px at 88% 8%,rgba(124,58,237,.11),transparent 70%)}
+.wrap{position:relative;z-index:1;max-width:1220px;margin:0 auto;padding:0 22px 90px}
+h1,h2,h3,h4{margin:0;text-wrap:balance;letter-spacing:-.015em}
+p{margin:0 0 12px}
+a{color:var(--cyan);text-decoration:none;border-bottom:1px solid rgba(34,211,238,.3)}
+a:hover{border-bottom-color:var(--cyan)}
+code,.m{font-family:var(--mono)}
+
+/* ═══ hero: the logo, glowing and hovering ═══ */
+.hero{padding:52px 0 10px;text-align:center}
+.logo-stage{position:relative;display:inline-block;padding:26px 40px}
+.logo-stage:before{content:"";position:absolute;inset:0;border-radius:50%;
+  background:radial-gradient(closest-side,rgba(43,107,255,.42),rgba(124,58,237,.20) 55%,transparent 78%);
+  filter:blur(26px);animation:bloom 5.5s var(--ease) infinite}
+.logo{position:relative;display:block;width:min(78vw,460px);height:auto;
+  filter:brightness(1.42) saturate(1.12)
+         drop-shadow(0 0 14px rgba(43,107,255,.62))
+         drop-shadow(0 0 40px rgba(124,58,237,.40))
+         drop-shadow(0 0 78px rgba(34,211,238,.16));
+  animation:hover 6.5s ease-in-out infinite}
+@keyframes hover{0%,100%{transform:translateY(-5px)}50%{transform:translateY(6px)}}
+@keyframes bloom{0%,100%{opacity:.62;transform:scale(.94)}50%{opacity:1;transform:scale(1.06)}}
+.hero .tag{margin-top:16px;font:500 11px/1 var(--mono);letter-spacing:.34em;
+  text-transform:uppercase;color:var(--slate)}
+.hero .thesis{margin:20px auto 0;max-width:62ch;font-size:17px;line-height:1.62;color:var(--bone)}
+.hero .thesis b{background:var(--grad);-webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;font-weight:600}
+
+/* ═══ maturity banner ═══ */
+.truth{display:flex;gap:14px;align-items:flex-start;max-width:900px;margin:22px auto 0;
+  padding:13px 16px;border:1px solid rgba(240,166,60,.3);border-left:2px solid var(--amber);
+  background:rgba(240,166,60,.05);border-radius:3px;text-align:left}
+.truth .ic{color:var(--amber);font-size:15px;line-height:1.4}
+.truth p{margin:0;font-size:12.5px;line-height:1.6;color:var(--slate)}
+.truth b{color:var(--bone);font-weight:600}
+
+/* ═══ tabs ═══ */
+.tabs{position:sticky;top:0;z-index:20;margin:16px 0 0;
+  background:rgba(5,9,18,.92);backdrop-filter:blur(12px);
+  border-top:1px solid var(--edge);border-bottom:1px solid var(--edge)}
+.tabs-in{max-width:1220px;margin:0 auto;padding:0 22px;display:flex;gap:2px;overflow-x:auto;
+  scrollbar-width:thin}
+.tab{flex:0 0 auto;background:none;border:0;border-bottom:2px solid transparent;
+  padding:14px 15px 12px;cursor:pointer;color:var(--slate-dim);
+  font:500 11.5px/1 var(--mono);letter-spacing:.11em;text-transform:uppercase;
+  transition:color .16s ease-out,border-color .16s ease-out;white-space:nowrap}
+.tab:hover{color:var(--slate)}
+.tab[aria-selected="true"]{color:var(--bone);border-bottom-color:var(--blue)}
+.tab:focus-visible{outline:2px solid var(--cyan);outline-offset:-2px}
+.tab i{font-style:normal;color:var(--slate-dim);margin-right:7px}
+.tab[aria-selected="true"] i{background:var(--grad);-webkit-background-clip:text;
+  background-clip:text;-webkit-text-fill-color:transparent}
+
+/* ═══ generic section furniture ═══ */
+.panel{padding-top:38px}
+.sec{margin-bottom:46px}
+.sec>h2{font:600 20px/1.25 var(--disp);margin-bottom:7px}
+.sec>.lede{color:var(--slate);max-width:70ch;margin-bottom:20px;font-size:14px}
+.eyebrow{font:500 10px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;
+  color:var(--slate-dim);margin-bottom:9px}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(290px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(232px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+.card{background:var(--surface);border:1px solid var(--edge);border-radius:4px;padding:17px 18px}
+.card h3{font:600 14.5px/1.3 var(--disp);margin-bottom:7px}
+.card h3 .n{font-family:var(--mono);font-size:11px;color:var(--slate-dim);margin-right:8px}
+.card p{font-size:13px;line-height:1.6;color:var(--slate);margin:0}
+.card p+p{margin-top:9px}
+.card.accent{border-left:2px solid var(--blue)}
+.pill{display:inline-block;font:400 9.5px/1 var(--mono);letter-spacing:.1em;padding:4px 7px;
+  border:1px solid var(--edge-hi);border-radius:2px;color:var(--slate);white-space:nowrap}
+.pill.planned{border-color:var(--slate-dim);color:var(--slate-dim)}
+.pill.proto{border-color:var(--violet);color:#b69bff}
+.pill.impl{border-color:var(--blue);color:#7ba6ff}
+.pill.cert{border-color:var(--green);color:var(--green)}
+.pill.frontier{border-color:var(--amber);color:var(--amber)}
+.tblwrap{overflow-x:auto;border:1px solid var(--edge);border-radius:4px;background:var(--surface)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--edge);vertical-align:top}
+th{font:500 9.5px/1.4 var(--mono);letter-spacing:.11em;text-transform:uppercase;
+  color:var(--slate-dim);background:var(--deep);position:sticky;top:0}
+td{color:var(--slate)}
+td b,td strong{color:var(--bone);font-weight:600}
+td.m{font-family:var(--mono);font-size:11.5px;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+tr:hover td{background:rgba(43,107,255,.045)}
+
+/* ═══ architecture stack ═══ */
+.stack{display:flex;flex-direction:column;gap:5px}
+.layer{display:grid;grid-template-columns:46px 1fr auto;gap:14px;align-items:center;
+  width:100%;text-align:left;background:var(--surface);border:1px solid var(--edge);
+  border-left:3px solid var(--lc,var(--blue));border-radius:3px;padding:12px 15px;cursor:pointer;
+  transition:background .16s ease-out,transform .16s var(--ease)}
+.layer:hover{background:var(--raise);transform:translateX(3px)}
+.layer:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.layer[aria-expanded="true"]{background:var(--raise);box-shadow:inset 0 0 0 1px var(--lc)}
+.layer .num{font:600 17px/1 var(--mono);color:var(--lc,var(--blue));text-align:center;
+  font-variant-numeric:tabular-nums}
+.layer .nm{font:600 13.5px/1.3 var(--disp);color:var(--bone);text-transform:uppercase;
+  letter-spacing:.03em}
+.layer .sub{font:400 11.5px/1.4 var(--disp);color:var(--slate);margin-top:2px}
+.layer .cnt{font:400 10px/1 var(--mono);color:var(--slate-dim);letter-spacing:.08em}
+.flowlbl{text-align:center;font:400 9.5px/1 var(--mono);letter-spacing:.14em;
+  color:var(--slate-dim);padding:2px 0}
+.flowlbl:before{content:"↑ "}
+/* native disclosure so a layer opens with zero JS */
+.ldet{border:0}
+.ldet>summary{list-style:none}
+.ldet>summary::-webkit-details-marker{display:none}
+.ldet>summary::marker{content:""}
+.ldet>summary:after{content:"OPEN";font:400 9px/1 var(--mono);letter-spacing:.14em;
+  color:var(--slate-dim);border:1px solid var(--edge-hi);border-radius:2px;padding:5px 7px}
+.ldet[open]>summary:after{content:"CLOSE";color:var(--lc);border-color:var(--lc)}
+.ldet[open]>summary{border-radius:3px 3px 0 0;background:var(--raise);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--lc) 34%,transparent)}
+.ldet>summary{display:grid;grid-template-columns:46px 1fr auto auto;gap:14px}
+.ldetail{border:1px solid var(--edge);border-top:0;border-radius:0 0 4px 4px;
+  background:var(--deep);padding:18px 20px}
+.ldetail h4{font:600 12px/1 var(--mono);letter-spacing:.13em;text-transform:uppercase;
+  color:var(--slate-dim);margin-bottom:11px}
+.svcs{display:grid;grid-template-columns:repeat(auto-fill,minmax(178px,1fr));gap:8px}
+.svc{border:1px solid var(--edge);border-radius:3px;padding:9px 11px;background:var(--surface)}
+.svc .s1{font:500 12px/1.3 var(--disp);color:var(--bone)}
+.svc .s2{font:400 10px/1.3 var(--mono);color:var(--slate-dim);margin-top:3px}
+.io{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:16px}
+.io .box{border:1px solid var(--edge);border-radius:3px;padding:11px 13px;background:var(--surface)}
+.io .box .k{font:500 9.5px/1 var(--mono);letter-spacing:.13em;text-transform:uppercase;
+  color:var(--slate-dim);margin-bottom:6px}
+.io .box .v{font-size:12.5px;color:var(--slate);line-height:1.55}
+.rails{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+@media(max-width:660px){.rails{grid-template-columns:1fr}}
+.rail{border:1px solid var(--edge);border-radius:4px;background:var(--surface);padding:14px 16px}
+.rail .k{font:500 9.5px/1 var(--mono);letter-spacing:.15em;text-transform:uppercase;
+  color:var(--slate-dim);margin-bottom:10px}
+.rail ul{margin:0;padding-left:16px;font-size:12.5px;color:var(--slate);line-height:1.75}
+.substrate{display:flex;flex-wrap:wrap;gap:7px;margin-top:5px}
+.substrate span{font:400 10.5px/1 var(--mono);padding:7px 10px;border:1px solid var(--edge);
+  border-radius:2px;color:var(--slate);background:var(--surface)}
+
+/* ═══ stepper (first operative) ═══ */
+.journey{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:22px}
+.jstep{flex:0 0 auto;min-width:158px;background:var(--surface);border:1px solid var(--edge);
+  border-top:2px solid var(--jc,var(--blue));border-radius:3px;padding:12px 13px;cursor:pointer;
+  text-align:left;transition:background .16s ease-out}
+.jstep:hover{background:var(--raise)}
+.jstep[aria-selected="true"]{background:var(--raise);box-shadow:0 0 0 1px var(--jc)}
+.jstep:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.jstep .jn{display:inline-grid;place-items:center;width:17px;height:17px;border-radius:50%;
+  background:var(--jc);color:#050912;font:600 10px/1 var(--mono);margin-bottom:7px}
+.jstep .jt{font:600 11.5px/1.3 var(--disp);color:var(--bone);text-transform:uppercase;
+  letter-spacing:.04em}
+.jstep .jd{font-size:11px;line-height:1.5;color:var(--slate);margin-top:4px}
+.screen{border:1px solid var(--edge);border-radius:4px;background:var(--surface);overflow:hidden}
+.screen .bar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--deep);
+  border-bottom:1px solid var(--edge)}
+.screen .bar .dot{width:8px;height:8px;border-radius:50%;background:var(--edge-hi)}
+.screen .bar .ttl{font:500 11px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;
+  color:var(--slate)}
+.screen .body{padding:18px 20px}
+.mock{display:grid;gap:12px}
+.field{display:grid;grid-template-columns:132px 1fr;gap:12px;align-items:center}
+.field .lb{font:400 10.5px/1.3 var(--mono);letter-spacing:.06em;color:var(--slate-dim);
+  text-transform:uppercase}
+.field .in{border:1px solid var(--edge-hi);border-radius:2px;padding:8px 11px;
+  background:var(--deep);font:400 12.5px/1.3 var(--disp);color:var(--bone)}
+.field .in.sel:after{content:"⌄";float:right;color:var(--slate-dim)}
+.metricrow{display:flex;justify-content:space-between;align-items:center;padding:8px 0;
+  border-bottom:1px solid var(--edge);font-size:12.5px;color:var(--slate)}
+.metricrow:last-child{border-bottom:0}
+.metricrow b{color:var(--bone);font-family:var(--mono);font-size:12px}
+.bararea{height:5px;border-radius:3px;background:var(--edge);overflow:hidden;min-width:78px}
+.bararea i{display:block;height:100%;background:var(--grad);border-radius:3px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:9px}
+.tile{border:1px solid var(--edge);border-radius:3px;padding:11px 12px;background:var(--deep)}
+.tile .tv{font:600 19px/1 var(--disp);color:var(--bone);font-variant-numeric:tabular-nums}
+.tile .tk{font:400 9.5px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;
+  color:var(--slate-dim);margin-top:6px}
+.chk{display:grid;gap:7px;font-size:12.5px;color:var(--slate)}
+.chk div:before{content:"✓";color:var(--green);margin-right:9px;font-family:var(--mono)}
+.chk div.pend:before{content:"◐";color:var(--cyan)}
+
+/* ═══ prototype ═══ */
+.builder{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:16px}
+@media(max-width:840px){.builder{grid-template-columns:1fr}}
+.ctrl{display:grid;gap:15px}
+.ctrl label{display:block;font:500 9.5px/1 var(--mono);letter-spacing:.13em;
+  text-transform:uppercase;color:var(--slate-dim);margin-bottom:7px}
+input[type=text]{width:100%;background:var(--deep);border:1px solid var(--edge-hi);border-radius:2px;
+  padding:9px 11px;color:var(--bone);font:400 13px/1.3 var(--disp)}
+input[type=text]:focus{outline:0;border-color:var(--blue)}
+input[type=range]{width:100%;accent-color:var(--blue)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{background:var(--deep);border:1px solid var(--edge-hi);border-radius:2px;padding:7px 10px;
+  color:var(--slate);font:400 11px/1 var(--mono);cursor:pointer;transition:all .14s ease-out}
+.chip:hover{color:var(--bone);border-color:var(--slate-dim)}
+.chip[aria-pressed="true"]{border-color:var(--rc,var(--blue));color:var(--bone);
+  background:color-mix(in srgb,var(--rc,var(--blue)) 16%,var(--deep))}
+.chip:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
+.btn{background:var(--grad);border:0;border-radius:3px;padding:11px 17px;color:#fff;
+  font:600 11.5px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;
+  transition:filter .14s ease-out}
+.btn:hover{filter:brightness(1.16)}
+.btn:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.btn.ghost{background:none;border:1px solid var(--edge-hi);color:var(--slate)}
+.btn.ghost:hover{color:var(--bone);border-color:var(--blue);filter:none}
+.roster{display:grid;gap:7px;margin-top:4px}
+.op{display:grid;grid-template-columns:30px 1fr auto;gap:11px;align-items:center;
+  background:var(--deep);border:1px solid var(--edge);border-left:2px solid var(--oc);
+  border-radius:3px;padding:9px 11px}
+.op .av{width:26px;height:26px;border-radius:6px;background:color-mix(in srgb,var(--oc) 22%,var(--deep));
+  border:1px solid var(--oc);display:grid;place-items:center;font:600 10px/1 var(--mono);
+  color:var(--oc);box-shadow:0 0 12px -2px var(--oc)}
+.op .on{font:500 12.5px/1.25 var(--disp);color:var(--bone)}
+.op .or{font:400 10px/1.3 var(--mono);color:var(--slate-dim)}
+.op .rm{background:none;border:0;color:var(--slate-dim);cursor:pointer;font-size:15px;padding:2px 5px}
+.op .rm:hover{color:var(--amber)}
+.meshview{border:1px solid var(--edge);border-radius:4px;background:var(--deep);padding:14px;
+  display:grid;gap:12px}
+.meshview svg{width:100%;height:auto;display:block}
+.empty{text-align:center;color:var(--slate-dim);font-size:12.5px;padding:26px 14px;
+  border:1px dashed var(--edge-hi);border-radius:3px}
+.simrow{display:grid;grid-template-columns:96px 1fr 44px;gap:11px;align-items:center;
+  font:400 11px/1 var(--mono);color:var(--slate)}
+.simrow b{color:var(--bone);text-align:right;font-variant-numeric:tabular-nums}
+.score{display:flex;align-items:baseline;gap:11px;padding:14px 0 4px}
+.score .sv{font:700 40px/1 var(--disp);font-variant-numeric:tabular-nums;
+  background:var(--grad);-webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent}
+.score .sl{font:400 10px/1.4 var(--mono);letter-spacing:.1em;color:var(--slate-dim);
+  text-transform:uppercase}
+.note{font-size:12px;line-height:1.6;color:var(--slate-dim);border-left:2px solid var(--edge-hi);
+  padding-left:12px;margin-top:14px}
+
+/* ═══ use cases ═══ */
+.uc{background:var(--surface);border:1px solid var(--edge);border-radius:4px;overflow:hidden}
+.uc .uch{display:flex;gap:12px;align-items:flex-start;padding:15px 17px;
+  border-bottom:1px solid var(--edge);background:var(--deep)}
+.uc .uch .ucn{font:600 12px/1 var(--mono);color:var(--slate-dim);padding-top:3px}
+.uc .uch h3{font:600 14.5px/1.3 var(--disp);flex:1}
+.uc .ucb{padding:15px 17px;display:grid;gap:11px}
+.uc dl{margin:0;display:grid;grid-template-columns:104px 1fr;gap:7px 12px}
+.uc dt{font:500 9.5px/1.5 var(--mono);letter-spacing:.1em;text-transform:uppercase;
+  color:var(--slate-dim)}
+.uc dd{margin:0;font-size:12.5px;line-height:1.6;color:var(--slate)}
+.uc dd b{color:var(--bone)}
+.gate{border:1px solid rgba(240,166,60,.28);border-left:2px solid var(--amber);
+  background:rgba(240,166,60,.05);border-radius:0 3px 3px 0;padding:10px 13px;
+  font-size:12px;line-height:1.6;color:var(--slate)}
+.gate b{color:var(--amber);font-weight:600}
+
+/* ═══ film tab ═══ */
+.filmlink{display:flex;gap:16px;align-items:center;flex-wrap:wrap;
+  border:1px solid var(--edge);border-radius:4px;background:var(--surface);padding:18px 20px}
+.filmlink .fs{display:flex;gap:22px;flex-wrap:wrap;font:400 10px/1 var(--mono);
+  letter-spacing:.09em;color:var(--slate-dim)}
+.filmlink .fs b{display:block;font-family:var(--disp);font-size:17px;font-weight:600;
+  color:var(--bone);margin-bottom:5px;font-variant-numeric:tabular-nums}
+
+footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--edge);
+  font:400 11.5px/1.75 var(--mono);color:var(--slate-dim)}
+footer b{color:var(--slate)}
+
+/* motion gates */
+.js .rv{opacity:0;transform:translateY(8px);
+  transition:opacity .5s var(--ease),transform .5s var(--ease)}
+.js .rv.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){
+  .js .rv,.js .rv.in{opacity:1!important;transform:none!important;transition:none!important}
+  .logo,.logo-stage:before{animation:none!important}
+  *{animation-duration:.001ms!important;animation-iteration-count:1!important;
+    transition-duration:.001ms!important}
+}
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="logo-stage">
+      <img class="logo" src="data:image/png;base64,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" alt="CELL//OS">
+    </div>
+    <div class="tag">The Agentic Organization Operating System</div>
+    <p class="thesis">An operating system for <b>synthetic organizations</b> — not a graphical
+      wrapper around multi-agent chat. You express an outcome, its constraints and an authority
+      boundary. CELL&nbsp;OS compiles an organizational response, runs it as one or more Cells,
+      proves what happened, and uses that evidence to improve the next configuration.</p>
+    <div class="truth">
+      <div class="ic">⚠</div>
+      <p><b>Read every claim on this page against its maturity chip.</b> The product's own design
+        doctrine requires it — <em>&ldquo;every product surface and document should display maturity
+        explicitly&rdquo;</em> (Technical Design v0.1 §1.3). Most of what follows is
+        <span class="pill planned">PLANNED</span> or <span class="pill frontier">FRONTIER</span>.
+        In the reference implementation this deck was built from, the run ledger holds
+        <b>10 runs and 0 PASS</b>, and every recorded agent return carries <code>dry_run=True</code>.
+        The instruments are real; the subject has not yet been measured at scale.</p>
+    </div>
+  </header>
+</div>
+
+<nav class="tabs">
+  <div class="tabs-in" role="tablist" aria-label="CELL OS sections">
+    <button class="tab" role="tab" id="t-over" aria-controls="p-over" aria-selected="true"><i>01</i>Overview</button>
+    <button class="tab" role="tab" id="t-arch" aria-controls="p-arch" aria-selected="false"><i>02</i>Architecture</button>
+    <button class="tab" role="tab" id="t-first" aria-controls="p-first" aria-selected="false"><i>03</i>First Operative</button>
+    <button class="tab" role="tab" id="t-proto" aria-controls="p-proto" aria-selected="false"><i>04</i>Prototype</button>
+    <button class="tab" role="tab" id="t-cases" aria-controls="p-cases" aria-selected="false"><i>05</i>Use Cases</button>
+    <button class="tab" role="tab" id="t-guide" aria-controls="p-guide" aria-selected="false"><i>06</i>User Guide</button>
+    <button class="tab" role="tab" id="t-film" aria-controls="p-film" aria-selected="false"><i>07</i>Launch Film</button>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<!-- ══════════════════ 01 OVERVIEW ══════════════════ -->
+<section class="panel" id="p-over" role="tabpanel" aria-labelledby="t-over">
+
+  <div class="sec">
+    <div class="eyebrow">The five promises</div>
+    <h2>What the product is required to do</h2>
+    <p class="lede">Five non-negotiable promises. They are the acceptance criteria for the whole
+      platform — a surface that breaks one of them is wrong however well it demos.</p>
+    <div class="grid g3">
+      <div class="card accent"><h3><span class="n">01</span>Build organizations, not prompts</h3>
+        <p>Reusable Cells are versioned organizational software, created from typed blueprints
+          rather than assembled from prompt collections.</p></div>
+      <div class="card accent"><h3><span class="n">02</span>Run safely</h3>
+        <p>A deterministic Kernel owns identity, permissions, budgets, privileged capability calls
+          and hard policy. Operatives never hold unrestricted credentials.</p></div>
+      <div class="card accent"><h3><span class="n">03</span>Remember structurally</h3>
+        <p>HyperMESH separates authoritative evidence from derived retrieval projections, and
+          preserves provenance for both.</p></div>
+      <div class="card accent"><h3><span class="n">04</span>Prove outcomes</h3>
+        <p>Consequential missions emit typed evidence and a Mission Assurance Receipt.
+          <b>An agent's assertion that it finished is not sufficient.</b></p></div>
+      <div class="card accent"><h3><span class="n">05</span>Improve empirically</h3>
+        <p>Shadow Cells, replays and the Evolution Chamber compare configurations against explicit
+          KPIs before anything is promoted.</p></div>
+      <div class="card" style="border-left:2px solid var(--amber)">
+        <h3><span class="n">✳</span>And the discipline that binds them</h3>
+        <p>Every surface displays its own maturity. A feature that cannot show repository evidence
+          may be called <em>planned</em> — never <em>available</em>.</p></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="eyebrow">The mapping that makes it an OS</div>
+    <h2>Every primitive has an operating-system ancestor</h2>
+    <p class="lede">This is the load-bearing idea of the whole product. It is not a metaphor used
+      for marketing — it is an architectural constraint, and each row carries a design consequence
+      the platform has to honour.</p>
+    <div class="tblwrap">
+      <table>
+        <thead><tr><th>Traditional OS concept</th><th>CELL&nbsp;OS primitive</th><th>Design consequence</th></tr></thead>
+        <tbody>
+          <tr><td class="m">Process</td><td><b>Operative Cell</b></td><td>Has identity, lifecycle, resources, memory mounts, permissions, threads and state.</td></tr>
+          <tr><td class="m">Thread</td><td><b>AI Operative</b></td><td>Concurrent cognitive worker inside a Cell; may block, wait, call capabilities and emit evidence.</td></tr>
+          <tr><td class="m">Executable / image</td><td><b>Cell Image</b></td><td>Immutable, versioned, certifiable resolved organization definition.</td></tr>
+          <tr><td class="m">Compiler</td><td><b>Organizational Compiler</b></td><td>Mission or blueprint → Org-IR → linked Cell Image.</td></tr>
+          <tr><td class="m">RAM / virtual memory</td><td><b>Active Context / Context VM</b></td><td>Finite model context is managed as a scarce runtime resource, not an unbounded dump.</td></tr>
+          <tr><td class="m">Filesystem / storage</td><td><b>HyperMESH</b></td><td>Permissioned organizational knowledge, episodes, claims, procedures, artifacts and evidence.</td></tr>
+          <tr><td class="m">System call</td><td><b>Capability Call</b></td><td>Operatives request side effects through Kernel policy rather than holding credentials.</td></tr>
+          <tr><td class="m">Driver</td><td><b>Capability Adapter</b></td><td>GitHub, browser, warehouse, code runner, messaging, cloud and other integrations.</td></tr>
+          <tr><td class="m">IPC</td><td><b>CellBus</b></td><td>Typed communication between Operatives, Cells and services.</td></tr>
+          <tr><td class="m">Scheduler</td><td><b>Mission / Epistemic Scheduler</b></td><td>Allocates execution <em>and cognitive effort</em> by dependency, risk, cost and uncertainty.</td></tr>
+          <tr><td class="m">Debugger / profiler</td><td><b>Replay / Cell Profiler</b></td><td>Reconstruct execution, bottlenecks, resource use and evidence after the fact.</td></tr>
+          <tr><td class="m"><code>fork()</code></td><td><b>Shadow Twin</b></td><td>Counterfactual Cell from a controlled snapshot, with contained side effects.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="eyebrow">Object model</div>
+    <h2>Six entities, each with its own governance boundary</h2>
+    <p class="lede">Higher layers coordinate lower layers without collapsing their boundaries. A
+      Federation cannot reach past an Organism's policy to drive an Operative directly.</p>
+    <div class="tblwrap">
+      <table>
+        <thead><tr><th>Entity</th><th>Definition</th><th>Lifecycle</th><th>Key configuration</th></tr></thead>
+        <tbody>
+          <tr><td><b>Mission</b></td><td>Desired outcome plus constraints, risk and evidence requirements.</td><td class="m">Ephemeral or recurring</td><td>Intent Contract, assurance contract, priority, temporal horizon.</td></tr>
+          <tr><td><b>AI Operative</b></td><td>Versioned cognitive worker executing within a Cell.</td><td class="m">Ephemeral or persistent seat</td><td>Cognitive runtime, tools, memory policy, communication behaviour, authority.</td></tr>
+          <tr><td><b>Worker</b></td><td>Deterministic execution unit — no cognition.</td><td class="m">Task / daemon</td><td>Code, retry policy, I/O contract, resource limits.</td></tr>
+          <tr><td><b>Cell</b></td><td>Bounded executable organizational unit containing Operatives, Workers, memory mounts and policy.</td><td class="m">Spawn / pause / resume / terminate</td><td>Cell Genome, topology, authority, budgets, lifecycle, assurance.</td></tr>
+          <tr><td><b>Organism</b></td><td>Persistent adaptive organization composed of Cells.</td><td class="m">Long-lived</td><td>Strategy, Cell topology, homeostatic targets, capital, governance.</td></tr>
+          <tr><td><b>Federation</b></td><td>Cooperating Organisms or CELL&nbsp;OS nodes under shared rules.</td><td class="m">Long-lived, optional</td><td>Trust, identity, knowledge and resource sharing, policy boundaries.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="eyebrow">One runtime, five ways in</div>
+    <h2>Product modes</h2>
+    <p class="lede">Every mode is a different projection of <em>the same underlying state</em>. That
+      constraint is what stops the visual mode becoming a toy disconnected from the real runtime.</p>
+    <div class="grid g2">
+      <div class="card"><h3>Mission Control <span class="pill proto">PROTOTYPE</span></h3>
+        <p><b>Power user / operator.</b> Dense dashboards, graphs, run state, diffs, budgets, logs,
+          evidence and controls.</p></div>
+      <div class="card"><h3>Cell Studio <span class="pill planned">PLANNED</span></h3>
+        <p><b>Builder.</b> Design and version Cell genomes, capabilities, memory, topology and
+          policies. See the <em>Prototype</em> tab for a working sketch of this surface.</p></div>
+      <div class="card"><h3>Briefing Room <span class="pill planned">PLANNED</span></h3>
+        <p><b>Decision maker.</b> Questions, unknowns, evidence, approvals, strategy and mission
+          planning — what is not yet known, and what decision is needed.</p></div>
+      <div class="card"><h3>Evolution Chamber <span class="pill frontier">FRONTIER</span></h3>
+        <p><b>Researcher / optimizer.</b> Shadow runs, tournaments, Pareto frontiers and
+          experimental promotion. Deliberately gated behind an unlock threshold.</p></div>
+      <div class="card"><h3>Avatar World <span class="pill frontier">FRONTIER</span></h3>
+        <p><b>Visual / social user.</b> A spatial, Sims-style representation of the organization,
+          its Operatives, Cells and missions — synchronized with Mission Control, not separate
+          from it.</p></div>
+      <div class="card" style="border-left:2px solid var(--cyan)"><h3>Cell Genome &amp; Cell Image</h3>
+        <p>The <b>Genome</b> is the versioned, diffable configuration surface: topology, cognition
+          ratio, memory mounts, CellBus routes, authority, resources, allowed mutations. The
+          <b>Image</b> is the immutable, attestable build of it.</p></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="eyebrow">Maturity legend</div>
+    <h2>What each chip permits you to say</h2>
+    <div class="tblwrap">
+      <table>
+        <thead><tr><th>State</th><th>Meaning</th><th>Allowed product language</th></tr></thead>
+        <tbody>
+          <tr><td><span class="pill planned">PLANNED</span></td><td>Approved design intent; no repository evidence yet.</td><td class="m">planned · designed · proposed</td></tr>
+          <tr><td><span class="pill proto">PROTOTYPE</span></td><td>Partial path exists; not trusted for production claims.</td><td class="m">prototype · experimental · alpha</td></tr>
+          <tr><td><span class="pill impl">IMPLEMENTED</span></td><td>Repository or runtime evidence confirms behaviour in a stated environment.</td><td class="m">implemented · available in env X</td></tr>
+          <tr><td><span class="pill cert">CERTIFIED</span></td><td>A pinned version passed defined evals and holds an attestation record.</td><td class="m">certified for mission class Y</td></tr>
+          <tr><td><span class="pill frontier">FRONTIER</span></td><td>Research hypothesis; prerequisites or evidence incomplete.</td><td class="m">hypothesis · experiment · frontier</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ 02 ARCHITECTURE ══════════════════ -->
+<section class="panel" id="p-arch" role="tabpanel" aria-labelledby="t-arch" hidden>
+
+  <div class="sec">
+    <div class="eyebrow">Seven layers over one substrate</div>
+    <h2>Click any layer to open it</h2>
+    <p class="lede">Each layer is a governance boundary, not just a box. Open one to see the
+      services inside it, what enters, what leaves, its operating-system ancestor, and how mature
+      it actually is. Layers are stacked as the reference diagram draws them — experience at the
+      top, runtime at the bottom, requests travelling down and results travelling up.</p>
+
+    <div class="rails">
+      <div class="rail"><div class="k">External inputs →</div>
+        <ul><li>Users &amp; Teams</li><li>Mission Briefs</li><li>Data Sources</li>
+          <li>Systems &amp; APIs</li><li>Files &amp; Docs</li><li>Devices &amp; IoT</li></ul></div>
+      <div class="rail"><div class="k">→ External outputs</div>
+        <ul><li>Analytics &amp; Reports</li><li>Automations</li><li>Notifications</li>
+          <li>Open APIs</li><li>Data Exports</li><li>Client Applications</li></ul></div>
+    </div>
+
+    <div class="stack" id="stack">
+
+      <details class="ldet" style="--lc:#2B6BFF">
+        <summary class="layer"><span class="num">1</span>
+          <span><span class="nm">Experience Layer</span><span class="sub">Interact &amp; Observe — the only layer a human touches</span></span>
+          <span class="cnt">7 SURFACES · PROTOTYPE</span></summary>
+        <div class="ldetail">
+          <h4>What happens at this layer</h4>
+          <p>Humans express intent and observe consequences. <b>No business logic lives here.</b>
+            Every surface is a projection of state the runtime already holds — which is why the
+            dense operator view and the spatial Avatar World can coexist without drifting apart.</p>
+          <h4>Services</h4>
+          <div class="svcs">
+            <div class="svc"><div class="s1">Mission Control</div><div class="s2">Command Center</div></div>
+            <div class="svc"><div class="s1">Briefing Room</div><div class="s2">Intent &amp; Context</div></div>
+            <div class="svc"><div class="s1">Agent Workbench</div><div class="s2">Build &amp; Configure</div></div>
+            <div class="svc"><div class="s1">Org Studio</div><div class="s2">Design Organizations</div></div>
+            <div class="svc"><div class="s1">Org Steward</div><div class="s2">Performance &amp; Health</div></div>
+            <div class="svc"><div class="s1">Eval Dashboard</div><div class="s2">Performance &amp; Health</div></div>
+            <div class="svc"><div class="s1">Observability Console</div><div class="s2">Telemetry &amp; Tracing</div></div>
+          </div>
+          <div class="io">
+            <div class="box"><div class="k">Receives</div><div class="v">User goals and mission briefs from outside; <code>results · artifacts</code> from the Interface layer below.</div></div>
+            <div class="box"><div class="k">Emits</div><div class="v"><code>analytics · reports</code> outward; API requests downward.</div></div>
+            <div class="box"><div class="k">OS ancestor</div><div class="v">The shell and window manager. It renders; it does not decide.</div></div>
+            <div class="box"><div class="k">Maturity</div><div class="v"><span class="pill proto">PROTOTYPE</span> A switchboard projection and a rendered client-review surface exist and are render-confirmed. The rest is designed.</div></div>
+          </div>
+        </div>
+      </details>
+
+      <div class="flowlbl">results · artifacts</div>
+
+      <details class="ldet" style="--lc:#7C3AED">
+        <summary class="layer"><span class="num">2</span>
+          <span><span class="nm">Interface &amp; Integration</span><span class="sub">Connect &amp; Integrate — one door in, one door out</span></span>
+          <span class="cnt">4 SERVICES · PLANNED</span></summary>
+        <div class="ldetail">
+          <h4>What happens at this layer</h4>
+          <p>Every request that enters or leaves CELL&nbsp;OS crosses this boundary, which is what
+            makes authentication, rate limiting and audit tractable. A connector that bypasses it
+            becomes a second, untested control plane — the failure mode the design explicitly
+            forbids.</p>
+          <h4>Services</h4>
+          <div class="svcs">
+            <div class="svc"><div class="s1">API Gateway</div><div class="s2">Single Entry</div></div>
+            <div class="svc"><div class="s1">Webhooks</div><div class="s2">Event Ingest</div></div>
+            <div class="svc"><div class="s1">Connector Framework</div><div class="s2">Standardized Connectors</div></div>
+            <div class="svc"><div class="s1">Client SDKs</div><div class="s2">APIs &amp; Libraries</div></div>
+          </div>
+          <div class="io">
+            <div class="box"><div class="k">Receives</div><div class="v">Calls from the Experience layer, and inbound events from external systems.</div></div>
+            <div class="box"><div class="k">Emits</div><div class="v"><code>API requests</code> into the Cognitive Core; <code>results · artifacts · responses</code> back out.</div></div>
+            <div class="box"><div class="k">OS ancestor</div><div class="v">The syscall interface and device layer.</div></div>
+            <div class="box"><div class="k">Maturity</div><div class="v"><span class="pill planned">PLANNED</span> A connector contract with twelve calibrated assertions exists and scores 12/12 — but <b>replayed against one recorded corpus</b>, and 48 connectors have never been scored. Sensitivity is not coverage.</div></div>
+          </div>
+        </div>
+      </details>
+
+      <div class="flowlbl">API requests</div>
+
+      <details class="ldet" style="--lc:#34D399">
+        <summary class="layer"><span class="num">3</span>
+          <span><span class="nm">Cognitive Core</span><span class="sub">Think &amp; Decide — the only layer permitted to reason</span></span>
+          <span class="cnt">8 ENGINES · PLANNED</span></summary>
+        <div class="ldetail">
+          <h4>What happens at this layer</h4>
+          <p>Intent becomes an organization. The Intent Engine reads a goal, the Context Engine
+            compiles only the knowledge that goal authorizes, the Planning Engine decomposes it, and
+            the Execution Engine orchestrates. <b>Reasoning is confined here on purpose</b> — no
+            other layer is allowed to improvise, so the layers below stay deterministic and
+            auditable.</p>
+          <h4>Services</h4>
+          <div class="svcs">
+            <div class="svc"><div class="s1">Intent Engine</div><div class="s2">Understand Goals</div></div>
+            <div class="svc"><div class="s1">Context Engine</div><div class="s2">Compile Context</div></div>
+            <div class="svc"><div class="s1">Planning Engine</div><div class="s2">Plan &amp; Decompose</div></div>
+            <div class="svc"><div class="s1">Execution Engine</div><div class="s2">Orchestrate</div></div>
+            <div class="svc"><div class="s1">Memory Engine</div><div class="s2">Episodic &amp; Semantic</div></div>
+            <div class="svc"><div class="s1">Learning Engine</div><div class="s2">Adapt &amp; Improve</div></div>
+            <div class="svc"><div class="s1">Evaluation Engine</div><div class="s2">Score &amp; Validate</div></div>
+            <div class="svc"><div class="s1">Evolution Engine</div><div class="s2">Mutate &amp; Evolve</div></div>
+          </div>
+          <div class="io">
+            <div class="box"><div class="k">Receives</div><div class="v"><code>API requests</code> carrying a mission intent and its authority boundary.</div></div>
+            <div class="box"><div class="k">Emits</div><div class="v"><code>plans · tasks · tool calls</code> downward; <code>decisions · insights · models</code> outward.</div></div>
+            <div class="box"><div class="k">OS ancestor</div><div class="v">The compiler plus the scheduler — Mission intent → Org-IR → linked Cell Image.</div></div>
+            <div class="box"><div class="k">Maturity</div><div class="v"><span class="pill planned">PLANNED</span> for the compiler — the Org-IR schema is marked <em>seed only</em> and the category itself is contested in the source corpus. <span class="pill frontier">FRONTIER</span> for the Evolution Engine.</div></div>
+          </div>
+        </div>
+      </details>
+
+      <div class="flowlbl">plans · tasks · tool calls</div>
+
+      <details class="ldet" style="--lc:#F0A63C">
+        <summary class="layer"><span class="num">4</span>
+          <span><span class="nm">Coordination &amp; Platform Services</span><span class="sub">Coordinate &amp; Enable — where a request is authorised or refused</span></span>
+          <span class="cnt">8 SERVICES · PROTOTYPE</span></summary>
+        <div class="ldetail">
+          <h4>What happens at this layer</h4>
+          <p>This is the Kernel's service plane and the most security-critical layer in the stack.
+            An Operative never holds a credential; it asks. Identity, capability scope, parameter
+            bounds, budget, policy, evidence prerequisites and — where required — a human are all
+            checked here before any side effect reaches the outside world.</p>
+          <h4>Services</h4>
+          <div class="svcs">
+            <div class="svc"><div class="s1">Identity &amp; Access</div><div class="s2">AuthN / AuthZ</div></div>
+            <div class="svc"><div class="s1">Org Graph Service</div><div class="s2">Relationships</div></div>
+            <div class="svc"><div class="s1">Agent Registry</div><div class="s2">Agents &amp; Roles</div></div>
+            <div class="svc"><div class="s1">Capability Registry</div><div class="s2">Skills &amp; Tools</div></div>
+            <div class="svc"><div class="s1">Tool Execution</div><div class="s2">Run Tools</div></div>
+            <div class="svc"><div class="s1">Knowledge Broker</div><div class="s2">Route Knowledge</div></div>
+            <div class="svc"><div class="s1">Communication Service</div><div class="s2">Message &amp; Notify</div></div>
+            <div class="svc"><div class="s1">Notification Service</div><div class="s2">Alerts &amp; Updates</div></div>
+          </div>
+          <div class="io">
+            <div class="box"><div class="k">Receives</div><div class="v"><code>plans · tasks · tool calls</code> from the Cognitive Core.</div></div>
+            <div class="box"><div class="k">Emits</div><div class="v"><code>actions · responses</code>; <code>state · memory</code> writes downward.</div></div>
+            <div class="box"><div class="k">OS ancestor</div><div class="v">Kernel services and drivers. A Capability Call is this stack's <code>syscall</code>.</div></div>
+            <div class="box"><div class="k">Maturity</div><div class="v"><span class="pill proto">PROTOTYPE</span> 30 readiness gates and four typed evidence classes are implemented, and the task layer raises <code>EvidenceRequired</code>. ⚠ But the known-failure preflight is <b>WARN-ONLY — it refuses nothing.</b></div></div>
+          </div>
+        </div>
+      </details>
+
+      <div class="flowlbl">state · memory</div>
+
+      <details class="ldet" style="--lc:#22D3EE">
+        <summary class="layer"><span class="num">5</span>
+          <span><span class="nm">Memory &amp; Data</span><span class="sub">Store &amp; Retrieve — authority and projection, kept apart</span></span>
+          <span class="cnt">7 STORES · PLANNED</span></summary>
+        <div class="ldetail">
+          <h4>What happens at this layer</h4>
+          <p>HyperMESH lands here. The rule that matters is the separation the design insists on:
+            <b>authoritative evidence is never confused with a derived retrieval projection.</b> A
+            vector index is a convenience for finding things; it is never the record of what
+            happened. Provenance survives both.</p>
+          <h4>Services</h4>
+          <div class="svcs">
+            <div class="svc"><div class="s1">Org Graph DB</div><div class="s2">Neo4j</div></div>
+            <div class="svc"><div class="s1">Vector DB</div><div class="s2">Pinecone</div></div>
+            <div class="svc"><div class="s1">Document Store</div><div class="s2">MongoDB</div></div>
+            <div class="svc"><div class="s1">Relational DB</div><div class="s2">PostgreSQL</div></div>
+            <div class="svc"><div class="s1">Time Series DB</div><div class="s2">TimescaleDB</div></div>
+            <div class="svc"><div class="s1">Data Warehouse</div><div class="s2">Snowflake</div></div>
+            <div class="svc"><div class="s1">Lakehouse</div><div class="s2">Iceberg</div></div>
+          </div>
+          <div class="io">
+            <div class="box"><div class="k">Receives</div><div class="v"><code>state · memory</code> writes from the coordination layer.</div></div>
+            <div class="box"><div class="k">Emits</div><div class="v"><code>structured data · knowledge</code> outward; <code>events · state deltas</code> downward.</div></div>
+            <div class="box"><div class="k">OS ancestor</div><div class="v">The filesystem, plus the page cache. Context VM is the paging discipline over it.</div></div>
+            <div class="box"><div class="k">Maturity</div><div class="v"><span class="pill planned">PLANNED</span> HyperMESH is the single most contested concept in the source corpus — designed and specified, not built.</div></div>
+          </div>
+        </div>
+      </details>
+
+      <div class="flowlbl">events · state deltas</div>
+
+      <details class="ldet" style="--lc:#A855F7">
+        <summary class="layer"><span class="num">6</span>
+          <span><span class="nm">Event &amp; Telemetry</span><span class="sub">Emit &amp; Stream — append-only, and the reason replay is possible</span></span>
+          <span class="cnt">6 SERVICES · PROTOTYPE</span></summary>
+        <div class="ldetail">
+          <h4>What happens at this layer</h4>
+          <p>Everything that happened, as typed append-only streams. This is not logging as an
+            afterthought — <b>it is the substrate Replay, the Cell Profiler and every assurance
+            receipt are built on.</b> If an event was not emitted here, it did not happen as far as
+            the platform can later prove.</p>
+          <h4>Services</h4>
+          <div class="svcs">
+            <div class="svc"><div class="s1">Event Bus</div><div class="s2">Kafka / NATS</div></div>
+            <div class="svc"><div class="s1">Mission Events</div><div class="s2">Lifecycle &amp; verdicts</div></div>
+            <div class="svc"><div class="s1">Agent Events</div><div class="s2">Operative activity</div></div>
+            <div class="svc"><div class="s1">Telemetry Collector</div><div class="s2">Gather</div></div>
+            <div class="svc"><div class="s1">Telemetry Stream</div><div class="s2">Distribute</div></div>
+            <div class="svc"><div class="s1">Alerts</div><div class="s2">Thresholds &amp; anomalies</div></div>
+          </div>
+          <div class="io">
+            <div class="box"><div class="k">Receives</div><div class="v">Events from every layer above, and from the runtime below.</div></div>
+            <div class="box"><div class="k">Emits</div><div class="v"><code>events · telemetry</code> outward; <code>events · telemetry · alerts</code> to the runtime layer.</div></div>
+            <div class="box"><div class="k">OS ancestor</div><div class="v">The kernel log and audit subsystem.</div></div>
+            <div class="box"><div class="k">Maturity</div><div class="v"><span class="pill proto">PROTOTYPE</span> An append-only event ledger exists and holds <b>61 events</b> — of which 7 are agent returns, and <b>all 7 carry <code>dry_run=True</code></b>.</div></div>
+          </div>
+        </div>
+      </details>
+
+      <div class="flowlbl">events · telemetry · alerts</div>
+
+      <details class="ldet" style="--lc:#1B4FCC">
+        <summary class="layer"><span class="num">7</span>
+          <span><span class="nm">Runtime &amp; Foundation</span><span class="sub">Run &amp; Operate — where code actually executes, under isolation</span></span>
+          <span class="cnt">7 SERVICES · PLANNED</span></summary>
+        <div class="ldetail">
+          <h4>What happens at this layer</h4>
+          <p>Real execution, real secrets, real blast radius. The Model Gateway decides which model
+            answers; the Sandbox Runtime decides what that answer is allowed to touch; the Policy
+            Engine is the hard stop. Everything above this layer is, ultimately, a proposal.</p>
+          <h4>Services</h4>
+          <div class="svcs">
+            <div class="svc"><div class="s1">Observability Stack</div><div class="s2">Logs, Metrics, Traces</div></div>
+            <div class="svc"><div class="s1">Model Gateway</div><div class="s2">LLM Routing</div></div>
+            <div class="svc"><div class="s1">Secrets Manager</div><div class="s2">Keys &amp; Tokens</div></div>
+            <div class="svc"><div class="s1">Config Service</div><div class="s2">Feature Flags</div></div>
+            <div class="svc"><div class="s1">Policy Engine</div><div class="s2">Guardrails</div></div>
+            <div class="svc"><div class="s1">Sandbox Runtime</div><div class="s2">Docker / WASM</div></div>
+            <div class="svc"><div class="s1">Backup &amp; DR</div><div class="s2">Resilience</div></div>
+          </div>
+          <div class="io">
+            <div class="box"><div class="k">Receives</div><div class="v">Authorised actions, and the event stream from layer 6.</div></div>
+            <div class="box"><div class="k">Emits</div><div class="v"><code>alerts · notifications · system health</code>.</div></div>
+            <div class="box"><div class="k">OS ancestor</div><div class="v">The kernel proper, plus hardware abstraction.</div></div>
+            <div class="box"><div class="k">Maturity</div><div class="v"><span class="pill planned">PLANNED</span> with a <span class="pill proto">PROTOTYPE</span> isolation ladder. ⚠ The design itself warns that an ephemeral zero-copy clone is <em>&ldquo;a compromised oracle at exactly the layer our evidence rule exists to protect&rdquo;</em>.</div></div>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <div style="margin-top:16px">
+      <div class="eyebrow">Foundation — the substrate</div>
+      <div class="substrate">
+        <span>Infrastructure · Cloud / On-Prem</span><span>Security &amp; Identity · Zero Trust</span>
+        <span>Network · Private / Encrypted</span><span>Monitoring · Health &amp; Performance</span>
+        <span>Cost Management · FinOps</span><span>Compliance · Audit &amp; Policy</span>
+        <span>CI/CD · Pipelines</span><span>Governance · Data &amp; AI</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="eyebrow">The mechanism worth understanding</div>
+    <h2>What a capability call actually passes through</h2>
+    <p class="lede">This is the single most important control path in the platform. An Operative
+      cannot merge a pull request, deploy, spend money or email a customer directly — it requests,
+      and the Kernel decides. Seven checks, and any one of them can stop it.</p>
+    <div class="card" style="padding:22px 24px">
+      <div class="m" style="font-size:12.5px;line-height:2;color:var(--slate);white-space:pre;overflow-x:auto">
+<span style="color:var(--bone)">Operative request</span>   <span style="color:var(--cyan)">repo.merge_pull_request(...)</span>
+        │
+        ▼
+<span style="color:var(--bone)">CELL KERNEL</span>
+   identity?              <span style="color:var(--slate-dim)">is this Operative who it claims to be</span>
+   capability scope?      <span style="color:var(--slate-dim)">is this operation in its grant</span>
+   parameter boundary?    <span style="color:var(--slate-dim)">is <em>this repo</em>, <em>this branch</em> in bounds</span>
+   namespace?             <span style="color:var(--slate-dim)">right environment, right tenant</span>
+   budget?                <span style="color:var(--slate-dim)">tokens, time, spend remaining</span>
+   policy?                <span style="color:var(--slate-dim)">hard organizational rules</span>
+   evidence prerequisite? <span style="color:var(--slate-dim)">has it proved what it must first</span>
+   human authorization?   <span style="color:var(--amber)">a person must decide</span>
+        │
+        ├──▶ <span style="color:var(--amber)">DENY  /  REQUEST GATE</span>
+        │
+        ▼
+<span style="color:var(--bone)">Capability Driver</span> ──▶ external system ──▶ result ──▶ <span style="color:var(--cyan)">audit / evidence</span></div>
+    </div>
+    <p class="note"><b>Why the last line matters.</b> The call does not end at the result. It ends at
+      an audit record and typed evidence — which is what allows a mission to later be certified
+      rather than merely reported.</p>
+  </div>
+
+  <div class="sec">
+    <div class="grid g2">
+      <div class="card" style="border-left:2px solid var(--amber)">
+        <h3>🔥 The Crucible <span class="pill frontier">FRONTIER</span></h3>
+        <p><b>Survival is the benchmark.</b> Ideas, agents, workflows and whole organizations are
+          tested in adversarial environments. Only the strong get promoted.</p>
+        <p>Concretely: a configuration does not graduate because it worked once. It graduates
+          because it survived a deliberate attempt to break it, and the attempt is on record.</p>
+      </div>
+      <div class="card" style="border-left:2px solid var(--violet)">
+        <h3>⬢ The Blackbox <span class="pill frontier">FRONTIER</span></h3>
+        <p><b>Put the problem in. See what evolves.</b> Unknown in, useful out.</p>
+        <p>The counterpart to the Crucible: where the Crucible tries to kill a known
+          configuration, the Blackbox searches for one nobody specified. Both are research
+          surfaces, and both are gated behind the same unlock as the optimizer.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ 03 FIRST OPERATIVE ══════════════════ -->
+<section class="panel" id="p-first" role="tabpanel" aria-labelledby="t-first" hidden>
+
+  <div class="sec">
+    <div class="eyebrow">Build your first Cell-Operator → Cell-Mesh → run missions</div>
+    <h2>Six steps, eight screens</h2>
+    <p class="lede">The path from an empty workspace to an organization that runs and improves
+      itself. Jump to any screen, or read straight down — each screen below shows the real fields
+      and the real values from the product's interaction design.</p>
+
+    <div class="journey">
+      <a class="jstep" style="--jc:#A855F7" href="#scr-1"><span class="jn">1</span>
+        <span class="jt">Get Started</span><span class="jd">Create your account and choose a mission template.</span></a>
+      <a class="jstep" style="--jc:#2B6BFF" href="#scr-2"><span class="jn">2</span>
+        <span class="jt">Create Operator</span><span class="jd">Design your first Cell-Operator by defining role, skills and tools.</span></a>
+      <a class="jstep" style="--jc:#22D3EE" href="#scr-3"><span class="jn">3</span>
+        <span class="jt">Build Cell-Mesh</span><span class="jd">Connect Operators into a mesh type that fits your mission.</span></a>
+      <a class="jstep" style="--jc:#34D399" href="#scr-4"><span class="jn">4</span>
+        <span class="jt">Configure &amp; Simulate</span><span class="jd">Run simulations to test performance, cost and outcomes.</span></a>
+      <a class="jstep" style="--jc:#F0A63C" href="#scr-5"><span class="jn">5</span>
+        <span class="jt">Deploy</span><span class="jd">Deploy your Cell-Mesh to execute missions in the real world.</span></a>
+      <a class="jstep" style="--jc:#7C3AED" href="#scr-6"><span class="jn">6</span>
+        <span class="jt">Operate &amp; Evolve</span><span class="jd">Monitor, learn and evolve your Cell-Mesh continuously.</span></a>
+    </div>
+  </div>
+
+  <div class="sec" id="scr-1">
+    <div class="screen">
+      <div class="bar"><span class="dot"></span><span class="ttl">1 · Dashboard — Home</span>
+        <span class="pill proto" style="margin-left:auto">PROTOTYPE</span></div>
+      <div class="body">
+        <h3 style="font:600 16px/1.3 var(--disp);margin-bottom:4px">Good morning, Commander.</h3>
+        <p style="color:var(--slate);font-size:13px">What mission are we solving today?</p>
+        <div class="eyebrow" style="margin-top:16px">Quick start</div>
+        <div class="chips" style="margin-bottom:18px">
+          <span class="chip" style="border-color:var(--blue);color:var(--bone)">◎ New Mission</span>
+          <span class="chip">◳ New Operator</span><span class="chip">⚇ Gather Intelligence</span>
+          <span class="chip">⚑ Fraud Detection</span></div>
+        <div class="grid g2">
+          <div>
+            <div class="eyebrow">Recent missions</div>
+            <div class="metricrow"><span>Market Analysis</span><span><span class="pill" style="border-color:var(--violet);color:#b69bff">Strategy</span> <b>2h ago</b></span></div>
+            <div class="metricrow"><span>Customer Scan</span><span><span class="pill" style="border-color:var(--green);color:var(--green)">Growth</span> <b>3h ago</b></span></div>
+            <div class="metricrow"><span>Threat Monitor</span><span><span class="pill" style="border-color:var(--amber);color:var(--amber)">Risk</span> <b>4h ago</b></span></div>
+          </div>
+          <div>
+            <div class="eyebrow">System health</div>
+            <div class="metricrow"><span style="color:var(--green)">All systems nominal</span><b>—</b></div>
+            <div class="metricrow"><span>Active Cell-Meshes</span><b>5</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="note">The home screen answers exactly one question — <em>what is my synthetic
+      organization doing, and is it healthy?</em> Everything else is one click away, not on this
+      screen.</p>
+  </div>
+
+  <div class="sec" id="scr-2">
+    <div class="screen">
+      <div class="bar"><span class="dot"></span><span class="ttl">2 · Create Operator — Design</span>
+        <span class="pill planned" style="margin-left:auto">PLANNED</span></div>
+      <div class="body">
+        <div class="grid g2" style="align-items:start">
+          <div>
+            <div class="eyebrow">Wizard steps</div>
+            <div class="chips" style="flex-direction:column;align-items:stretch;gap:4px">
+              <span class="chip" style="border-color:var(--blue);color:var(--bone);text-align:left">1. Profile</span>
+              <span class="chip" style="text-align:left">2. Skills</span>
+              <span class="chip" style="text-align:left">3. Tools</span>
+              <span class="chip" style="text-align:left">4. Memory</span>
+              <span class="chip" style="text-align:left">5. Guardrails</span>
+              <span class="chip" style="text-align:left">6. Review</span>
+            </div>
+          </div>
+          <div class="mock">
+            <div class="eyebrow">Operator profile</div>
+            <div class="field"><span class="lb">Name</span><span class="in">Insight Synthesizer</span></div>
+            <div class="field"><span class="lb">Role</span><span class="in">Extract insights from data and context</span></div>
+            <div class="field"><span class="lb">Goal</span><span class="in">Synthesize key insights with high accuracy</span></div>
+            <div class="field"><span class="lb">Personality</span><span class="in">☑ Analytical &nbsp; ☐ Curious &nbsp; ☐ Precise</span></div>
+            <div class="field"><span class="lb">Autonomy level</span>
+              <span><span class="bararea" style="display:block"><i style="width:78%"></i></span>
+              <span class="m" style="font-size:11px;color:var(--slate);float:right;margin-top:4px">78%</span></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="note"><b>Autonomy is a dial, not a switch</b> — and it is the field that decides how
+      often a human sees this Operative's work before it takes effect. 78% is not
+      &ldquo;78% correct&rdquo;; it is how much of its action space it may enter unaccompanied.</p>
+  </div>
+
+  <div class="sec" id="scr-3">
+    <div class="screen">
+      <div class="bar"><span class="dot"></span><span class="ttl">3 · Build Cell-Mesh — Topology</span>
+        <span class="pill planned" style="margin-left:auto">PLANNED</span></div>
+      <div class="body">
+        <div class="grid" style="grid-template-columns:150px minmax(0,1fr) 200px;gap:18px">
+          <div>
+            <div class="eyebrow">Mesh types</div>
+            <div class="chips" style="flex-direction:column;align-items:stretch;gap:4px">
+              <span class="chip" style="border-color:var(--cyan);color:var(--bone);text-align:left">✳ Star (default)</span>
+              <span class="chip" style="text-align:left">◯ Ring</span>
+              <span class="chip" style="text-align:left">⛛ Hierarchical</span>
+              <span class="chip" style="text-align:left">⬡ Mesh</span>
+              <span class="chip" style="text-align:left">⇥ Pipeline</span>
+            </div>
+          </div>
+          <div style="text-align:center">
+            <svg viewBox="0 0 260 200" style="width:100%;max-width:280px;height:auto" aria-label="Star topology: a central coordinator connected to researcher, validator and executor">
+              <g stroke="#26375C" stroke-width="1.2" fill="none">
+                <line x1="130" y1="46" x2="130" y2="98"/><line x1="130" y1="102" x2="60" y2="70"/>
+                <line x1="130" y1="102" x2="200" y2="70"/><line x1="130" y1="102" x2="130" y2="152"/>
+              </g>
+              <circle cx="130" cy="100" r="7" fill="#0C1428" stroke="#8FA0C4" stroke-width="1.2"/>
+              <g>
+                <circle cx="130" cy="38" r="15" fill="#0C1428" stroke="#7C3AED" stroke-width="1.6"/>
+                <text x="130" y="16" fill="#8FA0C4" font-family="monospace" font-size="9" text-anchor="middle">COORDINATOR</text>
+              </g>
+              <g><circle cx="52" cy="66" r="15" fill="#0C1428" stroke="#2B6BFF" stroke-width="1.6"/>
+                <text x="52" y="96" fill="#8FA0C4" font-family="monospace" font-size="9" text-anchor="middle">RESEARCHER</text></g>
+              <g><circle cx="208" cy="66" r="15" fill="#0C1428" stroke="#F0A63C" stroke-width="1.6"/>
+                <text x="208" y="96" fill="#8FA0C4" font-family="monospace" font-size="9" text-anchor="middle">VALIDATOR</text></g>
+              <g><circle cx="130" cy="163" r="15" fill="#0C1428" stroke="#22D3EE" stroke-width="1.6"/>
+                <text x="130" y="192" fill="#8FA0C4" font-family="monospace" font-size="9" text-anchor="middle">EXECUTOR</text></g>
+            </svg>
+          </div>
+          <div class="mock">
+            <div class="eyebrow">Mesh config</div>
+            <div><span class="lb" style="font:400 10px/1.3 var(--mono);color:var(--slate-dim)">NAME</span>
+              <div class="in" style="margin-top:4px">Market Intel Mesh</div></div>
+            <div><span class="lb" style="font:400 10px/1.3 var(--mono);color:var(--slate-dim)">DESCRIPTION</span>
+              <div class="in" style="margin-top:4px;font-size:11.5px">Collect, analyze and synthesize market intelligence</div></div>
+            <div class="metricrow"><span>Resilience</span><b style="color:var(--green)">High</b></div>
+            <div class="metricrow"><span>Max operators</span><b>12</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="note">Topology is chosen from the <em>shape of the mission</em>, never from a
+      preferred agent count — the table at the bottom of this tab is the actual decision rule.</p>
+  </div>
+
+  <div class="sec" id="scr-4">
+    <div class="screen">
+      <div class="bar"><span class="dot"></span><span class="ttl">4 · Simulate — Test &amp; Optimize</span>
+        <span class="pill frontier" style="margin-left:auto">FRONTIER</span></div>
+      <div class="body">
+        <div class="grid g2">
+          <div class="mock">
+            <div class="eyebrow">Simulation scenario</div>
+            <div class="in sel">Q4 Market Analysis</div>
+            <div class="eyebrow" style="margin-top:8px">Metrics</div>
+            <div class="metricrow"><span>Accuracy</span><b style="color:var(--green)">on</b></div>
+            <div class="metricrow"><span>Latency</span><b style="color:var(--green)">on</b></div>
+            <div class="metricrow"><span>Cost</span><b style="color:var(--green)">on</b></div>
+            <div class="metricrow"><span>Throughput</span><b style="color:var(--green)">on</b></div>
+            <div class="metricrow"><span>Reliability</span><b style="color:var(--green)">on</b></div>
+            <button class="btn" style="margin-top:12px;background:var(--green);color:#05210f">Run simulation</button>
+          </div>
+          <div>
+            <div class="eyebrow">Simulation results</div>
+            <svg viewBox="0 0 220 190" style="width:100%;max-width:250px;height:auto" aria-label="Radar chart of accuracy, latency, cost, throughput and reliability">
+              <g fill="none" stroke="#1A2744" stroke-width="1">
+                <polygon points="110,20 195,82 162,180 58,180 25,82"/>
+                <polygon points="110,52 161,89 141,148 79,148 59,89"/>
+              </g>
+              <g stroke="#1A2744" stroke-width="1">
+                <line x1="110" y1="100" x2="110" y2="20"/><line x1="110" y1="100" x2="195" y2="82"/>
+                <line x1="110" y1="100" x2="162" y2="180"/><line x1="110" y1="100" x2="58" y2="180"/>
+                <line x1="110" y1="100" x2="25" y2="82"/>
+              </g>
+              <polygon points="110,33 178,86 150,164 70,157 45,86" fill="rgba(52,211,153,.18)" stroke="#34D399" stroke-width="1.6"/>
+              <g fill="#8FA0C4" font-family="monospace" font-size="8.5" text-anchor="middle">
+                <text x="110" y="12">ACCURACY</text><text x="206" y="80">LATENCY</text>
+                <text x="172" y="192">COST</text><text x="48" y="192">THROUGHPUT</text>
+                <text x="16" y="80">RELIABILITY</text>
+              </g>
+            </svg>
+            <div class="score"><span class="sv">87</span>
+              <span class="sl">/ 100 &nbsp;·&nbsp; overall score<br><span style="color:var(--green)">excellent</span></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="gate" style="margin-top:12px"><b>⚠ Read the 87 correctly.</b> A simulation score is
+      a <em>model output</em>, not a measurement of the world. It is legitimate for comparing two
+      configurations against each other under identical assumptions, and illegitimate as a promise
+      about production. The design requires simulation and preflight specifically where a Cell will
+      have <em>consequential side effects</em> — the point is to catch a bad shape before it can
+      spend money or touch a customer.</div>
+  </div>
+
+  <div class="sec" id="scr-5">
+    <div class="screen">
+      <div class="bar"><span class="dot"></span><span class="ttl">5 · Deploy — Launch</span>
+        <span class="pill planned" style="margin-left:auto">PLANNED</span></div>
+      <div class="body">
+        <div class="grid g2" style="align-items:center">
+          <div>
+            <h3 style="font:600 15px/1.3 var(--disp);margin-bottom:12px">Deploying Cell-Mesh</h3>
+            <div class="chk">
+              <div>Provisioning resources</div><div>Starting operators</div>
+              <div>Wiring communications</div><div class="pend">Validating health</div>
+            </div>
+          </div>
+          <div>
+            <div class="eyebrow">Deployment progress</div>
+            <div class="bararea" style="height:7px"><i style="width:87%"></i></div>
+            <div class="m" style="font-size:12px;color:var(--slate);margin-top:7px;text-align:right">87%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec" id="scr-6">
+    <div class="screen">
+      <div class="bar"><span class="dot"></span><span class="ttl">6 · Live Operations — Overview</span>
+        <span class="pill proto" style="margin-left:auto">PROTOTYPE</span></div>
+      <div class="body">
+        <div class="grid g2">
+          <div>
+            <div class="eyebrow">Active missions</div>
+            <div class="metricrow"><span>Market Intel Mesh</span><b style="color:var(--green)">Running</b></div>
+            <div class="metricrow"><span>Competitor Watch</span><b style="color:var(--green)">Running</b></div>
+            <div class="metricrow"><span>Customer Insights</span><b style="color:var(--green)">Running</b></div>
+          </div>
+          <div>
+            <div class="eyebrow">Live metrics</div>
+            <div class="tiles">
+              <div class="tile"><div class="tv">128</div><div class="tk">ops / min</div></div>
+              <div class="tile"><div class="tv">96.4%</div><div class="tk">success rate</div></div>
+              <div class="tile"><div class="tv">12.3s</div><div class="tk">avg latency</div></div>
+              <div class="tile"><div class="tv">$2.4K</div><div class="tk">total cost</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen" style="margin-top:14px">
+      <div class="bar"><span class="dot"></span><span class="ttl">7 · Operator Detail — Insight Synthesizer</span>
+        <span class="pill planned" style="margin-left:auto">PLANNED</span></div>
+      <div class="body">
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+          <div class="av" style="--oc:#2B6BFF;width:32px;height:32px;border-radius:7px;
+            background:rgba(43,107,255,.18);border:1px solid #2B6BFF;display:grid;place-items:center;
+            font:600 11px/1 var(--mono);color:#7ba6ff;box-shadow:0 0 16px -3px #2B6BFF">IS</div>
+          <div><div style="font:600 14px/1.2 var(--disp)">Insight Synthesizer</div>
+            <div class="m" style="font-size:10.5px;color:var(--green)">Running</div></div>
+          <div style="margin-left:auto;min-width:150px">
+            <div class="m" style="font-size:9.5px;letter-spacing:.1em;color:var(--slate-dim)">AUTONOMY 70%</div>
+            <div class="bararea" style="margin-top:5px"><i style="width:70%"></i></div></div>
+        </div>
+        <div class="grid g2">
+          <div><div class="eyebrow">Recent activity</div>
+            <div class="metricrow"><span>Ingested 120 documents</span><b>2m ago</b></div>
+            <div class="metricrow"><span>Detected 35 insights</span><b>5m ago</b></div>
+            <div class="metricrow"><span>Validated 18 insights</span><b>9m ago</b></div>
+            <div class="metricrow"><span>Published report</span><b>12m ago</b></div></div>
+          <div><div class="eyebrow">Capabilities</div>
+            <div class="simrow"><span>Web Search</span><span class="bararea"><i style="width:85%"></i></span><b>85%</b></div>
+            <div class="simrow" style="margin-top:8px"><span>Doc Parsing</span><span class="bararea"><i style="width:92%"></i></span><b>92%</b></div>
+            <div class="simrow" style="margin-top:8px"><span>NLP Analysis</span><span class="bararea"><i style="width:88%"></i></span><b>88%</b></div>
+            <div class="simrow" style="margin-top:8px"><span>Insight Synth</span><span class="bararea"><i style="width:91%"></i></span><b>91%</b></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen" style="margin-top:14px">
+      <div class="bar"><span class="dot"></span><span class="ttl">8 · Evolve — Improve</span>
+        <span class="pill frontier" style="margin-left:auto">FRONTIER</span></div>
+      <div class="body">
+        <div class="grid g3">
+          <div><div class="eyebrow">Learning &amp; evolution</div>
+            <div class="metricrow"><span>Auto improve</span><b style="color:var(--green)">on</b></div>
+            <div class="metricrow"><span>Learning rate</span><b>Medium</b></div></div>
+          <div><div class="eyebrow">Recent learnings</div>
+            <div class="metricrow"><span>Improved source ranking</span><b>—</b></div>
+            <div class="metricrow"><span>Reduced hallucinations</span><b>—</b></div>
+            <div class="metricrow"><span>Faster insight extraction</span><b>—</b></div></div>
+          <div><div class="eyebrow">Evolution impact</div>
+            <div class="metricrow"><span>Accuracy</span><b style="color:var(--green)">+12%</b></div>
+            <div class="metricrow"><span>Latency</span><b style="color:var(--green)">−8%</b></div>
+            <div class="metricrow"><span>Cost</span><b style="color:var(--green)">−6%</b></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="gate" style="margin-top:12px"><b>⚠ These deltas are illustrative.</b> +12% / −8% /
+      −6% are the reference design's example figures, not measured results from a running system.
+      In the implementation this deck was built from, no Operative has completed a non-dry-run
+      mission — so there is nothing yet to compute a real delta against. Treat the panel as the
+      <em>shape</em> of the evolution report, not its content.</div>
+  </div>
+
+  <div class="sec">
+    <div class="eyebrow">The decision rule that actually matters</div>
+    <h2>Start from mission shape, not agent count</h2>
+    <p class="lede">The most common way to waste money on this kind of platform is to add
+      Operatives because more feels better. Coordination has a cost, and it is paid whether or not
+      it buys anything.</p>
+    <div class="tblwrap">
+      <table>
+        <thead><tr><th>Mission shape</th><th>Recommended starting formation</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td><b>Simple bounded transformation</b></td><td>Solo Operative, or a deterministic Worker</td><td>Coordination overhead is not justified.</td></tr>
+          <tr><td><b>Predictable multi-stage process</b></td><td>Specialist pipeline with a deterministic spine</td><td>Clear handoffs and clear evidence points.</td></tr>
+          <tr><td><b>High diagnostic uncertainty</b></td><td>Parallel hypothesis swarm plus synthesis</td><td>Independent search reduces time-to-root-cause.</td></tr>
+          <tr><td><b>High assurance, contested claims</b></td><td>Adversarial pair or diamond, plus an independent verifier</td><td>Creates intentional challenge and proof.</td></tr>
+          <tr><td><b>Large decomposable mission</b></td><td>Command tree, or federated Cells</td><td>Local ownership with explicit coordination.</td></tr>
+          <tr><td><b>Mission changes by phase</b></td><td>Elastic Cell</td><td>Expand and collapse specialists as uncertainty moves.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="eyebrow">Seven questions per Operative</div>
+    <h2>Configuring one seat properly</h2>
+    <div class="grid g2">
+      <div class="card"><h3>Role and objective</h3><p>What unique function does this Operative perform? If you cannot answer without describing another seat, merge them.</p></div>
+      <div class="card"><h3>Model and runtime</h3><p>Why does <em>this</em> role need <em>this</em> reasoning capability? Capability class, not brand preference.</p></div>
+      <div class="card"><h3>Context mounts</h3><p>What should it know — and <b>what should it deliberately not see?</b> The second half is the one people skip.</p></div>
+      <div class="card"><h3>Capabilities</h3><p>Exact operations, parameter bounds and environments. Not &ldquo;can use the API&rdquo;.</p></div>
+      <div class="card"><h3>Communication policy</h3><p>When should it emit a claim, a request, a handoff or an escalation?</p></div>
+      <div class="card"><h3>Resource envelope</h3><p>Budget, time, tool and model use, concurrency.</p></div>
+      <div class="card" style="border-left:2px solid var(--amber)"><h3>Evaluation</h3><p><b>How will you know this role is useful rather than decorative?</b> A seat with no answer here is the first one to cut.</p></div>
+      <div class="card" style="border-left:2px solid var(--cyan)"><h3>And then: does it survive contact?</h3><p>Run the preflight. Launch. Read the Assurance Receipt. Save the Cell Image as a certified blueprint <em>only after</em> evaluation — never on the strength of one good run.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ 04 PROTOTYPE ══════════════════ -->
+<section class="panel" id="p-proto" role="tabpanel" aria-labelledby="t-proto" hidden>
+
+  <div class="sec">
+    <div class="eyebrow">Cell Studio — working sketch</div>
+    <h2>Build a Cell, wire a mesh, score it</h2>
+    <p class="lede">This is interactive and it runs entirely in your browser — design Operatives,
+      pick a topology, and the mesh redraws from your actual roster. The simulation score is
+      computed from the configuration you built by a formula printed below it, so you can see
+      exactly why a shape scores well or badly. Nothing is sent anywhere.</p>
+
+    <div class="builder">
+      <div class="ctrl">
+        <div class="card">
+          <div><label for="opname">Operative name</label>
+            <input type="text" id="opname" value="Insight Synthesizer" maxlength="40"></div>
+          <div style="margin-top:14px"><label>Role archetype</label>
+            <div class="chips" id="roleChips"></div></div>
+          <div style="margin-top:14px"><label>Personality</label>
+            <div class="chips" id="persChips"></div></div>
+          <div style="margin-top:14px">
+            <label for="auton">Autonomy level — <span class="m" id="autonVal">70%</span></label>
+            <input type="range" id="auton" min="0" max="100" step="5" value="70"></div>
+          <div style="display:flex;gap:8px;margin-top:16px">
+            <button class="btn" id="addOp">＋ Add operative</button>
+            <button class="btn ghost" id="clearOps">Clear</button></div>
+        </div>
+
+        <div class="card">
+          <label>Mesh topology</label>
+          <div class="chips" id="topoChips"></div>
+          <div style="margin-top:14px"><label for="meshname">Mesh name</label>
+            <input type="text" id="meshname" value="Market Intel Mesh" maxlength="40"></div>
+          <div style="margin-top:14px">
+            <label for="resil">Resilience target — <span class="m" id="resilVal">High</span></label>
+            <input type="range" id="resil" min="0" max="2" step="1" value="2"></div>
+        </div>
+      </div>
+
+      <div style="display:grid;gap:14px;align-content:start">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:11px">
+            <div class="eyebrow" style="margin:0">Roster — <span id="rosterCount">0</span> / 12 operatives</div>
+            <div class="m" style="font-size:10.5px;color:var(--slate-dim)" id="meshLabel">—</div>
+          </div>
+          <div class="roster" id="roster"></div>
+        </div>
+
+        <div class="meshview">
+          <div class="eyebrow" style="margin:0">Live topology — <span id="topoName">Star</span></div>
+          <div id="meshSvg"></div>
+          <div class="m" style="font-size:10.5px;color:var(--slate-dim)" id="topoNote"></div>
+        </div>
+
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+            <div class="eyebrow" style="margin:0">Simulation</div>
+            <button class="btn" id="runSim">▶ Run simulation</button>
+          </div>
+          <div id="simOut" style="margin-top:14px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="eyebrow">Reference</div>
+    <h2>The five archetypes and the five topologies</h2>
+    <div class="grid g3" style="margin-bottom:18px">
+      <div class="card" style="border-left:2px solid #2B6BFF"><h3>Researcher</h3><p>Explores and gathers information. High context appetite, low authority.</p></div>
+      <div class="card" style="border-left:2px solid #34D399"><h3>Analyst</h3><p>Analyzes and finds patterns. Works on what the Researcher brought back.</p></div>
+      <div class="card" style="border-left:2px solid #F0A63C"><h3>Validator</h3><p>Validates and ensures quality. <b>Must be independent of whoever built the thing.</b></p></div>
+      <div class="card" style="border-left:2px solid #FF7847"><h3>Executor</h3><p>Executes tasks and takes action. The only archetype whose calls have real side effects.</p></div>
+      <div class="card" style="border-left:2px solid #A855F7"><h3>Coordinator</h3><p>Orchestrates and makes decisions. Holds the mission contract, not the tools.</p></div>
+      <div class="card" style="border-left:2px solid var(--cyan)"><h3>Why appearance follows configuration</h3><p>Colour, shape and glow are driven by role, personality and autonomy — so a mis-wired Cell <em>looks</em> wrong before it behaves wrong.</p></div>
+    </div>
+    <div class="tblwrap">
+      <table>
+        <thead><tr><th>Topology</th><th>Shape</th><th>Use it when</th><th>Cost of the shape</th></tr></thead>
+        <tbody>
+          <tr><td><b>Star</b> <span class="pill">default</span></td><td class="m">central coordinator</td><td>One owner needs to hold the mission and delegate.</td><td>The coordinator is a single point of failure.</td></tr>
+          <tr><td><b>Ring</b></td><td class="m">closed loop</td><td>Even distribution, no privileged seat.</td><td>Latency grows with every hop.</td></tr>
+          <tr><td><b>Hierarchical</b></td><td class="m">multi-level</td><td>Large decomposable missions with local ownership.</td><td>Information loss at each level.</td></tr>
+          <tr><td><b>Mesh</b></td><td class="m">fully connected</td><td>High resilience; no seat is load-bearing.</td><td>Communication cost rises as n².</td></tr>
+          <tr><td><b>Pipeline</b></td><td class="m">sequential</td><td>Structured tasks with clear handoffs and evidence points.</td><td>The slowest stage sets the pace.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="gate"><b>What this prototype is and is not.</b> It is a faithful sketch of the
+      Cell Studio interaction model — the fields, the archetypes, the topologies and the trade-offs
+      are taken from the product design. It is <b>not</b> connected to a runtime: no Operative is
+      created, no capability is granted, no model is called and no mission runs. The score is
+      arithmetic over your choices, and its formula is shown so it cannot be mistaken for a
+      measurement. <span class="pill proto">PROTOTYPE</span></div>
+  </div>
+</section>
+
+<!-- ══════════════════ 05 USE CASES ══════════════════ -->
+<section class="panel" id="p-cases" role="tabpanel" aria-labelledby="t-cases" hidden>
+
+  <div class="sec">
+    <div class="eyebrow">Where the money actually is</div>
+    <h2>Nine ways this earns — and what each one needs first</h2>
+    <p class="lede">Ordered by how little unbuilt machinery they require. The first three earn with
+      today's off-the-shelf agent tooling plus the platform's <em>discipline</em>; the last three
+      need the compiler and the mesh to exist. Every one names the Cell shape that does the work
+      and the gate that stands between it and an invoice.</p>
+
+    <div class="truth" style="margin:0 0 22px">
+      <div class="ic">⚠</div>
+      <p><b>Every figure below is <span class="pill" style="border-color:var(--amber);color:var(--amber)">ASSUMED</span>, not measured.</b>
+        They are pricing <em>models</em> — anchors for a conversation — not revenue projections and
+        not results. No mission has been sold or delivered on this platform, and the reference
+        implementation has completed <b>zero</b> non-dry-run agent runs. Treat this tab as
+        opportunity mapping with its basis stated, which is the only honest form it can take.</p>
+    </div>
+
+    <div class="eyebrow">Personal — leverage on your own time</div>
+    <div class="grid g2" style="margin-bottom:30px">
+
+      <div class="uc">
+        <div class="uch"><span class="ucn">P1</span>
+          <h3>The pre-market research desk</h3><span class="pill proto">PROTOTYPE</span></div>
+        <div class="ucb">
+          <p>A Cell that runs before the session opens: gathers overnight moves, macro calendar,
+            positioning and news, cross-checks each claim against a second source, and hands you one
+            page with every figure carrying its source. It does not predict; it removes the 45
+            minutes of gathering.</p>
+          <dl>
+            <dt>Cell shape</dt><dd>Pipeline — <b>Researcher → Analyst → Validator</b>. The Validator is independent and its only job is killing unsourced claims.</dd>
+            <dt>Earns by</dt><dd>Time, not signal. <b>~45 min/session × 5 sessions</b> is the honest unit; whether that converts to P&amp;L is yours to measure, not the platform's to claim.</dd>
+            <dt>Cost model</dt><dd class="m">ASSUMED · $0.30–$1.20 per run in model spend</dd>
+            <dt>Gate</dt><dd>None material. This is buildable today with existing tooling — the platform contribution is the <em>evidence discipline</em>, not the runtime.</dd>
+          </dl>
+          <div class="gate"><b>The trap.</b> A research Cell that starts producing directional
+            opinions has stopped being an instrument. Bound its capabilities to retrieval and
+            summarisation, and never give it a view.</div>
+        </div>
+      </div>
+
+      <div class="uc">
+        <div class="uch"><span class="ucn">P2</span>
+          <h3>Consulting delivery leverage</h3><span class="pill proto">PROTOTYPE</span></div>
+        <div class="ucb">
+          <p>The grunt half of an analytics engagement — population enumeration, cross-checking,
+            reconciliation tables, first-draft write-ups — done by a Cell whose output you review
+            rather than produce. You keep the judgement and the client relationship; you stop
+            selling the typing.</p>
+          <dl>
+            <dt>Cell shape</dt><dd>Adversarial pair — <b>Builder + independent Verifier</b>, human gate before anything reaches the client.</dd>
+            <dt>Earns by</dt><dd>Margin on fixed-fee work. The same deliverable at lower delivery hours, or a bigger deliverable in the same hours.</dd>
+            <dt>Cost model</dt><dd class="m">ASSUMED · converts billable hours to ~$5–40 of model spend per analysis pass</dd>
+            <dt>Gate</dt><dd><b>Client data handling.</b> Nothing client-identifying goes into a shared context mount without an explicit authority boundary — this is a contractual question before it is a technical one.</dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="uc">
+        <div class="uch"><span class="ucn">P3</span>
+          <h3>The authority engine</h3><span class="pill planned">PLANNED</span></div>
+        <div class="ucb">
+          <p>Publish evidence-backed analysis on a cadence you could not sustain by hand — each
+            piece carrying its own regeneration command and its own limits section. In a market
+            saturated with confident AI-written content, <b>the differentiator is the audit
+            trail</b>, and almost nobody is doing it.</p>
+          <dl>
+            <dt>Cell shape</dt><dd>Pipeline with a rendered-output gate — <b>Researcher → Writer → Validator → render check</b>.</dd>
+            <dt>Earns by</dt><dd>Indirectly and slowly: inbound leads, rate, and the option value of being the person who publishes proofs rather than takes.</dd>
+            <dt>Cost model</dt><dd class="m">ASSUMED · $2–15 per published piece</dd>
+            <dt>Gate</dt><dd>Your own review capacity. Publishing volume you cannot personally stand behind converts authority into liability.</dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="uc">
+        <div class="uch"><span class="ucn">P4</span>
+          <h3>Personal knowledge compounding</h3><span class="pill frontier">FRONTIER</span></div>
+        <div class="ucb">
+          <p>Your notes, past engagements, decisions and their outcomes as a permissioned
+            HyperMESH — so the answer to <em>&ldquo;have we solved this before, and did it
+            work?&rdquo;</em> takes seconds and comes back with provenance instead of vibes.</p>
+          <dl>
+            <dt>Cell shape</dt><dd>Not a Cell — a <b>memory layer</b> every other Cell mounts.</dd>
+            <dt>Earns by</dt><dd>Compounding. Never directly; it makes P1–P3 and every business case below materially better.</dd>
+            <dt>Gate</dt><dd><b>The hard one.</b> HyperMESH is the most contested concept in the source corpus — designed, specified, not built. A vector store over your notes is <em>not</em> this; it lacks the provenance separation that makes the answers trustworthy.</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+
+    <div class="eyebrow">Business — things other people pay for</div>
+    <div class="grid g2">
+
+      <div class="uc">
+        <div class="uch"><span class="ucn">B1</span>
+          <h3>Productised evidence-gated audits</h3><span class="pill impl">IMPLEMENTED</span></div>
+        <div class="ucb">
+          <p>A fixed-scope, fixed-fee audit — data pipeline, dashboard trust, agent estate,
+            usage reconciliation — delivered with a declared counting basis, an enumerated
+            population, and every figure labelled <code>MEASURED / DERIVED / ASSUMED / PROXY</code>.
+            <b>This is the one case where the machinery already exists and has been exercised.</b></p>
+          <dl>
+            <dt>Cell shape</dt><dd>Council — parallel independent analysts on orthogonal parts of the measurement chain, then a reconciliation nobody is allowed to skip.</dd>
+            <dt>Who pays</dt><dd>Anyone who has been burned by a wrong number reaching a client or a board.</dd>
+            <dt>Cost model</dt><dd class="m">ASSUMED · fixed fee per audit, priced on population size not hours</dd>
+            <dt>Gate</dt><dd>None technical. This is a <b>packaging and positioning</b> job, not a build.</dd>
+          </dl>
+          <div class="gate"><b>⭐ Start here.</b> Of the nine, this is the only one whose
+            differentiator is already built, already validated, and already has a track record of
+            catching real errors. Everything else on this page is a bet; this is a product.</div>
+        </div>
+      </div>
+
+      <div class="uc">
+        <div class="uch"><span class="ucn">B2</span>
+          <h3>Assurance-receipt delivery</h3><span class="pill proto">PROTOTYPE</span></div>
+        <div class="ucb">
+          <p>Agent-delivered work where the deliverable includes a <b>Mission Assurance
+            Receipt</b> — verdict, corpus hash, evidence classes and their states, cost basis, and
+            an explicit <em>what we could not measure</em> section. Sold specifically against
+            competitors who deliver output and a confident email.</p>
+          <dl>
+            <dt>Cell shape</dt><dd>Any — the receipt is a <b>join over existing producers</b>, not a new subsystem. The verdict lattice, evidence classes and cost basis already exist separately.</dd>
+            <dt>Who pays</dt><dd>Regulated, audited or burned buyers. The ones who ask &ldquo;how do you know?&rdquo; in the first meeting.</dd>
+            <dt>Cost model</dt><dd class="m">ASSUMED · premium over undifferentiated agent delivery</dd>
+            <dt>Gate</dt><dd><b>Build the join.</b> Every one of the receipt's nine sections has a producer already; what is absent is the join, the rendering, and the <code>limits.unmeasured</code> section — which is the section that makes it worth paying for.</dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="uc">
+        <div class="uch"><span class="ucn">B3</span>
+          <h3>Certified blueprint library</h3><span class="pill planned">PLANNED</span></div>
+        <div class="ucb">
+          <p>Sell the Cell Image, not the engagement. A versioned, eval-backed organizational
+            blueprint for a specific recurring job — with its evaluation record, failure modes and
+            lineage attached, so a buyer knows what they are getting.</p>
+          <dl>
+            <dt>Cell shape</dt><dd>The product <em>is</em> a Cell Genome plus its certification record.</dd>
+            <dt>Who pays</dt><dd>Teams who want the shape without the discovery cost.</dd>
+            <dt>Cost model</dt><dd class="m">ASSUMED · one-off licence or subscription per blueprint</dd>
+            <dt>Gate</dt><dd><b>Certification has to mean something.</b> Selling a blueprint whose evals were never calibrated is selling a badge. Requires the Cell Image format, pinned evals and an attestation record — none of which is built.</dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="uc">
+        <div class="uch"><span class="ucn">B4</span>
+          <h3>Vertical Cell products</h3><span class="pill planned">PLANNED</span></div>
+        <div class="ucb">
+          <p>One narrow, painful, recurring job done end-to-end for a specific industry — marketing
+            model reconstruction, connector conformance, month-end reconciliation, incident
+            forensics. Deep instead of general, so the evidence claims are provable.</p>
+          <dl>
+            <dt>Cell shape</dt><dd>Elastic Cell — expands into a specialist swarm when the input is unfamiliar, collapses when it is routine.</dd>
+            <dt>Who pays</dt><dd>The function that owns the pain and already has a budget line for it.</dd>
+            <dt>Cost model</dt><dd class="m">ASSUMED · per-run or per-seat, benchmarked against the manual process</dd>
+            <dt>Gate</dt><dd>Requires the <b>Organizational Compiler</b> — mission intent to Cell Image. Currently designed and specified, with the category itself contested in the corpus.</dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="uc">
+        <div class="uch"><span class="ucn">B5</span>
+          <h3>Federation and compute exchange</h3><span class="pill frontier">FRONTIER</span></div>
+        <div class="ucb">
+          <p>Independent CELL&nbsp;OS nodes joining a mesh — discovery, secure messaging, federated
+            knowledge queries, resource exchange and cross-node observability, while each node keeps
+            local ownership of its data and runtime authority.</p>
+          <dl>
+            <dt>Cell shape</dt><dd>Federation — the optional outermost layer of the object model.</dd>
+            <dt>Who pays</dt><dd>Nobody yet. This is a network-effects play that only makes sense after many nodes exist.</dd>
+            <dt>Gate</dt><dd><b>Everything above it.</b> Federation before a single node has completed a real mission is architecture for its own sake — the exact failure this estate is organised against.</dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="uc" style="border-color:rgba(240,166,60,.32)">
+        <div class="uch" style="background:rgba(240,166,60,.06)"><span class="ucn">⚑</span>
+          <h3>The honest gate across all nine</h3></div>
+        <div class="ucb">
+          <p>Four facts stand between this page and revenue. They are not reasons to stop; they are
+            the actual work queue.</p>
+          <dl>
+            <dt>Zero real runs</dt><dd>The run ledger holds <b>10 rows, 0 PASS</b>, and all 7 recorded agent returns carry <code>dry_run=True</code>. Until one real mission completes, every delivery claim is a forecast.</dd>
+            <dt>No mission object</dt><dd>The Mission Assembly Plan is <b>specified only</b> — no mission object, schema or lifecycle exists. B4 and B3 depend on it.</dd>
+            <dt>The gate warns, it does not refuse</dt><dd>The known-failure preflight is <b>WARN-ONLY</b>. B2 sells refusal as a feature, so this has to become real before it can be sold.</dd>
+            <dt>One formation was already rejected</dt><dd>A three-agent orchestrator team was <b>built, tested and rejected on evidence</b> — kept, not deleted, with a quantified unlock threshold. That is a good sign about the method and a warning about assuming multi-agent shapes work.</dd>
+          </dl>
+          <div class="gate"><b>Recommended order:</b> B1 today (nothing to build) → P1 and P2 this
+            month (existing tooling, real leverage) → B2 next (build the receipt join; it is a join,
+            not a subsystem) → then reassess. B3, B4 and B5 stay on the shelf until one real mission
+            has completed and been certified.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ 06 USER GUIDE ══════════════════ -->
+<section class="panel" id="p-guide" role="tabpanel" aria-labelledby="t-guide" hidden>
+
+  <div class="sec">
+    <div class="eyebrow">Operator guide · condensed from Master R&amp;D&amp;O Guide v0.2</div>
+    <h2>First run, in nine steps</h2>
+    <p class="lede">The order matters. Steps 5 and 6 are the ones people skip, and they are the two
+      that stop a first Cell doing something expensive.</p>
+    <div class="grid g2">
+      <div class="card"><h3><span class="n">1</span>Create a workspace</h3><p>Choose your deployment and trust mode before anything else — it sets the authority ceiling for everything you build after.</p></div>
+      <div class="card"><h3><span class="n">2</span>Describe a north-star objective</h3><p>Plain language. Not a prompt, not a task list — the outcome you want.</p></div>
+      <div class="card"><h3><span class="n">3</span>Review the Mission Contract</h3><p>The compiler proposes outcome, evidence, budget, authority and risk. <b>Read it.</b> This is where you find out what it thinks you asked for.</p></div>
+      <div class="card"><h3><span class="n">4</span>Choose a formation</h3><p>Take a starter formation, or accept the compiler's recommendation — checked against the mission-shape table.</p></div>
+      <div class="card" style="border-left:2px solid var(--amber)"><h3><span class="n">5</span>Review capabilities and mounts</h3><p>Capabilities, data mounts, resource limits and human gates. <b>The most consequential screen in the product</b> — everything a Cell can do wrong, it does through here.</p></div>
+      <div class="card" style="border-left:2px solid var(--amber)"><h3><span class="n">6</span>Run preflight</h3><p>Mandatory whenever the Cell will have consequential side effects. A simulation that costs cents beats a mistake that costs a client.</p></div>
+      <div class="card"><h3><span class="n">7</span>Launch and watch</h3><p>Mission Board and Mission Control, for blockers and evidence — not for reassurance.</p></div>
+      <div class="card"><h3><span class="n">8</span>Read the Assurance Receipt</h3><p>Verdict, evidence states, cost, and what could not be measured.</p></div>
+      <div class="card" style="border-left:2px solid var(--cyan)"><h3><span class="n">9</span>Save the Image — later</h3><p>Keep a useful Cell Image as a candidate blueprint <b>only after evaluation</b>. Certifying on one good run is how you ship a badge instead of a product.</p></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="eyebrow">Eight surfaces, eight questions</div>
+    <h2>Where to go when you want to know something</h2>
+    <div class="tblwrap">
+      <table>
+        <thead><tr><th>Surface</th><th>The question it answers</th><th>Core widgets</th></tr></thead>
+        <tbody>
+          <tr><td><b>Organization Home</b></td><td>What is my synthetic organization doing, and is it healthy?</td><td>Goals, mission queue, Cells, cost, health, decisions, experiments.</td></tr>
+          <tr><td><b>Mission Board</b></td><td>What work exists, what is blocked, what should act next?</td><td>Board / list / timeline / graph, dependencies, owners, evidence, gates.</td></tr>
+          <tr><td><b>Mission Control</b></td><td>What is happening right now?</td><td>Live topology, runs, events, resources, syscalls, gates, rollback.</td></tr>
+          <tr><td><b>Briefing Room</b></td><td>What is unknown, and what decision is needed?</td><td>Questions, options, evidence, assumptions, approvals.</td></tr>
+          <tr><td><b>Cell Studio</b></td><td>How is this Cell built?</td><td>Topology, genome, capabilities, mounts, budgets, versions, diff, evals.</td></tr>
+          <tr><td><b>HyperMESH Explorer</b></td><td>What does the organization know, and why?</td><td>Graph, episodes, provenance, contradictions, retrieval trace.</td></tr>
+          <tr><td><b>Evolution Chamber</b></td><td>Which configuration performs better?</td><td>Experiments, shadows, distributions, Pareto frontier, promotion.</td></tr>
+          <tr><td><b>Replay / Profiler</b></td><td>Why did this mission behave this way?</td><td>Timeline, calls, context, waits, costs, evidence, critical path.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="eyebrow">Worked example</div>
+    <h2>An elastic engineering Cell, phase by phase</h2>
+    <p class="lede">Mission: repair an unfamiliar integration failure. Watch the team size follow
+      the <em>uncertainty</em> rather than the ambition.</p>
+    <div class="card" style="padding:22px 24px">
+      <div class="m" style="font-size:12.5px;line-height:1.95;color:var(--slate);white-space:pre;overflow-x:auto">
+<span style="color:var(--slate-dim)">PHASE 1 — solo investigator</span>
+  <span style="color:var(--bone)">ATLAS</span>
+
+        <span style="color:var(--amber)">uncertainty remains high ──▶ expand</span>
+
+<span style="color:var(--slate-dim)">PHASE 2 — parallel diagnosis</span>
+  <span style="color:var(--bone)">ATLAS</span>
+   ├── <span style="color:var(--cyan)">AUTH specialist</span>
+   ├── <span style="color:var(--cyan)">runtime / code investigator</span>
+   └── <span style="color:var(--cyan)">historical evidence specialist</span>
+
+        <span style="color:var(--amber)">root cause converges ──▶ collapse and reform</span>
+
+<span style="color:var(--slate-dim)">PHASE 3 — build with independent verification</span>
+  <span style="color:var(--bone)">Lead</span> ──▶ <span style="color:var(--bone)">Builder</span> ──▶ <span style="color:var(--bone)">Verifier</span>
+
+        <span style="color:var(--amber)">high-risk promotion ──▶ fork Shadow reviewer</span>
+
+  <span style="color:var(--violet)">Shadow Cell</span>  <span style="color:var(--slate-dim)">(no production authority)</span>
+
+        <span style="color:var(--green)">evidence converges ──▶ human production gate ──▶ Assurance Receipt</span></div>
+    </div>
+    <p class="note"><b>Why this works.</b> Team size follows mission uncertainty. Specialists receive
+      <em>different</em> Context Pages. The verifier is independent of the builder. The Shadow never
+      gains production authority. And the outcome is accepted because the evidence satisfies the
+      Mission Contract — <b>not because the lead says it is complete.</b></p>
+  </div>
+
+  <div class="sec">
+    <div class="eyebrow">Operating discipline</div>
+    <h2>Daily routine, and the four things never to automate yet</h2>
+    <div class="grid g2">
+      <div class="card"><h3>The daily pass</h3>
+        <p>Check mission queue and blockers. Review anything sitting at a human gate. Read
+          overnight assurance receipts — <em>including the failures</em>. Check budget burn against
+          value delivered. Look at what the Evolution Chamber wants to promote, and decline most
+          of it.</p></div>
+      <div class="card"><h3>Common Cell operations</h3>
+        <p>Pause and resume a Cell. Expand or collapse a formation mid-mission. Re-mount a
+          different Context Page. Fork a Shadow to test an alternative. Roll a Cell Image back to a
+          previous version. Retire a seat that never earned its evaluation.</p></div>
+      <div class="card"><h3>Recovery ladder</h3>
+        <p>Retry the attempt → re-plan the task → re-mount narrower context → escalate to a
+          human → pause the Cell → roll back the Image. <b>Climb it in order.</b> Jumping to
+          rollback hides the diagnosis you needed.</p></div>
+      <div class="card" style="border-left:2px solid var(--amber)"><h3>⛔ Never automatic in early releases</h3>
+        <p>Merging. Per-secret approval. Promotion to production. Any evidence-gated deploy.
+          <b>These stay human, permanently by design</b> — not as a limitation of the current
+          version but as a property of the architecture.</p></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="eyebrow">Where CELL OS deliberately differs</div>
+    <h2>Three things it refuses to be</h2>
+    <div class="grid g3">
+      <div class="card"><h3>Not a chat wrapper</h3><p>The unit of work is a versioned organization, not a conversation. If the answer to &ldquo;what did you build?&rdquo; is a transcript, nothing was built.</p></div>
+      <div class="card"><h3>Not an issue tracker</h3><p>A conventional tracker optimises for people coordinating planned work. Machine execution, authority, evidence, attempts and certification cannot be forced into labels and comments without creating an untestable second control plane.</p></div>
+      <div class="card"><h3>Not engagement-optimised</h3><p>No loot boxes, no randomized rewards, no optimisation for time-spent. Reputation attaches to verified useful output and <b>reverses when the evidence is invalidated.</b></p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ 07 LAUNCH FILM ══════════════════ -->
+<section class="panel" id="p-film" role="tabpanel" aria-labelledby="t-film" hidden>
+  <div class="sec">
+    <div class="eyebrow">Launch film · 90-second master</div>
+    <h2>The category film, and the previz bay that proves its timing</h2>
+    <p class="lede">A complete production package exists for a 90-second launch film — shooting
+      script, narration inside a measured word budget, an eleven-cue sound vocabulary, motion spec,
+      generative-video prompts and cutdowns. The previz is <b>watchable</b>: real timings, real
+      typography, a real transport.</p>
+
+    <div class="filmlink">
+      <div class="fs">
+        <div><b>90.0s</b>runtime</div><div><b>31</b>shots</div><div><b>156</b>vo words</div>
+        <div><b>25.0s</b>silence</div><div><b>2 / 20</b>indicative claims</div>
+      </div>
+      <a class="btn" style="margin-left:auto;text-decoration:none;border:0"
+         href="https://claude.ai/code/artifact/db289afc-5bde-44e6-b79f-5827513a1d75"
+         target="_blank" rel="noopener">▶ Open the previz bay</a>
+    </div>
+
+    <div class="grid g2" style="margin-top:20px">
+      <div class="card"><h3>The film's anchor is the one measured claim</h3>
+        <p>One reel is built, tested, validated and standards-grounded — the five-verdict lattice:</p>
+        <p class="m" style="color:var(--cyan);font-size:12.5px">NOT_RUN &lt; PASS &lt; UNMEASURABLE &lt; FAIL &lt; ERROR</p>
+        <p><em>&ldquo;A check whose instrument could not run has not passed.&rdquo;</em> Grounded in
+          ISO/IEC 9646 and carried still by TTCN-3. Every competitor can claim orchestration; none
+          ships a verdict meaning <b>the thing that was supposed to measure this could not see.</b></p></div>
+      <div class="card"><h3>What the package had to correct</h3>
+        <p>The brief specified a <code>VERIFIED_SUCCESS</code> mission state. It returns <b>zero
+          hits</b> in the repository, and a <code>RED → GREEN</code> transition cannot be depicted
+          against a ledger holding 0 <code>PASS</code>. Both were cut and replaced with the lattice
+          that actually exists.</p>
+        <p>The brief also asked for 75–90 seconds while its own timecodes summed to 118. Resolved
+          as a 90.0s master with a compression ledger, plus a documented extended cut.</p></div>
+    </div>
+    <p class="note">Every mechanism reel in the film carries a <b>maturity chip</b> — the same
+      discipline this deck uses — and it <em>downgrades</em> at shot 24 rather than only ever
+      climbing. A film that upgrades its own badge throughout is marketing; one that downgrades
+      itself is a status report.</p>
+  </div>
+</section>
+
+<footer>
+  <b>CELL//OS Command Deck</b> · built from the Architecture Overview and Build-Your-First-OPC
+  diagrams, Product Technical Design v0.1, and Master Research / Design / Development / Operations
+  User Guide v0.2.<br>
+  Inter-layer flow labels follow the source diagram, with one correction: the label between layers
+  5 and 6 is rendered as <b>events · state deltas</b> where the source repeats
+  <em>plans · tasks · tool calls</em>.<br>
+  Maturity chips follow the product's own legend (Technical Design §1.3). Pricing figures are
+  <b>ASSUMED</b> models, never measurements. The prototype tab runs locally and calls nothing.
+</footer>
+</div>
+
+<script>
+document.documentElement.classList.add('js');
+const STILL = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+
+/* ═══ tabs ═══ */
+const tabs = $$('.tab');
+function showTab(id, push){
+  tabs.forEach(t => {
+    const on = t.id === id;
+    t.setAttribute('aria-selected', on ? 'true' : 'false');
+    document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+  });
+  if (push) history.replaceState(null, '', '#' + id.slice(2));
+  revealSweep();
+}
+tabs.forEach(t => t.addEventListener('click', () => {
+  showTab(t.id, true);
+  window.scrollTo({ top: 0, behavior: STILL ? 'auto' : 'smooth' });
+}));
+$('.tabs-in').addEventListener('keydown', e => {
+  const i = tabs.findIndex(t => t.getAttribute('aria-selected') === 'true');
+  let n = null;
+  if (e.key === 'ArrowRight') n = (i + 1) % tabs.length;
+  if (e.key === 'ArrowLeft') n = (i - 1 + tabs.length) % tabs.length;
+  if (n !== null) { e.preventDefault(); tabs[n].focus(); showTab(tabs[n].id, true); }
+});
+// deep link, and in-page anchors on the First Operative tab
+const hash = location.hash.replace('#', '');
+if (hash && document.getElementById('t-' + hash)) showTab('t-' + hash, false);
+$$('.jstep').forEach(a => a.addEventListener('click', e => {
+  const t = document.getElementById(a.getAttribute('href').slice(1));
+  if (t) { e.preventDefault(); t.scrollIntoView({ behavior: STILL ? 'auto' : 'smooth', block: 'start' }); }
+}));
+
+/* ═══ architecture: accordion — opening one closes the others ═══ */
+const dets = $$('.ldet');
+dets.forEach(d => d.addEventListener('toggle', () => {
+  if (d.open) dets.forEach(o => { if (o !== d) o.open = false; });
+}));
+
+/* ═══ prototype: Cell Studio ═══ */
+const ROLES = [
+  { k:'Researcher', c:'#2B6BFF', ab:'RS', d:'Explores and gathers information',  ctx:1.0, auth:0.2, cost:1.0 },
+  { k:'Analyst',    c:'#34D399', ab:'AN', d:'Analyzes and finds patterns',        ctx:0.7, auth:0.3, cost:1.1 },
+  { k:'Validator',  c:'#F0A63C', ab:'VD', d:'Validates and ensures quality',      ctx:0.5, auth:0.4, cost:0.8 },
+  { k:'Executor',   c:'#FF7847', ab:'EX', d:'Executes tasks and takes action',    ctx:0.4, auth:1.0, cost:1.3 },
+  { k:'Coordinator',c:'#A855F7', ab:'CO', d:'Orchestrates and makes decisions',   ctx:0.8, auth:0.7, cost:0.9 }
+];
+const PERS = ['Analytical', 'Curious', 'Precise', 'Cautious'];
+const TOPOS = [
+  { k:'Star',        note:'Central coordinator manages all. One privileged seat; a single point of failure.',      links:n=>Math.max(0,n-1), resil:0.55, lat:0.80, over:0.30 },
+  { k:'Ring',        note:'Even distribution in a closed loop. No privileged seat; latency grows per hop.',        links:n=>n<2?0:n,          resil:0.70, lat:0.50, over:0.45 },
+  { k:'Hierarchical',note:'Multi-level leadership and delegation. Scales, but loses information at each level.',   links:n=>Math.max(0,n-1), resil:0.65, lat:0.65, over:0.40 },
+  { k:'Mesh',        note:'Fully connected for high resilience. Communication cost rises as n squared.',           links:n=>n*(n-1)/2,       resil:0.95, lat:0.55, over:0.85 },
+  { k:'Pipeline',    note:'Sequential flow for structured tasks. Clear handoffs; the slowest stage sets the pace.',links:n=>Math.max(0,n-1), resil:0.40, lat:0.35, over:0.20 }
+];
+const RESIL = ['Low', 'Medium', 'High'];
+const MAX_OPS = 12;
+
+let role = 0, pers = new Set([0]), topo = 0, ops = [], sim = null;
+
+function chip(label, on, color){
+  return `<button class="chip" role="button" aria-pressed="${on}"${color ? ` style="--rc:${color}"` : ''}>${label}</button>`;
+}
+function paintChips(){
+  $('#roleChips').innerHTML = ROLES.map((r,i) => chip(r.k, i === role, r.c)).join('');
+  $$('#roleChips .chip').forEach((b,i) => b.onclick = () => { role = i; paintChips(); });
+  $('#persChips').innerHTML = PERS.map((p,i) => chip(p, pers.has(i), '#22D3EE')).join('');
+  $$('#persChips .chip').forEach((b,i) => b.onclick = () => {
+    pers.has(i) ? pers.delete(i) : pers.add(i);
+    if (!pers.size) pers.add(i);
+    paintChips();
+  });
+  $('#topoChips').innerHTML = TOPOS.map((t,i) => chip(t.k, i === topo, '#7C3AED')).join('');
+  $$('#topoChips .chip').forEach((b,i) => b.onclick = () => { topo = i; sim = null; paintAll(); });
+}
+
+function paintRoster(){
+  $('#rosterCount').textContent = ops.length;
+  $('#meshLabel').textContent = ops.length
+    ? `${$('#meshname').value || 'Untitled mesh'} · ${TOPOS[topo].k} · ${RESIL[+$('#resil').value]} resilience`
+    : '—';
+  if (!ops.length){
+    $('#roster').innerHTML = '<div class="empty">No operatives yet. Design one on the left and add it — the mesh redraws from whatever you build.</div>';
+    return;
+  }
+  $('#roster').innerHTML = ops.map((o,i) => `
+    <div class="op" style="--oc:${o.role.c}">
+      <div class="av">${o.role.ab}</div>
+      <div><div class="on">${esc(o.name)}</div>
+        <div class="or">${o.role.k} · autonomy ${o.auton}% · ${o.pers.join(' / ')}</div></div>
+      <button class="rm" data-i="${i}" aria-label="Remove ${esc(o.name)}">×</button>
+    </div>`).join('');
+  $$('#roster .rm').forEach(b => b.onclick = () => {
+    ops.splice(+b.dataset.i, 1); sim = null; paintAll();
+  });
+}
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+
+/* mesh geometry computed from the roster, not hardcoded */
+function paintMesh(){
+  const T = TOPOS[topo], n = ops.length;
+  $('#topoName').textContent = T.k;
+  $('#topoNote').textContent = n
+    ? `${T.note}  ·  ${T.links(n)} link${T.links(n) === 1 ? '' : 's'} for ${n} operative${n === 1 ? '' : 's'}`
+    : T.note;
+  if (!n){ $('#meshSvg').innerHTML = '<div class="empty">Add an operative to draw the mesh.</div>'; return; }
+
+  const W = 460, H = 250, cx = W/2, cy = H/2, R = Math.min(96, 44 + n*7);
+  let pts = [];
+  if (T.k === 'Star'){
+    pts.push({ x:cx, y:cy, o:ops[0] });
+    for (let i = 1; i < n; i++){
+      const a = -Math.PI/2 + (i-1) * (2*Math.PI/Math.max(1,n-1));
+      pts.push({ x:cx + R*Math.cos(a), y:cy + R*0.72*Math.sin(a), o:ops[i] });
+    }
+  } else if (T.k === 'Ring' || T.k === 'Mesh'){
+    for (let i = 0; i < n; i++){
+      const a = -Math.PI/2 + i * (2*Math.PI/n);
+      pts.push({ x:cx + R*Math.cos(a), y:cy + R*0.72*Math.sin(a), o:ops[i] });
+    }
+  } else if (T.k === 'Pipeline'){
+    const gap = Math.min(110, (W-90)/Math.max(1,n-1));
+    const x0 = cx - gap*(n-1)/2;
+    for (let i = 0; i < n; i++) pts.push({ x:x0 + i*gap, y:cy, o:ops[i] });
+  } else { // Hierarchical
+    const rows = [];
+    let rem = n, lvl = 0;
+    while (rem > 0){ const take = Math.min(rem, lvl === 0 ? 1 : lvl*2); rows.push(take); rem -= take; lvl++; }
+    let k = 0;
+    rows.forEach((cnt, ri) => {
+      const y = 44 + ri * ((H-88)/Math.max(1,rows.length-1) || 0);
+      for (let i = 0; i < cnt; i++){
+        const gap = Math.min(96, (W-90)/Math.max(1,cnt));
+        const x = cx + (i - (cnt-1)/2) * gap;
+        pts.push({ x, y: rows.length === 1 ? cy : y, o:ops[k++] });
+      }
+    });
+  }
+
+  let edges = [];
+  if (T.k === 'Star') for (let i = 1; i < n; i++) edges.push([0, i]);
+  if (T.k === 'Ring' && n > 1) for (let i = 0; i < n; i++) edges.push([i, (i+1) % n]);
+  if (T.k === 'Mesh') for (let i = 0; i < n; i++) for (let j = i+1; j < n; j++) edges.push([i, j]);
+  if (T.k === 'Pipeline') for (let i = 0; i < n-1; i++) edges.push([i, i+1]);
+  if (T.k === 'Hierarchical'){
+    let idx = 1, parent = 0, cursor = 0;
+    while (idx < n){
+      edges.push([parent, idx]);
+      cursor++;
+      if (cursor === 2){ cursor = 0; parent++; }
+      idx++;
+    }
+  }
+
+  const line = ([a,b]) => `<line x1="${pts[a].x.toFixed(1)}" y1="${pts[a].y.toFixed(1)}" x2="${pts[b].x.toFixed(1)}" y2="${pts[b].y.toFixed(1)}"/>`;
+  const node = p => `<g>
+      <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="15" fill="#0C1428" stroke="${p.o.role.c}" stroke-width="1.7"/>
+      <text x="${p.x.toFixed(1)}" y="${(p.y+3.5).toFixed(1)}" fill="${p.o.role.c}" font-family="monospace" font-size="9" text-anchor="middle">${p.o.role.ab}</text>
+      <text x="${p.x.toFixed(1)}" y="${(p.y+29).toFixed(1)}" fill="#5B6B8C" font-family="monospace" font-size="7.5" text-anchor="middle">${esc(p.o.name.slice(0,14).toUpperCase())}</text>
+    </g>`;
+  $('#meshSvg').innerHTML =
+    `<svg viewBox="0 0 ${W} ${H}" aria-label="${T.k} topology with ${n} operatives and ${T.links(n)} links">
+       <g stroke="#26375C" stroke-width="1.1" fill="none">${edges.map(line).join('')}</g>
+       ${pts.map(node).join('')}
+     </svg>`;
+}
+
+/* score — arithmetic over the configuration, and the formula is printed */
+function runSim(){
+  const T = TOPOS[topo], n = ops.length;
+  if (!n){ sim = null; paintSim(); return; }
+  const avgAuton = ops.reduce((a,o) => a + o.auton, 0) / n / 100;
+  const roles = new Set(ops.map(o => o.role.k));
+  const diversity = roles.size / Math.min(n, ROLES.length);
+  const hasValidator = ops.some(o => o.role.k === 'Validator');
+  const hasExecutor  = ops.some(o => o.role.k === 'Executor');
+  const resilTarget  = +$('#resil').value / 2;
+  const links = T.links(n);
+  const commLoad = Math.min(1, links / 14);
+
+  const accuracy   = clamp(0.42 + 0.30*diversity + (hasValidator ? 0.18 : 0) - 0.16*Math.max(0, avgAuton - 0.75));
+  const latency    = clamp(0.92 - T.lat*0.42 - 0.05*Math.max(0, n - 4));
+  const cost       = clamp(0.95 - 0.055*n*ops.reduce((a,o)=>a+o.role.cost,0)/Math.max(1,n) - 0.22*commLoad);
+  const throughput = clamp(0.34 + 0.11*n - 0.30*T.over - 0.16*commLoad);
+  const reliability= clamp(0.30 + 0.52*T.resil + 0.16*resilTarget + (hasValidator ? 0.10 : 0) - (hasExecutor && !hasValidator ? 0.18 : 0));
+  const overall = Math.round(100 * (accuracy*0.28 + latency*0.16 + cost*0.16 + throughput*0.16 + reliability*0.24));
+  sim = { accuracy, latency, cost, throughput, reliability, overall, links, diversity, hasValidator, hasExecutor };
+  paintSim();
+}
+const clamp = v => Math.max(0.04, Math.min(1, v));
+
+function paintSim(){
+  if (!sim){
+    $('#simOut').innerHTML = '<div class="empty">Build a roster, choose a topology, then run the simulation.</div>';
+    return;
+  }
+  const rows = [['Accuracy','accuracy'],['Latency','latency'],['Cost','cost'],
+                ['Throughput','throughput'],['Reliability','reliability']];
+  const band = sim.overall >= 80 ? ['Excellent','#34D399']
+             : sim.overall >= 62 ? ['Workable','#22D3EE']
+             : sim.overall >= 44 ? ['Marginal','#F0A63C'] : ['Poor','#FF7847'];
+  const warn = [];
+  if (!sim.hasValidator && sim.hasExecutor)
+    warn.push('An Executor with no independent Validator. This shape can act without anything checking it — the highest-risk configuration in the set.');
+  if (ops.length > 6 && TOPOS[topo].k === 'Mesh')
+    warn.push(`A fully connected mesh of ${ops.length} carries ${sim.links} links. Communication cost is now the dominant term.`);
+  if (ops.length === 1 && TOPOS[topo].k !== 'Star')
+    warn.push('One operative does not have a topology. Pick a formation once there is something to coordinate.');
+  if (sim.diversity < 0.5 && ops.length > 2)
+    warn.push('Most seats share a role. Duplicating an archetype rarely adds capability — it adds cost.');
+
+  $('#simOut').innerHTML = `
+    <div class="score"><span class="sv">${sim.overall}</span>
+      <span class="sl">/ 100 · overall score<br><span style="color:${band[1]}">${band[0]}</span></span></div>
+    ${rows.map(([lbl,k]) => `
+      <div class="simrow" style="margin-top:8px"><span>${lbl}</span>
+        <span class="bararea"><i style="width:${(sim[k]*100).toFixed(0)}%"></i></span>
+        <b>${(sim[k]*100).toFixed(0)}</b></div>`).join('')}
+    ${warn.length ? `<div class="gate" style="margin-top:16px"><b>⚠ What this configuration risks</b><br>${warn.join('<br>')}</div>` : ''}
+    <div class="note"><b>How the score was computed.</b> Accuracy rises with role diversity and an
+      independent Validator, and falls when average autonomy exceeds 75%. Latency and throughput are
+      penalised by the topology's coordination overhead and by ${sim.links} communication link${sim.links === 1 ? '' : 's'}.
+      Cost falls with headcount and comms load. Reliability is driven by the topology's own
+      resilience and your target. Weights: accuracy .28, reliability .24, latency .16, cost .16,
+      throughput .16.<br>
+      <b>This is a model of your choices, not a measurement of a system.</b> It is useful for
+      comparing two shapes under identical assumptions and useless as a production promise.</div>`;
+}
+
+function paintAll(){ paintChips(); paintRoster(); paintMesh(); paintSim(); }
+
+$('#addOp').onclick = () => {
+  if (ops.length >= MAX_OPS){ return; }
+  const nm = ($('#opname').value || '').trim() || ROLES[role].k;
+  ops.push({ name:nm, role:ROLES[role], auton:+$('#auton').value, pers:[...pers].map(i => PERS[i]) });
+  sim = null;
+  $('#opname').value = '';
+  paintAll();
+};
+$('#clearOps').onclick = () => { ops = []; sim = null; paintAll(); };
+$('#runSim').onclick = runSim;
+$('#auton').oninput = e => $('#autonVal').textContent = e.target.value + '%';
+$('#resil').oninput = e => { $('#resilVal').textContent = RESIL[+e.target.value]; sim = null; paintRoster(); paintSim(); };
+$('#meshname').oninput = paintRoster;
+
+// open with a realistic working state rather than an empty shell
+[['Atlas','Coordinator',60],['Market Scanner','Researcher',75],['Signal Analyst','Analyst',70],['Claim Checker','Validator',45]]
+  .forEach(([nm, rk, au]) => ops.push({
+    name:nm, role:ROLES.find(r => r.k === rk), auton:au, pers:['Analytical']
+  }));
+paintAll();
+runSim();
+
+/* ═══ reveal, with a non-rAF fallback ═══ */
+function revealSweep(){
+  $$('.rv').forEach(el => { if (el.getBoundingClientRect().top < innerHeight + 60) el.classList.add('in'); });
+}
+if (STILL) $$('.rv').forEach(el => el.classList.add('in'));
+else {
+  addEventListener('scroll', revealSweep, { passive:true });
+  revealSweep();
+  setTimeout(() => $$('.rv').forEach(el => el.classList.add('in')), 2500);
+}
+</script>

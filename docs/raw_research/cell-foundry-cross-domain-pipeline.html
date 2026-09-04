@@ -1,0 +1,219 @@
+<div id="cell-foundry-pipeline" class="cell-foundry">
+  <style>
+    #cell-foundry-pipeline {
+      --cf-bg: var(--color-background-primary, #0b1020);
+      --cf-panel: var(--color-background-secondary, #121a2d);
+      --cf-panel-2: var(--color-background-tertiary, #18243c);
+      --cf-text: var(--color-text-primary, #eef4ff);
+      --cf-muted: var(--color-text-secondary, #aab7ce);
+      --cf-border: var(--color-border-secondary, #2c3c59);
+      --cf-blue: var(--color-accent-blue, #62a8ff);
+      --cf-green: var(--color-accent-green, #56d6a0);
+      --cf-purple: var(--color-accent-purple, #b89cff);
+      --cf-orange: var(--color-accent-orange, #ffb763);
+      --cf-red: var(--color-accent-red, #ff7e86);
+      color: var(--cf-text);
+      background: var(--cf-bg);
+      border: 1px solid var(--cf-border);
+      border-radius: 20px;
+      padding: clamp(14px, 3vw, 28px);
+      font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+      line-height: 1.45;
+      overflow: hidden;
+    }
+    #cell-foundry-pipeline * { box-sizing: border-box; }
+    #cell-foundry-pipeline h2,
+    #cell-foundry-pipeline h3,
+    #cell-foundry-pipeline p { margin: 0; }
+    #cell-foundry-pipeline .cf-head { display: grid; gap: 7px; margin-bottom: 18px; }
+    #cell-foundry-pipeline .cf-kicker {
+      color: var(--cf-green); font-size: 12px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase;
+    }
+    #cell-foundry-pipeline h2 { font-size: clamp(23px, 4vw, 38px); letter-spacing: -.035em; line-height: 1.08; }
+    #cell-foundry-pipeline .cf-sub { max-width: 860px; color: var(--cf-muted); font-size: 14px; }
+    #cell-foundry-pipeline .cf-layout { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(260px, .8fr); gap: 16px; align-items: stretch; }
+    #cell-foundry-pipeline .cf-map { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    #cell-foundry-pipeline .cf-lane {
+      background: var(--cf-panel); border: 1px solid var(--cf-border); border-radius: 16px; padding: 12px;
+      min-width: 0;
+    }
+    #cell-foundry-pipeline .cf-lane-title { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-weight: 800; }
+    #cell-foundry-pipeline .cf-num {
+      display: inline-grid; place-items: center; width: 25px; height: 25px; border-radius: 8px;
+      color: var(--cf-bg); background: var(--lane-color); font-size: 12px; font-weight: 900;
+    }
+    #cell-foundry-pipeline .cf-flow { display: grid; gap: 8px; }
+    #cell-foundry-pipeline .cf-stage {
+      width: 100%; text-align: left; color: var(--cf-text); background: var(--cf-panel-2);
+      border: 1px solid var(--cf-border); border-radius: 12px; padding: 10px 11px; cursor: pointer;
+      font: inherit; transition: border-color .15s ease, transform .15s ease, background .15s ease;
+    }
+    #cell-foundry-pipeline .cf-stage:hover { border-color: var(--lane-color); transform: translateY(-1px); }
+    #cell-foundry-pipeline .cf-stage[aria-pressed="true"] {
+      border-color: var(--lane-color); background: color-mix(in srgb, var(--lane-color) 13%, var(--cf-panel-2));
+      box-shadow: inset 3px 0 0 var(--lane-color);
+    }
+    #cell-foundry-pipeline .cf-stage strong { display: block; font-size: 13px; }
+    #cell-foundry-pipeline .cf-stage span { display: block; color: var(--cf-muted); font-size: 11px; margin-top: 2px; }
+    #cell-foundry-pipeline .cf-arrow { color: var(--lane-color); text-align: center; font-size: 15px; line-height: .7; }
+    #cell-foundry-pipeline .cf-detail {
+      display: grid; align-content: start; gap: 12px; background: var(--cf-panel); border: 1px solid var(--cf-border);
+      border-radius: 16px; padding: 16px; min-height: 100%;
+    }
+    #cell-foundry-pipeline .cf-detail-top { display: grid; gap: 5px; padding-bottom: 12px; border-bottom: 1px solid var(--cf-border); }
+    #cell-foundry-pipeline .cf-detail-tag { color: var(--cf-blue); font-size: 11px; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
+    #cell-foundry-pipeline .cf-detail h3 { font-size: 21px; line-height: 1.15; }
+    #cell-foundry-pipeline .cf-detail-desc { color: var(--cf-muted); font-size: 13px; }
+    #cell-foundry-pipeline .cf-field { display: grid; gap: 3px; }
+    #cell-foundry-pipeline .cf-field b { color: var(--cf-green); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+    #cell-foundry-pipeline .cf-field p { font-size: 13px; }
+    #cell-foundry-pipeline .cf-object-strip {
+      grid-column: 1 / -1; display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center;
+      background: var(--cf-panel); border: 1px solid var(--cf-border); border-radius: 16px; padding: 14px 16px; margin-top: 4px;
+    }
+    #cell-foundry-pipeline .cf-object-strip strong { color: var(--cf-purple); font-size: 13px; }
+    #cell-foundry-pipeline .cf-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    #cell-foundry-pipeline .cf-chip { padding: 5px 8px; background: var(--cf-panel-2); border: 1px solid var(--cf-border); border-radius: 999px; color: var(--cf-muted); font-size: 11px; }
+    #cell-foundry-pipeline .cf-example {
+      margin-top: 16px; background: linear-gradient(120deg, color-mix(in srgb, var(--cf-blue) 12%, var(--cf-panel)), var(--cf-panel));
+      border: 1px solid var(--cf-border); border-radius: 16px; padding: 14px 16px;
+    }
+    #cell-foundry-pipeline .cf-example-title { color: var(--cf-orange); font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 9px; }
+    #cell-foundry-pipeline .cf-example-flow { display: flex; gap: 8px; align-items: stretch; flex-wrap: wrap; }
+    #cell-foundry-pipeline .cf-example-node { flex: 1 1 150px; min-width: 0; background: var(--cf-panel-2); border: 1px solid var(--cf-border); border-radius: 11px; padding: 9px 10px; font-size: 12px; }
+    #cell-foundry-pipeline .cf-example-node b { display: block; color: var(--cf-text); margin-bottom: 2px; }
+    #cell-foundry-pipeline .cf-example-node span { color: var(--cf-muted); }
+    #cell-foundry-pipeline .cf-benefit { margin-top: 12px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    #cell-foundry-pipeline .cf-benefit div { border-top: 2px solid var(--benefit); background: var(--cf-panel); border-radius: 10px; padding: 9px; font-size: 11px; color: var(--cf-muted); }
+    #cell-foundry-pipeline .cf-benefit b { display: block; color: var(--cf-text); margin-bottom: 3px; }
+    @media (max-width: 850px) {
+      #cell-foundry-pipeline .cf-layout { grid-template-columns: 1fr; }
+      #cell-foundry-pipeline .cf-detail { min-height: auto; }
+      #cell-foundry-pipeline .cf-benefit { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 620px) {
+      #cell-foundry-pipeline .cf-map { grid-template-columns: 1fr; }
+      #cell-foundry-pipeline .cf-object-strip { grid-template-columns: 1fr; }
+      #cell-foundry-pipeline .cf-benefit { grid-template-columns: 1fr; }
+    }
+  </style>
+
+  <section class="cf-head">
+    <div class="cf-kicker">CELL Foundry</div>
+    <h2>Cross-Domain Mechanism Transfer Engine</h2>
+    <p class="cf-sub">Turns research from any field into traceable, testable Operative capabilities. Select a stage to inspect its input, transformation, output, and quality gate.</p>
+  </section>
+
+  <div class="cf-layout">
+    <div class="cf-map">
+      <section class="cf-lane" style="--lane-color: var(--cf-blue)">
+        <div class="cf-lane-title"><span class="cf-num">1</span> Discover</div>
+        <div class="cf-flow">
+          <button class="cf-stage" data-stage="acquire" aria-pressed="true"><strong>Source intake</strong><span>Papers · standards · datasets · patents</span></button>
+          <div class="cf-arrow">↓</div>
+          <button class="cf-stage" data-stage="extract" aria-pressed="false"><strong>Typed extraction</strong><span>Knowledge objects, not one “concept” bucket</span></button>
+          <div class="cf-arrow">↓</div>
+          <button class="cf-stage" data-stage="validate" aria-pressed="false"><strong>Evidence validation</strong><span>Provenance · licensing · confidence</span></button>
+          <div class="cf-arrow">↓</div>
+          <button class="cf-stage" data-stage="normalize" aria-pressed="false"><strong>Normalize & link</strong><span>Aliases · ontology · units · duplicates</span></button>
+        </div>
+      </section>
+
+      <section class="cf-lane" style="--lane-color: var(--cf-purple)">
+        <div class="cf-lane-title"><span class="cf-num">2</span> Translate</div>
+        <div class="cf-flow">
+          <button class="cf-stage" data-stage="decompose" aria-pressed="false"><strong>Mechanism decomposition</strong><span>Function → states → rules → outcomes</span></button>
+          <div class="cf-arrow">↓</div>
+          <button class="cf-stage" data-stage="rank" aria-pressed="false"><strong>Metadata ranking</strong><span>Hot · warm · cold; never blind deletion</span></button>
+          <div class="cf-arrow">↓</div>
+          <button class="cf-stage" data-stage="review" aria-pressed="false"><strong>Dual-specialist review</strong><span>Source domain + AI/data/software</span></button>
+          <div class="cf-arrow">↓</div>
+          <button class="cf-stage" data-stage="synthesize" aria-pressed="false"><strong>Map & synthesize</strong><span>Direct · adapted · hybrid · mesh</span></button>
+        </div>
+      </section>
+
+      <section class="cf-lane" style="--lane-color: var(--cf-green)">
+        <div class="cf-lane-title"><span class="cf-num">3</span> Prove</div>
+        <div class="cf-flow">
+          <button class="cf-stage" data-stage="compile" aria-pressed="false"><strong>Experiment compiler</strong><span>Hypothesis · controls · metrics · budget</span></button>
+          <div class="cf-arrow">↓</div>
+          <button class="cf-stage" data-stage="trial" aria-pressed="false"><strong>Shadow trials</strong><span>Twin · sandbox · Evolution Chamber</span></button>
+          <div class="cf-arrow">↓</div>
+          <button class="cf-stage" data-stage="gate" aria-pressed="false"><strong>Promotion gate</strong><span>Performance · safety · cost · generality</span></button>
+          <div class="cf-arrow">↓</div>
+          <button class="cf-stage" data-stage="learn" aria-pressed="false"><strong>Operative learning loop</strong><span>Trait · Cell pattern · doctrine · rollback</span></button>
+        </div>
+      </section>
+
+      <div class="cf-object-strip">
+        <strong>Universal Mechanism Graph</strong>
+        <div class="cf-chips">
+          <span class="cf-chip">Entity</span><span class="cf-chip">Concept</span><span class="cf-chip">Mechanism</span>
+          <span class="cf-chip">Process</span><span class="cf-chip">Technique</span><span class="cf-chip">Pattern</span>
+          <span class="cf-chip">Framework</span><span class="cf-chip">Theory</span><span class="cf-chip">Law</span>
+          <span class="cf-chip">Formula</span><span class="cf-chip">Algorithm</span><span class="cf-chip">Constraint</span>
+          <span class="cf-chip">Metric</span><span class="cf-chip">Failure mode</span><span class="cf-chip">Evidence</span>
+        </div>
+      </div>
+    </div>
+
+    <aside class="cf-detail" aria-live="polite">
+      <div class="cf-detail-top">
+        <div id="cf-detail-tag" class="cf-detail-tag">Discover · Stage 1</div>
+        <h3 id="cf-detail-title">Source intake</h3>
+        <p id="cf-detail-desc" class="cf-detail-desc">Builds a governed research feed across selected domains.</p>
+      </div>
+      <div class="cf-field"><b>Input</b><p id="cf-detail-input">Trusted papers, standards, textbooks, patents, datasets, and internal reports.</p></div>
+      <div class="cf-field"><b>Transformation</b><p id="cf-detail-action">Capture source identity, domain, permissions, date, version, and machine-readable content.</p></div>
+      <div class="cf-field"><b>Output</b><p id="cf-detail-output">A versioned source object ready for extraction.</p></div>
+      <div class="cf-field"><b>Quality gate</b><p id="cf-detail-gate">Source is permitted, attributable, parseable, and assigned an authority score.</p></div>
+    </aside>
+  </div>
+
+  <section class="cf-example">
+    <div class="cf-example-title">Worked transfer · Calculus → Agentic Engineering</div>
+    <div class="cf-example-flow">
+      <div class="cf-example-node"><b>Source mechanism</b><span>Gradient: direction and rate of local change</span></div>
+      <div class="cf-example-node"><b>Agentic abstraction</b><span>Marginal effect of a configuration change</span></div>
+      <div class="cf-example-node"><b>Synthetic pattern</b><span>Mesh Gradient across interacting layers</span></div>
+      <div class="cf-example-node"><b>Experiment</b><span>Compare isolated vs coordinated layer updates</span></div>
+      <div class="cf-example-node"><b>Promoted result</b><span>Validated optimizer heuristic with rollback</span></div>
+    </div>
+    <div class="cf-benefit">
+      <div style="--benefit: var(--cf-blue)"><b>Discovery speed</b>Reuse mechanisms instead of inventing from zero.</div>
+      <div style="--benefit: var(--cf-purple)"><b>Search quality</b>Compare causal structure, not vocabulary alone.</div>
+      <div style="--benefit: var(--cf-green)"><b>Performance</b>Promote only changes that beat controlled baselines.</div>
+      <div style="--benefit: var(--cf-orange)"><b>Defensibility</b>Keep lineage from source evidence to deployed trait.</div>
+    </div>
+  </section>
+
+  <script>
+    (() => {
+      const root = document.getElementById('cell-foundry-pipeline');
+      const stages = {
+        acquire: ['Discover · Stage 1', 'Source intake', 'Builds a governed research feed across selected domains.', 'Trusted papers, standards, textbooks, patents, datasets, and internal reports.', 'Capture source identity, domain, permissions, date, version, and machine-readable content.', 'A versioned source object ready for extraction.', 'Source is permitted, attributable, parseable, and assigned an authority score.'],
+        extract: ['Discover · Stage 2', 'Typed extraction', 'Finds distinct knowledge-object types instead of flattening everything into “concepts.”', 'Source sections, tables, figures, equations, definitions, claims, and procedures.', 'Extract entities, mechanisms, frameworks, formulas, constraints, metrics, failure modes, and relations.', 'Candidate objects with spans, citations, confidence, and object type.', 'Every claim points back to evidence; equations preserve variables, units, and conditions.'],
+        validate: ['Discover · Stage 3', 'Evidence validation', 'Separates source reliability from transfer plausibility.', 'Candidate objects plus source metadata.', 'Check provenance, authority, corroboration, contradictions, licensing, and extraction confidence.', 'Evidence-scored objects with conflicts explicitly represented.', 'Unverifiable or restricted material is quarantined, not promoted.'],
+        normalize: ['Discover · Stage 4', 'Normalize & link', 'Creates a common semantic layer across domain vocabularies.', 'Validated objects from many fields and naming systems.', 'Resolve aliases, units, symbols, taxonomies, duplicates, and existing ontology links.', 'Canonical objects and typed graph relationships.', 'No merge unless identity confidence passes threshold; original terms remain traceable.'],
+        decompose: ['Translate · Stage 5', 'Mechanism decomposition', 'Rewrites a domain idea as a portable causal or procedural model.', 'A canonical source object.', 'Express function, inputs, state, transformations, assumptions, invariants, outputs, signatures, and failure modes.', 'A Mechanism Primitive—structured enough to simulate or implement.', 'Mechanism is distinguished from metaphor; boundary conditions are explicit.'],
+        rank: ['Translate · Stage 6', 'Metadata ranking', 'Controls context cost without destroying future evidence.', 'Mechanism Primitive with rich metadata.', 'Rank fields by relevance, information gain, confidence, mission fit, and retrieval value.', 'Hot context, warm retrieval data, and cold archival data.', 'Low-ranked metadata remains recoverable; ranking is task-specific and reversible.'],
+        review: ['Translate · Stage 7', 'Dual-specialist review', 'Combines fidelity to the source domain with implementation realism.', 'Ranked Mechanism Primitive and target Agentic function.', 'A source-domain specialist checks meaning; an AI/data/software specialist checks computability and fit.', 'Approved, revised, disputed, unsafe, or rejected transfer candidate.', 'Both evidence confidence and analogy confidence are scored independently.'],
+        synthesize: ['Translate · Stage 8', 'Map & synthesize', 'Creates the target pattern and its position in the Concept MESH.', 'Reviewed primitives and an Agentic Engineering function taxonomy.', 'Generate direct transfers, adapted patterns, hybrids, or relational mesh patterns; name by target function.', 'Operative Pattern with parents, transformations, intended layer, and predicted benefit.', 'Novel naming never hides provenance; incompatible assumptions block synthesis.'],
+        compile: ['Prove · Stage 9', 'Experiment compiler', 'Turns an interesting mapping into a falsifiable test.', 'Operative Pattern and candidate Operative configuration.', 'Define hypothesis, baseline, ablation, controls, target layers, metrics, budget, stop rules, and rollback.', 'Executable Capability Experiment specification.', 'Success and failure criteria are fixed before the trial begins.'],
+        trial: ['Prove · Stage 10', 'Shadow trials', 'Evaluates new behavior away from production missions.', 'Experiment specification, datasets, simulations, and representative mission traces.', 'Run isolated-layer and cross-layer trials in a Shadow Twin or Evolution Chamber.', 'Performance, safety, cost, robustness, and interaction evidence.', 'Negative controls, repeatability, and distribution-shift checks must pass.'],
+        gate: ['Prove · Stage 11', 'Promotion gate', 'Prevents an exciting analogy from becoming an unearned capability claim.', 'Trial evidence and risk assessment.', 'Compare uplift against cost, regressions, generality, uncertainty, and operational constraints.', 'Promote, specialize, revise, pause, or reject decision.', 'No promotion on a single metric; evidence package and rollback path are mandatory.'],
+        learn: ['Prove · Stage 12', 'Operative learning loop', 'Feeds validated improvements into configurable Operatives and specialist teams.', 'Promoted experiment result plus complete lineage.', 'Package as an Operative Trait, Cell Pattern, specialist archetype, or doctrine module; monitor in service.', 'Reusable capability with version, applicable layers, compatibility, and known limits.', 'Continuous telemetry can demote or roll back a trait when its assumptions stop holding.']
+      };
+      const ids = ['tag', 'title', 'desc', 'input', 'action', 'output', 'gate'];
+      root.querySelectorAll('.cf-stage').forEach(button => {
+        button.addEventListener('click', () => {
+          root.querySelectorAll('.cf-stage').forEach(item => item.setAttribute('aria-pressed', 'false'));
+          button.setAttribute('aria-pressed', 'true');
+          stages[button.dataset.stage].forEach((value, index) => {
+            root.querySelector('#cf-detail-' + ids[index]).textContent = value;
+          });
+        });
+      });
+    })();
+  </script>
+</div>

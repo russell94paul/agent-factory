@@ -1,0 +1,54 @@
+version: 1
+created: 2026-09-02
+status: proposed_for_live_repo_validation
+
+decisions:
+  - id: ADR-P0-001
+    decision: Extend existing TaskStore/Switchboard runtime rather than create a second orchestration system.
+    reason: Existing work, dependency, priority, claim, session, evidence and UI mechanisms already cover most required behavior.
+    deadline_class: MUST
+
+  - id: ADR-P0-002
+    decision: Implement mission presets as a thin compiler into canonical work; defer a generic Mission lifecycle/Org-IR.
+    reason: The mission object is absent, but creating a parallel source of truth before the deadline creates more integration risk than value.
+    deadline_class: MUST
+
+  - id: ADR-P0-003
+    decision: Make existing MANUAL/GUARDED/AUTO policy operational with a deterministic autonomy pump.
+    reason: P1 already exposes policy and pause/resume; the explicit missing seam is that policy decides but does not act.
+    deadline_class: MUST
+
+  - id: ADR-P0-004
+    decision: Add RUN DAG and RUN CRITICAL PATH as operator controls over canonical work.
+    reason: Removes repeated terminal/slash-command launches while preserving human gates.
+    deadline_class: MUST
+
+  - id: ADR-P0-005
+    decision: Approval wakes downstream execution automatically when an autonomous run is active.
+    reason: Approval should be an event, not a second manual launch operation.
+    deadline_class: MUST
+
+  - id: ADR-P0-006
+    decision: Keep deadline/authority/budget in an ExecutionMandate, separate from success contracts.
+    reason: Deadline changes scheduling, not falsifiable success semantics.
+    deadline_class: SHOULD
+
+  - id: ADR-P0-007
+    decision: Do not automatically drop required scope under deadline pressure.
+    reason: Scope degradation is a governance capability that the corpus shows is not yet designed.
+    deadline_class: MUST_NOT_VIOLATE
+
+  - id: ADR-P1-001
+    decision: Add Mission Assurance Receipt as a projection over existing runtime/evidence data.
+    reason: High client/trust value with little new machinery.
+    deadline_class: SHOULD
+
+  - id: ADR-P2-001
+    decision: Do not encode mandatory Agent-Team-Manager-Master-Army hierarchy.
+    reason: Organizational topologies should remain configurable; prior art refutes the need to invent a new category hierarchy.
+    deadline_class: POST_DEADLINE
+
+  - id: ADR-P2-002
+    decision: Delay evolution/archive optimization until real-run data and model-binding revalidation exist.
+    reason: Learned organizational winners may expire when the model binding changes.
+    deadline_class: POST_DEADLINE

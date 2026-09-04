@@ -1,0 +1,14 @@
+version: 1
+execution_mandate:
+  id: mandate-marketing-2026-09-02
+  goal_id: marketing-meeting-ready
+  target_work_id: marketing-001-meeting-ready
+  deadline: 2026-09-02T12:00:00-07:00
+  mode: GUARDED
+  max_parallel: 3
+  run_mode: CRITICAL_PATH
+  visibility: REVIEW_REQUIRED
+  scope_profile: deadline_p0
+  operator_pause: false
+
+# Intentionally separate from success/eval contracts.

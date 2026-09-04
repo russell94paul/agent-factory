@@ -1,0 +1,10 @@
+# LOCAL_ONLY. Input to capture_public_exposure.py. Never commit, never push.
+# One extended-regex per line; optional `class:` prefix.
+client: navira
+brand: LECTRIC
+figures: 244,870|457,425|264,836|3,374\.90
+jira: GP-[0-9]{3}|FU92-[0-9]{3}
+credential-like-account: og35375\.canada\-central\.azure
+credential-like-vault: aldc-vault-test|aldc-vault-prod
+credential-like-secretname: snowflake-admin-nonprod|snowflake-r3-cartography-nonprod|prod-dg1-core-admin
+credential-like-database: TEST_DG1_GEP
